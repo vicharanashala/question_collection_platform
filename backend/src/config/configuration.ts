@@ -144,10 +144,10 @@ export const answerScoringConfig = registerAs("answerScoring", () => ({
   baseUrl: `${required("VM_SERVER_URL")}:${process.env.ANSWER_SCORING_PORT || "8011"}`,
 }));
 
-export const reviwerConfig = registerAs("reviewSystem", ()=>({
+export const reviwerConfig = registerAs("reviewSystem", () => ({
   reviewerUri: process.env.REVIEWER_INGEST_URL,
-  apiKey: process.env.REVIEW_SYSTEM_AUTH_KEY
-}))
+  apiKey: process.env.REVIEW_SYSTEM_API_AUTH_KEY,
+}));
 
 export const anveshanDbConfig = registerAs("anveshanDb", () => ({
   mongoUri: process.env.ANVESHAN_DB_URL || "mongodb://localhost:27017/question_platform",

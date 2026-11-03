@@ -118,7 +118,7 @@ export class LgdService {
 
     this.internalApiKey =
       this.configService.get<string>("lgd.internalApiKey") ||
-      process.env.REVIEW_SYSTEM_AUTH_KEY ||
+      process.env.REVIEW_SYSTEM_API_AUTH_KEY ||
       "";
 
     const ttlDays =
@@ -215,7 +215,7 @@ export class LgdService {
       try {
         const response = await axios.get<T[]>(url, {
           timeout: Math.min(this.attemptTimeoutMs, remainingMs),
-          headers: { 'X-Internal-API-Key': this.internalApiKey },
+          headers: { 'x-internal-api-key': this.internalApiKey },
         });
         if (!Array.isArray(response.data)) {
           throw new InternalServerErrorException(`LGD reviewer returned unexpected payload for ${url}`);
