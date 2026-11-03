@@ -1787,7 +1787,8 @@ export function UserDetailPage() {
             <DialogDescription>
               This will delete {user.name || user.mobileNumber} and hide all of
               their related data (questions, wallet, transactions, withdrawals,
-              payment methods, notifications). They will no longer be able to
+              payment methods, notifications, reports,{" "}
+              {user.isAnveshanUser ? "feedbacks and Anveshan answers" : "and feedbacks"}). They will no longer be able to
               log in.
             </DialogDescription>
           </DialogHeader>
@@ -1824,7 +1825,8 @@ export function UserDetailPage() {
             <DialogDescription>
               This restores {user.name || user.mobileNumber} and all data that
               was deleted with them (questions, wallet, transactions,
-              withdrawals, payment methods, notifications). They will be able to
+              withdrawals, payment methods, notifications, reports{" "}
+              {user.isAnveshanUser ? "feedbacks and Anveshan answers" : "and feedbacks"}). They will be able to
               log in again.
             </DialogDescription>
           </DialogHeader>
