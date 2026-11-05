@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminStats, TimeRange, AnalyticsDashboard, ExportParams } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 // ─── StatCard with trend ───────────────────────────────────────────────────────
 
@@ -81,6 +82,7 @@ interface ExportPanelProps {
 }
 
 function ExportPanel({ disabled, days }: ExportPanelProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [dataType, setDataType] = useState<ExportParams['dataType']>('questions')
@@ -97,7 +99,7 @@ function ExportPanel({ disabled, days }: ExportPanelProps) {
       } else {
         await analyticsApi.downloadExcel({ ...params, format: 'excel' }, `${dataType}_last_${days}_days.xlsx`)
       }
-      toast.success(`Exported ${dataType} for the last ${days} days`)
+      toast.success(t('adminDashboardPage.exportedForTheLast', { dataType, days }))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Export failed'))
     } finally {
@@ -116,18 +118,18 @@ function ExportPanel({ disabled, days }: ExportPanelProps) {
         disabled={disabled}
       >
         <DownloadCloud className="h-4 w-4" />
-        Export
+        {t('exportMenu.export')}
       </Button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <Card className="absolute right-0 top-12 z-20 w-72 shadow-lg">
             <CardHeader className="pb-3">
-              <CardTitle className="text-xs sm:text-xs sm:text-sm">Export Data</CardTitle>
+              <CardTitle className="text-xs sm:text-xs sm:text-sm">{t('adminDashboardPage.exportData')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">Data Type</label>
+                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">{t('adminDashboardPage.dataType')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['questions', 'users', 'rewards', 'withdrawals'] as const).map((t) => (
                     <Button
@@ -143,7 +145,7 @@ function ExportPanel({ disabled, days }: ExportPanelProps) {
                 </div>
               </div>
               <div>
-                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">Format</label>
+                <label className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-text-secondary mb-1.5 block">{t('adminDashboardPage.format')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['csv', 'excel'] as const).map((f) => (
                     <Button
@@ -165,7 +167,7 @@ function ExportPanel({ disabled, days }: ExportPanelProps) {
                 disabled={exporting}
               >
                 <Download className="h-4 w-4" />
-                {exporting ? 'Preparing…' : `Download ${format.toUpperCase()}`}
+                {exporting ? t('anveshanExportDialog.preparing') : `Download ${format.toUpperCase()}`}
               </Button>
             </CardContent>
           </Card>
@@ -196,6 +198,7 @@ const QUESTION_VOLUME_SERIES = [
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function AdminDashboardPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null)
@@ -330,28 +333,28 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Users}
-          label="New Registrations"
+          label={t('adminDashboardPage.newRegistrations')}
           value={uAnalytics?.newUsers ?? 0}
           sub={`${formatNumber(analytics?.totalRegisteredUsers ?? d?.totalUsers ?? 0)} total · ${uAnalytics?.activeUsers ?? 0} active`}
           variant="primary"
         />
         <StatCard
           icon={MessageSquare}
-          label="Approved Questions"
+          label={t('adminDashboardPage.approvedQuestions')}
           value={qAnalytics?.summary.approved ?? 0}
           sub={`${qAnalytics?.summary.approvalRate ?? 0}% approval rate`}
           variant="info"
         />
         <StatCard
           icon={CheckCircle}
-          label="Verified Users"
+          label={t('adminDashboardPage.verifiedUsers')}
           value={uAnalytics?.newVerified ?? 0}
           sub={`${uAnalytics?.newPending ?? 0} pending review`}
           variant="success"
         />
         <StatCard
           icon={TrendingUp}
-          label="Questions Submitted"
+          label={t('adminDashboardPage.questionsSubmitted')}
           value={qAnalytics?.summary.total ?? 0}
           change={qAnalytics?.summary.growthRate}
           sub="vs previous period"
@@ -363,28 +366,28 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={IndianRupee}
-          label="Cost per Approved Question"
+          label={t('adminDashboardPage.costPerApprovedQuestion')}
           value={analytics?.costPerApprovedQuestion != null ? `₹${analytics.costPerApprovedQuestion.toFixed(2)}` : '—'}
           sub={analytics ? `₹${formatINR(analytics.totalRewarded)} rewarded` : undefined}
           variant="warning"
         />
         <StatCard
           icon={MapPin}
-          label="State Participation"
+          label={t('adminDashboardPage.stateParticipation')}
           value={`${analytics?.stateParticipationRate ?? 0}%`}
           sub={`${analytics?.statesWithApprovedQuestions ?? 0} of 37 states with approvals`}
           variant="info"
         />
         <StatCard
           icon={Clock}
-          label="Pending Questions"
+          label={t('adminDashboardPage.pendingQuestions')}
           value={qAnalytics?.summary.pending ?? 0}
           sub={`${formatNumber(d?.pendingQuestions ?? 0)} pending overall`}
           variant="warning"
         />
         <StatCard
           icon={Activity}
-          label="Avg Review Turnaround"
+          label={t('adminDashboardPage.avgReviewTurnaround')}
           value={analytics?.avgReviewTurnaroundMinutes != null ? formatDuration(analytics.avgReviewTurnaroundMinutes) : '—'}
           sub="submission to decision"
           variant="info"
@@ -395,26 +398,24 @@ export function AdminDashboardPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard
           className="xl:col-span-2"
-          title="Daily Question Volume"
-          subtitle={`Last ${days} days`}
+          title={t('adminDashboardPage.dailyQuestionVolume')}
+          subtitle={t('adminDashboardPage.lastDays', { days })}
           action={
             <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[hsl(var(--chart-2))]" /> Submitted
+                <span className="h-2 w-2 rounded-full bg-[hsl(var(--chart-2))]" /> {t('submissions.submitted')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-success" /> Approved
+                <span className="h-2 w-2 rounded-full bg-success" /> {t('myQuestions.approved')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-destructive" /> Rejected
+                <span className="h-2 w-2 rounded-full bg-destructive" /> {t('myQuestions.rejected')}
               </span>
             </div>
           }
         >
           {analyticsLoading ? (
-            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
-              Loading…
-            </div>
+            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('leaderboard.loading')}</div>
           ) : qAnalytics?.dailyVolume.length ? (
             <>
               <AreaChartComponent
@@ -437,13 +438,11 @@ export function AdminDashboardPage() {
               </div>
             </>
           ) : (
-            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
-              No volume data available
-            </div>
+            <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('curatorDashboard.noVolumeData')}</div>
           )}
         </ChartCard>
 
-        <ChartCard title="Questions by Status" subtitle={`Submitted in the last ${days} days`}>
+        <ChartCard title={t('adminDashboardPage.questionsByStatus')} subtitle={t('adminDashboardPage.submittedInTheLast', { days })}>
           <BarChartComponent
             data={qStatusData.map((d_) => ({ name: d_.name, value: d_.value }))}
             dataKey="value"
@@ -456,7 +455,7 @@ export function AdminDashboardPage() {
 
       {/* ── Charts row 2: State + District + Crop breakdowns ─────────────────── */}
       <div className="grid gap-4 xl:grid-cols-3">
-        <ChartCard title="Top States by Volume" subtitle="Questions submitted per state">
+        <ChartCard title={t('curatorDashboard.topStatesTitle')} subtitle={t('curatorDashboard.topStatesSub')}>
           <BulletChartComponent
             data={stateBarData}
             height={220}
@@ -465,7 +464,7 @@ export function AdminDashboardPage() {
           />
         </ChartCard>
 
-        <ChartCard title="Top Districts by Volume" subtitle="Questions submitted per district">
+        <ChartCard title={t('adminDashboardPage.topDistrictsByVolume')} subtitle={t('adminDashboardPage.questionsSubmittedPerDistrict')}>
           <TreemapChartComponent
             data={districtBarData}
             height={220}
@@ -473,7 +472,7 @@ export function AdminDashboardPage() {
           />
         </ChartCard>
 
-        <ChartCard title="Top Crops" subtitle="Question distribution by crop type">
+        <ChartCard title={t('curatorDashboard.topCropsTitle')} subtitle={t('curatorDashboard.topCropsSub')}>
           {cropDonutData.length > 0 ? (
             <RankedBarList
               data={cropDonutData}
@@ -482,9 +481,7 @@ export function AdminDashboardPage() {
               valueFormatter={(v) => formatNumber(v)}
             />
           ) : (
-            <div className="h-52 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
-              No crop data available
-            </div>
+            <div className="h-52 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('adminDashboardPage.noCropDataAvailable')}</div>
           )}
         </ChartCard>
       </div>
@@ -493,7 +490,7 @@ export function AdminDashboardPage() {
       <Card className="shadow-xs">
         <CardHeader className="pb-0">
           <div className="flex items-center gap-4">
-            <CardTitle className="text-xs sm:text-xs sm:text-sm">Deep Analytics</CardTitle>
+            <CardTitle className="text-xs sm:text-xs sm:text-sm">{t('adminDashboardPage.deepAnalytics')}</CardTitle>
             <div className="flex rounded-lg border border-border-subtle bg-surface p-1">
               {([
                 { key: 'questions', label: 'Questions' },
@@ -519,14 +516,14 @@ export function AdminDashboardPage() {
           {tab === 'questions' && (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-                <StatCard icon={MessageSquare} label="Total Submitted" value={qAnalytics?.summary.total ?? 0} variant="primary" />
-                <StatCard icon={CheckCircle} label="Approved" value={qAnalytics?.summary.approved ?? 0} variant="success" />
-                <StatCard icon={Ban} label="Rejected" value={qAnalytics?.summary.rejected ?? 0} variant="danger" />
-                <StatCard icon={Activity} label="Approval Rate" value={`${qAnalytics?.summary.approvalRate ?? 0}%`} variant="success" />
-                <StatCard icon={Sparkles} label="Growth Rate" value={`${qAnalytics?.summary.growthRate ?? 0}%`} change={qAnalytics?.summary.growthRate} variant="info" />
+                <StatCard icon={MessageSquare} label={t('adminDashboardPage.totalSubmitted')} value={qAnalytics?.summary.total ?? 0} variant="primary" />
+                <StatCard icon={CheckCircle} label={t('myQuestions.approved')} value={qAnalytics?.summary.approved ?? 0} variant="success" />
+                <StatCard icon={Ban} label={t('myQuestions.rejected')} value={qAnalytics?.summary.rejected ?? 0} variant="danger" />
+                <StatCard icon={Activity} label={t('adminDashboardPage.approvalRate')} value={`${qAnalytics?.summary.approvalRate ?? 0}%`} variant="success" />
+                <StatCard icon={Sparkles} label={t('adminDashboardPage.growthRate')} value={`${qAnalytics?.summary.growthRate ?? 0}%`} change={qAnalytics?.summary.growthRate} variant="info" />
               </div>
               <div className="grid gap-4 xl:grid-cols-2">
-                <ChartCard title="Daily Submission Trend" subtitle="Submitted, approved, rejected">
+                <ChartCard title={t('adminDashboardPage.dailySubmissionTrend')} subtitle={t('adminDashboardPage.submittedApprovedRejected')}>
                   <AreaChartComponent
                     data={(qAnalytics?.dailyVolume ?? []).map((v) => ({ date: v.date, Submitted: v.submitted, Approved: v.approved, Rejected: v.rejected }))}
                     dataKey="Submitted"
@@ -536,7 +533,7 @@ export function AdminDashboardPage() {
                     valueFormatter={(v) => formatNumber(v)}
                   />
                 </ChartCard>
-                <ChartCard title="Domain Category Breakdown" subtitle="Questions per domain">
+                <ChartCard title={t('adminDashboardPage.domainCategoryBreakdown')} subtitle={t('adminDashboardPage.questionsPerDomain')}>
                   <BarChartComponent
                     data={(qAnalytics?.domainBreakdown ?? []).slice(0, 8).map((d_) => ({ name: d_.domain, value: d_.count }))}
                     dataKey="value"
@@ -553,14 +550,14 @@ export function AdminDashboardPage() {
           {tab === 'users' && (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-                <StatCard icon={Users} label="Total Users" value={uAnalytics?.totalUsers ?? 0} variant="primary" />
-                <StatCard icon={Activity} label="Monthly Active" value={uAnalytics?.mau ?? 0} variant="info" />
-                <StatCard icon={Clock} label="Daily Active" value={uAnalytics?.dau ?? 0} variant="warning" />
-                <StatCard icon={TrendingUp} label="Signup Growth" value={`${uAnalytics?.signupGrowth ?? 0}%`} change={uAnalytics?.signupGrowth} variant="success" />
-                <StatCard icon={CheckCircle} label="Verified" value={d?.verifiedUsers ?? 0} variant="success" />
+                <StatCard icon={Users} label={t('adminDashboardPage.totalUsers')} value={uAnalytics?.totalUsers ?? 0} variant="primary" />
+                <StatCard icon={Activity} label={t('adminDashboardPage.monthlyActive')} value={uAnalytics?.mau ?? 0} variant="info" />
+                <StatCard icon={Clock} label={t('adminDashboardPage.dailyActive')} value={uAnalytics?.dau ?? 0} variant="warning" />
+                <StatCard icon={TrendingUp} label={t('adminDashboardPage.signupGrowth')} value={`${uAnalytics?.signupGrowth ?? 0}%`} change={uAnalytics?.signupGrowth} variant="success" />
+                <StatCard icon={CheckCircle} label={t('profile.verified')} value={d?.verifiedUsers ?? 0} variant="success" />
               </div>
               <div className="grid gap-4 xl:grid-cols-2">
-                <ChartCard title="Daily Signups & DAU" subtitle={`Last ${days} days`}>
+                <ChartCard title={t('adminDashboardPage.dailySignupsDau')} subtitle={t('adminDashboardPage.lastDays', { days })}>
                   <AreaChartComponent
                     data={(uAnalytics?.signupTrend ?? []).map((s) => ({ date: s.date, Signups: s.signups, DAU: s.dau }))}
                     dataKey="Signups"
@@ -571,7 +568,7 @@ export function AdminDashboardPage() {
                   />
                 </ChartCard>
                 <div className="grid grid-cols-2 gap-4">
-                  <ChartCard title="Users by Role" subtitle="Platform roles">
+                  <ChartCard title={t('adminDashboardPage.usersByRole')} subtitle={t('adminDashboardPage.platformRoles')}>
                     {roleDonut.length > 0 ? (
                       <DonutChartComponent
                         data={roleDonut}
@@ -580,10 +577,10 @@ export function AdminDashboardPage() {
                         outerRadius={72}
                       />
                     ) : (
-                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">No data</div>
+                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('adminDashboardPage.noData')}</div>
                     )}
                   </ChartCard>
-                  <ChartCard title="Users by Category" subtitle="Farmer, FPO, Student…">
+                  <ChartCard title={t('adminDashboardPage.usersByCategory')} subtitle={t('adminDashboardPage.farmerFpoStudent')}>
                     {categoryDonut.length > 0 ? (
                       <DonutChartComponent
                         data={categoryDonut}
@@ -592,7 +589,7 @@ export function AdminDashboardPage() {
                         outerRadius={72}
                       />
                     ) : (
-                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">No data</div>
+                      <div className="h-40 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('adminDashboardPage.noData')}</div>
                     )}
                   </ChartCard>
                 </div>
@@ -604,14 +601,14 @@ export function AdminDashboardPage() {
           {tab === 'rewards' && (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-                <StatCard icon={IndianRupee} label="Total Rewarded" value={`₹${formatINR(rAnalytics?.totalRewarded ?? 0)}`} variant="success" />
-                <StatCard icon={BarChart3} label="Reward Count" value={rAnalytics?.rewardCount ?? 0} variant="info" />
-                <StatCard icon={PieChart} label="Avg Reward" value={rAnalytics?.avgReward != null ? `₹${rAnalytics.avgReward.toFixed(1)}` : '—'} variant="warning" />
-                <StatCard icon={AlertTriangle} label="Pending Withdrawals" value={rAnalytics?.withdrawals.pending ?? 0} variant="warning" />
-                <StatCard icon={CheckCircle} label="Completed Withdrawals" value={rAnalytics?.withdrawals.completed ?? 0} variant="success" />
+                <StatCard icon={IndianRupee} label={t('adminDashboardPage.totalRewarded')} value={`₹${formatINR(rAnalytics?.totalRewarded ?? 0)}`} variant="success" />
+                <StatCard icon={BarChart3} label={t('adminDashboardPage.rewardCount')} value={rAnalytics?.rewardCount ?? 0} variant="info" />
+                <StatCard icon={PieChart} label={t('adminDashboardPage.avgReward')} value={rAnalytics?.avgReward != null ? `₹${rAnalytics.avgReward.toFixed(1)}` : '—'} variant="warning" />
+                <StatCard icon={AlertTriangle} label={t('adminDashboardPage.pendingWithdrawals')} value={rAnalytics?.withdrawals.pending ?? 0} variant="warning" />
+                <StatCard icon={CheckCircle} label={t('adminDashboardPage.completedWithdrawals')} value={rAnalytics?.withdrawals.completed ?? 0} variant="success" />
               </div>
               <div className="grid gap-4 xl:grid-cols-2">
-                <ChartCard title="Daily Reward Amount" subtitle="₹ credited per day">
+                <ChartCard title={t('adminDashboardPage.dailyRewardAmount')} subtitle={t('adminDashboardPage.creditedPerDay')}>
                   <AreaChartComponent
                     data={(rAnalytics?.dailyRewardTrend ?? []).map((r) => ({ date: r.date, Amount: r.amount, Count: r.count }))}
                     dataKey="Amount"
@@ -621,7 +618,7 @@ export function AdminDashboardPage() {
                     valueFormatter={(v) => `₹${formatNumber(v)}`}
                   />
                 </ChartCard>
-                <ChartCard title="Withdrawal Status" subtitle="Pending, completed, failed">
+                <ChartCard title={t('adminDashboardPage.withdrawalStatus')} subtitle={t('adminDashboardPage.pendingCompletedFailed')}>
                   <BarChartComponent
                     data={[
                       { name: 'Pending', value: rAnalytics?.withdrawals.pending ?? 0 },
@@ -643,8 +640,8 @@ export function AdminDashboardPage() {
       {/* ── Charts row 3: Role + Category donuts ──────────────────────────── */}
       <div className="grid gap-4 md:grid-cols-2">
         <ChartCard
-          title="Users by Role"
-          subtitle={`${roleTotal.toLocaleString()} total`}
+          title={t('adminDashboardPage.usersByRole')}
+          subtitle={t('adminDashboardPage.total', { value1: roleTotal.toLocaleString() })}
         >
           {roleDonut.length > 0 ? (
             <DonutChartComponent
@@ -656,11 +653,11 @@ export function AdminDashboardPage() {
               centerLabel="Total Users"
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">No role data</div>
+            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('adminDashboardPage.noRoleData')}</div>
           )}
         </ChartCard>
 
-        <ChartCard title="Users by Category" subtitle="Farmer, FPO, Student, Volunteer, NGO">
+        <ChartCard title={t('adminDashboardPage.usersByCategory')} subtitle={t('adminDashboardPage.farmerFpoStudentVolunteer')}>
           {categoryDonut.length > 0 ? (
             <DonutChartComponent
               data={categoryDonut}
@@ -671,14 +668,14 @@ export function AdminDashboardPage() {
               centerLabel="Total Users"
             />
           ) : (
-            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">No category data</div>
+            <div className="flex items-center justify-center h-48 text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('adminDashboardPage.noCategoryData')}</div>
           )}
         </ChartCard>
       </div>
 
       {/* ── Quick actions + Recent Activity ────────────────────────────────── */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <ChartCard title="Quick Actions" subtitle="Navigate the platform">
+        <ChartCard title={t('home.quickActions')} subtitle={t('curatorDashboard.quickActionsSub')}>
           <div className="space-y-2 pt-1">
             <Link
               to="/users"
@@ -686,7 +683,7 @@ export function AdminDashboardPage() {
             >
               <span className="flex items-center gap-3">
                 <Users className="h-4 w-4 text-primary" />
-                View all users
+                {t('adminDashboardPage.viewAllUsers')}
               </span>
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             </Link>
@@ -696,7 +693,7 @@ export function AdminDashboardPage() {
             >
               <span className="flex items-center gap-3">
                 <MessageSquare className="h-4 w-4 text-primary" />
-                Manage questions
+                {t('adminDashboardPage.manageQuestions')}
               </span>
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             </Link>
@@ -706,17 +703,17 @@ export function AdminDashboardPage() {
             >
               <span className="flex items-center gap-3">
                 <ShieldCheck className="h-4 w-4 text-primary" />
-                Distributions
+                {t('nav.distributions')}
               </span>
               <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
             </Link>
           </div>
         </ChartCard>
 
-        <ChartCard title="Recent Activity" subtitle="Latest platform actions" className="lg:col-span-2">
+        <ChartCard title={t('adminDashboardPage.recentActivity')} subtitle={t('adminDashboardPage.latestPlatformActions')} className="lg:col-span-2">
           <div className="space-y-3 max-h-56 overflow-y-auto">
             {(stats?.recentActivity ?? []).length === 0 ? (
-              <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary py-4 text-center">No recent activity</p>
+              <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary py-4 text-center">{t('adminDashboardPage.noRecentActivity')}</p>
             ) : (
               (stats?.recentActivity ?? []).slice(0, 10).map((entry) => (
                 <div key={entry.id} className="flex items-start gap-3 text-xs sm:text-xs sm:text-sm">

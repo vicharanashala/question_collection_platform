@@ -114,11 +114,11 @@ export function SttMicButton({ onTranscribed, onRecordingStart, onRecordingCompl
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
       if (msg.includes('too short')) {
-        showToast(t('question.audio.micButtonDone', 'Audio too short — please record a longer message'), 'warning');
+        showToast(t('question.audio.micButtonDone'), 'warning');
       } else if (msg.includes('60-second') || msg.includes('exceed')) {
-        showToast(t('question.audio.micButtonDone', 'Audio too long — please record under 60 seconds'), 'warning');
+        showToast(t('question.audio.micButtonDone'), 'warning');
       } else {
-        showToast(t('question.audio.transcribeError', 'Transcription failed'), 'error');
+        showToast(t('question.audio.transcribeError'), 'error');
       }
       setState('error');
       setTimeout(() => setState('idle'), 2500);

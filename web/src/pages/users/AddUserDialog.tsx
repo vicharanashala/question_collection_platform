@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { UserCategory, UserRole } from '@/types'
 import { Loader2, UserRound } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type CreatableRole = Exclude<UserRole, 'super_admin'>
 
@@ -45,6 +46,7 @@ export function AddUserDialog({
   onOpenChange: (open: boolean) => void
   onCreated: () => void
 }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState<AddUserForm>(INITIAL_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState('')
@@ -106,10 +108,8 @@ export function AddUserDialog({
     <Dialog open={open} onOpenChange={(next) => !creating && onOpenChange(next)}>
       <DialogContent className="flex h-[85vh] max-h-[85vh] !w-[85vw] !max-w-[85vw] grid-rows-none flex-col gap-0 overflow-hidden p-2 sm:rounded-xl">
         <DialogHeader className="shrink-0 border-b border-border-subtle px-5 py-4 pr-12 sm:px-7 sm:py-5">
-          <DialogTitle>Add New User</DialogTitle>
-          <DialogDescription>
-            Create an account using the user&apos;s basic details and assigned role.
-          </DialogDescription>
+          <DialogTitle>{t('addUserDialog.addNewUser')}</DialogTitle>
+          <DialogDescription>{t('addUserDialog.createAnAccountUsing')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
@@ -120,41 +120,41 @@ export function AddUserDialog({
                   <UserRound className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-text">Account information</h3>
-                  <p className="mt-0.5 text-sm text-text-tertiary">Enter the details required to create this account.</p>
+                  <h3 className="text-base font-semibold text-text">{t('addUserDialog.accountInformation')}</h3>
+                  <p className="mt-0.5 text-sm text-text-tertiary">{t('addUserDialog.enterTheDetailsRequired')}</p>
                 </div>
               </div>
 
               <div className="overflow-hidden p-1">
                 <div>
-                  <Label htmlFor="add-user-name">Full Name *</Label>
-                  <Input id="add-user-name" className="mt-1" value={form.name} onChange={(event) => setField('name', event.target.value)} placeholder="Ramesh Kumar" maxLength={80} />
+                  <Label htmlFor="add-user-name">{t('profilePage.fullName')}</Label>
+                  <Input id="add-user-name" className="mt-1" value={form.name} onChange={(event) => setField('name', event.target.value)} placeholder={t('addUserDialog.rameshKumar')} maxLength={80} />
                   <FieldError message={errors.name} />
                 </div>
                 <div>
-                  <Label htmlFor="add-user-mobile">Mobile Number *</Label>
+                  <Label htmlFor="add-user-mobile">{t('addUserDialog.mobileNumber')}</Label>
                   <Input id="add-user-mobile" className="mt-1" type="tel" inputMode="numeric" value={form.mobileNumber} onChange={(event) => setField('mobileNumber', event.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="9876543210" />
                   <FieldError message={errors.mobileNumber} />
                 </div>
                 <div>
-                  <Label htmlFor="add-user-role">Role *</Label>
+                  <Label htmlFor="add-user-role">{t('addUserDialog.role')}</Label>
                   <select id="add-user-role" className={selectClassName} value={form.role} onChange={(event) => setField('role', event.target.value as CreatableRole)}>
-                    <option value="user">User</option>
-                    <option value="curator">Curator</option>
-                    <option value="finance">Finance</option>
-                    <option value="distributor">Distributor</option>
-                    <option value="admin">Admin</option>
+                    <option value="user">{t('roles.user')}</option>
+                    <option value="curator">{t('roles.curator')}</option>
+                    <option value="finance">{t('roles.finance')}</option>
+                    <option value="distributor">{t('roles.distributor')}</option>
+                    <option value="admin">{t('admin.title')}</option>
                   </select>
                 </div>
                 {isEndUser && (
                   <div>
-                    <Label htmlFor="add-user-category">Category *</Label>
+                    <Label htmlFor="add-user-category">{t('addUserDialog.category')}</Label>
                     <select id="add-user-category" className={selectClassName} value={form.category} onChange={(event) => setField('category', event.target.value as UserCategory)}>
-                      <option value="farmer">Farmer</option>
-                      <option value="fpo">FPO Member</option>
-                      <option value="student">Student</option>
-                      <option value="volunteer">Volunteer</option>
-                      <option value="ngo">NGO Partner</option>
+                      <option value="farmer">{t('farmer')}</option>
+                      <option value="fpo">{t('fpoMember')}</option>
+                      <option value="student">{t('home.student')}</option>
+                      <option value="volunteer">{t('home.volunteer')}</option>
+                      <option value="ngo">{t('home.ngo')}</option>
                     </select>
                     <FieldError message={errors.category} />
                   </div>
@@ -166,10 +166,10 @@ export function AddUserDialog({
           </div>
 
           <DialogFooter className="shrink-0 gap-2 border-t border-border-subtle bg-surface px-5 py-4 sm:px-7">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={creating}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={creating}>{t('common.cancel')}</Button>
             <Button type="submit" disabled={creating}>
               {creating && <Loader2 className="h-4 w-4 animate-spin" />}
-              {creating ? 'Creating…' : 'Create User'}
+              {creating ? t('addUserDialog.creating') : t('addUserDialog.createUser')}
             </Button>
           </DialogFooter>
         </form>

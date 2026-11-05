@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface Tab {
   to: string
@@ -58,6 +59,7 @@ interface StaffBottomNavProps {
  * Hidden on `md` and above where the desktop sidebar takes over.
  */
 export function StaffBottomNav({ onOpenMenu }: StaffBottomNavProps) {
+  const { t } = useTranslation()
   const { pathname } = useLocation()
   const { user } = useAuth()
 
@@ -69,7 +71,7 @@ export function StaffBottomNav({ onOpenMenu }: StaffBottomNavProps) {
 
   return (
     <nav
-      aria-label="Staff navigation"
+      aria-label={t('staffBottomNav.staffNavigation')}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-surface/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur md:hidden"
     >
       <div className="mx-auto flex max-w-2xl items-stretch justify-around pb-[env(safe-area-inset-bottom)]">

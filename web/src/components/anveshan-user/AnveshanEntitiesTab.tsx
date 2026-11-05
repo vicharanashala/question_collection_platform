@@ -7,11 +7,13 @@ import { SUBMISSION_TAB_ICONS } from '@/components/agri-entity/SubmissionTypeTab
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AgriEntitySubmission, AgriEntityType } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const PAGE_SIZE = 12
 
 // Entities the Anveshan user submitted, filtered by type, each opening the full detail dialog.
 export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmission[] }) {
+  const { t } = useTranslation()
   const [type, setType] = useState<'' | AgriEntityType>('')
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
   const filtered = type ? entities.filter((e) => e.type === type) : entities
@@ -25,7 +27,7 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter entities by type">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={t('anveshanEntitiesTab.filterEntitiesByType')}>
         {[{ value: '' as const, label: 'All', count: entities.length }, ...AGRI_ENTITY_TYPES.map((t) => ({ ...t, count: countOf(t.value) }))].map((option) => (
           <button
             key={option.value || 'all'}
@@ -43,7 +45,7 @@ export function AnveshanEntitiesTab({ entities }: { entities: AgriEntitySubmissi
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-text-secondary">No entities submitted</Card>
+        <Card className="p-8 text-center text-sm text-text-secondary">{t('anveshanEntitiesTab.noEntitiesSubmitted')}</Card>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((entity) => {

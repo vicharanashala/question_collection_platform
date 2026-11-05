@@ -11,6 +11,7 @@ import { useToast } from '../../components/Toast';
 import { auditApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -262,6 +263,7 @@ function LogCard({
   expanded: boolean;
   themeColors: any;
 }) {
+  const { t } = useTranslation();
   const meta = getMeta(item.action);
 
   return (
@@ -316,7 +318,7 @@ function LogCard({
             <View style={cardStyles.diffBlock}>
               {item.oldValue && (
                 <>
-                  <Text style={[cardStyles.diffLabel, { color: themeColors.mutedForeground }]}>Previous</Text>
+                  <Text style={[cardStyles.diffLabel, { color: themeColors.mutedForeground }]}>{t('adminAuditLogsScreen.previous')}</Text>
                   <View style={[cardStyles.diffBox, { backgroundColor: '#fee2e220' }]}>
                     <Text style={[cardStyles.diffText, { color: '#991b1b' }]}>
                       {JSON.stringify(item.oldValue, null, 2)}
@@ -339,7 +341,7 @@ function LogCard({
           {/* Metadata */}
           {item.metadata && Object.keys(item.metadata).length > 0 && (
             <>
-              <Text style={[cardStyles.diffLabel, { color: themeColors.mutedForeground }]}>Metadata</Text>
+              <Text style={[cardStyles.diffLabel, { color: themeColors.mutedForeground }]}>{t('adminAuditLogsScreen.metadata')}</Text>
               <View style={[cardStyles.diffBox, { backgroundColor: themeColors.muted + '22' }]}>
                 <Text style={[cardStyles.diffText, { color: themeColors.foreground }]}>
                   {JSON.stringify(item.metadata, null, 2)}
@@ -375,6 +377,7 @@ function FilterModal({
   onApply: (f: FilterState) => void;
   onReset: () => void;
 }) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [local, setLocal] = useState<FilterState>(filters);
@@ -399,9 +402,9 @@ function FilterModal({
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={22} color={c.text} />
             </TouchableOpacity>
-            <Text style={[fmStyles.sheetTitle, { color: c.text }]}>Filter Audit Logs</Text>
+            <Text style={[fmStyles.sheetTitle, { color: c.text }]}>{t('adminAuditLogsScreen.filterAuditLogs')}</Text>
             <TouchableOpacity onPress={() => { onReset(); onClose(); }}>
-              <Text style={[fmStyles.resetText, { color: c.primary }]}>Reset</Text>
+              <Text style={[fmStyles.resetText, { color: c.primary }]}>{t('submissions.reset')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -443,7 +446,7 @@ function FilterModal({
                 style={[fmStyles.applyBtn, { backgroundColor: c.primary }]}
                 onPress={() => { onApply(local); onClose(); }}
               >
-                <Text style={fmStyles.applyBtnText}>Apply Filters</Text>
+                <Text style={fmStyles.applyBtnText}>{t('submissions.applyFilters')}</Text>
               </TouchableOpacity>
             }
           />
@@ -648,6 +651,7 @@ function buildQuery(filters: FilterState, page: number): Record<string, string |
 }
 
 export function AdminAuditLogsScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation<Nav>();
@@ -774,8 +778,8 @@ export function AdminAuditLogsScreen() {
           <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="chevron-back" size={24} color={c.text} />
           </TouchableOpacity>
-          <Text style={[styles.screenTitle, { color: c.text }]}>Audit Logs</Text>
-          <Text style={[styles.count, { color: c.textSecondary }]}>{total.toLocaleString()} entries</Text>
+          <Text style={[styles.screenTitle, { color: c.text }]}>{t('adminAuditLogsScreen.auditLogs')}</Text>
+          <Text style={[styles.count, { color: c.textSecondary }]}>{t('adminAuditLogsScreen.entries', { value0: total.toLocaleString() })}</Text>
           <TouchableOpacity
             style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
             onPress={() => setFilterVisible(true)}
@@ -808,7 +812,7 @@ export function AdminAuditLogsScreen() {
                   <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Super Admin'}</Text>
                   <View style={[styles.heroRolePill, { backgroundColor: c.heroFg + '22' }]}>
                     <Ionicons name="shield" size={13} color={c.heroFg} />
-                    <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>Super Administrator</Text>
+                    <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>{t('adminAuditLogsScreen.superAdministrator')}</Text>
                   </View>
                 </View>
               </View>
@@ -816,17 +820,17 @@ export function AdminAuditLogsScreen() {
 
             {/* Global KPIs */}
             <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-              <SectionHeader title="Activity Overview" icon="analytics" themeColors={c} />
+              <SectionHeader title={t('adminAuditLogsScreen.activityOverview')} icon="analytics" themeColors={c} />
               <View style={styles.kpiRow}>
                 <KpiCard
-                  label="Total Actions"
+                  label={t('adminAuditLogsScreen.totalActions')}
                   value={fmtNum(totalActions)}
                   gradient={['#4f46e5', '#7c3aed']}
                   icon="flash"
                   sub="All time"
                 />
                 <KpiCard
-                  label="Active Admins"
+                  label={t('adminAuditLogsScreen.activeAdmins')}
                   value={String(uniqueActors)}
                   gradient={['#0891b2', '#0e7490']}
                   icon="people"
@@ -835,13 +839,13 @@ export function AdminAuditLogsScreen() {
               </View>
               <View style={styles.kpiRow}>
                 <KpiCard
-                  label="Config Changes"
+                  label={t('adminAuditLogsScreen.configChanges')}
                   value={fmtNum(actors.reduce((s, a) => s + a.configUpdated, 0))}
                   gradient={['#6b7280', '#4b5563']}
                   icon="settings"
                 />
                 <KpiCard
-                  label="Users Banned"
+                  label={t('adminAuditLogsScreen.usersBanned')}
                   value={fmtNum(actors.reduce((s, a) => s + a.userBanned, 0))}
                   gradient={['#dc2626', '#991b1b']}
                   icon="person-remove"
@@ -852,7 +856,7 @@ export function AdminAuditLogsScreen() {
             {/* Activity chart */}
             {recentSeries.length > 0 && (
               <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-                <SectionHeader title="Daily Activity (Last 7 Days)" icon="bar-chart" themeColors={c} />
+                <SectionHeader title={t('adminAuditLogsScreen.dailyActivityLastDays')} icon="bar-chart" themeColors={c} />
                 <View style={[styles.chartCard, { backgroundColor: c.card, borderColor: c.border }]}>
                   <View style={chartStyles.bars}>
                     {recentSeries.map((day) => {
@@ -896,7 +900,7 @@ export function AdminAuditLogsScreen() {
             {/* Top performers */}
             {topActors.length > 0 && (
               <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-                <SectionHeader title="Moderation Leaderboard" icon="trophy" themeColors={c} />
+                <SectionHeader title={t('adminAuditLogsScreen.moderationLeaderboard')} icon="trophy" themeColors={c} />
                 <View style={[styles.leaderboard, { backgroundColor: c.card, borderColor: c.border }]}>
                   {topActors.map((actor) => (
                     <ActorRow key={actor.actorId} actor={actor} themeColors={c} />
@@ -909,7 +913,7 @@ export function AdminAuditLogsScreen() {
             <View style={styles.section}>
               <View style={[styles.logsDivider, { borderTopColor: c.border }]} />
               <View style={styles.logsSectionHeader}>
-                <SectionHeader title="Audit Logs" icon="document-text" themeColors={c} />
+                <SectionHeader title={t('adminAuditLogsScreen.auditLogs')} icon="document-text" themeColors={c} />
               </View>
             </View>
           </>
@@ -943,7 +947,7 @@ export function AdminAuditLogsScreen() {
               />
             )}
             <TouchableOpacity onPress={handleResetFilters}>
-              <Text style={[styles.clearAll, { color: c.primary }]}>Clear all</Text>
+              <Text style={[styles.clearAll, { color: c.primary }]}>{t('adminAuditLogsScreen.clearAll')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -967,11 +971,11 @@ export function AdminAuditLogsScreen() {
             <View style={styles.empty}>
               <Ionicons name="document-text-outline" size={48} color={c.textTertiary} />
               <Text style={[styles.emptyTitle, { color: c.text }]}>
-                {loading ? '' : 'No audit logs found'}
+                {loading ? '' : t('adminAuditLogsScreen.noAuditLogsFound')}
               </Text>
               {!loading && (
                 <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>
-                  {countBadge > 0 ? 'Try adjusting your filters' : 'Logs will appear here as actions are performed'}
+                  {countBadge > 0 ? t('submissions.adjustFilters') : t('adminAuditLogsScreen.logsWillAppearHere')}
                 </Text>
               )}
             </View>

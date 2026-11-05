@@ -59,6 +59,7 @@ import type {
   AuditLogEntry,
   PaymentDetail,
 } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 interface UserSession {
   isActive: boolean;
@@ -403,6 +404,7 @@ function DetailRow({ label, value }: DetailRowProps) {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export function UserDetailPage() {
+  const { t } = useTranslation();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -568,7 +570,7 @@ export function UserDetailPage() {
     setActionLoading(true);
     try {
       await adminApi.verifyUser(userId);
-      toast.success("User verified");
+      toast.success(t('userDetailPage.userVerified'));
       setVerifyModalOpen(false);
       const r = await adminApi.getUserDetail(userId);
       setUser(r.user as UserType);
@@ -649,7 +651,7 @@ export function UserDetailPage() {
 
   async function handleSuspendBan() {
     if (!userId || !suspendReason.trim()) {
-      toast.error("Please provide a reason");
+      toast.error(t('userDetailPage.pleaseProvideReason'));
       return;
     }
     setActionLoading(true);
@@ -672,7 +674,7 @@ export function UserDetailPage() {
   async function loadAuditHistory() {
     setAuditCollapsed(false);
     toast.info(
-      "Entity-specific audit history is now available from the Audit Logs page.",
+      t('withdrawalDetailModal.entitySpecificAuditHistory'),
     );
   }
 
@@ -700,9 +702,9 @@ export function UserDetailPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">User not found</p>
+        <p className="text-muted-foreground">{t('userDetailPage.userNotFound')}</p>
         <Button variant="outline" onClick={() => navigate("/users")}>
-          <ArrowLeft className="h-4 w-4" /> Back to Users
+          <ArrowLeft className="h-4 w-4" /> {t('anveshanUserDetailPage.backToUsers')}
         </Button>
       </div>
     );
@@ -722,7 +724,7 @@ export function UserDetailPage() {
         onClick={() => navigate("/users")}
         className="flex items-center gap-2 text-xs sm:text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Users
+        <ArrowLeft className="h-4 w-4" /> {t('anveshanUserDetailPage.backToUsers')}
       </button>
 
       {/* Hero card */}
@@ -775,7 +777,7 @@ export function UserDetailPage() {
                         className="gap-1.5"
                         onClick={() => setRevokeModalOpen(true)}
                       >
-                        <LogOut className="h-4 w-4" /> Log out user
+                        <LogOut className="h-4 w-4" /> {t('userDetailPage.logOutUser2')}
                       </Button>
                     )}
 
@@ -785,7 +787,7 @@ export function UserDetailPage() {
                         className="bg-emerald-500 hover:bg-emerald-600 gap-1.5 text-white"
                         onClick={() => setVerifyModalOpen(true)}
                       >
-                        <CheckCircle className="h-4 w-4" /> Verify
+                        <CheckCircle className="h-4 w-4" /> {t('userDetailPage.verify')}
                       </Button>
                     )}
 
@@ -795,7 +797,7 @@ export function UserDetailPage() {
                         className="gap-1.5 text-white bg-emerald-600 hover:bg-emerald-700"
                         onClick={() => setRestoreModalOpen(true)}
                       >
-                        <RotateCcw className="h-4 w-4" /> Restore
+                        <RotateCcw className="h-4 w-4" /> {t('userDetailPage.restore')}
                       </Button>
                     ) : (
                       <Button
@@ -807,7 +809,7 @@ export function UserDetailPage() {
                           setDeleteModalOpen(true);
                         }}
                       >
-                        <Trash2 className="h-4 w-4" /> Delete
+                        <Trash2 className="h-4 w-4" /> {t('audio.delete')}
                       </Button>
                     )}
 
@@ -822,7 +824,7 @@ export function UserDetailPage() {
                             setSuspendModalOpen(true);
                           }}
                         >
-                          <PauseCircle className="h-4 w-4" /> Suspend
+                          <PauseCircle className="h-4 w-4" /> {t('userDetailPage.suspend')}
                         </Button>
                         <Button
                           size="sm"
@@ -852,7 +854,7 @@ export function UserDetailPage() {
                         }}
                       >
                         <PlayCircle className="h-4 w-4" />{" "}
-                        {isBanned ? "Unban" : "Lift Suspension"}
+                        {isBanned ? t('userDetailPage.unban') : t('userDetailPage.liftSuspension')}
                       </Button>
                     )}
                   </div>
@@ -903,7 +905,7 @@ export function UserDetailPage() {
             )}
             <div className="flex-1">
               <p className="font-semibold text-foreground">
-                {isBanned ? "Permanently Banned" : "Account Suspended"}
+                {isBanned ? t('userDetailPage.permanentlyBanned') : t('otp.accountSuspended')}
               </p>
               {(user.suspendedReason ?? user.bannedReason) && (
                 <p className="mt-1 text-xs sm:text-xs sm:text-sm italic text-muted-foreground">
@@ -912,11 +914,11 @@ export function UserDetailPage() {
               )}
               <div className="mt-2 flex flex-wrap gap-4 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                 <span>
-                  {isBanned ? "Banned" : "Suspended"}{" "}
+                  {isBanned ? t('profile.banned') : t('profile.suspended')}{" "}
                   {formatDate(isBanned ? user.bannedAt : user.suspendedAt)}
                 </span>
                 {!isBanned && user.suspendedUntil && (
-                  <span>Until {formatDate(user.suspendedUntil)}</span>
+                  <span>{t('userDetailPage.until', { value1: formatDate(user.suspendedUntil) })}</span>
                 )}
               </div>
             </div>
@@ -951,9 +953,7 @@ export function UserDetailPage() {
                 ) : (
                   <ShieldCheck className="h-4 w-4 text-blue-600" />
                 )}
-                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                  Account Details
-                </CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">{t('userDetailPage.accountDetails')}</CardTitle>
               </div>
               <ChevronDown
                 className={cn(
@@ -974,24 +974,22 @@ export function UserDetailPage() {
             <CardContent className="pt-4 pb-5 space-y-5">
               {/* Personal Info */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Personal Info
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.personalInfo')}</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                   <DetailRow
-                    label="Language"
+                    label={t('speech.stt.language')}
                     value={user.languagePreference || "-"}
                   />
-                  <DetailRow label="Category" value={user.category ?? "-"} />
+                  <DetailRow label={t('profile.completion.fieldCategory')} value={user.category ?? "-"} />
                   {user.age && (
-                    <DetailRow label="Age" value={user.age.toString()} />
+                    <DetailRow label={t('age')} value={user.age.toString()} />
                   )}
                   {user.gender && (
-                    <DetailRow label="Gender" value={user.gender} />
+                    <DetailRow label={t('profile.gender')} value={user.gender} />
                   )}
                   {user.organisationType && (
                     <DetailRow
-                      label="Org. Type"
+                      label={t('profile.orgType')}
                       value={user.organisationType}
                     />
                   )}
@@ -1000,15 +998,13 @@ export function UserDetailPage() {
 
               {/* Personal Location */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Personal Location
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('userDetailPage.personalLocation')}</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-0">
-                  <DetailRow label="State" value={user.state || "-"} />
-                  <DetailRow label="District" value={user.district || "-"} />
-                  <DetailRow label="Block" value={user.block ?? "-"} />
-                  <DetailRow label="Village" value={user.village ?? "-"} />
-                  <DetailRow label="KVK" value={user.kvk ?? "—"} />
+                  <DetailRow label={t('admin.state')} value={user.state || "-"} />
+                  <DetailRow label={t('auth.district')} value={user.district || "-"} />
+                  <DetailRow label={t('block')} value={user.block ?? "-"} />
+                  <DetailRow label={t('village')} value={user.village ?? "-"} />
+                  <DetailRow label={t('profile.kvk')} value={user.kvk ?? "—"} />
                 </div>
               </div>
 
@@ -1020,18 +1016,16 @@ export function UserDetailPage() {
                 user.organizationBlock ||
                 user.organizationVillage) && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Organisation
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.completion.fieldOrganisationName')}</p>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                     {user.organizationName && (
-                      <DetailRow label="Name" value={user.organizationName} />
+                      <DetailRow label={t('auth.name')} value={user.organizationName} />
                     )}
                     {user.organizationRole && (
-                      <DetailRow label="Role" value={user.organizationRole} />
+                      <DetailRow label={t('profile.completion.fieldRole')} value={user.organizationRole} />
                     )}
                     <DetailRow
-                      label="Org. State(s)"
+                      label={t('userDetailPage.orgState')}
                       value={
                         user.organizationState &&
                         user.organizationState.length > 0
@@ -1040,20 +1034,20 @@ export function UserDetailPage() {
                       }
                     />
                     <DetailRow
-                      label="Org. District"
+                      label={t('userDetailPage.orgDistrict')}
                       value={user.organizationDistrict ?? "-"}
                     />
                     <DetailRow
-                      label="Org. Block"
+                      label={t('userDetailPage.orgBlock')}
                       value={user.organizationBlock ?? "-"}
                     />
                     <DetailRow
-                      label="Org. Village"
+                      label={t('userDetailPage.orgVillage')}
                       value={user.organizationVillage ?? "-"}
                     />
                     {user.numberOfFarmers != null && (
                       <DetailRow
-                        label="Members"
+                        label={t('profile.members')}
                         value={user.numberOfFarmers.toString()}
                       />
                     )}
@@ -1064,40 +1058,36 @@ export function UserDetailPage() {
               {/* Category-specific */}
               {user.category === "farmer" && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Farming
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.farming')}</p>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                     {user.farmSize && (
                       <DetailRow
-                        label="Farm Size"
+                        label={t('profile.completion.fieldFarmSize')}
                         value={`${user.farmSize} acres`}
                       />
                     )}
                     {user.cropType && (
-                      <DetailRow label="Crop" value={user.cropType} />
+                      <DetailRow label={t('profile.crop')} value={user.cropType} />
                     )}
                     {user.season && (
-                      <DetailRow label="Season" value={user.season} />
+                      <DetailRow label={t('profile.season')} value={user.season} />
                     )}
                   </div>
                 </div>
               )}
               {user.category === "student" && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Education
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.education')}</p>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                     {user.courseName && (
-                      <DetailRow label="Course" value={user.courseName} />
+                      <DetailRow label={t('profile.course')} value={user.courseName} />
                     )}
                     {user.collegeName && (
-                      <DetailRow label="College" value={user.collegeName} />
+                      <DetailRow label={t('profile.college')} value={user.collegeName} />
                     )}
                     {user.universityName && (
                       <DetailRow
-                        label="University"
+                        label={t('profile.completion.fieldUniversityName')}
                         value={user.universityName}
                       />
                     )}
@@ -1107,16 +1097,14 @@ export function UserDetailPage() {
 
               {/* Account */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Account
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.account')}</p>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-0">
                   <DetailRow
-                    label="Joined"
+                    label={t('profilePage.joined')}
                     value={formatDate(user.createdAt) ?? "-"}
                   />
                   <DetailRow
-                    label="Last Login"
+                    label={t('profilePage.lastLogin')}
                     value={
                       user.lastLoginAt
                         ? formatDateTime(user.lastLoginAt)
@@ -1142,9 +1130,7 @@ export function UserDetailPage() {
               >
                 <div className="flex items-center gap-2">
                   <Leaf className="h-4 w-4 text-green-600" />
-                  <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                    Crops
-                  </CardTitle>
+                  <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">{t('profile.completion.fieldCrops')}</CardTitle>
                   {crops.length > 0 && (
                     <Badge
                       variant="secondary"
@@ -1174,9 +1160,7 @@ export function UserDetailPage() {
                 {crops.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                     <Leaf className="h-7 w-7 opacity-25" />
-                    <p className="text-[11px] sm:text-[11px] sm:text-xs">
-                      No crops added
-                    </p>
+                    <p className="text-[11px] sm:text-[11px] sm:text-xs">{t('userDetailPage.noCropsAdded')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1209,9 +1193,7 @@ export function UserDetailPage() {
             >
               <div className="flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                  Payment Methods
-                </CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">{t('profile.paymentMethods')}</CardTitle>
                 {paymentDetails.length > 0 && (
                   <Badge
                     variant="secondary"
@@ -1241,9 +1223,7 @@ export function UserDetailPage() {
               {paymentDetails.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                   <CreditCard className="h-7 w-7 opacity-25" />
-                  <p className="text-[11px] sm:text-[11px] sm:text-xs">
-                    No payment methods added
-                  </p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs">{t('userDetailPage.noPaymentMethodsAdded')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1263,7 +1243,7 @@ export function UserDetailPage() {
                             ) : (
                               <span className="flex items-center gap-1.5">
                                 <Smartphone className="h-3.5 w-3.5" />
-                                UPI
+                                {t('wallet.withdrawal.upi')}
                               </span>
                             )}
                           </span>
@@ -1272,7 +1252,7 @@ export function UserDetailPage() {
                         <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
                           {pd.displayValue}
                           {pd.payoutMethod === "bank_transfer" && pd.ifsc && (
-                            <span className="ml-2">IFSC: {pd.ifsc}</span>
+                            <span className="ml-2">{t('userDetailPage.ifsc', { ifsc: pd.ifsc })}</span>
                           )}
                         </p>
                         {pd.accountHolderName && (
@@ -1283,9 +1263,7 @@ export function UserDetailPage() {
                         <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                           Added {formatDate(pd.createdAt) ?? "-"}
                           {pd.verifiedAt && (
-                            <span className="ml-2 text-emerald-600">
-                              Verified {formatDate(pd.verifiedAt)}
-                            </span>
+                            <span className="ml-2 text-emerald-600">{t('userDetailPage.verified', { value1: formatDate(pd.verifiedAt) })}</span>
                           )}
                         </p>
                       </div>
@@ -1303,9 +1281,7 @@ export function UserDetailPage() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                  Questions
-                </CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">{t('pageTitle.questions')}</CardTitle>
                 <Badge
                   variant="secondary"
                   className="text-[11px] sm:text-[11px] sm:text-xs"
@@ -1329,12 +1305,8 @@ export function UserDetailPage() {
               <div className="flex flex-col items-center justify-center py-14 gap-3 border border-dashed border-border rounded-xl">
                 <MessageSquare className="h-10 w-10 text-muted-foreground/40" />
                 <div className="text-center">
-                  <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">
-                    No questions submitted yet
-                  </p>
-                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
-                    Questions from this user will appear here
-                  </p>
+                  <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">{t('submissions.noSubmissions')}</p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">{t('userDetailPage.questionsFromThisUser')}</p>
                 </div>
               </div>
             ) : qView === "table" ? (
@@ -1385,9 +1357,7 @@ export function UserDetailPage() {
             >
               <div className="flex items-center gap-2">
                 <ScrollText className="h-4 w-4 text-blue-600" />
-                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">
-                  Audit History
-                </CardTitle>
+                <CardTitle className="text-xs sm:text-xs sm:text-sm font-semibold">{t('withdrawalDetailModal.auditHistory')}</CardTitle>
                 {auditEntries.length > 0 && (
                   <Badge
                     variant="secondary"
@@ -1430,9 +1400,7 @@ export function UserDetailPage() {
               ) : auditEntries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                   <ScrollText className="h-7 w-7 opacity-25" />
-                  <p className="text-[11px] sm:text-[11px] sm:text-xs">
-                    No audit history for this user
-                  </p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs">{t('userDetailPage.noAuditHistoryFor')}</p>
                 </div>
               ) : (
                 <>
@@ -1533,27 +1501,27 @@ export function UserDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {suspendAction === "ban" ? "Ban User" : "Suspend User"}
+              {suspendAction === "ban" ? t('userDetailPage.banUser') : t('userDetailPage.suspendUser')}
             </DialogTitle>
             <DialogDescription>
               {suspendAction === "ban"
-                ? "This will permanently prevent the user from accessing the platform."
-                : "The user will be locked out until the suspension end date."}
+                ? t('userDetailPage.thisWillPermanentlyPrevent')
+                : t('userDetailPage.theUserWillBe')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason *</Label>
+              <Label htmlFor="reason">{t('userDetailPage.reason')}</Label>
               <Input
                 id="reason"
-                placeholder="Enter reason for this action..."
+                placeholder={t('userDetailPage.enterReasonForThis')}
                 value={suspendReason}
                 onChange={(e) => setSuspendReason(e.target.value)}
               />
             </div>
             {suspendAction === "suspend" && (
               <div className="space-y-2">
-                <Label htmlFor="until">Suspend Until</Label>
+                <Label htmlFor="until">{t('userDetailPage.suspendUntil')}</Label>
                 <Input
                   id="until"
                   type="date"
@@ -1567,9 +1535,7 @@ export function UserDetailPage() {
             <Button
               variant="outline"
               onClick={() => setSuspendModalOpen(false)}
-            >
-              Cancel
-            </Button>
+            >{t('common.cancel')}</Button>
             <Button
               style={
                 suspendModalOpen === false
@@ -1582,7 +1548,7 @@ export function UserDetailPage() {
               disabled={actionLoading || !suspendReason.trim()}
             >
               {actionLoading
-                ? "Processing..."
+                ? t('wallet.withdrawal.processing')
                 : suspendAction === "ban"
                   ? "Ban User"
                   : "Suspend User"}
@@ -1596,7 +1562,7 @@ export function UserDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {confirmAction === "unban" ? "Unban User?" : "Lift Suspension?"}
+              {confirmAction === "unban" ? t('userDetailPage.unbanUser') : t('userDetailPage.liftSuspension2')}
             </DialogTitle>
             <DialogDescription>
               This will restore {user.name || user.mobileNumber}&apos;s access
@@ -1604,12 +1570,10 @@ export function UserDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleReinstate} disabled={actionLoading}>
               {actionLoading
-                ? "Processing..."
+                ? t('wallet.withdrawal.processing')
                 : confirmAction === "unban"
                   ? "Unban User"
                   : "Lift Suspension"}
@@ -1622,12 +1586,8 @@ export function UserDetailPage() {
       <Dialog open={verifyModalOpen} onOpenChange={setVerifyModalOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Verify User</DialogTitle>
-            <DialogDescription>
-              Review this user&apos;s account before verifying. All listed
-              fields will be permanently set as the user&apos;s verified
-              profile.
-            </DialogDescription>
+            <DialogTitle>{t('admin.verifyUser')}</DialogTitle>
+            <DialogDescription>{t('userDetailPage.reviewThisUserAccount')}</DialogDescription>
           </DialogHeader>
 
           {user && (
@@ -1635,9 +1595,7 @@ export function UserDetailPage() {
               {/* Missing fields warning */}
               {missingFields.length > 0 && (
                 <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-3 space-y-1">
-                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                    Missing / Incomplete Fields
-                  </p>
+                  <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">{t('userDetailPage.missingIncompleteFields')}</p>
                   {missingFields.map((f) => (
                     <p
                       key={f}
@@ -1652,9 +1610,7 @@ export function UserDetailPage() {
 
               {/* Section: Basic Info */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Basic Info
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('userDetailPage.basicInfo')}</p>
                 <div className="rounded-lg border border-border">
                   {[
                     { label: "Name", value: user.name || "—" },
@@ -1695,9 +1651,7 @@ export function UserDetailPage() {
 
               {/* Section: Personal Location */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Personal Location
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('userDetailPage.personalLocation')}</p>
                 <div className="rounded-lg border border-border">
                   {[
                     { label: "State", value: user.state || "—" },
@@ -1733,9 +1687,7 @@ export function UserDetailPage() {
               {/* Section: Farmer-specific */}
               {user.category === "farmer" && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Farming
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.farming')}</p>
                   <div className="rounded-lg border border-border">
                     {[
                       {
@@ -1775,9 +1727,7 @@ export function UserDetailPage() {
               {/* Section: Organisation */}
               {["fpo", "volunteer", "ngo"].includes(user.category ?? "") && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Organisation
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.completion.fieldOrganisationName')}</p>
                   <div className="rounded-lg border border-border">
                     {[
                       {
@@ -1833,9 +1783,7 @@ export function UserDetailPage() {
               {/* Section: Student */}
               {user.category === "student" && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                    Education
-                  </p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.education')}</p>
                   <div className="rounded-lg border border-border">
                     {[
                       { label: "Course", value: user.courseName || "—" },
@@ -1870,9 +1818,7 @@ export function UserDetailPage() {
 
               {/* Section: Account */}
               <div className="space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  Account
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">{t('profile.account')}</p>
                 <div className="rounded-lg border border-border">
                   {[
                     {
@@ -1915,15 +1861,13 @@ export function UserDetailPage() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setVerifyModalOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setVerifyModalOpen(false)}>{t('common.cancel')}</Button>
             <Button
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
               onClick={handleVerify}
               disabled={actionLoading}
             >
-              {actionLoading ? "Verifying..." : "Confirm & Verify"}
+              {actionLoading ? t('userDetailPage.verifying') : t('userDetailPage.confirmVerify')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1932,7 +1876,7 @@ export function UserDetailPage() {
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent className="p-4">
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>{t('userDetailPage.deleteUser')}</DialogTitle>
             <DialogDescription>
               This will delete {user.name || user.mobileNumber} and hide all of
               their related data (questions, wallet, transactions, withdrawals,
@@ -1941,26 +1885,24 @@ export function UserDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
-            <Label htmlFor="delete-confirm">Type DELETE to confirm</Label>
+            <Label htmlFor="delete-confirm">{t('userDetailPage.typeDeleteToConfirm')}</Label>
             <Input
               id="delete-confirm"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="DELETE"
+              placeholder={t('userDetailPage.delete')}
               autoComplete="off"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>{t('common.cancel')}</Button>
             <Button
               style={{ backgroundColor: "#dc2626" }}
               className="text-white"
               onClick={handleDelete}
               disabled={actionLoading || deleteConfirmText !== "DELETE"}
             >
-              {actionLoading ? "Deleting..." : "Delete User"}
+              {actionLoading ? t('userDetailPage.deleting') : t('userDetailPage.deleteUser')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1969,7 +1911,7 @@ export function UserDetailPage() {
       <Dialog open={restoreModalOpen} onOpenChange={setRestoreModalOpen}>
         <DialogContent className="p-4">
           <DialogHeader>
-            <DialogTitle>Restore User?</DialogTitle>
+            <DialogTitle>{t('userDetailPage.restoreUser')}</DialogTitle>
             <DialogDescription>
               This restores {user.name || user.mobileNumber} and all data that
               was deleted with them (questions, wallet, transactions,
@@ -1980,15 +1922,13 @@ export function UserDetailPage() {
             <Button
               variant="outline"
               onClick={() => setRestoreModalOpen(false)}
-            >
-              Cancel
-            </Button>
+            >{t('common.cancel')}</Button>
             <Button
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleRestore}
               disabled={actionLoading}
             >
-              {actionLoading ? "Restoring..." : "Restore User"}
+              {actionLoading ? t('userDetailPage.restoring') : t('userDetailPage.restoreUser2')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1997,7 +1937,7 @@ export function UserDetailPage() {
       <Dialog open={revokeModalOpen} onOpenChange={setRevokeModalOpen}>
         <DialogContent className="p-4">
           <DialogHeader>
-            <DialogTitle>Log out user?</DialogTitle>
+            <DialogTitle>{t('userDetailPage.logOutUser')}</DialogTitle>
             <DialogDescription>
               {user.name || user.mobileNumber} will be signed out
               {session?.browser || session?.os
@@ -2007,16 +1947,14 @@ export function UserDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRevokeModalOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setRevokeModalOpen(false)}>{t('common.cancel')}</Button>
             <Button
               style={{ backgroundColor: "#dc2626" }}
               className="text-white"
               onClick={handleRevokeSession}
               disabled={actionLoading}
             >
-              {actionLoading ? "Logging out..." : "Log out user"}
+              {actionLoading ? t('userDetailPage.loggingOut') : t('userDetailPage.logOutUser2')}
             </Button>
           </DialogFooter>
         </DialogContent>

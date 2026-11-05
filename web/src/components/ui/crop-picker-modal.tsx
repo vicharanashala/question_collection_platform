@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { CropImage } from '@/components/CropImage'
 // import { CROPS } from '@/constants/public'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface CropPickerModalProps {
   open: boolean
@@ -48,6 +49,7 @@ export function CropPickerModal({
   title = 'Select crops',
   crops
 }: CropPickerModalProps) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [showOther, setShowOther] = useState(false)
   const [otherText, setOtherText] = useState('')
@@ -136,7 +138,7 @@ const allOptions = useMemo(() => {
               autoFocus
               value={query}
               onChange={(e) => { setQuery(e.target.value); setShowOther(false) }}
-              placeholder="Search crops…"
+              placeholder={t('cropPickerModal.searchCrops')}
               className="rounded-full bg-surface-variant pl-9"
             />
           </div>
@@ -146,13 +148,13 @@ const allOptions = useMemo(() => {
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           {showOther ? (
             <div className="space-y-3 px-2 py-3">
-              <Label htmlFor="other-crop-manual">Enter crop name</Label>
+              <Label htmlFor="other-crop-manual">{t('question.enterCrop')}</Label>
               <Input
                 id="other-crop-manual"
                 autoFocus
                 value={otherText}
                 onChange={(e) => setOtherText(e.target.value)}
-                placeholder="e.g. exotic mushroom"
+                placeholder={t('cropPickerModal.exoticMushroom')}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); confirmOther() } }}
               />
               <div className="flex justify-end gap-2">
@@ -161,23 +163,17 @@ const allOptions = useMemo(() => {
                   variant="outline"
                   size="sm"
                   onClick={() => { setShowOther(false); setOtherText('') }}
-                >
-                  Back
-                </Button>
+                >{t('common.back')}</Button>
                 <Button
                   type="button"
                   size="sm"
                   disabled={!otherText.trim()}
                   onClick={confirmOther}
-                >
-                  Use this crop
-                </Button>
+                >{t('cropPickerModal.useThisCrop')}</Button>
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-xs sm:text-xs sm:text-sm text-muted-foreground">
-              No crops match your search
-            </p>
+            <p className="py-8 text-center text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('cropPickerModal.noCropsMatchYour')}</p>
           ) : (
             <div className="grid grid-cols-3 xs:grid-cols-4 gap-x-2 gap-y-4 sm:gap-y-5">
               {filtered.map((c) => {
@@ -236,9 +232,7 @@ const allOptions = useMemo(() => {
               type="button"
               onClick={() => setShowOther(true)}
               className="flex w-full items-center justify-center rounded-md px-3 py-2 text-center text-xs sm:text-xs sm:text-sm font-medium text-emerald-700 hover:bg-surface-variant dark:text-emerald-300"
-            >
-              Can't find your crop? Enter manually
-            </button>
+            >{t('cropPickerModal.canFindYourCrop')}</button>
           </div>
         )}
 
@@ -249,9 +243,7 @@ const allOptions = useMemo(() => {
               <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
                 {selected.length} selected{max > 0 ? ` / ${max} max` : ''}
               </p>
-              <Button size="sm" onClick={handleClose} className="bg-emerald-600 hover:bg-emerald-700">
-                Done
-              </Button>
+              <Button size="sm" onClick={handleClose} className="bg-emerald-600 hover:bg-emerald-700">{t('common.done')}</Button>
             </div>
           </div>
         )}

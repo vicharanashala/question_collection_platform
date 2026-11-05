@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../components/Toast';
 import { auditApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -184,6 +185,7 @@ const arStyles = StyleSheet.create({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function AdminSuperAdminScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
@@ -231,7 +233,7 @@ export function AdminSuperAdminScreen() {
       <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={c.primary} />
-          <Text style={[styles.loadingText, { color: c.mutedForeground }]}>Loading…</Text>
+          <Text style={[styles.loadingText, { color: c.mutedForeground }]}>{t('leaderboard.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -259,7 +261,7 @@ export function AdminSuperAdminScreen() {
               <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Super Admin'}</Text>
               <View style={[styles.heroRolePill, { backgroundColor: c.heroFg + '22' }]}>
                 <Ionicons name="shield" size={13} color={c.heroFg} />
-                <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>Super Administrator</Text>
+                <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>{t('adminAuditLogsScreen.superAdministrator')}</Text>
               </View>
             </View>
           </View>
@@ -267,17 +269,17 @@ export function AdminSuperAdminScreen() {
 
         {/* Global KPIs */}
         <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-          <SectionHeader title="Activity Overview" icon="analytics" themeColors={c} />
+          <SectionHeader title={t('adminAuditLogsScreen.activityOverview')} icon="analytics" themeColors={c} />
           <View style={styles.kpiRow}>
             <KpiCard
-              label="Total Actions"
+              label={t('adminAuditLogsScreen.totalActions')}
               value={fmtNum(totalActions)}
               gradient={['#4f46e5', '#7c3aed']}
               icon="flash"
               sub="All time"
             />
             <KpiCard
-              label="Active Admins"
+              label={t('adminAuditLogsScreen.activeAdmins')}
               value={String(uniqueActors)}
               gradient={['#0891b2', '#0e7490']}
               icon="people"
@@ -286,13 +288,13 @@ export function AdminSuperAdminScreen() {
           </View>
           <View style={styles.kpiRow}>
             <KpiCard
-              label="Config Changes"
+              label={t('adminAuditLogsScreen.configChanges')}
               value={fmtNum(actors.reduce((s, a) => s + a.configUpdated, 0))}
               gradient={['#6b7280', '#4b5563']}
               icon="settings"
             />
             <KpiCard
-              label="Users Banned"
+              label={t('adminAuditLogsScreen.usersBanned')}
               value={fmtNum(actors.reduce((s, a) => s + a.userBanned, 0))}
               gradient={['#dc2626', '#991b1b']}
               icon="person-remove"
@@ -303,7 +305,7 @@ export function AdminSuperAdminScreen() {
         {/* Activity chart (simple bar representation) */}
         {recentSeries.length > 0 && (
           <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-            <SectionHeader title="Daily Activity (Last 7 Days)" icon="bar-chart" themeColors={c} />
+            <SectionHeader title={t('adminAuditLogsScreen.dailyActivityLastDays')} icon="bar-chart" themeColors={c} />
             <View style={[styles.chartCard, { backgroundColor: c.card, borderColor: c.border }]}>
               <View style={chartStyles.bars}>
                 {recentSeries.map((day) => {
@@ -348,7 +350,7 @@ export function AdminSuperAdminScreen() {
         {/* Top performers */}
         {topActors.length > 0 && (
           <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
-            <SectionHeader title="Admin Leaderboard" icon="trophy" themeColors={c} />
+            <SectionHeader title={t('adminSuperAdminScreen.adminLeaderboard')} icon="trophy" themeColors={c} />
             <View style={[styles.leaderboard, { backgroundColor: c.card, borderColor: c.border }]}>
               {topActors.map((actor, idx) => (
                 <ActorRow key={actor.actorId} actor={actor} themeColors={c} />

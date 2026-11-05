@@ -208,13 +208,11 @@ export function AgriEntitySubmitForm({
 
   const requiredError = t(
     "agriEntity.errors.required",
-    "This field is required",
   );
   const errorFor = (value: string) =>
     showErrors && !value.trim() ? requiredError : undefined;
   const invalidUrlError = t(
     "agriEntity.errors.invalidUrl",
-    "Enter a valid URL starting with http:// or https://",
   );
   const sourceErrorFor = (value: string) =>
     showErrors && !isValidSourceUrl(value) ? invalidUrlError : undefined;
@@ -283,24 +281,19 @@ export function AgriEntitySubmitForm({
       case "unsupportedType":
         return t(
           "agriEntity.errors.imageType",
-          "Only JPEG, PNG and WEBP images are supported",
         );
       case "tooLarge":
         if (isAnveshan) {
           return t("agriEntity.errors.imageSize", {
             max: MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
-            defaultValue: "Each image must be {{max}} MB or smaller",
           });
         }
         return t("agriEntity.errors.imageTooLarge", {
           max: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
-          defaultValue:
-            "This image is still larger than {{max}} MB after compression. Please choose or take a different photo.",
         });
       default:
         return t(
           "agriEntity.errors.imageProcessing",
-          "This image could not be processed. Please try another one.",
         );
     }
   }
@@ -309,7 +302,6 @@ export function AgriEntitySubmitForm({
     if (picked.length === 0) return; // picker or camera cancelled
     const limitMessage = t("agriEntity.errors.imageLimit", {
       max: MAX_AGRI_ENTITY_IMAGES,
-      defaultValue: "You can add up to {{max}} images",
     });
     const room = MAX_AGRI_ENTITY_IMAGES - images.length - processingCount;
     if (room <= 0) {
@@ -431,7 +423,6 @@ export function AgriEntitySubmitForm({
       toast.error(
         t(
           "agriEntity.errors.incomplete",
-          "Please fill in the required fields, fix any invalid URLs and add at least one image",
         ),
       );
       return;
@@ -464,7 +455,6 @@ export function AgriEntitySubmitForm({
       toast.success(
         t("agriEntity.submitted", {
           type: typeLabel,
-          defaultValue: "{{type}} submitted successfully",
         }),
       );
       resetForm();
@@ -474,7 +464,6 @@ export function AgriEntitySubmitForm({
           err,
           t(
             "agriEntity.errors.submitFailed",
-            "Submission failed. Please try again.",
           ),
         ),
       );
@@ -486,24 +475,22 @@ export function AgriEntitySubmitForm({
   const nameFields: { key: NameField; label: string; placeholder: string }[] = [
     {
       key: "localName",
-      label: t("agriEntity.localName", "Local Name"),
+      label: t("agriEntity.localName"),
       placeholder: t(
         "agriEntity.localNamePlaceholder",
-        "Name used in your area",
       ),
     },
     {
       key: "englishName",
-      label: t("agriEntity.englishName", "English Name"),
+      label: t("agriEntity.englishName"),
       placeholder: t(
         "agriEntity.englishNamePlaceholder",
-        "Common English name",
       ),
     },
     {
       key: "botanicalName",
-      label: t("agriEntity.botanicalName", "Botanical Name"),
-      placeholder: t("agriEntity.botanicalNamePlaceholder", "Scientific name"),
+      label: t("agriEntity.botanicalName"),
+      placeholder: t("agriEntity.botanicalNamePlaceholder"),
     },
   ];
   const imagesError = showErrors && images.length === 0;
@@ -521,7 +508,6 @@ export function AgriEntitySubmitForm({
             >
               {t("agriEntity.namesTitle", {
                 type: typeLabel,
-                defaultValue: "{{type}} names",
               })}
             </h2>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -567,7 +553,6 @@ export function AgriEntitySubmitForm({
             <Label htmlFor={`${fieldId}-source`}>
               {t(
                 "agriEntity.localNameSource",
-                "Source supporting the local name = standard name",
               )}
             </Label>
             <p
@@ -576,7 +561,6 @@ export function AgriEntitySubmitForm({
             >
               {t(
                 "agriEntity.localNameSourceHint",
-                "Link to a website, research paper or institution page that confirms this local name refers to the standard name.",
               )}
             </p>
             <Input
@@ -588,7 +572,6 @@ export function AgriEntitySubmitForm({
               onChange={(e) => setField("localNameSource", e.target.value)}
               placeholder={t(
                 "agriEntity.sourceUrlPlaceholder",
-                "https://example.com/reference",
               )}
               maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
               aria-invalid={Boolean(localSourceError)}
@@ -611,12 +594,11 @@ export function AgriEntitySubmitForm({
                 id={`${fieldId}-alt`}
                 className="text-sm font-semibold text-foreground"
               >
-                {t("agriEntity.alternateNames", "Alternate names with sources")}
+                {t("agriEntity.alternateNames")}
               </h2>
               <p className="text-[11px] text-text-tertiary sm:text-xs">
                 {t(
                   "agriEntity.alternateNamesOptionalHint",
-                  "Optional. Add other names and a link to where each is used or documented.",
                 )}
               </p>
             </div>
@@ -628,7 +610,6 @@ export function AgriEntitySubmitForm({
                   showErrors && alternateNameMissing(alt)
                     ? t(
                         "agriEntity.errors.alternateNameRequired",
-                        "Enter the name this source refers to",
                       )
                     : undefined;
                 const altSourceError =
@@ -643,7 +624,7 @@ export function AgriEntitySubmitForm({
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
                       <div className="space-y-1.5">
                         <Label htmlFor={nameId} className="text-xs">
-                          {t("agriEntity.alternateName", "Alternate name")}{" "}
+                          {t("agriEntity.alternateName")}{" "}
                           {index + 1}
                         </Label>
                         <Input
@@ -661,7 +642,7 @@ export function AgriEntitySubmitForm({
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor={sourceId} className="text-xs">
-                          {t("agriEntity.source", "Source")}
+                          {t("agriEntity.source")}
                         </Label>
                         <Input
                           id={sourceId}
@@ -673,7 +654,6 @@ export function AgriEntitySubmitForm({
                           }
                           placeholder={t(
                             "agriEntity.sourceUrlPlaceholder",
-                            "https://example.com/reference",
                           )}
                           maxLength={MAX_AGRI_ENTITY_SOURCE_LENGTH}
                           aria-invalid={Boolean(altSourceError)}
@@ -699,7 +679,6 @@ export function AgriEntitySubmitForm({
                         className="justify-self-end text-text-secondary hover:text-rose-600 sm:mt-6"
                         aria-label={t("agriEntity.removeAlternate", {
                           n: index + 1,
-                          defaultValue: "Remove alternate name {{n}}",
                         })}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -717,7 +696,7 @@ export function AgriEntitySubmitForm({
               className="gap-1.5"
             >
               <Plus className="h-4 w-4" />
-              {t("agriEntity.addAlternate", "Add alternate name")}
+              {t("agriEntity.addAlternate")}
             </Button>
           </section>
 
@@ -732,7 +711,7 @@ export function AgriEntitySubmitForm({
                 id={`${fieldId}-images`}
                 className="text-sm font-semibold text-foreground"
               >
-                {t("agriEntity.images", "Images")}{" "}
+                {t("agriEntity.images")}{" "}
                 <span className="text-rose-600" aria-hidden="true">
                   *
                 </span>
@@ -742,14 +721,10 @@ export function AgriEntitySubmitForm({
                   ? t("agriEntity.imagesSizeHintAnveshan", {
                       max: MAX_AGRI_ENTITY_IMAGES,
                       size: MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
-                      defaultValue:
-                        "Add 1 to {{max}} clear photos, up to {{size}} MB each.",
                     })
                   : t("agriEntity.imagesSizeHint", {
                       max: MAX_AGRI_ENTITY_IMAGES,
                       size: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
-                      defaultValue:
-                        "Add 1 to {{max}} clear photos (JPEG, PNG or WEBP), up to {{size}} MB each.",
                     })}
               </p>
             </div>
@@ -769,7 +744,7 @@ export function AgriEntitySubmitForm({
                     key: "gallery",
                     ref: fileInputRef,
                     Icon: ImagePlus,
-                    label: t("agriEntity.addImage", "Add image"),
+                    label: t("agriEntity.addImage"),
                   },
                   ...(TAKE_PHOTO_ENABLED
                     ? [
@@ -777,7 +752,7 @@ export function AgriEntitySubmitForm({
                           key: "camera",
                           ref: cameraInputRef,
                           Icon: Camera,
-                          label: t("agriEntity.takePhoto", "Take photo"),
+                          label: t("agriEntity.takePhoto"),
                         },
                       ]
                     : []),
@@ -828,7 +803,6 @@ export function AgriEntitySubmitForm({
                     className="block h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                     aria-label={t("agriEntity.viewImage", {
                       n: index + 1,
-                      defaultValue: "View image {{n}} larger",
                     })}
                   >
                     <img
@@ -836,7 +810,6 @@ export function AgriEntitySubmitForm({
                       alt={t("agriEntity.imageAlt", {
                         n: index + 1,
                         name: values.englishName || typeLabel,
-                        defaultValue: "{{name}} photo {{n}}",
                       })}
                       className="h-full w-full object-cover"
                     />
@@ -848,7 +821,6 @@ export function AgriEntitySubmitForm({
                     className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50"
                     aria-label={t("agriEntity.removeImage", {
                       n: index + 1,
-                      defaultValue: "Remove image {{n}}",
                     })}
                   >
                     <X className="h-4 w-4" />
@@ -866,7 +838,7 @@ export function AgriEntitySubmitForm({
                     className="h-5 w-5 animate-spin"
                     aria-hidden="true"
                   />
-                  {t("agriEntity.processingImage", "Processing…")}
+                  {t("agriEntity.processingImage")}
                 </div>
               ))}
             </div>
@@ -901,7 +873,7 @@ export function AgriEntitySubmitForm({
 
             {imagesError && (
               <p className="text-xs text-rose-600">
-                {t("agriEntity.errors.imageRequired", "Add at least one image")}
+                {t("agriEntity.errors.imageRequired")}
               </p>
             )}
           </section>
@@ -918,10 +890,9 @@ export function AgriEntitySubmitForm({
                 <Send className="h-4 w-4" />
               )}
               {submitting
-                ? t("agriEntity.submitting", "Submitting...")
+                ? t("agriEntity.submitting")
                 : t("agriEntity.submit", {
                     type: typeLabel,
-                    defaultValue: "Submit {{type}}",
                   })}
             </Button>
           </div>
@@ -959,7 +930,6 @@ export function AgriEntitySubmitForm({
             <DialogTitle className="sr-only">
               {t("agriEntity.imagePreviewTitle", {
                 n: previewIndex + 1,
-                defaultValue: "Image {{n}}",
               })}
             </DialogTitle>
           </DialogHeader>
@@ -969,7 +939,6 @@ export function AgriEntitySubmitForm({
               alt={t("agriEntity.imageAlt", {
                 n: previewIndex + 1,
                 name: values.englishName || typeLabel,
-                defaultValue: "{{name}} photo {{n}}",
               })}
               className="max-h-[80vh] w-full rounded-md object-contain"
             />

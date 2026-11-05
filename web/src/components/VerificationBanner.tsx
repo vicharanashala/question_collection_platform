@@ -32,7 +32,6 @@ export function VerificationBanner() {
       <p className="text-xs leading-relaxed text-amber-900 sm:text-sm dark:text-amber-100">
         {t(
           'account.notVerifiedBanner',
-          'Your account is not verified by an admin yet. Some features stay unavailable until it is approved.',
         )}
       </p>
     </div>

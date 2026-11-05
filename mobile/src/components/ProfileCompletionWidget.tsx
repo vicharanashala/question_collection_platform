@@ -99,7 +99,7 @@ export function ProfileCompletionWidget({ onEdit, hasCrops }: Props) {
             {t('profile.completion.title')}
           </Text>
           <Text style={[styles.sub, { color: c.textSecondary }]}>
-            {completed}/{total} {t('profile.completion.fieldsComplete', { defaultValue: 'fields complete' })}
+            {completed}/{total} {t('profile.completion.fieldsComplete')}
             {' · '}
             <Text style={{ color: barColor, fontWeight: '700' }}>{status.percentage}%</Text>
           </Text>
@@ -128,7 +128,7 @@ export function ProfileCompletionWidget({ onEdit, hasCrops }: Props) {
       {missing.length > 0 && (
         <View style={styles.fieldsSection}>
           <Text style={[styles.fieldsLabel, { color: c.textTertiary }]}>
-            {t('profile.completion.stillMissing', { defaultValue: 'Still missing' })}:
+            {t('profile.completion.stillMissing')}:
           </Text>
           <View style={styles.pillRow}>
             {missing.slice(0, 6).map((f) => (

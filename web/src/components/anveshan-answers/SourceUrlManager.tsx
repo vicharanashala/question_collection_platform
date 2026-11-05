@@ -65,28 +65,27 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
     const trimmedUrl = urlInput.trim()
     const trimmedPage = pageInput.trim()
 
-    if (!selectedType) found.type = t('anveshanAnswers.errors.sourceType', 'Please select a source type.')
-    if (!sourceName.trim()) found.name = t('anveshanAnswers.errors.sourceName', 'Please enter the source name.')
+    if (!selectedType) found.type = t('anveshanAnswers.errors.sourceType')
+    if (!sourceName.trim()) found.name = t('anveshanAnswers.errors.sourceName')
     if (!trimmedUrl) {
-      found.url = t('anveshanAnswers.errors.sourceUrl', 'Please enter the source URL.')
+      found.url = t('anveshanAnswers.errors.sourceUrl')
     } else if (!parseHttpUrl(trimmedUrl)) {
       found.url = t(
         'anveshanAnswers.errors.sourceUrlInvalid',
-        'Please enter a public web link starting with http:// or https://, for example https://agritech.tnau.ac.in/…',
       )
     }
     if (trimmedUrl && isPdfLink(trimmedUrl) && !trimmedPage) {
-      found.page = t('anveshanAnswers.errors.pdfPage', 'Page number is required for PDF links.')
+      found.page = t('anveshanAnswers.errors.pdfPage')
     } else if (trimmedPage && !isValidPageList(trimmedPage)) {
-      found.page = t('anveshanAnswers.errors.pageInvalid', 'Please enter valid page number(s) (e.g. 1 or 1,2,3).')
+      found.page = t('anveshanAnswers.errors.pageInvalid')
     }
     if (sources.length >= MAX_ANVESHAN_ANSWER_SOURCES) {
-      found.list = t('anveshanAnswers.errors.sourceLimit', { max: MAX_ANVESHAN_ANSWER_SOURCES, defaultValue: 'You can add up to {{max}} sources.' })
+      found.list = t('anveshanAnswers.errors.sourceLimit', { max: MAX_ANVESHAN_ANSWER_SOURCES })
     } else if (
       selectedType &&
       sources.some((s) => s.sourceType === selectedType && s.source === trimmedUrl && (s.page ?? null) === (trimmedPage || null))
     ) {
-      found.list = t('anveshanAnswers.errors.sourceDuplicate', 'This source already exists.')
+      found.list = t('anveshanAnswers.errors.sourceDuplicate')
     }
     return found
   }
@@ -120,7 +119,7 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
   return (
     <div className="grid gap-3" role="group" aria-labelledby="source-references-label" aria-describedby={describedBy}>
       <p className="text-sm font-medium text-text" id="source-references-label">
-        {t('anveshanAnswers.sourceReferences', 'Source References')} *
+        {t('anveshanAnswers.sourceReferences')} *
       </p>
 
       <div>
@@ -134,11 +133,11 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
         >
           <SelectTrigger
             className={cn('w-full', errors.type && invalidClass)}
-            aria-label={t('anveshanAnswers.selectSourceType', 'Select Source Type')}
+            aria-label={t('anveshanAnswers.selectSourceType')}
             aria-invalid={!!errors.type}
             aria-describedby={errors.type ? 'source-type-error' : undefined}
           >
-            <SelectValue placeholder={t('anveshanAnswers.selectSourceType', 'Select Source Type')} />
+            <SelectValue placeholder={t('anveshanAnswers.selectSourceType')} />
           </SelectTrigger>
           <SelectContent>
             {SOURCE_TYPES.map((type) => (
@@ -156,8 +155,8 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
           <div>
             <Input
               type="text"
-              aria-label={t('anveshanAnswers.sourceNameLabel', 'Source name')}
-              placeholder={`${typeLabel} ${t('anveshanAnswers.sourceNamePlaceholder', 'Source Name')}`}
+              aria-label={t('anveshanAnswers.sourceNameLabel')}
+              placeholder={`${typeLabel} ${t('anveshanAnswers.sourceNamePlaceholder')}`}
               value={sourceName}
               onChange={(e) => {
                 setSourceName(e.target.value)
@@ -176,8 +175,8 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
               <Input
                 type="url"
                 inputMode="url"
-                aria-label={t('anveshanAnswers.sourceUrlLabel', 'Source link URL')}
-                placeholder={`${typeLabel} ${t('anveshanAnswers.sourceUrlPlaceholder', 'Source Link URL')}`}
+                aria-label={t('anveshanAnswers.sourceUrlLabel')}
+                placeholder={`${typeLabel} ${t('anveshanAnswers.sourceUrlPlaceholder')}`}
                 value={urlInput}
                 onChange={(e) => {
                   setUrlInput(e.target.value)
@@ -198,8 +197,8 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
                 <Input
                   type="text"
                   inputMode="numeric"
-                  aria-label={t('anveshanAnswers.pageLabel', 'Page numbers')}
-                  placeholder={t('anveshanAnswers.pagePlaceholder', 'Page(s) e.g. 1,2,3')}
+                  aria-label={t('anveshanAnswers.pageLabel')}
+                  placeholder={t('anveshanAnswers.pagePlaceholder')}
                   value={pageInput}
                   onChange={(e) => {
                     setPageInput(e.target.value)
@@ -218,7 +217,7 @@ export function SourceUrlManager({ sources, onSourcesChange, disabled = false, d
                 type="button"
                 onClick={addSource}
                 disabled={disabled}
-                aria-label={t('anveshanAnswers.addSource', 'Add source')}
+                aria-label={t('anveshanAnswers.addSource')}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
               >
                 <PlusCircle className="h-5 w-5" />
@@ -263,13 +262,13 @@ export function SourceList({ sources, onRemove }: SourceListProps) {
             >
               {item.source}
             </a>
-            {item.page && <span className="whitespace-nowrap text-xs text-text-tertiary">pg {item.page}</span>}
+            {item.page && <span className="whitespace-nowrap text-xs text-text-tertiary">{t('sourceUrlManager.pg', { page: item.page })}</span>}
             {onRemove && (
               <button
                 type="button"
                 onClick={() => onRemove(index)}
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-text-tertiary transition-colors hover:bg-surface hover:text-text"
-                aria-label={t('anveshanAnswers.removeSource', 'Remove source')}
+                aria-label={t('anveshanAnswers.removeSource')}
               >
                 <X className="h-3.5 w-3.5" />
               </button>

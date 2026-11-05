@@ -27,6 +27,7 @@ import {
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 // ─── Resend countdown ──────────────────────────────────────────────────────
 
@@ -147,12 +148,11 @@ function StepMobile({
   loading: boolean;
   onSubmit: (e: React.FormEvent) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-xs sm:text-sm font-medium text-[hsl(var(--text))]">
-          Mobile Number
-        </label>
+        <label className="text-xs sm:text-sm font-medium text-[hsl(var(--text))]">{t('loginPhone.mobileNumber')}</label>
         <div className="flex gap-1.5 sm:gap-2">
           <div className="flex items-center rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 sm:px-4 text-sm font-semibold text-[hsl(var(--text-secondary))]">
             +91
@@ -160,7 +160,7 @@ function StepMobile({
           <Input
             type="tel"
             inputMode="tel"
-            placeholder="10-digit number"
+            placeholder={t('loginPage.10DigitNumber')}
             value={mobile}
             onChange={(e) =>
               setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
@@ -182,9 +182,7 @@ function StepMobile({
         )}
       </Button>
 
-      <p className="text-center text-[11px] sm:text-xs text-[hsl(var(--text-tertiary))]">
-        A 6-digit code will be sent to your mobile
-      </p>
+      <p className="text-center text-[11px] sm:text-xs text-[hsl(var(--text-tertiary))]">{t('loginPage.digitCodeWillBe')}</p>
     </form>
   );
 }
@@ -210,6 +208,7 @@ function StepOtp({
   onBack: () => void;
   onResend: () => void;
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus input on mount
@@ -242,15 +241,13 @@ function StepOtp({
           onClick={onBack}
           className="flex items-center gap-1 text-[11px] text-[hsl(var(--primary))] hover:underline shrink-0"
         >
-          <ArrowLeft className="h-3 w-3" /> Change
+          <ArrowLeft className="h-3 w-3" /> {t('loginPage.change')}
         </button>
       </div>
 
       {/* OTP boxes */}
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-[hsl(var(--text))]">
-          One-Time Password
-        </label>
+        <label className="text-xs font-medium text-[hsl(var(--text))]">{t('loginPage.oneTimePassword')}</label>
         <div className="flex gap-1.5 justify-center">
           {digits.map((d, i) => (
             <button
@@ -286,9 +283,7 @@ function StepOtp({
           className="sr-only"
           maxLength={6}
         />
-        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">
-          Enter the 6-digit code sent to your mobile
-        </p>
+        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">{t('loginPage.enterTheDigitCode')}</p>
       </div>
 
       <Button
@@ -322,7 +317,7 @@ function StepOtp({
         >
           {countdown.active
             ? `Resend in ${countdown.secs}s`
-            : "Didn't receive it? Resend"}
+            : t('loginPage.didnReceiveItResend')}
         </button>
       </div>
     </form>
@@ -332,6 +327,7 @@ function StepOtp({
 // ─── Main ──────────────────────────────────────────────────────────────────
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isAnveshanLogin = searchParams.get("isAnveshan") === "true";
@@ -353,7 +349,7 @@ export function LoginPage() {
     e.preventDefault();
     const cleaned = mobile.replace(/\D/g, "").slice(0, 10);
     if (!/^[6-9]\d{9}$/.test(cleaned)) {
-      toast.error("Mobile number must be a valid phone number");
+      toast.error(t('loginPage.mobileNumberMustBe'));
       return;
     }
     setLoading(true);
@@ -361,7 +357,7 @@ export function LoginPage() {
       await authApi.requestOtp(cleaned, false);
       setStep(2);
       countdown.start();
-      toast.success("OTP sent to your mobile");
+      toast.success(t('loginPage.otpSentToYour'));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to send OTP"));
     } finally {
@@ -418,7 +414,7 @@ export function LoginPage() {
   e.preventDefault();
   const cleaned = otp.replace(/\D/g, "").slice(0, 6);
   if (cleaned.length !== 6) {
-    toast.error("Enter the 6-digit OTP");
+    toast.error(t('loginPage.enterTheDigitOtp'));
     return;
   }
   setLoading(true);
@@ -437,7 +433,7 @@ export function LoginPage() {
         navigate("/home", { state: { mobileNumber: mobile }, replace: true });
       } else {
         toast.error(
-          "Your account is not yet activated. Please contact your administrator.",
+          t('loginPage.yourAccountIsNot'),
         );
       }
       return;
@@ -459,10 +455,10 @@ export function LoginPage() {
     }
 
     if (user.role === "user") {
-      toast.success("Welcome back!");
+      toast.success(t('loginPage.welcomeBack'));
       navigate("/home", { replace: true });
     } else {
-      toast.success("Welcome back!");
+      toast.success(t('loginPage.welcomeBack'));
       navigate("/dashboard", { replace: true });
     }
   } catch (err) {
@@ -480,7 +476,7 @@ export function LoginPage() {
     try {
       await authApi.requestOtp(mobile, false);
       countdown.start();
-      toast.success("New OTP sent");
+      toast.success(t('loginPage.newOtpSent'));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to resend OTP"));
     } finally {
@@ -518,10 +514,8 @@ export function LoginPage() {
             <BrandLogo className="h-full w-full" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight">
-              AnnaDatha
-            </h1>
-            <p className="text-white/60 text-sm">{isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight leading-tight">{t('app.name')}</h1>
+            <p className="text-white/60 text-sm">{isAnveshanLogin ? ANVESHAN_TAGLINE : t('loginPage.farmingQuestionsPlatform')}</p>
           </div>
         </div>
 
@@ -548,7 +542,7 @@ export function LoginPage() {
 
         {/* Bottom: simple footer */}
         <p className="text-xs text-white/30">
-          &copy; {new Date().getFullYear()} {isAnveshanLogin ? "AnnaDatha × Anveshan" : "AnnaDatha"}
+          &copy; {new Date().getFullYear()} {isAnveshanLogin ? t('anveshanCompletionScreen.annadathaAnveshan') : t('app.name')}
         </p>
       </div>
 
@@ -566,11 +560,9 @@ export function LoginPage() {
               <div className="mb-2.5 h-14 w-14 rounded-2xl bg-white/20 p-2 shadow-sm">
                 <BrandLogo className="h-full w-full" />
               </div>
-              <h1 className="text-lg font-extrabold text-white tracking-tight">
-                AnnaDatha
-              </h1>
+              <h1 className="text-lg font-extrabold text-white tracking-tight">{t('app.name')}</h1>
               <p className="mt-0.5 text-xs text-white/70">
-                {isAnveshanLogin ? ANVESHAN_TAGLINE : "Farming Questions Platform"}
+                {isAnveshanLogin ? ANVESHAN_TAGLINE : t('loginPage.farmingQuestionsPlatform')}
               </p>
             </div>
 
@@ -579,11 +571,11 @@ export function LoginPage() {
               {/* Step heading */}
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-[hsl(var(--text))]">
-                  {step === 1 ? "Sign in" : "Verify OTP"}
+                  {step === 1 ? t('loginPage.signIn') : t('auth.verifyOtp')}
                 </h2>
                 <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
                   {step === 1
-                    ? "Enter your mobile number to continue"
+                    ? t('loginPhone.signInDesc')
                     : `OTP sent to +91 ${mobile}`}
                 </p>
               </div>
@@ -626,17 +618,13 @@ export function LoginPage() {
                   type="button"
                   onClick={() => setLegalDoc("terms")}
                   className="underline hover:text-[hsl(var(--text-secondary))]"
-                >
-                  Terms
-                </button>{" "}
+                >{t('loginPage.terms')}</button>{" "}
                 and{" "}
                 <button
                   type="button"
                   onClick={() => setLegalDoc("privacy")}
                   className="underline hover:text-[hsl(var(--text-secondary))]"
-                >
-                  Privacy Policy
-                </button>
+                >{t('profile.privacyPolicy')}</button>
               </p>
             </div>
           </Card>

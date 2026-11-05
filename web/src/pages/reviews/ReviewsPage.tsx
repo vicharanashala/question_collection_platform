@@ -36,6 +36,7 @@ import { TesterFilter, type TesterFilterValue } from "@/components/TesterFilter"
 import { UserTypeFilter, type UserTypeFilterValue } from "@/components/questions/UserTypeFilter";
 import { useAnveshanScope } from "@/lib/anveshanMode";
 import { QUESTION_EXPORT_COLUMNS } from "@/lib/questionExport";
+import { useTranslation } from 'react-i18next';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -94,6 +95,7 @@ function ReviewDetailModal({
   selectedLang,
   onLangChange,
 }: ReviewDetailModalProps) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -107,7 +109,7 @@ function ReviewDetailModal({
             <QuestionStatusBadge question={q} />
             {q.isAnveshan && !isStatusHidden(q) && (
               <Badge className="bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
-                <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> Anveshan
+                <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> {t('questionStatusBadge.anveshan')}
               </Badge>
             )}
             <span className="text-[11px] sm:text-xs text-muted-foreground font-mono">
@@ -134,9 +136,7 @@ function ReviewDetailModal({
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* Question text */}
           <div className="bg-muted/60 rounded-xl p-4">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Question
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('wallet.questionText')}</p>
             <TranslatableText
               text={q.questionText}
               selectedLang={selectedLang}
@@ -149,9 +149,7 @@ function ReviewDetailModal({
           {/* Status reason */}
           {q.status === "held" && q.heldReason && (
             <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-warning uppercase tracking-wide mb-1">
-                Hold Reason
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-warning uppercase tracking-wide mb-1">{t('notifications.holdReason')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
                 {q.heldReason}
               </p>
@@ -159,9 +157,7 @@ function ReviewDetailModal({
           )}
           {q.status === "rejected" && q.rejectionReason && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive uppercase tracking-wide mb-1">
-                Rejection Reason
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive uppercase tracking-wide mb-1">{t('notifications.rejectionReason')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
                 {q.rejectionReason}
               </p>
@@ -169,9 +165,7 @@ function ReviewDetailModal({
           )}
           {q.status === "approved" && q.approvalReason && (
             <div className="rounded-xl border border-success/30 bg-success/5 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-success uppercase tracking-wide mb-1">
-                Approval Reason
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-success uppercase tracking-wide mb-1">{t('submissions.approvalReason')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
                 {q.approvalReason}
               </p>
@@ -180,30 +174,28 @@ function ReviewDetailModal({
 
           {/* Details grid */}
           <div>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Details
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t('stepDetails')}</p>
             <div className="grid grid-cols-2 gap-3">
               <MetaItem
                 icon={Star}
-                label="Category"
+                label={t('profile.completion.fieldCategory')}
                 value={(q.domains ?? []).join(", ") || "—"}
               />
-              <MetaItem icon={Wheat} label="Crop" value={q.cropType} />
-              <MetaItem icon={Hash} label="Season" value={q.season} />
-              <MetaItem icon={MapPin} label="State" value={q.state} />
-              <MetaItem icon={MapPin} label="District" value={q.district} />
+              <MetaItem icon={Wheat} label={t('profile.crop')} value={q.cropType} />
+              <MetaItem icon={Hash} label={t('profile.season')} value={q.season} />
+              <MetaItem icon={MapPin} label={t('admin.state')} value={q.state} />
+              <MetaItem icon={MapPin} label={t('auth.district')} value={q.district} />
               {q.block && (
-                <MetaItem icon={MapPin} label="Block" value={q.block} />
+                <MetaItem icon={MapPin} label={t('block')} value={q.block} />
               )}
               <MetaItem
                 icon={Globe}
-                label="Language"
+                label={t('speech.stt.language')}
                 value={q.language?.toUpperCase()}
               />
               <MetaItem
                 icon={Clock}
-                label="Submitted"
+                label={t('submissions.submitted')}
                 value={formatDate(q.submittedAt)}
               />
             </div>
@@ -212,9 +204,7 @@ function ReviewDetailModal({
           {/* Submitted by */}
           {q.user && (
             <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Submitted By
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('staffQuestionDetailDialog.submittedBy2')}</p>
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-primary/10 p-2.5">
                   <User className="h-4 w-4 text-primary" />
@@ -223,7 +213,7 @@ function ReviewDetailModal({
                   <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
                     {q.user.name}
                     <span className="ml-2 text-[11px] font-normal text-muted-foreground">
-                      {q.isAnveshan ? "Anveshan User" : "Regular User"}
+                      {q.isAnveshan ? t('staffQuestionDetailDialog.anveshanUser') : t('staffQuestionDetailDialog.regularUser')}
                     </span>
                     {q.user.isTester && (
                       <span className="ml-2 align-middle">
@@ -247,9 +237,7 @@ function ReviewDetailModal({
               (u) => !u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
             ).length > 0 && (
               <div>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Images
-                </p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('agriEntity.images')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {q.mediaUrls
                     .filter(
@@ -266,13 +254,13 @@ function ReviewDetailModal({
                         {url.match(/\.(mp4|mov|avi|m4v)$/i) ? (
                           <div className="rounded-lg border bg-muted flex items-center justify-center h-24 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                             <span className="flex items-center gap-1.5">
-                              <Film className="h-4 w-4" /> Video
+                              <Film className="h-4 w-4" /> {t('question.video')}
                             </span>
                           </div>
                         ) : (
                           <img
                             src={url}
-                            alt={`img-${i}`}
+                            alt={t('reviewsPage.img', { i })}
                             className="rounded-lg border w-full h-24 object-cover hover:opacity-80 transition-opacity"
                           />
                         )}
@@ -288,16 +276,14 @@ function ReviewDetailModal({
               u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
             ).length > 0 && (
               <div>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Audio
-                </p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('reviewsPage.audio')}</p>
                 <div className="space-y-2">
                   {q.mediaUrls.filter((u) =>
                     u.match(/\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i),
                   ).length > 0 && (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
                       <Mic className="h-3 w-3" />
-                      Audio uploaded successfully
+                      {t('reviewsPage.audioUploadedSuccessfully')}
                     </span>
                   )}
                 </div>
@@ -307,9 +293,7 @@ function ReviewDetailModal({
           {/* Previous review */}
           {q.reviewedByName && (
             <div className="rounded-xl border border-border-subtle p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Previous Review
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('reviewsPage.previousReview')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground">
                 Reviewed by{" "}
                 <span className="font-medium">{q.reviewedByName}</span>
@@ -321,38 +305,34 @@ function ReviewDetailModal({
         {/* Action footer */}
         {REVIEWABLE_STATUSES.includes(q.status) ? (
           <div className="shrink-0 border-t border-border-subtle px-6 py-4 space-y-3">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">
-              Choose an action — you will be asked to provide a reason.
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">{t('reviewsPage.chooseAnActionYou')}</p>
             <div className="grid grid-cols-3 gap-2">
               <button
                 onClick={() => onAction("approve", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-success/10 text-success hover:bg-success/20 border border-success/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <CheckCircle className="h-5 w-5" /> Approve
+                <CheckCircle className="h-5 w-5" /> {t('admin.approve')}
               </button>
               <button
                 onClick={() => onAction("hold", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-warning/10 text-warning hover:bg-warning/20 border border-warning/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <PauseCircle className="h-5 w-5" /> Hold
+                <PauseCircle className="h-5 w-5" /> {t('reviewsPage.hold')}
               </button>
               <button
                 onClick={() => onAction("reject", q.questionText)}
                 disabled={actionLoading}
                 className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs sm:text-xs sm:text-sm font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <XCircle className="h-5 w-5" /> Reject
+                <XCircle className="h-5 w-5" /> {t('admin.reject')}
               </button>
             </div>
           </div>
         ) : (
           <div className="shrink-0 border-t border-border-subtle px-6 py-4 text-center">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              This question has already been reviewed.
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('reviewsPage.thisQuestionHasAlready')}</p>
           </div>
         )}
       </div>
@@ -379,6 +359,7 @@ function ReasonModal({
   onCancel,
   loading,
 }: ReasonModalProps) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -493,21 +474,19 @@ function toggleReason(suggestion: string) {
           </div>
           <div>
             <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-foreground">
-              {isApprove ? "Approve" : isReject ? "Reject" : "Hold"} Question
+              {isApprove ? t('admin.approve') : isReject ? "Reject" : "Hold"} Question
             </h3>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               {isReject
-                ? "This reason will be shared with the farmer."
-                : "This reason is recorded for audit."}
+                ? t('reviewsPage.thisReasonWillBe')
+                : t('reviewsPage.thisReasonIsRecorded')}
             </p>
           </div>
         </div>
 
         {/* Question preview */}
         <div className="px-6 py-3 border-b border-border-subtle bg-muted/30 shrink-0">
-          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">
-            Question
-          </p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium uppercase tracking-wide">{t('wallet.questionText')}</p>
           <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed line-clamp-3">
             {questionText}
           </p>
@@ -519,9 +498,7 @@ function toggleReason(suggestion: string) {
           <div>
             <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground mb-2">
               Suggested reasons{" "}
-              <span className="text-muted-foreground/60 font-normal">
-                (click to use)
-              </span>
+              <span className="text-muted-foreground/60 font-normal">{t('reasonDialog.clickToUse')}</span>
             </p>
             <div className="space-y-1.5">
               {SUGGESTED_REASONS[action].map((suggestion, i) => (
@@ -537,7 +514,7 @@ function toggleReason(suggestion: string) {
                           : "border-warning/20 bg-warning/5 text-warning hover:bg-warning/10 hover:border-warning/40",
                     )}
                     onClick={() => selectOnly(suggestion)}
-                    title="Replace reason with this suggestion"
+                    title={t('reasonDialog.replaceReasonWithThis')}
                   >
                     {suggestion}
                   </button>
@@ -550,9 +527,9 @@ function toggleReason(suggestion: string) {
       : "text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground",
   )}
   onClick={() => toggleReason(suggestion)}
-  title={isReasonAdded(suggestion) ? "Remove this reason" : "Add as additional reason"}
+  title={isReasonAdded(suggestion) ? t('reasonDialog.removeThisReason') : t('reasonDialog.addAsAdditionalReason')}
 >
-  {isReasonAdded(suggestion) ? "− Remove" : "+ Add"}
+  {isReasonAdded(suggestion) ? t('reasonDialog.remove') : t('reasonDialog.add')}
 </button>
                 </div>
               ))}
@@ -563,16 +540,14 @@ function toggleReason(suggestion: string) {
           <div>
             <Label className="text-xs sm:text-xs sm:text-sm font-medium text-foreground mb-2 block">
               Custom Reason{" "}
-              <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">
-                (or write your own)
-              </span>
+              <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">{t('reasonDialog.orWriteYourOwn')}</span>
             </Label>
             <textarea
               ref={textareaRef}
               rows={4}
               placeholder={
                 isApprove
-                  ? "Describe why this question is approved..."
+                  ? t('reviewsPage.describeWhyThisQuestion')
                   : isReject
                     ? "Describe why this question is rejected..."
                     : "Describe why this question needs further review..."
@@ -581,18 +556,13 @@ function toggleReason(suggestion: string) {
               onChange={(e) => setReason(e.target.value)}
               className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2.5 text-xs sm:text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
             />
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1.5">
-              Be specific — a clear reason helps farmers understand the outcome
-              and curators maintain quality.
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1.5">{t('reviewsPage.beSpecificClearReason')}</p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-muted/20 shrink-0">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onCancel} disabled={loading}>{t('common.cancel')}</Button>
           <Button
             className={cn(
               isApprove && "bg-success hover:bg-success/90 text-white",
@@ -605,7 +575,7 @@ function toggleReason(suggestion: string) {
             disabled={loading || !reason.trim()}
           >
             {loading
-              ? "Processing..."
+              ? t('wallet.withdrawal.processing')
               : `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`}
           </Button>
         </div>
@@ -778,6 +748,7 @@ function DuplicateFoundModal({
   selectedLang,
   onLangChange,
 }: DuplicateFoundModalProps) {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -791,15 +762,11 @@ function DuplicateFoundModal({
             <CopyCheck className="h-5 w-5 text-destructive" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-destructive">
-              Duplicate Question Found
-            </h3>
+            <h3 className="text-sm sm:text-sm sm:text-base font-semibold text-destructive">{t('reviewsPage.duplicateQuestionFound')}</h3>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
               This question is similar to an existing approved question.
               {duplicate.similarityScore != null && (
-                <span className="ml-1.5 text-muted-foreground/60">
-                  (Similarity: {(duplicate.similarityScore * 100).toFixed(0)}%)
-                </span>
+                <span className="ml-1.5 text-muted-foreground/60">{t('reviewsPage.similarity', { value1: (duplicate.similarityScore * 100).toFixed(0) })}</span>
               )}
             </p>
           </div>
@@ -812,9 +779,7 @@ function DuplicateFoundModal({
             <>
               {/* Existing question + answer (mirrors user-side submission display) */}
               <div>
-                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Existing Question
-                </p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('question.duplicate.existingQuestion')}</p>
                 <div className="rounded-xl border border-border-subtle bg-muted/60 p-4 space-y-3">
                   <div>
                     <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">
@@ -841,9 +806,7 @@ function DuplicateFoundModal({
             </>
           ) : (
             <div className="rounded-xl border border-border-subtle bg-muted/60 p-4">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Existing Question
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('question.duplicate.existingQuestion')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground leading-relaxed">
                 {duplicate.matchedQuestion}
               </p>
@@ -852,9 +815,7 @@ function DuplicateFoundModal({
 
           {/* Current question being reviewed */}
           <div>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Question You Are Reviewing
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t('reviewsPage.questionYouAreReviewing')}</p>
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1 font-medium">
                 Q
@@ -872,15 +833,13 @@ function DuplicateFoundModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-muted/20 shrink-0">
-          <Button variant="outline" onClick={onDismiss}>
-            Dismiss
-          </Button>
+          <Button variant="outline" onClick={onDismiss}>{t('common.dismiss')}</Button>
           <Button
             variant="destructive"
             onClick={() => onReject(currentQuestion.id)}
             disabled={rejectLoading}
           >
-            {rejectLoading ? "Rejecting..." : "Reject Question"}
+            {rejectLoading ? t('reviewsPage.rejecting') : t('reviewsPage.rejectQuestion')}
           </Button>
         </div>
       </div>
@@ -901,6 +860,7 @@ const STATUS_FILTER_OPTIONS = [
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
+  const { t } = useTranslation();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -998,7 +958,7 @@ export function ReviewsPage() {
             },
           });
         } else {
-          toast.success("No duplicate found — this question is unique.");
+          toast.success(t('reviewsPage.noDuplicateFoundThis'));
         }
       })
       .catch((e) =>
@@ -1018,7 +978,7 @@ export function ReviewsPage() {
     curatorApi
       .reviewQuestion(questionId, { action: "reject", reason })
       .then(() => {
-        toast.success("Question rejected as duplicate");
+        toast.success(t('reviewsPage.questionRejectedAsDuplicate'));
         setDuplicateData(null);
         setQuestions((qs) => qs.filter((q) => q.id !== questionId));
       })
@@ -1044,9 +1004,9 @@ export function ReviewsPage() {
               : "Approved",
           );
         } else if (action === "reject") {
-          toast.success("Question rejected");
+          toast.success(t('reviewsPage.questionRejected'));
         } else {
-          toast.success("Question put on hold");
+          toast.success(t('reviewsPage.questionPutOnHold'));
         }
         setQuestions((qs) => qs.filter((q) => q.id !== id));
         setDetailOpen(false);
@@ -1075,13 +1035,11 @@ export function ReviewsPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">
-            Review Queue
-          </h2>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('pageTitle.reviewQueue')}</h2>
           <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
             {total > 0
               ? `${total} question${total === 1 ? "" : "s"} pending review`
-              : "No questions pending"}
+              : t('reviewsPage.noQuestionsPending')}
           </p>
         </div>
         {total > 0 && (
@@ -1099,7 +1057,7 @@ export function ReviewsPage() {
                 total > 50 ? "bg-warning" : "bg-success",
               )}
             />
-            {total > 50 ? "Queue is busy" : "Queue is manageable"}
+            {total > 50 ? t('reviewsPage.queueIsBusy') : t('reviewsPage.queueIsManageable')}
           </div>
         )}
       </div>

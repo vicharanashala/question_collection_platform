@@ -565,7 +565,7 @@ export function PublicHomePage() {
             description={
               showPayments
                 ? t("home.quickActionsTip")
-                : t("home.quickActionsTipNoWallet", "Jump straight to Submit a Question.")
+                : t("home.quickActionsTipNoWallet")
             }
           />
         </div>
@@ -587,7 +587,7 @@ export function PublicHomePage() {
               cta={t("home.viewWallet")}
               onClick={() => navigate("/home/wallet")}
               disabled
-              badge={t("common.comingSoon", "Coming Soon")}
+              badge={t("common.comingSoon")}
             />
           )}
         </div>

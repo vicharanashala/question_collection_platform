@@ -63,7 +63,7 @@ export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideSt
             </DialogHeader>
 
             <div className="grid gap-6 px-5 py-6 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-              <section aria-label={t('agriEntity.images', 'Images')} className="space-y-3 lg:sticky lg:top-0 lg:self-start">
+              <section aria-label={t('agriEntity.images')} className="space-y-3 lg:sticky lg:top-0 lg:self-start">
                 {entity.imageUrls.length === 0 ? (
                   <div className="flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-border-subtle text-text-tertiary">
                     <ImageIcon className="h-8 w-8" aria-hidden="true" />
@@ -73,17 +73,17 @@ export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideSt
                     <button
                       type="button"
                       onClick={() => setViewerIndex(selectedImage)}
-                      aria-label={t('agriEntity.viewImage', { n: selectedImage + 1, defaultValue: 'View photo {{n}} full size' })}
+                      aria-label={t('agriEntity.viewImage', { n: selectedImage + 1 })}
                       className="group relative block w-full overflow-hidden rounded-xl border border-border-subtle bg-black/5 focus:outline-none focus:ring-2 focus:ring-focus dark:bg-black/30"
                     >
                       <img
                         src={entity.imageUrls[selectedImage] ?? entity.imageUrls[0]}
-                        alt={t('agriEntity.imageAlt', { n: selectedImage + 1, name: entity.englishName, defaultValue: '{{name}} photo {{n}}' })}
+                        alt={t('agriEntity.imageAlt', { n: selectedImage + 1, name: entity.englishName })}
                         className="aspect-[4/3] w-full object-contain"
                       />
                       <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white opacity-90 transition group-hover:bg-black/80">
                         <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        {t('agriEntity.viewFull', 'View full size')}
+                        {t('agriEntity.viewFull')}
                       </span>
                       {entity.imageUrls.length > 1 && (
                         <span className="absolute bottom-3 left-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">
@@ -98,7 +98,7 @@ export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideSt
                             key={url}
                             type="button"
                             onClick={() => setSelectedImage(i)}
-                            aria-label={t('agriEntity.showImage', { n: i + 1, defaultValue: 'Show photo {{n}}' })}
+                            aria-label={t('agriEntity.showImage', { n: i + 1 })}
                             aria-current={i === selectedImage}
                             className={cn(
                               'overflow-hidden rounded-lg border-2 transition focus:outline-none focus:ring-2 focus:ring-focus',
@@ -116,19 +116,19 @@ export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideSt
 
               <div className="space-y-5">
                 <div className="grid gap-4 rounded-xl border border-border-subtle bg-card p-5 sm:grid-cols-3">
-                  <Field label={t('agriEntity.localName', 'Local Name')} value={entity.localName} />
-                  <Field label={t('agriEntity.englishName', 'English Name')} value={entity.englishName} />
-                  <Field label={t('agriEntity.botanicalName', 'Botanical Name')} value={entity.botanicalName} italic />
+                  <Field label={t('agriEntity.localName')} value={entity.localName} />
+                  <Field label={t('agriEntity.englishName')} value={entity.englishName} />
+                  <Field label={t('agriEntity.botanicalName')} value={entity.botanicalName} italic />
                 </div>
 
                 {entity.localNameSource?.trim() && (
-                  <Panel icon={BookOpen} title={t('agriEntity.localNameSource', 'Source supporting the local name = standard name')}>
+                  <Panel icon={BookOpen} title={t('agriEntity.localNameSource')}>
                     <SourceText value={entity.localNameSource} />
                   </Panel>
                 )}
 
                 {entity.alternateNames?.length > 0 && (
-                  <Panel icon={Tags} title={t('agriEntity.alternateNames', 'Alternate names with sources')}>
+                  <Panel icon={Tags} title={t('agriEntity.alternateNames')}>
                     <ul className="divide-y divide-border-subtle">
                       {entity.alternateNames.map((alt, i) => (
                         <li key={`${alt.name}-${i}`} className="space-y-0.5 py-2.5 first:pt-0 last:pb-0">
@@ -145,7 +145,7 @@ export function AgriEntityDetailModal({ entity, onClose, hideStatus: forceHideSt
                     <div className="flex min-w-0 items-start gap-3">
                       <UserIcon className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
                       <div className="min-w-0">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-text-secondary">{t('agriEntity.submittedBy', 'Submitted by')}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-text-secondary">{t('agriEntity.submittedBy')}</p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-2">
                           <p className="break-words text-sm font-medium text-foreground">{submitterName(entity)}</p>
                           {entity.submitter?.isTester && <TesterTag />}

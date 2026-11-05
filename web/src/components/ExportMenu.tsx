@@ -11,6 +11,7 @@ import {
   type ExportColumn, type ExportFormat,
 } from '@/lib/exportData'
 import type { PaginatedResponse } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface ExportMenuProps<T> {
   /** Used as the file name prefix, e.g. "users" */
@@ -24,6 +25,7 @@ interface ExportMenuProps<T> {
 }
 
 export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled }: ExportMenuProps<T>) {
+  const { t } = useTranslation()
   const [exporting, setExporting] = useState(false)
 
   async function handleExport(fileFormat: ExportFormat) {
@@ -31,13 +33,13 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled }: Expo
     try {
       const { rows, total } = await fetchAllRows(fetchPage)
       if (rows.length === 0) {
-        toast.info('Nothing to export for the current filters')
+        toast.info(t('exportMenu.nothingToExportFor'))
         return
       }
       if (sort) rows.sort(sort)
       await downloadTable(rows, columns, name, fileFormat)
       if (total > rows.length) {
-        toast.warning(`Exported the first ${rows.length.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')} rows. Narrow the filters to export the rest.`)
+        toast.warning(t('exportMenu.exportedTheFirstOf', { value1: rows.length.toLocaleString('en-IN'), value3: total.toLocaleString('en-IN') }))
       } else {
         toast.success(`Exported ${rows.length.toLocaleString('en-IN')} row${rows.length === 1 ? '' : 's'}`)
       }
@@ -55,17 +57,17 @@ export function ExportMenu<T>({ name, columns, fetchPage, sort, disabled }: Expo
           {exporting
             ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
             : <Download className="h-4 w-4 mr-1.5" />}
-          {exporting ? 'Exporting…' : 'Export'}
+          {exporting ? t('exportMenu.exporting') : t('exportMenu.export')}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={() => handleExport('csv')}>
           <FileText className="h-4 w-4" />
-          CSV (.csv)
+          {t('exportMenu.csvCsv')}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => handleExport('xlsx')}>
           <FileSpreadsheet className="h-4 w-4" />
-          Excel (.xlsx)
+          {t('exportMenu.excelXlsx')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

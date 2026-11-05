@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 
 interface WarningModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ export const WarningModal: React.FC<WarningModalProps> = ({
   message,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
 
@@ -29,9 +31,7 @@ export const WarningModal: React.FC<WarningModalProps> = ({
             style={[styles.btn, { backgroundColor: c.primary }]}
             onPress={onClose}
           >
-            <Text style={[styles.btnText, { color: c.primaryForeground }]}>
-              OK
-            </Text>
+            <Text style={[styles.btnText, { color: c.primaryForeground }]}>{t('common.ok')}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -82,7 +82,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
           {/* Logo */}
           <View style={styles.logoSection}>
             <Image source={require('../../../assets/logo.png')} style={styles.logoMark} />
-            <Text style={[styles.brand, { color: c.text }]}>AnnaDatha</Text>
+            <Text style={[styles.brand, { color: c.text }]}>{t('app.name')}</Text>
             <Text style={[styles.tagline, { color: c.textSecondary }]}>
               {t('loginPhone.tagline')}
             </Text>
@@ -129,9 +129,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
                   </Text>
                 )}
                 <View style={styles.lockedBannerEmailRow}>
-                  <Text style={[styles.lockedBannerContactLabel, { color: c.textSecondary }]}>
-                    If you believe this was a mistake, contact support
-                  </Text>
+                  <Text style={[styles.lockedBannerContactLabel, { color: c.textSecondary }]}>{t('accountLockedModal.ifYouBelieveThis')}</Text>
                   <TouchableOpacity
                     style={[styles.lockedBannerEmailBtn, {
                       borderColor: lockedInfo.status === 'banned' ? c.error + '88' : c.warning + '88',
@@ -152,7 +150,7 @@ export function LoginPhoneScreen({ navigation }: Props) {
                     />
                     <Text style={[styles.lockedBannerEmailLabel, {
                       color: lockedInfo.status === 'banned' ? c.error : c.warning,
-                    }]}>Send email</Text>
+                    }]}>{t('accountLockedModal.sendEmail')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

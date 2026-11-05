@@ -7,8 +7,10 @@ import { Switch } from '@/components/ui/switch'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AnveshanUserQuestion } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const answer = question.answer
 
@@ -23,7 +25,7 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
           <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
           {[question.district, question.state].filter(Boolean).join(', ') || '—'}
         </span>
-        <span>Submitted {formatDateTime(question.submittedAt)}</span>
+        <span>{t('anveshanQuestionsTab.submitted', { value1: formatDateTime(question.submittedAt) })}</span>
       </div>
 
       {answer ? (
@@ -45,7 +47,7 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
               <p className="whitespace-pre-wrap text-foreground">{answer.answer}</p>
               {answer.sources.length > 0 && (
                 <div>
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Sources</p>
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{t('anveshanAnswers.confirmSources')}</p>
                   <ul className="space-y-1 text-xs text-text-secondary">
                     {answer.sources.map((source, index) => (
                       <li key={`${source.sourceName}-${index}`}>
@@ -56,12 +58,12 @@ function QuestionCard({ question }: { question: AnveshanUserQuestion }) {
                   </ul>
                 </div>
               )}
-              {answer.remarks && <p className="text-xs text-text-secondary">Remarks: {answer.remarks}</p>}
+              {answer.remarks && <p className="text-xs text-text-secondary">{t('anveshanQuestionsTab.remarks', { remarks: answer.remarks })}</p>}
             </div>
           )}
         </div>
       ) : question.isAnswerSubmitted ? null : (
-        <Badge variant="outline" className="text-[11px]">Not answered</Badge>
+        <Badge variant="outline" className="text-[11px]">{t('anveshanQuestionsTab.notAnswered')}</Badge>
       )}
     </li>
   )
@@ -81,23 +83,22 @@ export function AnveshanQuestionsToolbar({
   onSearchChange,
   onAnsweredOnlyChange,
 }: QuestionFilters & { onSearchChange: (value: string) => void; onAnsweredOnlyChange: (value: boolean) => void }) {
+  const { t } = useTranslation()
   return (
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
       <div className="relative w-full sm:w-72">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
         <Input
-          aria-label="Search questions"
-          placeholder="Search questions or crops..."
+          aria-label={t('faq.searchPlaceholder')}
+          placeholder={t('anveshanQuestionsTab.searchQuestionsOrCrops')}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-9"
         />
       </div>
       <div className="flex h-10 shrink-0 items-center gap-2 rounded-md border border-border-subtle bg-surface px-3">
-        <Switch id="answered-only" checked={answeredOnly} onCheckedChange={onAnsweredOnlyChange} className="h-5 w-9" aria-label="Show answered questions only" />
-        <label htmlFor="answered-only" className="cursor-pointer whitespace-nowrap text-xs font-medium text-text-secondary">
-          Answered only
-        </label>
+        <Switch id="answered-only" checked={answeredOnly} onCheckedChange={onAnsweredOnlyChange} className="h-5 w-9" aria-label={t('anveshanQuestionsTab.showAnsweredQuestionsOnly')} />
+        <label htmlFor="answered-only" className="cursor-pointer whitespace-nowrap text-xs font-medium text-text-secondary">{t('anveshanQuestionsTab.answeredOnly')}</label>
       </div>
     </div>
   )
@@ -105,6 +106,7 @@ export function AnveshanQuestionsToolbar({
 
 // Questions the Anveshan user submitted, narrowed by the toolbar filters, with their answers.
 export function AnveshanQuestionsTab({ questions, search, answeredOnly }: { questions: AnveshanUserQuestion[] } & QuestionFilters) {
+  const { t } = useTranslation()
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return questions.filter(
@@ -124,7 +126,7 @@ export function AnveshanQuestionsTab({ questions, search, answeredOnly }: { ques
     <div className="space-y-3">
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
-          <p className="p-8 text-center text-sm text-text-secondary">No questions found</p>
+          <p className="p-8 text-center text-sm text-text-secondary">{t('common.noQuestionsFound')}</p>
         ) : (
           <ul className="divide-y divide-border-subtle">
             {visible.map((question) => <QuestionCard key={question.id} question={question} />)}

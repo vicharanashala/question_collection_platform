@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from 'react-i18next';
 
 export type UserTypeFilterValue = "" | "anveshan" | "regular";
 
@@ -21,12 +22,13 @@ interface UserTypeFilterProps {
 
 // Dropdown to filter questions by submitter type. An empty value means all users.
 export function UserTypeFilter({ value, onChange }: UserTypeFilterProps) {
+  const { t } = useTranslation();
   return (
     <Select
       value={value || "all"}
       onValueChange={(v) => onChange(v === "all" ? "" : (v as UserTypeFilterValue))}
     >
-      <SelectTrigger className="w-full" aria-label="Filter by user type">
+      <SelectTrigger className="w-full" aria-label={t('userTypeFilter.filterByUserType')}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

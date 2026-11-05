@@ -307,7 +307,7 @@ export function MicButton({
           setElapsedMs(now - startTimeRef.current)
         }
         if (hasBeenSilentTooLong(now)) {
-          toast.info(t('audio.stoppedForSilence', 'No speech detected for 1 minute, so recording was stopped.'))
+          toast.info(t('audio.stoppedForSilence'))
           stopRecording()
         }
       }, 250)
@@ -375,10 +375,10 @@ export function MicButton({
       : isUploading
         ? t('audio.transcribing')
         : isFinal
-          ? t('audio.addedShort', 'Added')
+          ? t('audio.addedShort')
           : isRecording
-            ? `${fmtElapsed(elapsedMs)} · ${t('audio.tapToStopShort', 'Tap to stop')}`
-            : t('audio.speakShort', 'Speak')
+            ? `${fmtElapsed(elapsedMs)} · ${t('audio.tapToStopShort')}`
+            : t('audio.speakShort')
 
     return (
       <Button

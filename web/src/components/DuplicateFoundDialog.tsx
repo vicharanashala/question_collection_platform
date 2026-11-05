@@ -46,7 +46,7 @@ export function DuplicateFoundDialog({ duplicate, onOpenChange, onTryAnother, on
         <div className="max-h-[45vh] overflow-y-auto px-6 py-5">
           <div className="rounded-lg border border-border-subtle bg-surface-variant/50 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
-              {t('question.duplicate.existingQuestion', 'Existing Question')}
+              {t('question.duplicate.existingQuestion')}
             </p>
             <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">
               {duplicate?.matchedQuestion}
@@ -76,7 +76,7 @@ export function DuplicateFoundDialog({ duplicate, onOpenChange, onTryAnother, on
 
         <div className="flex flex-col gap-2 border-t border-border-subtle px-6 py-4 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={onTryAnother} className="justify-center">
-            {t('question.tryAnotherQuestion', 'Ask a different question')}
+            {t('question.tryAnotherQuestion')}
           </Button>
           <Button onClick={onBackHome} className="justify-center gap-2">
             <Home className="h-4 w-4" />

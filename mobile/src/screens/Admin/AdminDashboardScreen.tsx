@@ -12,6 +12,7 @@ import { ReasonModal } from '../../components/ReasonModal';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -454,6 +455,7 @@ const dividerStyles = StyleSheet.create({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AdminDashboardScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
@@ -551,7 +553,7 @@ export function AdminDashboardScreen() {
       await adminApi.reviewQuestion(reasonId, body);
       setQueue((prev) => prev.filter((q) => q.id !== reasonId));
       const label = reasonAction === 'approve' ? 'approved' : reasonAction === 'reject' ? 'rejected' : 'placed on hold';
-      showToast(`Question ${label}`, 'success');
+      showToast(t('adminDashboardScreen.question', { label }), 'success');
     } catch (e) {
       showToast(getErrorMessage(e, `Failed to ${reasonAction} question`), 'error');
     } finally {
@@ -566,7 +568,7 @@ export function AdminDashboardScreen() {
       <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={c.primary} />
-          <Text style={[styles.loadingText, { color: c.mutedForeground }]}>Loading dashboard...</Text>
+          <Text style={[styles.loadingText, { color: c.mutedForeground }]}>{t('adminDashboardScreen.loadingDashboard')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -601,7 +603,7 @@ export function AdminDashboardScreen() {
               <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Admin'}</Text>
               <View style={[styles.heroRolePill, { backgroundColor: c.heroFg + '22' }]}>
                 <Ionicons name="shield-checkmark" size={13} color={c.heroFg} />
-                <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>Administrator</Text>
+                <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>{t('adminDashboardScreen.administrator')}</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -619,23 +621,17 @@ export function AdminDashboardScreen() {
             <View style={styles.heroStatPills}>
               <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                 <Ionicons name="document-text" size={11} color={c.heroFg + 'cc'} />
-                <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                  {fmt(s?.totalQuestions ?? 0)} questions
-                </Text>
+                <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('adminDashboardScreen.questions', { value1: fmt(s?.totalQuestions ?? 0) })}</Text>
               </View>
               {user?.role !== 'curator' && (
                 <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                   <Ionicons name="people" size={11} color={c.heroFg + 'cc'} />
-                  <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                    {fmt(s?.totalUsers ?? 0)} users
-                  </Text>
+                  <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('adminDashboardScreen.users', { value1: fmt(s?.totalUsers ?? 0) })}</Text>
                 </View>
               )}
               <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                 <Ionicons name="checkmark-circle" size={11} color={c.heroFg + 'cc'} />
-                <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                  {approvalRate}% approved
-                </Text>
+                <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('adminDashboardScreen.approved', { approvalRate })}</Text>
               </View>
             </View>
           </View>
@@ -644,7 +640,7 @@ export function AdminDashboardScreen() {
         {/* ── Question stats ───────────────────────────────────────────── */}
         <View style={[styles.section, { marginTop: tokens.spacing5 }]}>
           <SectionHeader
-            title="Questions"
+            title={t('profile.questions')}
             icon="document-text"
             actionLabel="All questions"
             onAction={() => navigation.navigate('AdminQuestions')}
@@ -654,7 +650,7 @@ export function AdminDashboardScreen() {
             {/* Approval rate bar */}
             <View style={styles.rateBarRow}>
               <View style={styles.rateBarMeta}>
-                <Text style={[styles.rateBarLabel, { color: c.mutedForeground }]}>Approval Rate</Text>
+                <Text style={[styles.rateBarLabel, { color: c.mutedForeground }]}>{t('adminDashboardScreen.approvalRate')}</Text>
                 <Text style={[styles.rateBarValue, { color: approvalRate >= 70 ? '#059669' : approvalRate >= 40 ? '#D97706' : '#DC2626' }]}>
                   {approvalRate}%
                 </Text>
@@ -740,7 +736,7 @@ export function AdminDashboardScreen() {
         {rewards && user?.role !== 'curator' && (
           <View style={[styles.section, { marginTop: tokens.spacing6 }]}>
             <SectionHeader
-              title="Rewards & Payouts"
+              title={t('adminDashboardScreen.rewardsPayouts')}
               icon="card"
               themeColors={c}
             />
@@ -757,7 +753,7 @@ export function AdminDashboardScreen() {
                     <Text style={[styles.rewardGridValue, { color: '#059669' }]}>
                       {formatINR(rewards.totalRewarded)}
                     </Text>
-                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Total Rewarded</Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>{t('adminDashboardScreen.totalRewarded')}</Text>
                   </View>
                 </View>
 
@@ -770,7 +766,7 @@ export function AdminDashboardScreen() {
                     <Text style={[styles.rewardGridValue, { color: '#0891B2' }]}>
                       {rewards.rewardCount.toLocaleString()}
                     </Text>
-                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Rewards Given</Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>{t('adminDashboardScreen.rewardsGiven')}</Text>
                   </View>
                 </View>
               </View>
@@ -787,7 +783,7 @@ export function AdminDashboardScreen() {
                     <Text style={[styles.rewardGridValue, { color: '#7C3AED' }]}>
                       {formatINR(Math.round(rewards.avgReward))}
                     </Text>
-                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Avg per Reward</Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>{t('adminDashboardScreen.avgPerReward')}</Text>
                   </View>
                 </View>
 
@@ -800,7 +796,7 @@ export function AdminDashboardScreen() {
                     <Text style={[styles.rewardGridValue, { color: '#D97706' }]}>
                       {formatINR(rewards.totalWithdrawn)}
                     </Text>
-                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>Payouts Sent</Text>
+                    <Text style={[styles.rewardGridLabel, { color: c.mutedForeground }]}>{t('adminDashboardScreen.payoutsSent')}</Text>
                   </View>
                 </View>
               </View>
@@ -809,10 +805,8 @@ export function AdminDashboardScreen() {
             {/* ── Payout ratio bar ── */}
             <View style={[styles.payoutBarCard, { backgroundColor: c.card, borderColor: c.border }]}>
               <View style={styles.payoutBarHeader}>
-                <Text style={[styles.payoutBarTitle, { color: c.foreground }]}>Payout Pipeline</Text>
-                <Text style={[styles.payoutBarSub, { color: c.mutedForeground }]}>
-                  {rewards.withdrawalCount} transactions
-                </Text>
+                <Text style={[styles.payoutBarTitle, { color: c.foreground }]}>{t('adminDashboardScreen.payoutPipeline')}</Text>
+                <Text style={[styles.payoutBarSub, { color: c.mutedForeground }]}>{t('adminDashboardScreen.transactions', { withdrawalCount: rewards.withdrawalCount })}</Text>
               </View>
               <View style={styles.payoutBarTrack}>
                 <View
@@ -826,12 +820,8 @@ export function AdminDashboardScreen() {
                 />
               </View>
               <View style={styles.payoutBarFooter}>
-                <Text style={[styles.payoutBarLegend, { color: '#059669' }]}>
-                  {formatINR(rewards.totalWithdrawn)} sent
-                </Text>
-                <Text style={[styles.payoutBarLegend, { color: c.mutedForeground }]}>
-                  {formatINR(rewards.totalRewarded - rewards.totalWithdrawn)} remaining
-                </Text>
+                <Text style={[styles.payoutBarLegend, { color: '#059669' }]}>{t('adminDashboardScreen.sent', { value1: formatINR(rewards.totalWithdrawn) })}</Text>
+                <Text style={[styles.payoutBarLegend, { color: c.mutedForeground }]}>{t('adminDashboardScreen.remaining', { value1: formatINR(rewards.totalRewarded - rewards.totalWithdrawn) })}</Text>
               </View>
             </View>
 
@@ -853,7 +843,7 @@ export function AdminDashboardScreen() {
         {queue.length > 0 && (
           <View style={[styles.section, { marginTop: tokens.spacing2 }]}>
             <SectionHeader
-              title="Needs Review"
+              title={t('adminDashboardScreen.needsReview')}
               icon="git-pull-request"
               actionLabel="View all"
               onAction={() => navigation.navigate('AdminQuestions')}
@@ -878,10 +868,10 @@ export function AdminDashboardScreen() {
 
         {/* ── Quick access ──────────────────────────────────────────────── */}
         <View style={[styles.section, { marginTop: tokens.spacing2 }]}>
-          <SectionHeader title="Quick Access" icon="grid" themeColors={c} />
+          <SectionHeader title={t('adminDashboardScreen.quickAccess')} icon="grid" themeColors={c} />
           {user?.role !== 'curator' && (
             <QuickCard
-              label="Users"
+              label={t('admin.users')}
               sub="Manage accounts"
               icon="people"
               color="#0891B2"
@@ -890,7 +880,7 @@ export function AdminDashboardScreen() {
             />
           )}
           <QuickCard
-            label="Questions"
+            label={t('profile.questions')}
             sub="Review & moderate"
             icon="document-text"
             color={c.primary}
@@ -902,7 +892,7 @@ export function AdminDashboardScreen() {
           {(user?.role === 'super_admin' || user?.role === 'admin') && (
             <>
               <QuickCard
-                label="Audit Logs"
+                label={t('adminAuditLogsScreen.auditLogs')}
                 sub="Admin actions & stats"
                 icon="document-text"
                 color="#7c3aed"
@@ -910,7 +900,7 @@ export function AdminDashboardScreen() {
                 themeColors={c}
               />
               <QuickCard
-                label="FAQ Management"
+                label={t('faqAdmin.title')}
                 sub="Manage help content"
                 icon="help-circle"
                 color="#0891b2"
@@ -919,7 +909,7 @@ export function AdminDashboardScreen() {
               />
               {user?.role === 'super_admin' && (
                 <QuickCard
-                  label="Config"
+                  label={t('adminDashboardScreen.config')}
                   sub="System settings"
                   icon="settings"
                   color="#6B7280"
@@ -938,7 +928,7 @@ export function AdminDashboardScreen() {
       <ReasonModal
         visible={reasonAction !== null}
         title={
-          reasonAction === 'approve' ? 'Approve Question' :
+          reasonAction === 'approve' ? t('adminDashboardScreen.approveQuestion') :
           reasonAction === 'reject' ? 'Reject Question' :
           'Hold Question'
         }

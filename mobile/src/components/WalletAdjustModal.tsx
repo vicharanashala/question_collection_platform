@@ -9,6 +9,7 @@ import { useToast } from '../components/Toast';
 import { adminApi, getErrorMessage } from '../api/client';
 import { tokens } from '../utils/theme';
 import type { WalletSummary } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   visible: boolean;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjusted }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
@@ -117,10 +119,8 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
               <Ionicons name="swap-vertical" size={22} color={c.primary} />
             </View>
             <View style={styles.headerText}>
-              <Text style={[styles.title, { color: c.text }]}>Adjust Wallet Balance</Text>
-              <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-                Manually adjust {userName}'s wallet balance
-              </Text>
+              <Text style={[styles.title, { color: c.text }]}>{t('walletAdjustModal.adjustWalletBalance')}</Text>
+              <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('walletAdjustModal.manuallyAdjustWalletBalance', { userName })}</Text>
             </View>
           </View>
 
@@ -139,7 +139,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
 
           {/* Credit / Debit toggle */}
           <View style={styles.field}>
-            <Text style={[styles.fieldLabel, { color: c.text }]}>Transaction Type</Text>
+            <Text style={[styles.fieldLabel, { color: c.text }]}>{t('walletAdjustModal.transactionType')}</Text>
             <View style={styles.toggleRow}>
               <TouchableOpacity
                 style={[
@@ -157,9 +157,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
                   size={16}
                   color={type === 'credit' ? '#fff' : c.textSecondary}
                 />
-                <Text style={[styles.toggleBtnText, { color: type === 'credit' ? '#fff' : c.textSecondary }]}>
-                  Credit (+)
-                </Text>
+                <Text style={[styles.toggleBtnText, { color: type === 'credit' ? '#fff' : c.textSecondary }]}>{t('walletAdjustModal.credit')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -177,9 +175,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
                   size={16}
                   color={type === 'debit' ? '#fff' : c.textSecondary}
                 />
-                <Text style={[styles.toggleBtnText, { color: type === 'debit' ? '#fff' : c.textSecondary }]}>
-                  Debit (−)
-                </Text>
+                <Text style={[styles.toggleBtnText, { color: type === 'debit' ? '#fff' : c.textSecondary }]}>{t('walletAdjustModal.debit')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -218,7 +214,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
                   borderColor: reasonError ? c.error : c.borderSubtle,
                 },
               ]}
-              placeholder="e.g. Refund for rejected question, correction for duplicate payment…"
+              placeholder={t('walletAdjustModal.refundForRejectedQuestion')}
               placeholderTextColor={c.textTertiary}
               value={reason}
               onChangeText={(t) => { setReason(t); setReasonError(''); }}
@@ -233,7 +229,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
           {/* Preview */}
           {previewAmount !== null && (
             <View style={[styles.previewRow, { backgroundColor: (type === 'credit' ? c.success : c.error) + '12' }]}>
-              <Text style={[styles.previewLabel, { color: c.textSecondary }]}>New balance:</Text>
+              <Text style={[styles.previewLabel, { color: c.textSecondary }]}>{t('walletAdjustModal.newBalance')}</Text>
               <Text style={[styles.previewValue, { color: type === 'credit' ? c.success : c.error }]}>
                 ₹{previewAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </Text>
@@ -247,7 +243,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={[styles.btnCancelText, { color: c.text }]}>Cancel</Text>
+              <Text style={[styles.btnCancelText, { color: c.text }]}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -261,7 +257,7 @@ export function WalletAdjustModal({ visible, userId, userName, onClose, onAdjust
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.btnConfirmText}>Confirm Adjustment</Text>
+                <Text style={styles.btnConfirmText}>{t('walletAdjustModal.confirmAdjustment')}</Text>
               )}
             </TouchableOpacity>
           </View>

@@ -74,7 +74,7 @@ export function VideoSection() {
               <iframe
                 className="w-full h-full"
                 src={VIDEO_URL}
-                title="FAQ Video Guide"
+                title={t('videoSection.faqVideoGuide')}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

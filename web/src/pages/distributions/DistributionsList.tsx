@@ -15,8 +15,10 @@ import {
 import { toast } from 'sonner'
 import type { FinalQuestion } from '@/types'
 import { Pagination } from './Pagination'
+import { useTranslation } from 'react-i18next'
 
 export function DistributionsList() {
+  const { t } = useTranslation()
   // const [stats, setStats] = useState<DistributorStats | null>(null)
   const [indianStates, setIndianStates] = useState<string[]>([])
   const [distributionState, setDistributionState] = useState<string>('')
@@ -65,17 +67,17 @@ export function DistributionsList() {
           <div className="flex items-center gap-2 flex-1 min-w-[200px]">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search distributions..."
+              placeholder={t('distributionsList.searchDistributions')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
           <Select value={distributionState || 'all'} onValueChange={(v) => { setDistributionState(v === 'all' ? '' : v); setPage(1) }} disabled={questionType === 'original'}>
             <SelectTrigger className="w-56">
-              <SelectValue placeholder="Filter by state" />
+              <SelectValue placeholder={t('distributionsList.filterByState')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All states</SelectItem>
+              <SelectItem value="all">{t('distributionsList.allStates')}</SelectItem>
               {indianStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -92,17 +94,17 @@ export function DistributionsList() {
             }}
           >
             <SelectTrigger className="w-56">
-              <SelectValue placeholder="Filter by type" />
+              <SelectValue placeholder={t('distributionsList.filterByType')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All questions</SelectItem>
-              <SelectItem value="original">Original questions</SelectItem>
-              <SelectItem value="distributed">Distributed only</SelectItem>
+              <SelectItem value="all">{t('distributionsList.allQuestions')}</SelectItem>
+              <SelectItem value="original">{t('distributionsList.originalQuestions')}</SelectItem>
+              <SelectItem value="distributed">{t('distributionsList.distributedOnly')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </Button>
         </CardContent>
       </Card>
@@ -112,30 +114,26 @@ export function DistributionsList() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead className="bg-surface text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-2 font-medium">Question</th>
-                <th className="text-left px-4 py-2 font-medium">State</th>
-                <th className="text-left px-4 py-2 font-medium">Distributor</th>
-                <th className="text-left px-4 py-2 font-medium">Created</th>
+                <th className="text-left px-4 py-2 font-medium">{t('wallet.questionText')}</th>
+                <th className="text-left px-4 py-2 font-medium">{t('admin.state')}</th>
+                <th className="text-left px-4 py-2 font-medium">{t('roles.distributor')}</th>
+                <th className="text-left px-4 py-2 font-medium">{t('distributionsList.created')}</th>
               </tr>
             </thead>
             <tbody>
               {loading && items.length === 0 ? (
                 <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                  <Loader2 className="inline h-4 w-4 mr-2 animate-spin" /> Loading...
+                  <Loader2 className="inline h-4 w-4 mr-2 animate-spin" /> {t('common.loading')}
                 </td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                  No distributions yet.
-                </td></tr>
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">{t('distributionsList.noDistributionsYet')}</td></tr>
               ) : items.map((row) => (
                 <tr key={row.id} className="border-t border-border">
                   <td className="px-4 py-2 max-w-md">
                     <div className="line-clamp-2 text-foreground">{row.questionText}</div>
                     {row.submitterIsTester && <div className="mt-1"><TesterTag /></div>}
                     {row.notes && (
-                      <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                        Note: {row.notes}
-                      </div>
+                      <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1">{t('distributionsList.note', { notes: row.notes })}</div>
                     )}
                   </td>
                   <td className="px-4 py-2">
@@ -149,9 +147,9 @@ export function DistributionsList() {
                         <span className="text-muted-foreground">—</span>
                       )}
                       {!row.distributionState && (
-                        <Badge variant="secondary" title="Canonical reference doc — the original question row">
+                        <Badge variant="secondary" title={t('distributionsList.canonicalReferenceDocThe')}>
                           <Bookmark className="h-3 w-3 mr-1" />
-                          Original
+                          {t('translatableText.original')}
                         </Badge>
                       )}
                     </div>

@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { tokens } from '../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   visible: boolean;
@@ -34,6 +35,7 @@ export function TextInputModal({
   onSubmit,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [value, setValue] = useState(initialValue);
@@ -90,7 +92,7 @@ export function TextInputModal({
               disabled={loading}
             >
               {loading
-                ? <Text style={[styles.btnText, { color: '#fff' }]}>Please wait…</Text>
+                ? <Text style={[styles.btnText, { color: '#fff' }]}>{t('confirmModal.pleaseWait')}</Text>
                 : <Text style={[styles.btnText, { color: '#fff' }]}>{confirmLabel}</Text>}
             </TouchableOpacity>
           </View>

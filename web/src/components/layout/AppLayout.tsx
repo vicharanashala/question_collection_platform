@@ -9,8 +9,10 @@ import { Header } from './Header'
 import { MobileNav } from './MobileNav'
 import { Sidebar } from './Sidebar'
 import { StaffBottomNav } from './StaffBottomNav'
+import { useTranslation } from 'react-i18next'
 
 export function AppLayout() {
+  const { t } = useTranslation()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const location = useLocation()
   const anveshanScope = useAnveshanScope()
@@ -65,7 +67,7 @@ export function AppLayout() {
             >
               <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300 sm:px-6">
                 <Sprout className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {anveshanScope === 'only' ? 'Showing data from Anveshan users only.' : 'Showing data from non-Anveshan users only.'}
+                {anveshanScope === 'only' ? t('appLayout.showingDataFromAnveshan') : t('appLayout.showingDataFromNon')}
               </div>
             </motion.div>
           )}
@@ -82,7 +84,7 @@ export function AppLayout() {
             >
               <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 sm:px-6">
                 <FlaskConical className="h-4 w-4 shrink-0" aria-hidden="true" />
-                {testerScope === 'only' ? 'Showing data from tester accounts only.' : 'Showing data from non-tester accounts only.'}
+                {testerScope === 'only' ? t('appLayout.showingDataFromTester') : t('appLayout.showingDataFromNon2')}
               </div>
             </motion.div>
           )}

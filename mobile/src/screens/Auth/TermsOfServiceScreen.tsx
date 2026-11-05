@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
 import { config } from '../../config';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'TermsOfService'>;
@@ -71,6 +72,7 @@ const SECTIONS = [
 ];
 
 export function TermsOfServiceScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [openId, setOpenId] = useState<string | null>('1');
@@ -80,9 +82,9 @@ export function TermsOfServiceScreen({ navigation }: Props) {
       {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
+          <Text style={[styles.backText, { color: c.primary }]}>{t('← Back')}</Text>
         </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: c.text }]}>Terms of Service</Text>
+        <Text style={[styles.topBarTitle, { color: c.text }]}>{t('profile.termsOfService')}</Text>
         <View style={styles.spacer} />
       </View>
 
@@ -92,10 +94,8 @@ export function TermsOfServiceScreen({ navigation }: Props) {
           <View style={[styles.heroIcon, { backgroundColor: c.primary + '18' }]}>
             <Ionicons name="document-text-outline" size={32} color={c.primary} />
           </View>
-          <Text style={[styles.heroTitle, { color: c.text }]}>Terms of Service</Text>
-          <Text style={[styles.heroSub, { color: c.textSecondary }]}>
-            Last updated: June 2026 · 11 sections
-          </Text>
+          <Text style={[styles.heroTitle, { color: c.text }]}>{t('profile.termsOfService')}</Text>
+          <Text style={[styles.heroSub, { color: c.textSecondary }]}>{t('termsOfServiceScreen.lastUpdatedJune2026')}</Text>
         </View>
 
         {/* Sections */}

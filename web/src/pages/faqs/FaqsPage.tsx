@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Faq, FaqAudience, FaqCategory, PaginatedResponse } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,7 @@ function FaqRow({
   toggling: string | null;
   reorder: RowReorder | null;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const catMeta = getCatMeta(faq.category);
 
@@ -137,8 +139,8 @@ function FaqRow({
           <span
             draggable
             role="img"
-            aria-label="Drag to reorder"
-            title="Drag to reorder"
+            aria-label={t('faqsPage.dragToReorder')}
+            title={t('faqsPage.dragToReorder')}
             onDragStart={reorder.onDragStart}
             onDragEnd={reorder.onDragEnd}
             className="mt-1 -ml-1 shrink-0 cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
@@ -209,7 +211,7 @@ function FaqRow({
           ) : (
             <EyeOff className="h-3 w-3 mr-1" />
           )}
-          {faq.isVisible ? "Visible" : "Hidden"}
+          {faq.isVisible ? t('faqAdmin.visible') : t('faqAdmin.hidden')}
         </Badge>
 
         <div className="flex items-center gap-0.5 shrink-0">
@@ -219,7 +221,7 @@ function FaqRow({
             className="h-7 w-7"
             onClick={() => onToggle(faq)}
             disabled={!!toggling}
-            title={faq.isVisible ? "Hide" : "Show"}
+            title={faq.isVisible ? t('faqsPage.hide') : t('faqsPage.show')}
           >
             {toggling === faq.id ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -268,6 +270,7 @@ function PaginationControls({
   onPage: (p: number) => void;
   onLimit: (l: number) => void;
 }) {
+  const { t } = useTranslation();
   if (pages <= 1 && total <= limit) return null;
 
   const start = (page - 1) * limit + 1;
@@ -276,12 +279,10 @@ function PaginationControls({
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-2 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-        <span>
-          {start}–{end} of {total}
-        </span>
+        <span>{t('faqsPage.of', { start, end, total })}</span>
         <span className="text-border">|</span>
         <div className="flex items-center gap-1">
-          <span>Rows:</span>
+          <span>{t('faqsPage.rows')}</span>
           <Select
             value={String(limit)}
             onValueChange={(v) => onLimit(Number(v))}
@@ -381,6 +382,7 @@ function FaqDialog({
   onClose: () => void;
   onSave: (data: FormState) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Partial<FormState>>({});
@@ -425,11 +427,11 @@ function FaqDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-lg p-3 w-[85vw] !max-w-[85vw]">
         <DialogHeader>
-          <DialogTitle>{initial ? "Edit FAQ" : "Add FAQ"}</DialogTitle>
+          <DialogTitle>{initial ? t('faqAdmin.editTitle') : t('faqAdmin.addBtn')}</DialogTitle>
           <DialogDescription>
             {initial
-              ? "Update the question and answer below."
-              : "Fill in the question and answer below."}
+              ? t('faqsPage.updateTheQuestionAnd')
+              : t('faqsPage.fillInTheQuestion')}
           </DialogDescription>
         </DialogHeader>
 
@@ -440,7 +442,7 @@ function FaqDialog({
             </Label>
             <Input
               id="faq-question"
-              placeholder="e.g. How do I submit a question?"
+              placeholder={t('faqsPage.howDoSubmitQuestion')}
               value={form.question}
               onChange={(e) =>
                 setForm((f) => ({ ...f, question: e.target.value }))
@@ -460,7 +462,7 @@ function FaqDialog({
             </Label>
             <Textarea
               id="faq-answer"
-              placeholder="Enter the full answer..."
+              placeholder={t('faqsPage.enterTheFullAnswer')}
               value={form.answer}
               onChange={(e) =>
                 setForm((f) => ({ ...f, answer: e.target.value }))
@@ -476,7 +478,7 @@ function FaqDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="faq-category">Category</Label>
+            <Label htmlFor="faq-category">{t('profile.completion.fieldCategory')}</Label>
             <Select
               value={form.category}
               onValueChange={(v) =>
@@ -503,7 +505,7 @@ function FaqDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="faq-audience">Audience</Label>
+            <Label htmlFor="faq-audience">{t('faqsPage.audience')}</Label>
             <Select
               value={form.audience}
               onValueChange={(v) =>
@@ -514,21 +516,17 @@ function FaqDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="anveshan">Anveshan users</SelectItem>
-                <SelectItem value="user">Regular users</SelectItem>
-                <SelectItem value="all">Both</SelectItem>
+                <SelectItem value="anveshan">{t('faqsPage.anveshanUsers')}</SelectItem>
+                <SelectItem value="user">{t('faqsPage.regularUsers')}</SelectItem>
+                <SelectItem value="all">{t('faqsPage.both')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border-subtle px-3 py-2.5">
             <div>
-              <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">
-                Visible to users
-              </p>
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                Hidden FAQs are not shown on the public FAQ page
-              </p>
+              <p className="text-xs sm:text-xs sm:text-sm font-medium text-foreground">{t('faqAdmin.formVisibleLabel')}</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('faqAdmin.formVisibleDesc')}</p>
             </div>
             <Switch
               checked={form.isVisible}
@@ -538,12 +536,10 @@ function FaqDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>{t('common.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {initial ? "Save changes" : "Create FAQ"}
+            {initial ? t('faqsPage.saveChanges') : t('faqsPage.createFaq')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -564,21 +560,17 @@ function DeleteDialog({
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [deleting, setDeleting] = useState(false);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md p-2">
         <DialogHeader>
-          <DialogTitle>Delete FAQ?</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete &ldquo;{faq?.question}&rdquo;? This
-            action cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{t('faqAdmin.deleteTitle')}</DialogTitle>
+          <DialogDescription>{t('faqsPage.areYouSureYou', { question: faq?.question })}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={deleting}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose} disabled={deleting}>{t('common.cancel')}</Button>
           <Button
             variant="destructive"
             onClick={async () => {
@@ -608,6 +600,7 @@ function DeleteDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function FaqsPage() {
+  const { t } = useTranslation();
   // Opening the page counts as having seen the new nav entry.
   useEffect(() => { markFeatureSeen('faqAdmin') }, []);
 
@@ -745,13 +738,13 @@ export function FaqsPage() {
             }
           : prev,
       );
-      toast.success("FAQ updated");
+      toast.success(t('faqAdmin.success.updated'));
     } else {
       await faqApi.create(data);
       // Refresh full list and stats
       await fetchList(activeCat === "all" ? undefined : activeCat);
       await fetchStats(activeCat === "all" ? undefined : activeCat);
-      toast.success("FAQ created");
+      toast.success(t('faqAdmin.success.created'));
       return;
     }
     await fetchStats(activeCat === "all" ? undefined : activeCat);
@@ -814,7 +807,7 @@ export function FaqsPage() {
       visible: s.visible - (faq.isVisible ? 1 : 0),
       hidden: s.hidden - (faq.isVisible ? 0 : 1),
     }));
-    toast.success("FAQ deleted");
+    toast.success(t('faqAdmin.success.deleted'));
   }
 
   const items = result?.items ?? [];
@@ -837,12 +830,8 @@ export function FaqsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">
-            FAQ Management
-          </h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Manage frequently asked questions
-          </p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('nav.faqManagement')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">{t('faqAdmin.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -853,7 +842,7 @@ export function FaqsPage() {
               fetchStats(activeCat === "all" ? undefined : activeCat);
             }}
             disabled={loading}
-            title="Refresh"
+            title={t('common.refresh')}
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
@@ -865,7 +854,7 @@ export function FaqsPage() {
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
-            Add FAQ
+            {t('faqAdmin.addBtn')}
           </Button>
         </div>
       </div>
@@ -919,7 +908,7 @@ export function FaqsPage() {
         <div className="relative flex-1 min-w-48 max-w-80">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="Search questions or answers…"
+            placeholder={t('faqsPage.searchQuestionsOrAnswers')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-8 h-9 text-xs sm:text-xs sm:text-sm"
@@ -947,9 +936,9 @@ export function FaqsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Audiences</SelectItem>
-              <SelectItem value="anveshan">Anveshan Users</SelectItem>
-              <SelectItem value="user">Regular Users</SelectItem>
+              <SelectItem value="all">{t('faqsPage.allAudiences')}</SelectItem>
+              <SelectItem value="anveshan">{t('faqsPage.anveshanUsers2')}</SelectItem>
+              <SelectItem value="user">{t('faqsPage.regularUsers2')}</SelectItem>
             </SelectContent>
           </Select>
           <NewBadge feature="faqAdminTools" className="pointer-events-none absolute -right-2 -top-2" />
@@ -967,10 +956,10 @@ export function FaqsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="displayOrder">Sort: Order</SelectItem>
-            <SelectItem value="createdAt">Sort: Created</SelectItem>
-            <SelectItem value="updatedAt">Sort: Updated</SelectItem>
-            <SelectItem value="question">Sort: Question</SelectItem>
+            <SelectItem value="displayOrder">{t('faqsPage.sortOrder')}</SelectItem>
+            <SelectItem value="createdAt">{t('faqsPage.sortCreated')}</SelectItem>
+            <SelectItem value="updatedAt">{t('faqsPage.sortUpdated')}</SelectItem>
+            <SelectItem value="question">{t('faqsPage.sortQuestion')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -979,7 +968,7 @@ export function FaqsPage() {
           size="icon"
           className="h-9 w-9"
           onClick={() => handleSortChange(sortBy)}
-          title={sortOrder === "ASC" ? "Ascending" : "Descending"}
+          title={sortOrder === "ASC" ? t('faqsPage.ascending') : t('faqsPage.descending')}
         >
           {sortOrder === "ASC" ? (
             <ChevronUp className="h-4 w-4" />
@@ -1063,13 +1052,13 @@ export function FaqsPage() {
             </div>
             <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
               {activeCat !== "all" || search
-                ? `No FAQs matching your filters`
-                : "No FAQs yet"}
+                ? t('faqsPage.noFaqsMatchingYour')
+                : t('faqAdmin.emptyTitle')}
             </p>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1 max-w-52">
               {activeCat !== "all" || search
-                ? "Try adjusting your search or category filter"
-                : "Create your first FAQ to get started"}
+                ? t('faqsPage.tryAdjustingYourSearch')
+                : t('faqAdmin.emptySubtitle')}
             </p>
             {activeCat === "all" && !search && (
               <Button
@@ -1080,7 +1069,7 @@ export function FaqsPage() {
                 }}
               >
                 <Plus className="h-4 w-4" />
-                Create FAQ
+                {t('faqsPage.createFaq')}
               </Button>
             )}
             {(activeCat !== "all" || search) && (
@@ -1094,7 +1083,7 @@ export function FaqsPage() {
                 }}
               >
                 <X className="h-4 w-4" />
-                Clear filters
+                {t('wallet.clearFilters')}
               </Button>
             )}
           </CardContent>
@@ -1143,7 +1132,7 @@ export function FaqsPage() {
             {canReorder && items.length > 1 && (
               <p className="px-4 py-2 text-[11px] text-muted-foreground border-t border-border-subtle">
                 <NewBadge feature="faqAdminTools" className="mr-1.5" />
-                Drag the handle to change the order. Ordering applies within the current page and filters.
+                {t('faqsPage.dragTheHandleTo')}
               </p>
             )}
 
@@ -1171,7 +1160,7 @@ export function FaqsPage() {
                 className="flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="h-3 w-3" />
-                Clear category filter
+                {t('faqsPage.clearCategoryFilter')}
               </button>
             </div>
           )}

@@ -5,6 +5,7 @@ import {
 import {
   ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const PAGE_SIZES = [10, 20, 50, 100]
 
@@ -19,6 +20,7 @@ export function Pagination({
   onPage: (p: number) => void
   onLimit: (l: number) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] sm:text-[11px] sm:text-xs">
       <div className="text-muted-foreground">
@@ -30,7 +32,7 @@ export function Pagination({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {PAGE_SIZES.map((s) => <SelectItem key={s} value={String(s)}>{s}/page</SelectItem>)}
+            {PAGE_SIZES.map((s) => <SelectItem key={s} value={String(s)}>{t('pagination.page', { s })}</SelectItem>)}
           </SelectContent>
         </Select>
         <div className="flex items-center gap-1">
@@ -40,7 +42,7 @@ export function Pagination({
           <Button size="sm" variant="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="px-2">Page {page} / {Math.max(1, pages)}</span>
+          <span className="px-2">{t('pagination.page2', { page, value3: Math.max(1, pages) })}</span>
           <Button size="sm" variant="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>

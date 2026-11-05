@@ -9,6 +9,7 @@ import {
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Question } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface AssignResult {
   success: boolean
@@ -25,6 +26,7 @@ export function AssignStatesDialog({
   onClose: () => void
   onDone: () => void
 }) {
+  const { t } = useTranslation()
   const [states, setStates] = useState<string[]>([])
   const [indianStates, setIndianStates] = useState<string[]>([])
   const [notes, setNotes] = useState('')
@@ -53,7 +55,7 @@ export function AssignStatesDialog({
       // raw reviewer-API body (or is `undefined` when reviewer ingestion
       // wasn't attempted or failed). The full `r` is surfaced in the
       // success card below; the toast itself is intentionally neutral.
-      toast.success('Questions moved')
+      toast.success(t('assignStatesDialog.questionsMoved'))
       setTimeout(onDone, 1500)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to assign states.'))
@@ -66,11 +68,11 @@ export function AssignStatesDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="min-w-[75vw] p-2">
         <DialogHeader>
-          <DialogTitle>Assign states to question</DialogTitle>
+          <DialogTitle>{t('assignStatesDialog.assignStatesToQuestion')}</DialogTitle>
           <DialogDescription>
             Pick the Indian states where this question should be distributed. You can
             also submit with no states selected if the question is not state-specific.
-            The parent question status will flip to <em>moved_to_final</em>.
+            The parent question status will flip to <em>{t('assignStatesDialog.movedToFinal')}</em>.
           </DialogDescription>
         </DialogHeader>
 
@@ -80,10 +82,10 @@ export function AssignStatesDialog({
           </div>
 
           <div className="flex items-center justify-between">
-            <Label>Indian states ({states.length} selected)</Label>
+            <Label>{t('assignStatesDialog.indianStatesSelected', { length: states.length })}</Label>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={selectAll}>Select all</Button>
-              <Button size="sm" variant="ghost" onClick={clearAll}>Clear</Button>
+              <Button size="sm" variant="ghost" onClick={selectAll}>{t('dataTable.selectAll')}</Button>
+              <Button size="sm" variant="ghost" onClick={clearAll}>{t('dataTable.clear')}</Button>
             </div>
           </div>
 
@@ -109,11 +111,11 @@ export function AssignStatesDialog({
           </div>
 
           <div>
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">{t('assignStatesDialog.notesOptional')}</Label>
             <Textarea
               id="notes"
               rows={2}
-              placeholder="Optional note about this distribution..."
+              placeholder={t('assignStatesDialog.optionalNoteAboutThis')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -130,25 +132,21 @@ export function AssignStatesDialog({
                 </div>
               )}
               {result.count > 0 && result.reviewerResponse === undefined && (
-                <div className="mt-1 text-amber-700 dark:text-amber-400">
-                  Note: reviewer ingestion didn't return a response. The local rows have been saved and can be re-ingested later.
-                </div>
+                <div className="mt-1 text-amber-700 dark:text-amber-400">{t('assignStatesDialog.noteReviewerIngestionDidn')}</div>
               )}
               {result.count > 0 && result.reviewerResponse !== undefined && (
-                <div className="mt-1 text-green-700 dark:text-green-400 opacity-75">
-                  Reviewer ingestion acknowledged.
-                </div>
+                <div className="mt-1 text-green-700 dark:text-green-400 opacity-75">{t('assignStatesDialog.reviewerIngestionAcknowledged')}</div>
               )}
             </div>
           )}
         </div>
 
         <DialogFooter className='mt-2'>
-          <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={submitting}>{t('common.cancel')}</Button>
           <Button onClick={submit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
             {states.length === 0
-              ? 'Move to final (no states)'
+              ? t('assignStatesDialog.moveToFinalNo')
               : `Assign to ${states.length} state${states.length === 1 ? '' : 's'}`}
           </Button>
         </DialogFooter>

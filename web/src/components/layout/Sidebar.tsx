@@ -203,8 +203,8 @@ export function Sidebar() {
         <button
           onClick={toggleCollapsed}
           aria-expanded={!collapsed}
-          title={collapsed ? 'Expand sidebar' : undefined}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? t('sidebar.expandSidebar') : undefined}
+          aria-label={collapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
           className={cn(
             'mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs sm:text-xs sm:text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
             collapsed && 'justify-center px-0',

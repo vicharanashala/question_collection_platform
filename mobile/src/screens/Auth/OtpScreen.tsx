@@ -165,9 +165,7 @@ export function OtpScreen({ navigation, route }: Props) {
               </Text>
             )}
             <View style={styles.lockedBannerEmailRow}>
-              <Text style={[styles.lockedBannerContactLabel, { color: colors.textSecondary }]}>
-                If you believe this was a mistake, contact support
-              </Text>
+              <Text style={[styles.lockedBannerContactLabel, { color: colors.textSecondary }]}>{t('accountLockedModal.ifYouBelieveThis')}</Text>
               <TouchableOpacity
                 style={[styles.lockedBannerEmailBtn, {
                   borderColor: lockedInfo.status === 'banned' ? colors.error + '88' : colors.warning + '88',
@@ -188,7 +186,7 @@ export function OtpScreen({ navigation, route }: Props) {
                 />
                 <Text style={[styles.lockedBannerEmailLabel, {
                   color: lockedInfo.status === 'banned' ? colors.error : colors.warning,
-                }]}>Send email</Text>
+                }]}>{t('accountLockedModal.sendEmail')}</Text>
               </TouchableOpacity>
             </View>
           </View>

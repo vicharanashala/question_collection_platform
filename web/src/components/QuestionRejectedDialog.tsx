@@ -68,13 +68,13 @@ export function QuestionRejectedDialog({ category, questionText, onOpenChange }:
 
         <div className="space-y-3 px-6 py-5">
           <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-center text-xs font-medium text-emerald-700 dark:text-emerald-300">
-            {t('question.rejectedNotCounted', 'This was not submitted and does not count against your daily limit.')}
+            {t('question.rejectedNotCounted')}
           </p>
 
           {Boolean(questionText.trim()) && (
             <div className="rounded-lg border border-border-subtle bg-surface-variant/50 p-3">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
-                {t('question.rejectedYourQuestion', 'Your question')}
+                {t('question.rejectedYourQuestion')}
               </p>
               <p className="mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                 {questionText.trim()}
@@ -86,7 +86,7 @@ export function QuestionRejectedDialog({ category, questionText, onOpenChange }:
         <div className="px-6 pb-6">
           <Button onClick={() => onOpenChange(false)} className="w-full justify-center gap-2">
             <Pencil className="h-4 w-4" />
-            {t('question.rejectedEditQuestion', 'Edit My Question')}
+            {t('question.rejectedEditQuestion')}
           </Button>
         </div>
       </DialogContent>

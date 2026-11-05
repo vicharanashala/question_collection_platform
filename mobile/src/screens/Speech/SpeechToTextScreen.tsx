@@ -360,15 +360,11 @@ export function SpeechToTextScreen() {
               {isUploading && (
                 <View style={styles.uploadingRow}>
                   <ActivityIndicator size="small" color={theme.colors.primary} />
-                  <Text style={[styles.uploadingText, { color: theme.colors.textSecondary }]}>
-                    Transcribing…
-                  </Text>
+                  <Text style={[styles.uploadingText, { color: theme.colors.textSecondary }]}>{t('audio.transcribing')}</Text>
                 </View>
               )}
               {!isUploading && (
-                <Text style={[styles.placeholder, { color: theme.colors.textTertiary }]}>
-                  Your transcribed text will appear here
-                </Text>
+                <Text style={[styles.placeholder, { color: theme.colors.textTertiary }]}>{t('speechToTextScreen.yourTranscribedTextWill')}</Text>
               )}
             </View>
           ) : (

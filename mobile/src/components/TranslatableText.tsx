@@ -85,8 +85,7 @@ export function TranslatableText({
         (err as { response?: { data?: { message?: string }; message?: string } })
           ?.response?.data?.message ??
         (err as Error)?.message ??
-        t('audio.translateError') ??
-        'Translation failed. Please try again.';
+        t('audio.translateError');
       showToast(msg, 'error');
     } finally {
       setTranslating(false);
@@ -108,7 +107,7 @@ export function TranslatableText({
             inputStyle,
           ]}
           value={value}
-          placeholder={placeholder ?? t('audio.textPlaceholder') ?? 'Type your question in English…'}
+          placeholder={placeholder ?? t('audio.textPlaceholder')}
           placeholderTextColor={c.textSecondary}
           multiline
           editable={!disabled}
@@ -141,7 +140,7 @@ export function TranslatableText({
 
       {value.trim() && (
         <Text style={[styles.hint, { color: c.textSecondary }]}>
-          {t('audio.translateHint') ?? `Translate to ${langLabel}`}
+          {t('audio.translateHint', { language: langLabel })}
         </Text>
       )}
     </View>

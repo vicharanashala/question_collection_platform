@@ -198,7 +198,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
         <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
           {!loading ? (
             <Badge variant="outline" className="w-fit whitespace-nowrap">
-              {total} {typeLabel.toLowerCase()} {total === 1 ? 'submission' : 'submissions'}
+              {total} {typeLabel.toLowerCase()} {total === 1 ? t('agriEntitySubmissionsList.submission') : t('agriEntitySubmissionsList.submissions')}
             </Badge>
           ) : (
             <span />
@@ -216,16 +216,16 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
               size="sm"
               variant="outline"
               onClick={() => { markFeatureSeen('entitySortOrder'); setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc')); setPage(1) }}
-              aria-label="Toggle submission date order"
+              aria-label={t('agriEntitySubmissionsList.toggleSubmissionDateOrder')}
             >
               {sortOrder === 'desc' ? <ArrowDownWideNarrow className="mr-1.5 h-4 w-4" /> : <ArrowUpNarrowWide className="mr-1.5 h-4 w-4" />}
-              {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
+              {sortOrder === 'desc' ? t('agriEntitySubmissionsList.newestFirst') : t('agriEntitySubmissionsList.oldestFirst')}
               <NewBadge feature="entitySortOrder" className="ml-1.5" />
             </Button>
             {canFilterUsers && (
               <Button size="sm" variant="outline" onClick={() => { markFeatureSeen('entityExport'); handleExport() }} disabled={exporting}>
                 <Download className="mr-1.5 h-4 w-4" />
-                {exporting ? 'Exporting…' : 'Export Excel'}
+                {exporting ? t('exportMenu.exporting') : t('agriEntitySubmissionsList.exportExcel')}
                 <NewBadge feature="entityExport" className="ml-1.5" />
               </Button>
             )}
@@ -259,7 +259,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
       {!loading && total > 0 && (
         <SubmissionCount
           total={total}
-          label={t('agriEntity.count', { type: typeLabel.toLowerCase(), defaultValue: `${typeLabel.toLowerCase()} submission${total === 1 ? '' : 's'}` })}
+          label={t('agriEntity.count', { count: total, type: typeLabel.toLowerCase() })}
         />
       )}
 
@@ -270,13 +270,13 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
           ) : items.length === 0 ? (
             <SubmissionEmptyState
               icon={TypeIcon}
-              title={t('agriEntity.noSubmissions', { type: typeLabel.toLowerCase(), defaultValue: 'No {{type}} submissions yet' })}
+              title={t('agriEntity.noSubmissions', { type: typeLabel.toLowerCase() })}
               description={
                 scope === 'mine'
-                  ? t('agriEntity.emptyHint', { type: typeLabel.toLowerCase(), defaultValue: 'Share a {{type}} with its names, sources and photos. It will appear here.' })
+                  ? t('agriEntity.emptyHint', { type: typeLabel.toLowerCase() })
                   : undefined
               }
-              actionLabel={scope === 'mine' ? t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' }) : undefined}
+              actionLabel={scope === 'mine' ? t('agriEntity.submit', { type: typeLabel }) : undefined}
               onAction={scope === 'mine' ? () => navigate(`/home/ask?tab=${type}`) : undefined}
             />
           ) : (

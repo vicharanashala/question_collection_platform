@@ -12,8 +12,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ShieldCheck, Lock, ChevronDown, ChevronUp } from 'lucide-react'
 import { PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
+import { useTranslation } from 'react-i18next'
 
 export function PublicPrivacyPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [openId, setOpenId] = useState<string | null>('1')
 
@@ -21,7 +23,7 @@ export function PublicPrivacyPage() {
     <div className="mx-auto max-w-2xl space-y-4 pb-4">
       <Button variant="outline" size="sm" onClick={() => navigate('/home/profile')} className="rounded-full">
         <ArrowLeft className="h-4 w-4" />
-        Back to profile
+        {t('faq.backToProfile')}
       </Button>
 
       {/* Hero */}
@@ -29,18 +31,14 @@ export function PublicPrivacyPage() {
         <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
           <ShieldCheck className="h-8 w-8" />
         </div>
-        <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">Privacy Policy</h1>
-        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
-          Last updated: June 2026 · {PRIVACY_POLICY_SECTIONS.length} sections
-        </p>
+        <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{t('profile.privacyPolicy')}</h1>
+        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('publicPrivacyPage.lastUpdatedJune2026', { length: PRIVACY_POLICY_SECTIONS.length })}</p>
       </div>
 
       {/* Info banner */}
       <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 dark:bg-emerald-950/30">
         <Lock className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
-        <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-          Your data is stored securely and never sold to third parties.
-        </p>
+        <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400">{t('publicPrivacyPage.yourDataIsStored')}</p>
       </div>
 
       {/* Accordion sections */}
@@ -76,9 +74,7 @@ export function PublicPrivacyPage() {
         })}
       </div>
 
-      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
-        AnnaDatha — To Strengthen Indian Farmers
-      </p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('questionDetailModal.annadathaToStrengthenIndian')}</p>
     </div>
   )
 }

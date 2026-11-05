@@ -83,6 +83,7 @@ import {
   getProfileDraft,
   saveProfileDraft,
 } from "@/utils/profileDraft";
+import { useTranslation } from 'react-i18next';
 const TOTAL_STEPS = 4;
 const STEP_KEYS = [
   "Tell us about yourself",
@@ -239,11 +240,10 @@ interface WizardFormStateProps {
 }
 
 function Step1({ form, errors, setField }: WizardFormStateProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
-        Pick the option that best describes you.
-      </p>
+      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('completeProfileWizard.pickTheOptionThat')}</p>
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
         {USER_CATEGORIES.map((c) => {
           const active = form.category === c.value;
@@ -320,11 +320,10 @@ function Step2({
   kvkFreeText,
   setKvkFreeText,
 }: WizardFormStateProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
-        We&apos;ll use this to match your questions with local experts.
-      </p>
+      <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('completeProfileWizard.weLlUseThis')}</p>
 
       {/* State */}
       <div className="space-y-1.5">
@@ -343,7 +342,7 @@ function Step2({
             setField("districtCode", "");
             loadDistricts(v);
           }}
-          placeholder="Search state…"
+          placeholder={t('completeProfileWizard.searchState')}
           disabled={loadingDistricts}
           loading={loadingDistricts}
         />
@@ -368,7 +367,7 @@ function Step2({
             setField("districtCode", d?.code ?? "");
             loadBlocks(d?.code ?? "");
           }}
-          placeholder={!form.state ? "Choose state first" : "Search district…"}
+          placeholder={!form.state ? t('completeProfileWizard.chooseStateFirst') : t('completeProfileWizard.searchDistrict')}
           disabled={!form.state || loadingDistricts}
           loading={loadingDistricts}
           allowFreeText={
@@ -387,7 +386,7 @@ function Step2({
           <Input
             value={form.district}
             onChange={(e) => setField("district", e.target.value)}
-            placeholder="Type district name"
+            placeholder={t('completeProfileWizard.typeDistrictName')}
             className="mt-1.5"
           />
         )}
@@ -414,7 +413,7 @@ function Step2({
               loadKvks(form.districtCode);
             }}
             placeholder={
-              !form.district ? "Choose district first" : "Search block…"
+              !form.district ? t('completeProfileWizard.chooseDistrictFirst') : t('completeProfileWizard.searchBlock')
             }
             disabled={!form.district || loadingBlocks}
             loading={loadingBlocks}
@@ -434,7 +433,7 @@ function Step2({
             <Input
               value={form.block}
               onChange={(e) => setField("block", e.target.value)}
-              placeholder="Type block name"
+              placeholder={t('completeProfileWizard.typeBlockName')}
               className="mt-1.5"
             />
           )}
@@ -457,7 +456,7 @@ function Step2({
               items={villages.map((v) => ({ value: v.name, label: v.name }))}
               value={form.village}
               onValueChange={(v) => setField("village", v)}
-              placeholder="Search village…"
+              placeholder={t('completeProfileWizard.searchVillage')}
               disabled={loadingVillages}
               loading={loadingVillages}
               allowFreeText={
@@ -476,7 +475,7 @@ function Step2({
               <Input
                 value={form.village}
                 onChange={(e) => setField("village", e.target.value)}
-                placeholder="Type village name"
+                placeholder={t('completeProfileWizard.typeVillageName')}
                 className="mt-1.5"
               />
             )}
@@ -494,7 +493,7 @@ function Step2({
               items={kvks.map((k) => ({ value: k.address, label: k.address }))}
               value={form.kvk}
               onValueChange={(v) => setField("kvk", v)}
-              placeholder="Search KVK…"
+              placeholder={t('completeProfileWizard.searchKvk')}
               disabled={loadingKvks}
               loading={loadingKvks}
               allowFreeText={
@@ -513,7 +512,7 @@ function Step2({
               <Input
                 value={form.kvk}
                 onChange={(e) => setField("kvk", e.target.value)}
-                placeholder="Type KVK name"
+                placeholder={t('completeProfileWizard.typeKvkName')}
                 className="mt-1.5"
               />
             )}
@@ -548,6 +547,7 @@ function Step3({
   setVolunteerCropPickerOpen,
   crops
 }: WizardFormStateProps) {
+  const { t } = useTranslation();
 
   
 
@@ -582,7 +582,7 @@ function Step3({
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             maxLength={80}
-            placeholder="Your name"
+            placeholder={t('completeProfileWizard.yourName')}
           />
           {errors.name && (
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -604,7 +604,7 @@ function Step3({
                 )
               }
               maxLength={20}
-              placeholder="e.g. ram_kr"
+              placeholder={t('completeProfileWizard.ramKr')}
               className={cn(
                 "pr-8",
                 usernameStatus === "available" &&
@@ -632,9 +632,7 @@ function Step3({
           )}
           {usernameStatus === "taken" && (
             <div className="space-y-1">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
-                Taken. Try one of these:
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{t('completeProfileWizard.takenTryOneOf')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {usernameSuggestions.map((s) => (
                   <button
@@ -661,7 +659,7 @@ function Step3({
             onValueChange={(v) => setField("gender", v as any)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Choose" />
+              <SelectValue placeholder={t('completeProfileWizard.choose')} />
             </SelectTrigger>
             <SelectContent>
               {GENDER_OPTIONS.map((g) => (
@@ -687,7 +685,7 @@ function Step3({
             max={120}
             value={form.age}
             onChange={(e) => setField("age", e.target.value)}
-            placeholder="e.g. 28"
+            placeholder={t('completeProfileWizard.28')}
           />
           {errors.age && (
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -729,9 +727,7 @@ function Step3({
                 Primary crops <span className="text-rose-600">*</span>
               </Label>
               {form.cropType.length > 0 && (
-                <span className="text-[11px] sm:text-[11px] sm:text-xs text-emerald-600 font-medium">
-                  {form.cropType.length} selected
-                </span>
+                <span className="text-[11px] sm:text-[11px] sm:text-xs text-emerald-600 font-medium">{t('completeProfileWizard.selected', { length: form.cropType.length })}</span>
               )}
             </div>
 
@@ -804,7 +800,7 @@ function Step3({
                         )
                       }
                       className="ml-0.5 leading-none hover:text-rose-500"
-                      aria-label={`Remove ${c}`}
+                      aria-label={t('completeProfileWizard.remove', { c })}
                     >
                       ×
                     </button>
@@ -818,9 +814,7 @@ function Step3({
               type="button"
               onClick={() => setCropPickerOpen(true)}
               className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
-            >
-              See all {CROPS.length} crops
-            </button>
+            >{t('completeProfileWizard.seeAllCrops', { length: CROPS.length })}</button>
 
             <CropPickerModal
               open={cropPickerOpen}
@@ -849,7 +843,7 @@ function Step3({
               onValueChange={(v) => setField("courseName", v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose course" />
+                <SelectValue placeholder={t('completeProfileWizard.chooseCourse')} />
               </SelectTrigger>
               <SelectContent>
                 {COURSE_OPTIONS.map((c) => (
@@ -857,7 +851,7 @@ function Step3({
                     {c.label}
                   </SelectItem>
                 ))}
-                <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
+                <SelectItem value={OTHER_VALUE}>{t('completeProfileWizard.other')}</SelectItem>
               </SelectContent>
             </Select>
             {errors.courseName && (
@@ -870,7 +864,7 @@ function Step3({
                 className="mt-2"
                 value={form.courseNameOther}
                 onChange={(e) => setField("courseNameOther", e.target.value)}
-                placeholder="Enter course name"
+                placeholder={t('completeProfileWizard.enterCourseName')}
               />
             )}
             {errors.courseNameOther && (
@@ -886,7 +880,7 @@ function Step3({
             <Input
               value={form.collegeName}
               onChange={(e) => setField("collegeName", e.target.value)}
-              placeholder="College / institution"
+              placeholder={t('completeProfileWizard.collegeInstitution')}
             />
             {errors.collegeName && (
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -895,11 +889,11 @@ function Step3({
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>University</Label>
+            <Label>{t('profile.completion.fieldUniversityName')}</Label>
             <Input
               value={form.universityName}
               onChange={(e) => setField("universityName", e.target.value)}
-              placeholder="Optional"
+              placeholder={t('completeProfileWizard.optional')}
             />
             {errors.universityName && (
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -922,7 +916,7 @@ function Step3({
               onValueChange={(v) => setField("organisationType", v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose type" />
+                <SelectValue placeholder={t('completeProfileWizard.chooseType')} />
               </SelectTrigger>
               <SelectContent>
                 {ORG_TYPE_OPTIONS.map((o) => (
@@ -930,7 +924,7 @@ function Step3({
                     {o.label}
                   </SelectItem>
                 ))}
-                <SelectItem value={OTHER_VALUE}>Other…</SelectItem>
+                <SelectItem value={OTHER_VALUE}>{t('completeProfileWizard.other')}</SelectItem>
               </SelectContent>
             </Select>
             {errors.organisationType && (
@@ -945,7 +939,7 @@ function Step3({
                 onChange={(e) =>
                   setField("organisationTypeOther", e.target.value)
                 }
-                placeholder="Specify organisation type"
+                placeholder={t('completeProfileWizard.specifyOrganisationType')}
               />
             )}
             {errors.organisationTypeOther && (
@@ -962,7 +956,7 @@ function Step3({
               <Input
                 value={form.organizationName}
                 onChange={(e) => setField("organizationName", e.target.value)}
-                placeholder="Registered name"
+                placeholder={t('completeProfileWizard.registeredName')}
               />
               {errors.organizationName && (
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -977,7 +971,7 @@ function Step3({
               <Input
                 value={form.organizationRole}
                 onChange={(e) => setField("organizationRole", e.target.value)}
-                placeholder="e.g. CEO, Field Officer"
+                placeholder={t('completeProfileWizard.ceoFieldOfficer')}
               />
               {errors.organizationRole && (
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -997,7 +991,7 @@ function Step3({
                 min={0}
                 value={form.numberOfFarmers}
                 onChange={(e) => setField("numberOfFarmers", e.target.value)}
-                placeholder="Approx."
+                placeholder={t('completeProfileWizard.approx')}
               />
               {errors.numberOfFarmers && (
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -1017,8 +1011,8 @@ function Step3({
               }))}
               values={form.organizationState}
               onValuesChange={(v) => setField("organizationState", v)}
-              placeholder="Search states…"
-              helperText="Select all states where your organisation operates. You can pick more than one."
+              placeholder={t('completeProfileWizard.searchStates')}
+              helperText={t('completeProfileWizard.selectAllStatesWhere')}
             />
             {errors.organizationState && (
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
@@ -1030,13 +1024,13 @@ function Step3({
             <div className="space-y-3">
               {/* Season first */}
               <div className="space-y-1.5">
-                <Label>Season</Label>
+                <Label>{t('profile.season')}</Label>
                 <Select
                   value={form.season}
                   onValueChange={(v) => setField("season", v)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Optional" />
+                    <SelectValue placeholder={t('completeProfileWizard.optional')} />
                   </SelectTrigger>
                   <SelectContent>
                     {SEASONS.map((s) => (
@@ -1050,11 +1044,9 @@ function Step3({
 
               {/* Crop focus label sits BELOW Season (stacked layout) */}
               <div className="flex items-center justify-between">
-                <Label>Crop focus</Label>
+                <Label>{t('completeProfileWizard.cropFocus')}</Label>
                 {form.volunteerCropType.length > 0 && (
-                  <span className="text-[11px] sm:text-[11px] sm:text-xs font-normal text-emerald-600">
-                    {form.volunteerCropType.length} selected
-                  </span>
+                  <span className="text-[11px] sm:text-[11px] sm:text-xs font-normal text-emerald-600">{t('completeProfileWizard.selected', { length: form.volunteerCropType.length })}</span>
                 )}
               </div>
 
@@ -1127,7 +1119,7 @@ function Step3({
                           )
                         }
                         className="ml-0.5 leading-none hover:text-rose-500"
-                        aria-label={`Remove ${c}`}
+                        aria-label={t('completeProfileWizard.remove', { c })}
                       >
                         ×
                       </button>
@@ -1141,9 +1133,7 @@ function Step3({
                 type="button"
                 onClick={() => setVolunteerCropPickerOpen(true)}
                 className="flex w-full items-center justify-center rounded-md border border-border-subtle py-2 text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground hover:border-emerald-400 hover:text-emerald-600"
-              >
-                See all {crops.length} crops
-              </button>
+              >{t('completeProfileWizard.seeAllCrops', { length: crops.length })}</button>
 
               <CropPickerModal
                 open={volunteerCropPickerOpen}
@@ -1169,6 +1159,7 @@ function Step4({
   setLegalModal,
   setLanguage,
 }: WizardFormStateProps) {
+  const { t } = useTranslation();
   // When the user picks a language, switch the whole app to that language
   // immediately (i18n.changeLanguage + localStorage persistence + <html dir/lang>
   // sync are all handled by `setLanguage`/the i18n config). This is the live
@@ -1189,16 +1180,14 @@ function Step4({
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300">
             <Languages className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
-            Preferred language
-          </p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('completeProfileWizard.preferredLanguage')}</p>
         </div>
         <Select
           value={form.languagePreference}
           onValueChange={handleLanguageChange}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Choose language" />
+            <SelectValue placeholder={t('completeProfileWizard.chooseLanguage')} />
           </SelectTrigger>
           <SelectContent>
             {LANGUAGES.map((l) => (
@@ -1252,9 +1241,7 @@ function Step4({
                   setLegalModal("terms");
                 }}
                 className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
-              >
-                Terms of Service
-              </button>{" "}
+              >{t('profile.termsOfService')}</button>{" "}
               and{" "}
               <button
                 type="button"
@@ -1263,15 +1250,9 @@ function Step4({
                   setLegalModal("privacy");
                 }}
                 className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
-              >
-                Privacy Policy
-              </button>
+              >{t('profile.privacyPolicy')}</button>
             </p>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
-              I agree that the information I provide will be used to answer my
-              agriculture questions and improve services, and I understand my
-              mobile number will receive SMS notifications.
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{t('completeProfileWizard.agreeThatTheInformation')}</p>
           </div>
         </div>
         {errors.consentGiven && (
@@ -1287,9 +1268,7 @@ function Step4({
           <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
             <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">
-            What happens next?
-          </p>
+          <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground">{t('completeProfileWizard.whatHappensNext')}</p>
         </div>
         <ul className="space-y-2 sm:space-y-2.5">
           {[
@@ -1384,6 +1363,7 @@ export function CompleteProfileWizard({
   mobileNumber,
   onBack,
 }: CompleteProfileWizardProps) {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const { language: activeLanguage, setLanguage } = useLanguage();
 
@@ -1871,12 +1851,8 @@ export function CompleteProfileWizard({
         <div className="flex items-center gap-3">
           <BrandLogo className="h-9 w-9" />
           <div>
-            <h1 className="text-sm sm:text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
-              AnnaDatha
-            </h1>
-            <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              Complete your profile
-            </p>
+            <h1 className="text-sm sm:text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">{t('app.name')}</h1>
+            <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('completeProfileWizard.completeYourProfile')}</p>
           </div>
         </div>
         <Button
@@ -1886,7 +1862,7 @@ export function CompleteProfileWizard({
           className="gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
         >
           <LogOut className="h-3.5 w-3.5" />
-          Logout
+          {t('auth.logout')}
         </Button>
       </div>
 
@@ -1932,7 +1908,7 @@ export function CompleteProfileWizard({
               className="gap-1.5 text-xs sm:text-xs sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              {t('common.back')}
             </Button>
           ) : (
             <span />
@@ -1943,7 +1919,7 @@ export function CompleteProfileWizard({
               size="sm"
               className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-xs sm:text-sm"
             >
-              <span>Continue</span>
+              <span>{t('common.continue')}</span>
               <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           ) : (
@@ -1958,7 +1934,7 @@ export function CompleteProfileWizard({
               ) : (
                 <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               )}
-              <span>Submit registration</span>
+              <span>{t('completeProfileWizard.submitRegistration')}</span>
             </Button>
           )}
         </div>

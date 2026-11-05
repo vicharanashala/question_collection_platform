@@ -9,6 +9,7 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { walletApi, getErrorMessage } from '../../api/client';
 import { config } from '../../config';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Lazily resolved RazorpayCheckout — avoids top-level import which triggers
@@ -48,6 +49,7 @@ const STATUS_CONFIG: Record<PaymentDetailStatus, { label: string; color: string;
 };
 
 export function PaymentDetailsScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const navigation = useNavigation();
@@ -372,7 +374,7 @@ export function PaymentDetailsScreen() {
                 </Text>
                 <View style={styles.cardMetaRow}>
                   <Text style={[styles.cardMeta, { color: c.textSecondary }]}>
-                    {isUpi ? 'UPI ID' : (item.bankName || 'Bank Account')}
+                    {isUpi ? t('wallet.withdrawal.upiId') : (item.bankName || 'Bank Account')}
                   </Text>
                   {isUpi && (
                     <View style={[styles.statusBadge, { backgroundColor: accentColor + '18' }]}>
@@ -396,9 +398,7 @@ export function PaymentDetailsScreen() {
           {/* Bank extra details */}
           {!isUpi && item.ifsc && (
             <View style={[styles.bankDetailRow, { borderTopColor: c.border }]}>
-              <Text style={[styles.bankDetailText, { color: c.textSecondary }]}>
-                {item.accountHolderName} · IFSC: {item.ifsc}
-              </Text>
+              <Text style={[styles.bankDetailText, { color: c.textSecondary }]}>{t('paymentDetailsScreen.ifsc', { accountHolderName: item.accountHolderName, ifsc: item.ifsc })}</Text>
             </View>
           )}
 
@@ -414,7 +414,7 @@ export function PaymentDetailsScreen() {
               ) : (
                 <>
                   <Ionicons name="trash-outline" size={13} color="#ef4444" />
-                  <Text style={styles.removeBtnText}>Remove</Text>
+                  <Text style={styles.removeBtnText}>{t('paymentDetailsScreen.remove')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -425,9 +425,7 @@ export function PaymentDetailsScreen() {
             <View style={styles.actionArea}>
               <View style={[styles.alertRow, { backgroundColor: '#ef444410', borderColor: '#ef444430' }]}>
                 <Ionicons name="alert-circle" size={14} color="#ef4444" />
-                <Text style={[styles.alertText, { color: '#ef4444' }]}>
-                  Verification failed. Check details and try again.
-                </Text>
+                <Text style={[styles.alertText, { color: '#ef4444' }]}>{t('paymentDetailsScreen.verificationFailedCheckDetails')}</Text>
               </View>
               {canVerify && (
                 <TouchableOpacity
@@ -440,7 +438,7 @@ export function PaymentDetailsScreen() {
                   ) : (
                     <>
                       <Ionicons name="refresh" size={13} color="#fff" />
-                      <Text style={styles.verifyBtnText}>Retry Verification</Text>
+                      <Text style={styles.verifyBtnText}>{t('paymentDetailsScreen.retryVerification')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -456,7 +454,7 @@ export function PaymentDetailsScreen() {
                   ) : (
                     <>
                       <Ionicons name="trash-outline" size={13} color="#ef4444" />
-                      <Text style={styles.removeBtnText}>Remove</Text>
+                      <Text style={styles.removeBtnText}>{t('paymentDetailsScreen.remove')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -470,7 +468,7 @@ export function PaymentDetailsScreen() {
               <View style={[styles.instructionRow, { borderColor: '#f59e0b30' }]}>
                 <Ionicons name="information-circle" size={14} color="#f59e0b" />
                 <Text style={[styles.instructionText, { color: '#f59e0b' }]}>
-                  Pay ₹1 to verify your {isUpi ? 'UPI ID' : 'bank account'}.
+                  Pay ₹1 to verify your {isUpi ? t('wallet.withdrawal.upiId') : t('paymentDetailsScreen.bankAccount')}.
                 </Text>
               </View>
 
@@ -493,14 +491,12 @@ export function PaymentDetailsScreen() {
                   ) : (
                     <>
                       <Ionicons name={isUpi ? 'open-outline' : 'shield-checkmark-outline'} size={13} color="#fff" />
-                      <Text style={styles.verifyBtnText}>Verify with {isUpi ? 'UPI' : 'Net Banking'}</Text>
+                      <Text style={styles.verifyBtnText}>Verify with {isUpi ? t('wallet.withdrawal.upi') : t('paymentDetailsScreen.netBanking')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
               ) : (
-                <Text style={[styles.smsNote, { color: c.textTertiary }]}>
-                  Payment link will be sent via SMS shortly.
-                </Text>
+                <Text style={[styles.smsNote, { color: c.textTertiary }]}>{t('paymentDetailsScreen.paymentLinkWillBe')}</Text>
               )}
 
               {canRemove && (
@@ -514,7 +510,7 @@ export function PaymentDetailsScreen() {
                   ) : (
                     <>
                       <Ionicons name="trash-outline" size={13} color="#ef4444" />
-                      <Text style={styles.removeBtnText}>Remove</Text>
+                      <Text style={styles.removeBtnText}>{t('paymentDetailsScreen.remove')}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -533,7 +529,7 @@ export function PaymentDetailsScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="arrow-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: c.text }]}>Payment Methods</Text>
+        <Text style={[styles.headerTitle, { color: c.text }]}>{t('profile.paymentMethods')}</Text>
         <TouchableOpacity
           onPress={() => { resetForm(); setShowForm((v) => !v); }}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -561,15 +557,13 @@ export function PaymentDetailsScreen() {
         {/* Info banner */}
         <View style={[styles.infoBanner, { backgroundColor: c.primary + '10', borderColor: c.primary + '30' }]}>
           <Ionicons name="shield-checkmark-outline" size={18} color={c.primary} />
-          <Text style={[styles.infoBannerText, { color: c.textSecondary }]}>
-            Payment methods are verified with a ₹1 micro-transaction before use.
-          </Text>
+          <Text style={[styles.infoBannerText, { color: c.textSecondary }]}>{t('paymentDetailsScreen.paymentMethodsAreVerified')}</Text>
         </View>
 
         {/* Add form */}
         {showForm && (
           <View style={[styles.formCard, { backgroundColor: c.surface, borderColor: c.border }]}>
-            <Text style={[styles.formTitle, { color: c.text }]}>Add Payment Method</Text>
+            <Text style={[styles.formTitle, { color: c.text }]}>{t('paymentDetailsScreen.addPaymentMethod')}</Text>
 
             {/* Method toggle */}
             <View style={styles.methodRow}>
@@ -581,7 +575,7 @@ export function PaymentDetailsScreen() {
                 onPress={() => { setPayoutMethod('upi'); setFormError(''); }}
               >
                 <Ionicons name="at" size={16} color={payoutMethod === 'upi' ? c.primary : c.textTertiary} />
-                <Text style={[styles.methodLabel, { color: payoutMethod === 'upi' ? c.primary : c.textSecondary }]}>UPI</Text>
+                <Text style={[styles.methodLabel, { color: payoutMethod === 'upi' ? c.primary : c.textSecondary }]}>{t('wallet.withdrawal.upi')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -591,7 +585,7 @@ export function PaymentDetailsScreen() {
                 onPress={() => { setPayoutMethod('bank_transfer'); setFormError(''); }}
               >
                 <Ionicons name="card-outline" size={16} color={payoutMethod === 'bank_transfer' ? c.primary : c.textTertiary} />
-                <Text style={[styles.methodLabel, { color: payoutMethod === 'bank_transfer' ? c.primary : c.textSecondary }]}>Bank Account</Text>
+                <Text style={[styles.methodLabel, { color: payoutMethod === 'bank_transfer' ? c.primary : c.textSecondary }]}>{t('wallet.bankTab')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -599,7 +593,7 @@ export function PaymentDetailsScreen() {
               <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                 <TextInput
                   style={[styles.input, { color: c.text }]}
-                  placeholder="yourname@upi"
+                  placeholder={t('paymentDetailsScreen.yournameUpi')}
                   placeholderTextColor={c.textTertiary}
                   value={upiId}
                   onChangeText={(v) => { setUpiId(v.trim()); setFormError(''); }}
@@ -613,7 +607,7 @@ export function PaymentDetailsScreen() {
                 <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                   <TextInput
                     style={[styles.input, { color: c.text }]}
-                    placeholder="Account number"
+                    placeholder={t('paymentDetailsScreen.accountNumber')}
                     placeholderTextColor={c.textTertiary}
                     value={accountNumber}
                     onChangeText={(v) => { setAccountNumber(v.replace(/\s/g, '')); setFormError(''); }}
@@ -624,7 +618,7 @@ export function PaymentDetailsScreen() {
                 <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                   <TextInput
                     style={[styles.input, { color: c.text }]}
-                    placeholder="Confirm account number"
+                    placeholder={t('paymentDetailsScreen.confirmAccountNumber')}
                     placeholderTextColor={c.textTertiary}
                     value={confirmAccountNumber}
                     onChangeText={(v) => { setConfirmAccountNumber(v.replace(/\s/g, '')); setFormError(''); }}
@@ -635,7 +629,7 @@ export function PaymentDetailsScreen() {
                 <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                   <TextInput
                     style={[styles.input, { color: c.text }]}
-                    placeholder="IFSC code (e.g. SBIN0001234)"
+                    placeholder={t('paymentDetailsScreen.ifscCodeSbin0001234')}
                     placeholderTextColor={c.textTertiary}
                     value={ifsc}
                     onChangeText={(v) => { setIfsc(v.toUpperCase()); setFormError(''); }}
@@ -646,7 +640,7 @@ export function PaymentDetailsScreen() {
                 <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                   <TextInput
                     style={[styles.input, { color: c.text }]}
-                    placeholder="Account holder name"
+                    placeholder={t('paymentDetailsScreen.accountHolderName')}
                     placeholderTextColor={c.textTertiary}
                     value={accountHolderName}
                     onChangeText={(v) => { setAccountHolderName(v); setFormError(''); }}
@@ -657,7 +651,7 @@ export function PaymentDetailsScreen() {
                 <View style={[styles.inputWrap, { borderColor: c.border, backgroundColor: c.background }]}>
                   <TextInput
                     style={[styles.input, { color: c.text }]}
-                    placeholder="Bank name (optional)"
+                    placeholder={t('paymentDetailsScreen.bankNameOptional')}
                     placeholderTextColor={c.textTertiary}
                     value={bankName}
                     onChangeText={setBankName}
@@ -680,13 +674,11 @@ export function PaymentDetailsScreen() {
               {adding ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.submitBtnText}>Add & Verify</Text>
+                <Text style={styles.submitBtnText}>{t('paymentDetailsScreen.addVerify')}</Text>
               )}
             </TouchableOpacity>
 
-            <Text style={[styles.chargeNote, { color: c.textTertiary }]}>
-              A ₹1 verification charge will be applied and refunded upon confirmation.
-            </Text>
+            <Text style={[styles.chargeNote, { color: c.textTertiary }]}>{t('paymentDetailsScreen.verificationChargeWillBe')}</Text>
           </View>
         )}
 
@@ -696,10 +688,8 @@ export function PaymentDetailsScreen() {
         ) : details.length === 0 && !showForm ? (
           <View style={styles.emptyState}>
             <Ionicons name="wallet-outline" size={56} color={c.textTertiary} />
-            <Text style={[styles.emptyTitle, { color: c.text }]}>No payment methods</Text>
-            <Text style={[styles.emptySub, { color: c.textSecondary }]}>
-              Add a UPI ID or bank account to enable withdrawals.
-            </Text>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>{t('paymentDetailsScreen.noPaymentMethods')}</Text>
+            <Text style={[styles.emptySub, { color: c.textSecondary }]}>{t('paymentDetailsScreen.addUpiIdOr')}</Text>
           </View>
         ) : (
           <FlatList
@@ -714,7 +704,7 @@ export function PaymentDetailsScreen() {
 
       <ConfirmModal
         visible={deletingDetail !== null}
-        title="Remove Payment Method"
+        title={t('paymentDetailsScreen.removePaymentMethod')}
         message={
           deletingDetail?.payoutMethod === 'upi'
             ? `Remove ${deletingDetail.displayValue} from your payment methods?`

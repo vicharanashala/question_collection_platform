@@ -99,7 +99,7 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
   const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
 
   const tabs: { value: SubmissionTab; label: string }[] = [
-    ...(showQuestion ? [{ value: 'question' as const, label: t('agriEntity.tabs.question', 'Question') }] : []),
+    ...(showQuestion ? [{ value: 'question' as const, label: t('agriEntity.tabs.question') }] : []),
     ...(showAgriTabs ? AGRI_ENTITY_TYPES.map((type) => ({ value: type.value, label: t(`agriEntity.tabs.${type.value}`, type.label) })) : []),
   ]
 
@@ -157,7 +157,7 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
                     className="absolute right-1 top-1 h-3.5 w-3.5 text-emerald-500 sm:static sm:h-4 sm:w-4"
                     aria-hidden="true"
                   />
-                  <span className="sr-only">{t('agriEntity.tabs.completed', 'Completed')}</span>
+                  <span className="sr-only">{t('agriEntity.tabs.completed')}</span>
                 </>
               )}
             </TabsTrigger>

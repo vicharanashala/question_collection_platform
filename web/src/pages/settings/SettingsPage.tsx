@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { Settings2, RefreshCw, Lock } from 'lucide-react'
 import type { ConfigItem } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const CONFIG_META: Record<string, { label: string; suffix: string; description?: string }> = {
   max_users_per_state:            { label: 'Max Users per State',       suffix: '' },
@@ -52,6 +53,7 @@ const BOOLEAN_CONFIG_KEYS = new Set([
 ])
 
 export function SettingsPage() {
+  const { t } = useTranslation()
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
@@ -91,7 +93,7 @@ export function SettingsPage() {
     if (!editKey) return
     const val = parseFloat(editValue)
     if (isNaN(val) || val < 0) {
-      toast.error('Invalid value. Enter a non-negative number.')
+      toast.error(t('settingsPage.invalidValueEnterNon'))
       return
     }
     setSaving(true)
@@ -100,7 +102,7 @@ export function SettingsPage() {
       setConfigs((prev) =>
         prev.map((c) => (c.key === editKey ? { ...c, value: val } : c)),
       )
-      toast.success('Configuration updated')
+      toast.success(t('settingsPage.configurationUpdated'))
       setEditKey(null)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Update failed'))
@@ -117,7 +119,7 @@ export function SettingsPage() {
       setConfigs((prev) =>
         prev.map((c) => (c.key === cfg.key ? { ...c, value: val } : c)),
       )
-      toast.success('Configuration updated')
+      toast.success(t('settingsPage.configurationUpdated'))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Update failed'))
     } finally {
@@ -136,11 +138,9 @@ export function SettingsPage() {
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-text flex items-center gap-2">
             <Settings2 className="h-6 w-6" />
-            System Settings
+            {t('settingsPage.systemSettings')}
           </h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-1">
-            Platform configuration values. Changes apply immediately and are audit-logged.
-          </p>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-1">{t('settingsPage.platformConfigurationValuesChanges')}</p>
         </div>
         <Button
           variant="outline"
@@ -149,14 +149,14 @@ export function SettingsPage() {
           disabled={refreshing}
         >
           <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('common.refresh')}
         </Button>
       </div>
 
       {!isSuperAdmin && (
         <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-xs sm:text-xs sm:text-sm text-warning">
           <Lock className="h-4 w-4 shrink-0" />
-          Only <strong>super_admin</strong> can modify these settings.
+          Only <strong>{t('settingsPage.superAdmin')}</strong> can modify these settings.
         </div>
       )}
 
@@ -202,9 +202,7 @@ export function SettingsPage() {
                         onClick={() => openEdit(cfg)}
                         disabled={!isSuperAdmin}
                         className="shrink-0 text-text-tertiary hover:text-text"
-                      >
-                        Edit
-                      </Button>
+                      >{t('common.edit')}</Button>
                     )}
                   </div>
                 </CardContent>
@@ -214,7 +212,7 @@ export function SettingsPage() {
       </div>
 
       {configs.length === 0 && !loading && (
-        <p className="text-center text-xs sm:text-xs sm:text-sm text-text-secondary py-12">No configuration items found.</p>
+        <p className="text-center text-xs sm:text-xs sm:text-sm text-text-secondary py-12">{t('settingsPage.noConfigurationItemsFound')}</p>
       )}
 
       {/* Edit dialog */}
@@ -226,7 +224,7 @@ export function SettingsPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="cfg-value">New Value</Label>
+            <Label htmlFor="cfg-value">{t('settingsPage.newValue')}</Label>
             <Input
               id="cfg-value"
               type="number"
@@ -238,9 +236,9 @@ export function SettingsPage() {
             />
           </div>
           <DialogFooter className='mt-4 gap-1'>
-            <Button variant="outline" onClick={() => setEditKey(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditKey(null)}>{t('common.cancel')}</Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : 'Save Changes'}
+              {saving ? t('profilePage.saving') : t('editProfile.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>

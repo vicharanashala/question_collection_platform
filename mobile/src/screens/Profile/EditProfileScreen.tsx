@@ -272,7 +272,7 @@ export function EditProfileScreen({ navigation }: Props) {
             <Text style={[styles.title, { color: c.text }]}>{t('editProfile.title')}</Text>
             <Text style={[styles.subtitle, { color: c.textSecondary }]}>
               {isPrivileged
-                ? 'Update your admin profile'
+                ? t('editProfileScreen.updateYourAdminProfile')
                 : t('editProfile.subtitle')}
             </Text>
           </View>
@@ -390,7 +390,7 @@ export function EditProfileScreen({ navigation }: Props) {
                     searchable
                   />
                   <Button
-                    title="Manage My Crops"
+                    title={t('editProfile.manageCrops')}
                     variant="secondary"
                     onPress={() => navigation.navigate('CropManagement')}
                     style={styles.manageCropsButton}

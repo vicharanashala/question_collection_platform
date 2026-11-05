@@ -33,6 +33,7 @@ import {
   DualView,
   type ColumnDef,
 } from "@/components/DataTable";
+import { useTranslation } from 'react-i18next';
 
 const SEASON_LABEL: Record<string, string> = {
   Kharif: "Kharif",
@@ -64,6 +65,7 @@ const ANSWER_FILTER_OPTIONS: { value: AnswerFilter; label: string }[] = [
 // ─── Questions page ───────────────────────────────────────────────────────────
 
 export function QuestionsPage() {
+  const { t } = useTranslation();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -144,17 +146,15 @@ export function QuestionsPage() {
       render: (q) =>
         q.isAnswerSubmitted ? (
           <Badge className="whitespace-nowrap bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
-            <MessageSquareReply className="mr-1 h-3 w-3" aria-hidden="true" /> Answered
+            <MessageSquareReply className="mr-1 h-3 w-3" aria-hidden="true" /> {t('questionsPage.answered')}
           </Badge>
         ) : q.isAnveshan ? (
           <Badge
             variant="outline"
             className="whitespace-nowrap border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-600 sm:text-xs dark:text-amber-400"
-          >
-            Awaiting
-          </Badge>
+          >{t('questionsPage.awaiting')}</Badge>
         ) : (
-          <span className="text-xs text-muted-foreground" aria-label="Not applicable">—</span>
+          <span className="text-xs text-muted-foreground" aria-label={t('questionsPage.notApplicable')}>—</span>
         ),
     },
     {
@@ -258,9 +258,7 @@ export function QuestionsPage() {
           <Badge
             variant="outline"
             className="whitespace-nowrap px-2 py-0.5 text-[11px] text-muted-foreground sm:text-xs"
-          >
-            Not reviewed
-          </Badge>
+          >{t('questionsPage.notReviewed')}</Badge>
         )
       ),
     },
@@ -353,18 +351,12 @@ export function QuestionsPage() {
       {/* ─── Page header ─── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">
-            Questions
-          </h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
-            All submitted questions
-          </p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('pageTitle.questions')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">{t('questionsPage.allSubmittedQuestions')}</p>
         </div>
         <div className="flex items-center gap-3">
           {apiTotal > 0 && (
-            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hidden sm:block">
-              {apiTotal.toLocaleString()} total
-            </span>
+            <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hidden sm:block">{t('questionsPage.total', { value1: apiTotal.toLocaleString() })}</span>
           )}
           <ExportMenu
             name="questions"
@@ -395,8 +387,8 @@ export function QuestionsPage() {
             <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                aria-label="Search questions"
-                placeholder="Search crop, keyword, location..."
+                aria-label={t('faq.searchPlaceholder')}
+                placeholder={t('questionsPage.searchCropKeywordLocation')}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -411,7 +403,7 @@ export function QuestionsPage() {
               value={answerFilter || "all"}
               onValueChange={(v) => setAnswerFilter(v === "all" ? "" : (v as AnswerFilter))}
             >
-              <SelectTrigger className="w-full" aria-label="Filter by answer">
+              <SelectTrigger className="w-full" aria-label={t('questionsPage.filterByAnswer')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -433,7 +425,7 @@ export function QuestionsPage() {
           <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle pt-3">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <ListFilter className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Status
+              {t('submissions.status')}
             </span>
             <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
               {statusOptions.map(({ value, label }) => (
@@ -462,7 +454,7 @@ export function QuestionsPage() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full" aria-label="Filter by status">
+                <SelectTrigger className="w-full" aria-label={t('questionsPage.filterByStatus')}>
                   <SelectValue>
                     {statusOptions.find((o) => o.value === statusFilter)?.label ?? "All"}
                   </SelectValue>
@@ -481,9 +473,7 @@ export function QuestionsPage() {
                 type="button"
                 onClick={clearFilters}
                 className="ml-auto text-xs font-medium text-primary hover:underline"
-              >
-                Clear filters
-              </button>
+              >{t('wallet.clearFilters')}</button>
             )}
           </div>
         </div>

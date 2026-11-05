@@ -2,6 +2,7 @@ import { CheckCircle2 } from 'lucide-react'
 import { InfoTip } from '@/components/anveshan-answers/InfoTip'
 import { cn } from '@/lib/utils'
 import type { AnveshanMilestoneCounts, AnveshanUserProgress } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const BREAKDOWN: { key: keyof AnveshanMilestoneCounts; label: string }[] = [
   { key: 'questions', label: 'Questions' },
@@ -18,15 +19,16 @@ interface AnveshanProgressCellProps {
 
 // Compact milestone progress for the user table: bar, percentage and a per-goal breakdown tooltip.
 export function AnveshanProgressCell({ progress }: AnveshanProgressCellProps) {
+  const { t } = useTranslation()
   const { percent, completed } = progress
 
   return (
     <InfoTip
-      label={`Anveshan progress ${percent}%, show breakdown`}
+      label={t('anveshanProgressCell.anveshanProgressShowBreakdown', { percent })}
       className="w-36 flex-col items-stretch gap-1 p-0.5 text-left"
       content={
         <div className="space-y-1">
-          <p className="font-semibold">Anveshan progress: {percent}%</p>
+          <p className="font-semibold">{t('anveshanProgressCell.anveshanProgress', { percent })}</p>
           <ul className="space-y-0.5">
             {BREAKDOWN.map(({ key, label }) => {
               const done = progress.progress[key] >= progress.requirements[key]
@@ -41,7 +43,7 @@ export function AnveshanProgressCell({ progress }: AnveshanProgressCellProps) {
             })}
           </ul>
           {!progress.submissionsCompleted && (
-            <p className="text-[11px] opacity-80">Answers count after all submissions are done.</p>
+            <p className="text-[11px] opacity-80">{t('anveshanProgressCell.answersCountAfterAll')}</p>
           )}
         </div>
       }
@@ -49,10 +51,10 @@ export function AnveshanProgressCell({ progress }: AnveshanProgressCellProps) {
       <span className="flex items-center justify-between gap-2 text-[11px] font-semibold sm:text-xs">
         {completed ? (
           <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Complete
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> {t('anveshanProgressCell.complete')}
           </span>
         ) : (
-          <span className="text-text-secondary">{progress.submissionsCompleted ? 'Answering' : 'Submitting'}</span>
+          <span className="text-text-secondary">{progress.submissionsCompleted ? t('anveshanProgressCell.answering') : t('anveshanProgressCell.submitting')}</span>
         )}
         <span className={cn('tabular-nums', completed ? 'text-emerald-700 dark:text-emerald-400' : 'text-text')}>{percent}%</span>
       </span>

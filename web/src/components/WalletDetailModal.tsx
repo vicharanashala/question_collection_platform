@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Transaction, WalletSummary } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const TX_STATUS_COLORS: Record<string, string> = {
   pending:   'bg-warning text-white',
@@ -87,17 +88,18 @@ interface TransactionTableProps {
 function TransactionTable({
   items, loading, loadingMore, page, limit, total, emptyText, EmptyIcon, onLoadMore,
 }: TransactionTableProps) {
+  const { t } = useTranslation()
   return (
     <>
       <div className="rounded-xl border border-border overflow-x-auto flex flex-col flex-1 min-h-0">
         <div className="flex flex-col flex-1 min-h-0 md:min-w-[780px]">
         <div className="hidden md:grid md:grid-cols-[3rem_minmax(0,2.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)_minmax(0,1fr)] md:gap-4 px-4 py-2.5 bg-muted/60 text-[11px] sm:text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">
-          <span className="text-center">S.No</span>
-          <span>Source &amp; Description</span>
-          <span>Type</span>
-          <span className="text-right">Amount</span>
-          <span className="text-center">Status</span>
-          <span className="text-right">Balance</span>
+          <span className="text-center">{t('walletDetailModal.no')}</span>
+          <span>{t('walletDetailModal.sourceDescription')}</span>
+          <span>{t('wallet.txType')}</span>
+          <span className="text-right">{t('wallet.withdrawal.amount')}</span>
+          <span className="text-center">{t('submissions.status')}</span>
+          <span className="text-right">{t('admin.balance')}</span>
         </div>
         <div className="overflow-y-auto flex-1">
           {loading ? (
@@ -145,13 +147,11 @@ function TransactionTable({
                     {formatDate(tx.createdAt) ?? new Date(tx.createdAt).toLocaleDateString('en-IN')}
                   </p>
                   {tx.referenceId && (
-                    <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">
-                      Ref: {tx.referenceId}
-                    </p>
+                    <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">{t('walletDetailModal.ref', { referenceId: tx.referenceId })}</p>
                   )}
                 </div>
                 <div>
-                  <MobileLabel>Type</MobileLabel>
+                  <MobileLabel>{t('wallet.txType')}</MobileLabel>
                   <div className={cn('flex items-center gap-1 text-[11px] sm:text-[11px] sm:text-xs font-semibold', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                     {tx.type === 'credit'
                       ? <ArrowDownRight className="h-3.5 w-3.5 shrink-0" />
@@ -161,13 +161,13 @@ function TransactionTable({
                   </div>
                 </div>
                 <div>
-                  <MobileLabel>Amount</MobileLabel>
+                  <MobileLabel>{t('wallet.withdrawal.amount')}</MobileLabel>
                   <p className={cn('text-xs sm:text-xs sm:text-sm font-bold tabular-nums md:text-right', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
                     {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
                   </p>
                 </div>
                 <div>
-                  <MobileLabel>Status</MobileLabel>
+                  <MobileLabel>{t('submissions.status')}</MobileLabel>
                   <div className="flex items-center md:justify-center">
                     <span className={cn(
                       'inline-block rounded-full px-2 py-0.5 text-[11px] sm:text-[11px] sm:text-xs font-semibold capitalize',
@@ -178,7 +178,7 @@ function TransactionTable({
                   </div>
                 </div>
                 <div>
-                  <MobileLabel>Balance</MobileLabel>
+                  <MobileLabel>{t('admin.balance')}</MobileLabel>
                   <p className="text-xs sm:text-sm font-medium text-foreground tabular-nums md:text-right">
                     {tx.balanceAfter != null ? `₹${formatINRFull(Number(tx.balanceAfter))}` : '—'}
                   </p>
@@ -211,6 +211,7 @@ function TransactionTable({
 }
 
 export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalProps) {
+  const { t } = useTranslation()
   // const { user: currentUser } = useAuth()
   // const isSuperAdmin = currentUser?.role === 'super_admin'
 
@@ -405,7 +406,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
 
             {/* Balance card */}
             <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Balance</p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider font-medium">{t('walletDetailModal.currentBalance')}</p>
               {isLoading || loadingWallet ? (
                 <Skeleton className="h-10 w-36" />
               ) : (
@@ -417,7 +418,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                 <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <ArrowDownRight className="h-3.5 w-3.5 text-success" />
-                    Total Earned
+                    {t('home.totalEarned')}
                   </span>
                   {isLoading ? (
                     <Skeleton className="h-3 w-16" />
@@ -430,7 +431,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                 <div className="flex items-center justify-between text-[11px] sm:text-[11px] sm:text-xs">
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <ArrowUpRight className="h-3.5 w-3.5 text-destructive" />
-                    Total Withdrawn
+                    {t('walletsPage.totalWithdrawn')}
                   </span>
                   {isLoading ? (
                     <Skeleton className="h-3 w-16" />
@@ -455,7 +456,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Transactions</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('walletDetailModal.transactions')}</p>
                     </div>
                     <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
                       {txSummary.totalTransactions}
@@ -464,7 +465,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   <div className="rounded-xl border border-border bg-card p-3 text-center shadow-sm">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <Banknote className="h-3 w-3 text-muted-foreground" />
-                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawals</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('nav.withdrawals')}</p>
                     </div>
                     <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">{txSummary.withdrawalTransactions ?? 0}</p>
                   </div>
@@ -509,7 +510,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   page={txPage}
                   limit={limit}
                   total={txSummary.totalTransactions}
-                  emptyText="No transactions yet"
+                  emptyText={t('wallet.noTransactions')}
                   EmptyIcon={ArrowRightLeft}
                   onLoadMore={() => fetchTransactions(txPage + 1)}
                 />
@@ -524,7 +525,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   page={wdPage}
                   limit={limit}
                   total={wdTotal}
-                  emptyText="No withdrawals yet"
+                  emptyText={t('walletDetailModal.noWithdrawalsYet')}
                   EmptyIcon={Banknote}
                   onLoadMore={() => fetchWithdrawals(wdPage + 1)}
                 />

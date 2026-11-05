@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import type { Report } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open' },
@@ -100,6 +101,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 // }
 
 export default function ReportDetailPage() {
+  const { t } = useTranslation()
   const { reportId } = useParams<{ reportId: string }>()
   const navigate = useNavigate()
   const [report, setReport] = useState<Report | null>(null)
@@ -132,7 +134,7 @@ export default function ReportDetailPage() {
     try {
       await reportsApi.addReply(reportId, replyText.trim())
       setReplyText('')
-      toast.success('Reply sent')
+      toast.success(t('reportDetailPage.replySent'))
       await fetchReport()
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to send reply'))
@@ -146,7 +148,7 @@ export default function ReportDetailPage() {
     setUpdatingStatus(true)
     try {
       await reportsApi.updateStatus(reportId, status)
-      toast.success('Status updated')
+      toast.success(t('reportDetailPage.statusUpdated'))
       await fetchReport()
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to update status'))
@@ -160,7 +162,7 @@ export default function ReportDetailPage() {
     setUpdatingPriority(true)
     try {
       await reportsApi.updatePriority(reportId, priority)
-      toast.success('Priority updated')
+      toast.success(t('reportDetailPage.priorityUpdated'))
       await fetchReport()
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to update priority'))
@@ -180,7 +182,7 @@ export default function ReportDetailPage() {
     setMarkingClosed(true)
     try {
       await reportsApi.updateStatus(reportId, 'closed')
-      toast.success('Report marked as closed')
+      toast.success(t('reportDetailPage.reportMarkedAsClosed'))
       await fetchReport()
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to close report'))
@@ -208,10 +210,8 @@ export default function ReportDetailPage() {
   if (!report) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <p className="text-muted-foreground">Report not found</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/reports')}>
-          Back to Reports
-        </Button>
+        <p className="text-muted-foreground">{t('report.reportNotFound')}</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate('/reports')}>{t('reportDetailPage.backToReports')}</Button>
       </div>
     )
   }
@@ -225,13 +225,13 @@ export default function ReportDetailPage() {
             className="h-5 w-5 cursor-pointer hover:text-foreground transition-colors"
             onClick={() => navigate('/reports')}
           />
-          <h1 className="text-base sm:text-base sm:text-lg font-semibold">Report Detail</h1>
+          <h1 className="text-base sm:text-base sm:text-lg font-semibold">{t('reportDetailPage.reportDetail')}</h1>
         </div>
 
         {/* Status + Priority controls */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">Status:</span>
+            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('reportDetailPage.status')}</span>
             <Select
               value={report.status}
               onValueChange={handleStatusChange}
@@ -248,7 +248,7 @@ export default function ReportDetailPage() {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">Priority:</span>
+            <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('reportDetailPage.priority')}</span>
             <Select
               value={report.priority}
               onValueChange={handlePriorityChange}
@@ -272,7 +272,7 @@ export default function ReportDetailPage() {
               className="gap-1.5"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {markingClosed ? 'Closing...' : 'Mark as Closed'}
+              {markingClosed ? t('reportDetailPage.closing') : t('reportDetailPage.markAsClosed')}
             </Button>
           )}
 
@@ -280,26 +280,22 @@ export default function ReportDetailPage() {
           <Dialog open={showCloseModal} onOpenChange={setShowCloseModal}>
             <DialogContent className="max-w-sm p-2">
               <DialogHeader>
-                <DialogTitle>Close this report?</DialogTitle>
-                <DialogDescription>
-                  Marking this report as closed will notify the user that their issue has been resolved. This action cannot be undone.
-                </DialogDescription>
+                <DialogTitle>{t('reportDetailPage.closeThisReport')}</DialogTitle>
+                <DialogDescription>{t('reportDetailPage.markingThisReportAs')}</DialogDescription>
               </DialogHeader>
               <DialogFooter className="gap-2 mt-1">
                 <Button
                   variant="outline"
                   onClick={() => setShowCloseModal(false)}
                   disabled={markingClosed}
-                >
-                  Cancel
-                </Button>
+                >{t('common.cancel')}</Button>
                 <Button
                   variant="success"
                   onClick={confirmMarkClosed}
                   disabled={markingClosed}
                   className="gap-1.5"
                 >
-                  {markingClosed ? 'Closing...' : (
+                  {markingClosed ? t('reportDetailPage.closing') : (
                     <>
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Yes, Close Report
@@ -318,33 +314,31 @@ export default function ReportDetailPage() {
         <Card className="p-4 space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs sm:text-xs sm:text-sm">
             <div>
-              <p className="text-muted-foreground">Reporter</p>
+              <p className="text-muted-foreground">{t('reportDetailPage.reporter')}</p>
               <p className="font-medium">{report.user?.name ?? '—'}</p>
               <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{report.user?.mobileNumber ?? ''}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Category</p>
+              <p className="text-muted-foreground">{t('profile.completion.fieldCategory')}</p>
               <Badge className="mt-1 bg-surface-variant text-text">
                 {CATEGORY_LABELS[report.category] ?? report.category}
               </Badge>
             </div>
             <div>
-              <p className="text-muted-foreground">Priority</p>
+              <p className="text-muted-foreground">{t('reportDetailPage.priority2')}</p>
               <Badge className={`mt-1 ${PRIORITY_COLORS[report.priority] ?? 'bg-surface-variant text-text'}`}>
                 {report.priority}
               </Badge>
             </div>
             <div>
-              <p className="text-muted-foreground">Created</p>
+              <p className="text-muted-foreground">{t('distributionsList.created')}</p>
               <p className="font-medium">{formatDateTime(report.createdAt)}</p>
             </div>
           </div>
 
           {report.relatedEntityId && (
             <div className="pt-2 border-t border-border">
-              <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
-                Related: {report.relatedEntityType} — #{report.relatedEntityId}
-              </p>
+              <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('reportDetailPage.related', { relatedEntityType: report.relatedEntityType, relatedEntityId: report.relatedEntityId })}</p>
             </div>
           )}
 
@@ -358,9 +352,7 @@ export default function ReportDetailPage() {
         {/* Reply thread */}
         {report.replies && report.replies.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Replies ({report.replies.length})
-            </h3>
+            <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t('reportDetailPage.replies', { length: report.replies.length })}</h3>
             {report.replies.map((reply) => (
               <Card key={reply.id} className="p-4">
                 <div className="flex items-start gap-3">
@@ -386,15 +378,13 @@ export default function ReportDetailPage() {
 
         {/* Reply form */}
         <Card className="p-4 space-y-3">
-          <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Add Reply
-          </h3>
+          <h3 className="text-xs sm:text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">{t('reportDetailPage.addReply')}</h3>
 
           {/* Suggestions */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-medium">Suggestions</span>
+              <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-medium">{t('reportDetailPage.suggestions')}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {(REPLY_SUGGESTIONS[report.category] ?? GENERAL_SUGGESTIONS).map((suggestion, i) => (
@@ -416,7 +406,7 @@ export default function ReportDetailPage() {
 
           <Textarea
             id="reply-textarea"
-            placeholder="Type your reply to the user, or select a suggestion above..."
+            placeholder={t('reportDetailPage.typeYourReplyTo')}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             rows={4}
@@ -431,7 +421,7 @@ export default function ReportDetailPage() {
               disabled={!replyText.trim() || sending}
             >
               <Send className="h-4 w-4 mr-2" />
-              {sending ? 'Sending...' : 'Send Reply'}
+              {sending ? t('reportDetailPage.sending') : t('reportDetailPage.sendReply')}
             </Button>
           </div>
         </Card>

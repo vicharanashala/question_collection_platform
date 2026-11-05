@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from 'react-i18next';
 
 export type TesterFilterValue = "" | "only" | "exclude";
 
@@ -21,12 +22,13 @@ interface TesterFilterProps {
 
 // Dropdown to show only tester accounts, hide them, or show everything. An empty value means all.
 export function TesterFilter({ value, onChange }: TesterFilterProps) {
+  const { t } = useTranslation();
   return (
     <Select
       value={value || "all"}
       onValueChange={(v) => onChange(v === "all" ? "" : (v as TesterFilterValue))}
     >
-      <SelectTrigger className="w-full" aria-label="Filter by tester accounts">
+      <SelectTrigger className="w-full" aria-label={t('testerFilter.filterByTesterAccounts')}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

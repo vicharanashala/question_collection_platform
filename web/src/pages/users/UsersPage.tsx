@@ -28,6 +28,7 @@ import { ExportMenu } from '@/components/ExportMenu'
 import { exportDate, type ExportColumn } from '@/lib/exportData'
 import { AddUserDialog } from './AddUserDialog'
 import { AnveshanProgressCell } from './AnveshanProgressCell'
+import { useTranslation } from 'react-i18next'
 
 type AnveshanFilter = "" | "all" | "completed" | "incomplete";
 
@@ -181,12 +182,13 @@ function SessionStatus({ isActive, lastActivityAt, isDeleted }: {
   lastActivityAt?: string | null
   isDeleted: boolean
 }) {
+  const { t } = useTranslation()
   if (isDeleted) return <span className="text-text-tertiary">—</span>
   if (!isActive) {
     return (
       <span className="inline-flex items-center gap-1.5 text-text-secondary">
         <span className="h-2 w-2 rounded-full bg-gray-400" aria-hidden="true" />
-        Logged out
+        {t('usersPage.loggedOut')}
       </span>
     )
   }
@@ -194,12 +196,10 @@ function SessionStatus({ isActive, lastActivityAt, isDeleted }: {
     <div>
       <span className="inline-flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400">
         <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
-        Logged in
+        {t('usersPage.loggedIn')}
       </span>
       {lastActivityAt && (
-        <p className="text-[11px] sm:text-xs text-text-tertiary">
-          Active {formatDateTime(lastActivityAt)}
-        </p>
+        <p className="text-[11px] sm:text-xs text-text-tertiary">{t('usersPage.active', { value1: formatDateTime(lastActivityAt) })}</p>
       )}
     </div>
   )
@@ -235,6 +235,7 @@ function SortableHeader({ label, sortKey, activeKey, order, onSort, newBadge }: 
 }
 
 export function UsersPage() {
+  const { t } = useTranslation()
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<UserType[]>([])
   const [total, setTotal] = useState(0)
@@ -345,7 +346,7 @@ export function UsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   function handleUserCreated() {
-    toast.success("User created successfully");
+    toast.success(t('usersPage.userCreatedSuccessfully'));
     setPage(1);
     adminApi
       .getUsers({
@@ -374,8 +375,8 @@ export function UsersPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">User Management</h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">Review accounts, verification status and Anveshan progress · {total.toLocaleString()} {total === 1 ? 'user' : 'users'}</p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-extrabold text-text">{t('pageTitle.userManagement')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">Review accounts, verification status and Anveshan progress · {total.toLocaleString()} {total === 1 ? t('usersPage.user') : t('usersPage.users')}</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportMenu
@@ -399,7 +400,7 @@ export function UsersPage() {
           {isSuperAdmin && (
             <Button onClick={() => setCreateOpen(true)} size="sm">
               <Plus className="h-4 w-4" />
-              Add User
+              {t('usersPage.addUser')}
             </Button>
           )}
         </div>
@@ -407,22 +408,22 @@ export function UsersPage() {
 
       {/* Counts for the selected join date range */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <CountCard index={0} icon={Users} label="Total users" value={stats?.total} />
-        <CountCard index={1} icon={FlaskConical} label="Test accounts" value={stats?.testers} />
-        <CountCard index={2} icon={Sprout} label="Anveshan users" value={stats?.anveshan} />
-        <CountCard index={3} icon={UserRound} label="Non-Anveshan users" value={stats?.nonAnveshan} />
+        <CountCard index={0} icon={Users} label={t('usersPage.totalUsers')} value={stats?.total} />
+        <CountCard index={1} icon={FlaskConical} label={t('usersPage.testAccounts')} value={stats?.testers} />
+        <CountCard index={2} icon={Sprout} label={t('faqsPage.anveshanUsers')} value={stats?.anveshan} />
+        <CountCard index={3} icon={UserRound} label={t('usersPage.nonAnveshanUsers')} value={stats?.nonAnveshan} />
       </div>
 
       {/* Filters */}
       <Card className="space-y-4 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
-            <FilterField label="Search" htmlFor="users-search">
+            <FilterField label={t('common.search')} htmlFor="users-search">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <Input
                   id="users-search"
-                  placeholder="Search by name or mobile..."
+                  placeholder={t('usersPage.searchByNameOr')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   className="pl-9 !bg-surface-variant dark:!bg-surface-variant"
@@ -449,7 +450,7 @@ export function UsersPage() {
 
         {filtersOpen && (
         <div id="users-filters-panel" className="grid grid-cols-1 gap-4 border-t border-border-subtle pt-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FilterField label="Status">
+          <FilterField label={t('submissions.status')}>
             <FilterSelect
               ariaLabel="Filter by status"
               value={statusFilter}
@@ -458,7 +459,7 @@ export function UsersPage() {
             />
           </FilterField>
           {isSuperAdmin && anveshanScope !== 'only' && (
-            <FilterField label="Role">
+            <FilterField label={t('profile.completion.fieldRole')}>
               <FilterSelect
                 ariaLabel="Filter by role"
                 value={roleFilter}
@@ -468,7 +469,7 @@ export function UsersPage() {
             </FilterField>
           )}
           {anveshanScope !== 'only' && (
-            <FilterField label="Category">
+            <FilterField label={t('profile.completion.fieldCategory')}>
               <FilterSelect
                 ariaLabel="Filter by category"
                 value={categoryFilter}
@@ -477,7 +478,7 @@ export function UsersPage() {
               />
             </FilterField>
           )}
-          <FilterField label="State">
+          <FilterField label={t('admin.state')}>
             <FilterSelect
               ariaLabel="Filter by state"
               value={stateFilter}
@@ -485,7 +486,7 @@ export function UsersPage() {
               options={[{ value: '', label: 'All States' }, ...states.map((s) => ({ value: s.name, label: s.name }))]}
             />
           </FilterField>
-          <FilterField label="Account type">
+          <FilterField label={t('usersPage.accountType')}>
             <FilterSelect
               ariaLabel="Filter by tester accounts"
               value={testerFilter}
@@ -498,7 +499,7 @@ export function UsersPage() {
             />
           </FilterField>
           {canFilterAnveshan && anveshanScope !== 'exclude' && (
-            <FilterField label="Anveshan progress">
+            <FilterField label={t('anveshanProgressSummary.anveshanProgress')}>
               <FilterSelect
                 ariaLabel="Filter by Anveshan progress"
                 value={anveshanFilter}
@@ -507,12 +508,12 @@ export function UsersPage() {
               />
             </FilterField>
           )}
-          <FilterField label="Joined from" htmlFor="users-from">
+          <FilterField label={t('usersPage.joinedFrom')} htmlFor="users-from">
             <Input id="users-from" type="date" value={fromDate} max={toDate || undefined} onChange={(e) => { setFromDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" />
           </FilterField>
-          <FilterField label="Joined to" htmlFor="users-to">
+          <FilterField label={t('usersPage.joinedTo')} htmlFor="users-to">
             <Input id="users-to" type="date" value={toDate} min={fromDate || undefined} onChange={(e) => { setToDate(e.target.value); setPage(1) }} className="!bg-surface-variant dark:!bg-surface-variant" aria-invalid={dateRangeInvalid} />
-            {dateRangeInvalid && <p role="alert" className="text-xs text-red-600">To date must be on or after the From date.</p>}
+            {dateRangeInvalid && <p role="alert" className="text-xs text-red-600">{t('usersPage.toDateMustBe')}</p>}
           </FilterField>
         </div>
         )}
@@ -524,14 +525,14 @@ export function UsersPage() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b border-border-subtle bg-surface-variant/50">
-                <SortableHeader label="User" sortKey="name" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Role" sortKey="role" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Status" sortKey="verificationStatus" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Location" sortKey="state" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader newBadge label="Anveshan Progress" sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Joined" sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <SortableHeader label="Last Login" sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Session</th>
+                <SortableHeader label={t('roles.user')} sortKey="name" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label={t('profile.completion.fieldRole')} sortKey="role" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label={t('submissions.status')} sortKey="verificationStatus" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label={t('profile.location')} sortKey="state" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader newBadge label={t('usersPage.anveshanProgress')} sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label={t('profilePage.joined')} sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <SortableHeader label={t('profilePage.lastLogin')} sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('usersPage.session')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -550,9 +551,7 @@ export function UsersPage() {
                   <td
                     colSpan={8}
                     className="py-12 text-center text-text-secondary"
-                  >
-                    No users found
-                  </td>
+                  >{t('usersPage.noUsersFound')}</td>
                 </tr>
               ) : (
                 users.map((u) => {
@@ -593,9 +592,7 @@ export function UsersPage() {
                               </p>
                               {u.isTester && <TesterTag />}
                               {isDeleted && (
-                                <span className="inline-flex items-center rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                  DELETED
-                                </span>
+                                <span className="inline-flex items-center rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-300">{t('usersPage.deleted')}</span>
                               )}
                               {isLocked && (
                                 <span
@@ -607,8 +604,8 @@ export function UsersPage() {
                                   )}
                                 >
                                   {u.verificationStatus === "banned"
-                                    ? "BANNED"
-                                    : "SUSPENDED"}
+                                    ? t('usersPage.banned')
+                                    : t('usersPage.suspended')}
                                 </span>
                               )}
                             </div>
@@ -668,7 +665,7 @@ export function UsersPage() {
                         ) : (
                           <span
                             className="text-text-tertiary"
-                            aria-label="Not an Anveshan user"
+                            aria-label={t('usersPage.notAnAnveshanUser')}
                           >
                             —
                           </span>
@@ -680,7 +677,7 @@ export function UsersPage() {
                       <td className="px-4 py-3 text-text-secondary">
                         {u.lastLoginAt
                           ? formatDateTime(u.lastLoginAt)
-                          : "Never"}
+                          : t('usersPage.never')}
                       </td>
                       <td className="px-4 py-3">
                         <SessionStatus
@@ -713,9 +710,7 @@ export function UsersPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-xs sm:text-xs sm:text-sm text-text-secondary">
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-xs sm:text-xs sm:text-sm text-text-secondary">{t('usersPage.pageOf', { page, totalPages })}</span>
               <Button
                 variant="outline"
                 size="sm"

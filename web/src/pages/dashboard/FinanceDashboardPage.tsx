@@ -24,6 +24,7 @@ import {
   Minus, ArrowRight, Wallet, Activity, AlertTriangle, CreditCard,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 // ─── StatCard (same pattern as main dashboard) ────────────────────────────────
 
@@ -96,6 +97,7 @@ const TIME_RANGES: { value: string; label: string; days: number }[] = [
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export function FinanceDashboardPage() {
+  const { t } = useTranslation()
   // const { user } = useAuth()
   const [timeRange, setTimeRange] = useState('30d')
   const [finSummary, setFinSummary] = useState<FinSummary | null>(null)
@@ -117,9 +119,7 @@ export function FinanceDashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-text">
-            Financial Overview
-          </h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">{t('financeDashboardPage.financialOverview')}</h2>
           <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary">
             Wallet &amp; withdrawal analytics · {TIME_RANGES.find((r) => r.value === timeRange)?.label} period
           </p>
@@ -143,26 +143,26 @@ export function FinanceDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={IndianRupee}
-          label="Total Paid Out"
+          label={t('financeDashboardPage.totalPaidOut')}
           value={`₹${formatINR(finSummary?.totalPaidOut ?? 0)}`}
           variant="success"
         />
         <StatCard
           icon={Clock}
-          label="Pending Withdrawals"
+          label={t('adminDashboardPage.pendingWithdrawals')}
           value={finSummary?.pendingWithdrawals.count ?? 0}
           sub={`₹${formatINR(finSummary?.pendingWithdrawals.amount ?? 0)}`}
           variant="warning"
         />
         <StatCard
           icon={Wallet}
-          label="Total Wallet Balance"
+          label={t('financeDashboardPage.totalWalletBalance')}
           value={`₹${formatINR(finSummary?.totalWalletBalance ?? 0)}`}
           variant="primary"
         />
         <StatCard
           icon={CheckCircle}
-          label="Completed Withdrawals"
+          label={t('adminDashboardPage.completedWithdrawals')}
           value={finSummary?.completedWithdrawals.count ?? 0}
           sub={`₹${formatINR(finSummary?.completedWithdrawals.amount ?? 0)}`}
           variant="success"
@@ -173,26 +173,26 @@ export function FinanceDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Activity}
-          label="Today's Payouts"
+          label={t('financeDashboardPage.todayPayouts')}
           value={finSummary?.today.payoutCount ?? 0}
           sub={`₹${formatINR(finSummary?.today.payoutAmount ?? 0)}`}
           variant="info"
         />
         <StatCard
           icon={Ban}
-          label="Failed Withdrawals"
+          label={t('financeDashboardPage.failedWithdrawals')}
           value={finSummary?.failedWithdrawals.count ?? 0}
           variant="danger"
         />
         <StatCard
           icon={AlertTriangle}
-          label="Pending Amount"
+          label={t('financeDashboardPage.pendingAmount')}
           value={`₹${formatINR(finSummary?.pendingWithdrawals.amount ?? 0)}`}
           variant="warning"
         />
         <StatCard
           icon={TrendingUp}
-          label="Total Rewarded"
+          label={t('adminDashboardPage.totalRewarded')}
           value={`₹${formatINR((finSummary?.totalPaidOut ?? 0) + (finSummary?.pendingWithdrawals.amount ?? 0))}`}
           variant="primary"
         />
@@ -200,15 +200,15 @@ export function FinanceDashboardPage() {
 
       {/* Daily payout trend */}
       <ChartCard
-        title="Daily Payout Trend"
-        subtitle={`Last ${days} days`}
+        title={t('financeDashboardPage.dailyPayoutTrend')}
+        subtitle={t('adminDashboardPage.lastDays', { days })}
         action={
           <div className="flex gap-4 text-[11px] sm:text-[11px] sm:text-xs">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-primary" /> Count
+              <span className="h-2 w-2 rounded-full bg-primary" /> {t('financeDashboardPage.count')}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-success" /> Amount
+              <span className="h-2 w-2 rounded-full bg-success" /> {t('wallet.withdrawal.amount')}
             </span>
           </div>
         }
@@ -239,14 +239,12 @@ export function FinanceDashboardPage() {
             </div>
           </>
         ) : (
-          <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">
-            No payout data available
-          </div>
+          <div className="h-56 flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('financeDashboardPage.noPayoutDataAvailable')}</div>
         )}
       </ChartCard>
 
       {/* Quick access nav */}
-      <ChartCard title="Quick Access" subtitle="Navigate the platform">
+      <ChartCard title={t('financeDashboardPage.quickAccess')} subtitle={t('curatorDashboard.quickActionsSub')}>
         <div className="grid gap-3 md:grid-cols-3 pt-1">
           <Link
             to="/users"
@@ -254,7 +252,7 @@ export function FinanceDashboardPage() {
           >
             <span className="flex items-center gap-3">
               <IndianRupee className="h-4 w-4 text-primary" />
-              View all users
+              {t('adminDashboardPage.viewAllUsers')}
             </span>
             <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
           </Link>
@@ -266,7 +264,7 @@ export function FinanceDashboardPage() {
               <CreditCard className="h-4 w-4 text-primary" />
               {finSummary?.pendingWithdrawals.count
                 ? `${finSummary.pendingWithdrawals.count} pending withdrawals`
-                : 'Withdrawals'}
+                : t('nav.withdrawals')}
             </span>
             <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
           </Link>
@@ -276,7 +274,7 @@ export function FinanceDashboardPage() {
           >
             <span className="flex items-center gap-3">
               <Wallet className="h-4 w-4 text-primary" />
-              All wallets
+              {t('financeDashboardPage.allWallets')}
             </span>
             <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-text transition-colors" />
           </Link>

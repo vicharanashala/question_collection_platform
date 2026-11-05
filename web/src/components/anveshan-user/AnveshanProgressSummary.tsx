@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronDown, Circle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { AnveshanMilestoneCounts, AnveshanUserProgress } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const GOALS: { key: keyof AnveshanMilestoneCounts; label: string }[] = [
   { key: 'questions', label: 'Questions' },
@@ -15,11 +16,12 @@ const GOALS: { key: keyof AnveshanMilestoneCounts; label: string }[] = [
 
 // Overall Anveshan progress, collapsed by default, with a tile for every milestone goal when expanded.
 export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserProgress | null }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   if (!progress) {
     return (
       <Card>
-        <CardContent className="p-5 text-sm text-text-secondary">Progress is not available for this user.</CardContent>
+        <CardContent className="p-5 text-sm text-text-secondary">{t('anveshanProgressSummary.progressIsNotAvailable')}</CardContent>
       </Card>
     )
   }
@@ -37,7 +39,7 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
           className="flex w-full items-center justify-between gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         >
           <span className="flex items-baseline gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Anveshan progress</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary">{t('anveshanProgressSummary.anveshanProgress')}</span>
             <span className="text-xl font-extrabold tabular-nums text-foreground">{percent}%</span>
           </span>
           <span className="flex items-center gap-3">
@@ -58,7 +60,7 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label="Overall Anveshan progress"
+          aria-label={t('anveshanProgressSummary.overallAnveshanProgress')}
         >
           <div className={cn('h-full rounded-full', completed ? 'bg-emerald-500' : 'bg-primary')} style={{ width: `${percent}%` }} />
         </div>
@@ -77,7 +79,7 @@ export function AnveshanProgressSummary({ progress }: { progress: AnveshanUserPr
                   {progress.progress[key]}
                   <span className="text-sm font-medium text-text-tertiary"> / {progress.requirements[key]}</span>
                 </p>
-                <span className="sr-only">{done ? 'Goal met' : 'Goal not met'}</span>
+                <span className="sr-only">{done ? t('anveshanProgressSummary.goalMet') : t('anveshanProgressSummary.goalNotMet')}</span>
               </li>
             )
           })}

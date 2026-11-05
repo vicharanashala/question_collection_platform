@@ -13,6 +13,7 @@ import { adminApi, auditApi, getErrorMessage, AccountLockedInfo } from '../../ap
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { UserRole } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 const PRIVILEGED_ROLES = [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE];
 type Route = RouteProp<AdminStackParamList, 'AdminUserDetail'>;
@@ -24,6 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
 function statusColor(s: string) { return STATUS_COLORS[s] ?? '#6b7280'; }
 
 export function AdminUserDetailScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation();
@@ -164,7 +166,7 @@ export function AdminUserDetailScreen() {
     setActionLoading(true);
     try {
       await adminApi.verifyUser(userId);
-      showToast('User verified successfully', 'success');
+      showToast(t('adminUserDetailScreen.userVerifiedSuccessfully'), 'success');
       const r = await adminApi.getUserDetail(userId);
       setData(r.data);
     } catch (e: unknown) {
@@ -204,7 +206,7 @@ export function AdminUserDetailScreen() {
   if (!data || !user) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={styles.centered}><Text style={{ color: c.text }}>User not found</Text></View>
+        <View style={styles.centered}><Text style={{ color: c.text }}>{t('adminUserDetailScreen.userNotFound')}</Text></View>
       </SafeAreaView>
     );
   }
@@ -227,7 +229,7 @@ export function AdminUserDetailScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: c.text }]}>User Detail</Text>
+        <Text style={[styles.headerTitle, { color: c.text }]}>{t('adminUserDetailScreen.userDetail')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -284,7 +286,7 @@ export function AdminUserDetailScreen() {
             {!!user.kvk && (
               <View style={styles.heroDetailRow}>
                 <Ionicons name="school-outline" size={13} color={c.textTertiary} />
-                <Text style={[styles.heroDetail, { color: c.textSecondary }]}>KVK: {String(user.kvk)}</Text>
+                <Text style={[styles.heroDetail, { color: c.textSecondary }]}>{t('adminUserDetailScreen.kvk', { value1: String(user.kvk) })}</Text>
               </View>
             )}
           </View>
@@ -300,7 +302,7 @@ export function AdminUserDetailScreen() {
                 color={isBanned ? c.error : c.warning}
               />
               <Text style={[styles.alertTitle, { color: isBanned ? c.error : c.warning }]}>
-                {isBanned ? 'Account Permanently Banned' : 'Account Suspended'}
+                {isBanned ? t('otp.accountBanned') : t('otp.accountSuspended')}
               </Text>
             </View>
             {currentStatus?.reason && (
@@ -312,7 +314,7 @@ export function AdminUserDetailScreen() {
               {currentStatus?.suspendedAt && (
                 <View style={styles.alertMetaItem}>
                   <Text style={[styles.alertMetaLabel, { color: c.textTertiary }]}>
-                    {isBanned ? 'Banned' : 'Suspended'}
+                    {isBanned ? t('profile.banned') : t('profile.suspended')}
                   </Text>
                   <Text style={[styles.alertMetaValue, { color: c.text }]}>
                     {formatDate(isBanned ? currentStatus.bannedAt : currentStatus.suspendedAt)}
@@ -321,7 +323,7 @@ export function AdminUserDetailScreen() {
               )}
               {!isBanned && currentStatus?.suspendedUntil && (
                 <View style={styles.alertMetaItem}>
-                  <Text style={[styles.alertMetaLabel, { color: c.textTertiary }]}>Until</Text>
+                  <Text style={[styles.alertMetaLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.until')}</Text>
                   <Text style={[styles.alertMetaValue, { color: c.text }]}>
                     {formatDate(currentStatus.suspendedUntil)}
                     {' '}
@@ -336,16 +338,16 @@ export function AdminUserDetailScreen() {
         )}
 
         {/* Account info grid */}
-        <Text style={[styles.sectionHeading, { color: c.text }]}>Account Info</Text>
+        <Text style={[styles.sectionHeading, { color: c.text }]}>{t('adminUserDetailScreen.accountInfo')}</Text>
         <View style={[styles.card, { backgroundColor: c.surface }]}>
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Language</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('speech.stt.language')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{String(user.languagePreference ?? 'Not set')}</Text>
             </View>
             <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Joined</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.joined')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>
                 {user.createdAt ? new Date(String(user.createdAt)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
               </Text>
@@ -354,44 +356,44 @@ export function AdminUserDetailScreen() {
           <View style={[styles.infoRowBorder, { backgroundColor: c.border }]} />
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Last Login</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.lastLogin')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>
                 {user.lastLoginAt
                   ? new Date(String(user.lastLoginAt)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                  : 'Never'}
+                  : t('adminUserDetailScreen.never')}
               </Text>
             </View>
             <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Questions</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('profile.questions')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{questions.length}</Text>
             </View>
           </View>
         </View>
 
         {/* Location details section */}
-        <Text style={[styles.sectionHeading, { color: c.text }]}>Location Details</Text>
+        <Text style={[styles.sectionHeading, { color: c.text }]}>{t('locationDetails')}</Text>
         <View style={[styles.card, { backgroundColor: c.surface }]}>
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>State</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('admin.state')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{String(user.state ?? '—')}</Text>
             </View>
             <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>District</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('auth.district')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{String(user.district ?? '—')}</Text>
             </View>
           </View>
           <View style={[styles.infoRowBorder, { backgroundColor: c.border }]} />
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Block</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('block')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{String(user.block ?? '—')}</Text>
             </View>
             <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
             <View style={styles.infoItem}>
-              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>Village</Text>
+              <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('village')}</Text>
               <Text style={[styles.infoValue, { color: c.text }]}>{String(user.village ?? '—')}</Text>
             </View>
           </View>
@@ -400,7 +402,7 @@ export function AdminUserDetailScreen() {
               <View style={[styles.infoRowBorder, { backgroundColor: c.border }]} />
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: c.textTertiary }]}>KVK</Text>
+                  <Text style={[styles.infoLabel, { color: c.textTertiary }]}>{t('profile.kvk')}</Text>
                   <Text style={[styles.infoValue, { color: c.text }]}>{String(user.kvk)}</Text>
                 </View>
                 <View style={[styles.infoDivider, { backgroundColor: c.border }]} />
@@ -415,7 +417,7 @@ export function AdminUserDetailScreen() {
           <View style={[styles.card, { backgroundColor: c.surface }]}>
             <View style={styles.walletRow}>
               <View style={styles.walletInfo}>
-                <Text style={[styles.walletLabel, { color: c.textTertiary }]}>Current Balance</Text>
+                <Text style={[styles.walletLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.currentBalance')}</Text>
                 {walletLoading ? (
                   <ActivityIndicator size="small" color={c.primary} />
                 ) : (
@@ -431,7 +433,7 @@ export function AdminUserDetailScreen() {
         {/* Action cards */}
         {isSuperAdmin && user.role !== 'super_admin' && !isLocked && (
           <View style={[styles.card, { backgroundColor: c.surface }]}>
-            <Text style={[styles.cardSectionTitle, { color: c.text }]}>Admin Actions</Text>
+            <Text style={[styles.cardSectionTitle, { color: c.text }]}>{t('adminUserDetailScreen.adminActions')}</Text>
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={[styles.actionBtn, { borderColor: c.warning + '66', backgroundColor: c.warning + '0e' }]}
@@ -439,8 +441,8 @@ export function AdminUserDetailScreen() {
                 disabled={actionLoading}
               >
                 <Ionicons name="pause-circle-outline" size={20} color={c.warning} />
-                <Text style={[styles.actionBtnLabel, { color: c.warning }]}>Suspend</Text>
-                <Text style={[styles.actionBtnDesc, { color: c.textTertiary }]}>Temporary lockout</Text>
+                <Text style={[styles.actionBtnLabel, { color: c.warning }]}>{t('adminUserDetailScreen.suspend')}</Text>
+                <Text style={[styles.actionBtnDesc, { color: c.textTertiary }]}>{t('adminUserDetailScreen.temporaryLockout')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, { borderColor: c.error + '66', backgroundColor: c.error + '0e' }]}
@@ -449,7 +451,7 @@ export function AdminUserDetailScreen() {
               >
                 <Ionicons name="ban-outline" size={20} color={c.error} />
                 <Text style={[styles.actionBtnLabel, { color: c.error }]}>Ban</Text>
-                <Text style={[styles.actionBtnDesc, { color: c.textTertiary }]}>Permanent removal</Text>
+                <Text style={[styles.actionBtnDesc, { color: c.textTertiary }]}>{t('adminUserDetailScreen.permanentRemoval')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -457,13 +459,11 @@ export function AdminUserDetailScreen() {
 
         {isSuperAdmin && user.role !== 'super_admin' && isLocked && (
           <View style={[styles.card, { backgroundColor: (isBanned ? c.error : c.warning) + '0e', borderColor: (isBanned ? c.error : c.warning) + '40' }]}>
-            <Text style={[styles.cardSectionTitle, { color: isBanned ? c.error : c.warning }]}>
-              Restore Access
-            </Text>
+            <Text style={[styles.cardSectionTitle, { color: isBanned ? c.error : c.warning }]}>{t('adminUserDetailScreen.restoreAccess')}</Text>
             <Text style={[styles.cardSectionDesc, { color: c.textSecondary }]}>
               {isBanned
-                ? 'This user has been permanently banned. You can reverse this action.'
-                : 'This user is currently suspended. You can lift the suspension early.'}
+                ? t('adminUserDetailScreen.thisUserHasBeen')
+                : t('adminUserDetailScreen.thisUserIsCurrently')}
             </Text>
             <TouchableOpacity
               style={[styles.reinstateBtn, { backgroundColor: isBanned ? c.error : c.warning }]}
@@ -475,7 +475,7 @@ export function AdminUserDetailScreen() {
                 : <>
                     <Ionicons name={isBanned ? 'ban' : 'play-circle'} size={18} color="#fff" />
                     <Text style={styles.reinstateBtnText}>
-                      {isBanned ? 'Unban User' : 'Lift Suspension'}
+                      {isBanned ? t('adminUserDetailScreen.unbanUser') : t('adminUserDetailScreen.liftSuspension')}
                     </Text>
                   </>}
             </TouchableOpacity>
@@ -484,30 +484,28 @@ export function AdminUserDetailScreen() {
 
         {isPending && (
           <View style={[styles.card, { backgroundColor: c.success + '0e', borderColor: c.success + '40' }]}>
-            <Text style={[styles.cardSectionTitle, { color: c.success }]}>Awaiting Verification</Text>
-            <Text style={[styles.cardSectionDesc, { color: c.textSecondary }]}>
-              This user has completed registration but is awaiting admin verification.
-            </Text>
+            <Text style={[styles.cardSectionTitle, { color: c.success }]}>{t('adminUserDetailScreen.awaitingVerification')}</Text>
+            <Text style={[styles.cardSectionDesc, { color: c.textSecondary }]}>{t('adminUserDetailScreen.thisUserHasCompleted')}</Text>
 
             {/* Location summary for pending users */}
             <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
               <View style={styles.verifyInfoItem}>
-                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>State</Text>
+                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('admin.state')}</Text>
                 <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.state ?? '—')}</Text>
               </View>
               <View style={styles.verifyInfoItem}>
-                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>District</Text>
+                <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('auth.district')}</Text>
                 <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.district ?? '—')}</Text>
               </View>
             </View>
             {(!!user.block || !!user.village) && (
               <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
                 <View style={styles.verifyInfoItem}>
-                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Block</Text>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('block')}</Text>
                   <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.block ?? '—')}</Text>
                 </View>
                 <View style={styles.verifyInfoItem}>
-                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Village</Text>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('village')}</Text>
                   <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.village ?? '—')}</Text>
                 </View>
               </View>
@@ -515,7 +513,7 @@ export function AdminUserDetailScreen() {
             {!!user.kvk && (
               <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
                 <View style={styles.verifyInfoItem}>
-                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>KVK</Text>
+                  <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('profile.kvk')}</Text>
                   <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.kvk)}</Text>
                 </View>
               </View>
@@ -527,12 +525,12 @@ export function AdminUserDetailScreen() {
                 {user.organisationType && (
                   <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
                     <View style={styles.verifyInfoItem}>
-                      <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Org Type</Text>
+                      <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.orgType')}</Text>
                       <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organisationType)}</Text>
                     </View>
                     {user.organizationName && (
                       <View style={styles.verifyInfoItem}>
-                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Org Name</Text>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('adminUserDetailScreen.orgName')}</Text>
                         <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationName ?? '')}</Text>
                       </View>
                     )}
@@ -542,13 +540,13 @@ export function AdminUserDetailScreen() {
                   <View style={[styles.verifyInfoRow, { borderTopColor: c.success + '30' }]}>
                     {user.organizationRole && (
                       <View style={styles.verifyInfoItem}>
-                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Role</Text>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('profile.completion.fieldRole')}</Text>
                         <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.organizationRole)}</Text>
                       </View>
                     )}
                     {user.numberOfFarmers && (
                       <View style={styles.verifyInfoItem}>
-                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>Members</Text>
+                        <Text style={[styles.verifyInfoLabel, { color: c.textTertiary }]}>{t('profile.members')}</Text>
                         <Text style={[styles.verifyInfoValue, { color: c.text }]}>{String(user.numberOfFarmers)}</Text>
                       </View>
                     )}
@@ -566,7 +564,7 @@ export function AdminUserDetailScreen() {
                 ? <ActivityIndicator size="small" color="#fff" />
                 : <>
                     <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                    <Text style={styles.verifyBtnText}>Verify User</Text>
+                    <Text style={styles.verifyBtnText}>{t('admin.verifyUser')}</Text>
                   </>}
             </TouchableOpacity>
           </View>
@@ -582,7 +580,7 @@ export function AdminUserDetailScreen() {
             {questions.length === 0 ? (
               <View style={[styles.emptyCard, { backgroundColor: c.surface }]}>
                 <Ionicons name="chatbubble-outline" size={32} color={c.textTertiary} />
-                <Text style={[styles.emptyText, { color: c.textTertiary }]}>No questions submitted yet</Text>
+                <Text style={[styles.emptyText, { color: c.textTertiary }]}>{t('myQuestions.noQuestions')}</Text>
               </View>
             ) : (
               questions.map((q) => {
@@ -637,23 +635,19 @@ export function AdminUserDetailScreen() {
               ) : (
                 <Text style={[styles.auditToggleText, { color: c.primary }]}>
                   {auditCollapsed && auditEntries.length === 0
-                    ? 'Audit History'
+                    ? t('adminUserDetailScreen.auditHistory')
                     : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
                 </Text>
               )}
               {!auditCollapsed && auditEntries.length > 0 && (
-                <Text style={[styles.auditCountText, { color: c.textTertiary }]}>
-                  {auditEntries.length} total
-                </Text>
+                <Text style={[styles.auditCountText, { color: c.textTertiary }]}>{t('withdrawalDetailModal.total', { length: auditEntries.length })}</Text>
               )}
             </TouchableOpacity>
 
             {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
               <View style={styles.auditEmpty}>
                 <Ionicons name="git-branch-outline" size={28} color={c.textTertiary} style={{ opacity: 0.4 }} />
-                <Text style={[styles.auditEmptyText, { color: c.textTertiary }]}>
-                  No audit history for this user
-                </Text>
+                <Text style={[styles.auditEmptyText, { color: c.textTertiary }]}>{t('adminUserDetailScreen.noAuditHistoryFor')}</Text>
               </View>
             )}
 
@@ -744,7 +738,7 @@ export function AdminUserDetailScreen() {
 
       <ConfirmModal
         visible={confirmModalVisible}
-        title={confirmModalAction === 'unban' ? 'Unban User?' : 'Lift Suspension?'}
+        title={confirmModalAction === 'unban' ? t('adminUserDetailScreen.unbanUser2') : t('adminUserDetailScreen.liftSuspension2')}
         message={
           confirmModalAction === 'unban'
             ? `Are you sure you want to unban ${userName}? This will restore their access to the platform.`

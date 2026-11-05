@@ -29,7 +29,7 @@ export function AnswerScoreCard({ questionId, initialScore, onScoreChange }: Ans
         <div role="status" className="flex items-center gap-3 text-sm text-text-secondary">
           <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" aria-hidden="true" />
           <span>
-            {t('anveshanAnswers.score.processing', 'Scoring your advisory. This can take a few minutes; you can close this and come back later.')}
+            {t('anveshanAnswers.score.processing')}
           </span>
         </div>
       </ScoreShell>
@@ -37,10 +37,10 @@ export function AnswerScoreCard({ questionId, initialScore, onScoreChange }: Ans
   }
 
   const message = timedOut
-    ? t('anveshanAnswers.score.timedOut', 'Scoring is taking longer than usual. Your advisory is saved; check again in a moment.')
+    ? t('anveshanAnswers.score.timedOut')
     : score?.status === 'failed'
-      ? t('anveshanAnswers.score.failed', 'We could not score your advisory right now. Your advisory is saved.')
-      : t('anveshanAnswers.score.notScored', 'This advisory has not been scored yet.')
+      ? t('anveshanAnswers.score.failed')
+      : t('anveshanAnswers.score.notScored')
 
   return (
     <ScoreShell>
@@ -48,7 +48,7 @@ export function AnswerScoreCard({ questionId, initialScore, onScoreChange }: Ans
         <p className="text-sm text-text-secondary">{message}</p>
         <Button type="button" variant="outline" size="sm" onClick={checkAgain} className="shrink-0 gap-1.5 self-start sm:self-auto">
           <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-          {t('anveshanAnswers.score.checkAgain', 'Check score')}
+          {t('anveshanAnswers.score.checkAgain')}
         </Button>
       </div>
     </ScoreShell>
@@ -62,7 +62,7 @@ function ScoreShell({ children }: { children: ReactNode }) {
     <section className="space-y-3 rounded-xl border border-border-subtle bg-surface-variant/40 p-4" aria-live="polite">
       <h3 className="flex items-center gap-2 text-sm font-semibold text-text">
         <Gauge className="h-4 w-4 text-primary" aria-hidden="true" />
-        {t('anveshanAnswers.score.title', 'System score')}
+        {t('anveshanAnswers.score.title')}
       </h3>
       {children}
     </section>
@@ -90,7 +90,6 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
             {t('anveshanAnswers.score.points', {
               score: score.systemScore,
               max: score.maxScore,
-              defaultValue: '{{score}} of {{max}} points',
             })}
           </p>
         )}
@@ -101,7 +100,7 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percentage}
-        aria-label={t('anveshanAnswers.score.title', 'System score')}
+        aria-label={t('anveshanAnswers.score.title')}
       >
         <div className={cn('h-full rounded-full transition-all duration-500', tone.bar)} style={{ width: `${percentage}%` }} />
       </div>
@@ -111,12 +110,11 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
           <p className="text-sm text-text-secondary">
             {t(
               'anveshanAnswers.score.partial',
-              'Some checks could not run this time, so this score is incomplete. Your advisory is saved.',
             )}
           </p>
           <Button type="button" variant="outline" size="sm" onClick={onCheckAgain} className="shrink-0 gap-1.5 self-start sm:self-auto">
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            {t('anveshanAnswers.score.scoreAgain', 'Score again')}
+            {t('anveshanAnswers.score.scoreAgain')}
           </Button>
         </div>
       )}
@@ -127,8 +125,8 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
           <div className="space-y-1">
             <p className="font-semibold">
               {score.needsHumanReview
-                ? t('anveshanAnswers.score.needsReview', 'An expert will also review this advisory.')
-                : t('anveshanAnswers.score.reasons', 'Why you got this score')}
+                ? t('anveshanAnswers.score.needsReview')
+                : t('anveshanAnswers.score.reasons')}
             </p>
             {score.reviewReasons.length > 0 && (
               <ul className="list-disc space-y-0.5 pl-4">
@@ -143,7 +141,7 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
 
       {score.checks.length > 0 && (
         <p className="text-xs font-medium text-text-secondary">
-          {t('anveshanAnswers.score.checksTitle', 'Score breakdown')}
+          {t('anveshanAnswers.score.checksTitle')}
         </p>
       )}
       {score.checks.length > 0 && (
@@ -156,7 +154,7 @@ function CompletedScore({ score, onCheckAgain }: CompletedScoreProps) {
 
       {score.notApplicable.length > 0 && (
         <p className="text-xs text-text-tertiary">
-          {t('anveshanAnswers.score.notApplicable', 'Not applicable to this advisory:')}{' '}
+          {t('anveshanAnswers.score.notApplicable')}{' '}
           {score.notApplicable.map(humanizeParameter).join(', ')}
         </p>
       )}
@@ -170,11 +168,11 @@ function ScoreCheckRow({ check }: { check: AnveshanAnswerScoreCheck }) {
   const result = check.result.toUpperCase()
   const resultLabel =
     result === 'PASS'
-      ? t('anveshanAnswers.score.pass', 'Pass')
+      ? t('anveshanAnswers.score.pass')
       : result === 'FAIL'
-        ? t('anveshanAnswers.score.fail', 'Fail')
+        ? t('anveshanAnswers.score.fail')
         : result === 'NOT_EVALUATED'
-          ? t('anveshanAnswers.score.notEvaluated', 'Not evaluated')
+          ? t('anveshanAnswers.score.notEvaluated')
           : humanizeParameter(check.result.toLowerCase())
   const Icon = result === 'PASS' ? CheckCircle2 : result === 'FAIL' ? XCircle : MinusCircle
   const iconClass =

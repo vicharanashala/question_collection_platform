@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface DataPoint {
   name: string
@@ -30,6 +31,7 @@ export function BulletChartComponent({
   valueFormatter = (v) => formatNumber(v),
   showSecondary = false,
 }: BulletChartComponentProps) {
+  const { t } = useTranslation()
   const max = Math.max(...data.map((d) => d.value), 1)
 
   return (
@@ -82,9 +84,7 @@ export function BulletChartComponent({
       })}
 
       {data.length === 0 && (
-        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">
-          No data available
-        </div>
+        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('bulletChartComponent.noDataAvailable')}</div>
       )}
     </div>
   )

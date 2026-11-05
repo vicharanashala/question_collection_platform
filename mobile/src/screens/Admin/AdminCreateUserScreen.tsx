@@ -138,7 +138,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
         role,
         ...(role === 'user' ? { category } : {}),
       });
-      showToast('User created successfully', 'success');
+      showToast(t('adminCreateUserScreen.userCreatedSuccessfully'), 'success');
       navigation.goBack();
     } catch (err: unknown) {
       showToast(getErrorMessage(err, 'Failed to create user'), 'error');
@@ -153,21 +153,19 @@ export function AdminCreateUserScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={26} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text }]}>Create User</Text>
+        <Text style={[styles.screenTitle, { color: c.text }]}>{t('adminCreateUserScreen.createUser')}</Text>
         <View style={{ width: 26 }} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.pageHeader}>
-            <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-              Add a new user account manually
-            </Text>
+            <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('adminCreateUserScreen.addNewUserAccount')}</Text>
           </View>
 
           <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowMd }]}>
             <Input
-              label="Full Name"
+              label={t('fullName')}
               placeholder={t('namePlaceholder')}
               value={name}
               onChangeText={(txt) => { setName(txt); setErrors({}); }}
@@ -175,15 +173,15 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               autoCapitalize="words"
             />
             <Input
-              label="Mobile Number"
-              placeholder={t('mobileNumberPlaceholder')}
+              label={t('loginPhone.mobileNumber')}
+              placeholder={t('auth.mobileNumberPlaceholder')}
               value={mobileNumber}
               onChangeText={(txt) => { setMobileNumber(txt.replace(/\D/g, '').slice(0, 10)); setErrors({}); }}
               error={errors.mobileNumber}
               keyboardType="phone-pad"
             />
 
-            <Text style={[styles.fieldLabel, { color: c.text }]}>Role</Text>
+            <Text style={[styles.fieldLabel, { color: c.text }]}>{t('profile.completion.fieldRole')}</Text>
             <View style={styles.roleRow}>
               {ROLE_OPTIONS.map((opt) => (
                 <TouchableOpacity
@@ -207,7 +205,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
 
             {role === 'user' && (
               <>
-                <Text style={[styles.fieldLabel, { color: c.text }]}>Category</Text>
+                <Text style={[styles.fieldLabel, { color: c.text }]}>{t('profile.completion.fieldCategory')}</Text>
                 <View style={styles.catGrid}>
                   {CATEGORY_OPTIONS.map((opt) => (
                     <TouchableOpacity
@@ -232,7 +230,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
             )}
 
             <Select
-              label="State"
+              label={t('admin.state')}
               placeholder={t('selectState')}
               value={state}
               options={stateList.map((s) => ({ value: s.name, label: s.name }))}
@@ -266,7 +264,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               disabledMessage={t('stateLoadingMessage')}
             />
             <Select
-              label="District"
+              label={t('auth.district')}
               placeholder={t('selectDistrict')}
               value={district}
               options={districtList.map((d) => ({ value: d.name, label: d.name }))}
@@ -416,7 +414,7 @@ export function AdminCreateUserScreen({ navigation }: Props) {
               />
             )}
 
-            <Button title="Create User" onPress={handleSubmit} loading={loading} />
+            <Button title={t('adminCreateUserScreen.createUser')} onPress={handleSubmit} loading={loading} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

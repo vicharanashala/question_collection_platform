@@ -66,6 +66,7 @@ import { AdminFaqsScreen } from '../screens/Admin/AdminFaqsScreen';
 import { AdminUsersScreen as FinanceUsersScreen } from '../screens/Admin/AdminUsersScreen';
 import { FinanceDashboardScreen } from '../screens/Admin/FinanceDashboardScreen';
 import { FinanceWalletsScreen } from '../screens/Admin/FinanceWalletsScreen';
+import { useTranslation } from 'react-i18next';
 
 // ─── Navigators ───────────────────────────────────────────────────────────────
 
@@ -288,6 +289,7 @@ function FinanceNavigator() {
 }
 
 function MainNavigator() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const insets = useSafeAreaInsets();
@@ -322,8 +324,8 @@ function MainNavigator() {
           <View style={mainStyles.brand}>
             <Image source={require('../../assets/logo.png')} style={mainStyles.logo} />
             <View style={mainStyles.brandText}>
-              <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>AnnaDatha</Text>
-              <Text style={[mainStyles.tagline, { color: c.textSecondary }]} numberOfLines={1}>Empowering Farmers</Text>
+              <Text style={[mainStyles.appName, { color: c.text }]} numberOfLines={1}>{t('app.name')}</Text>
+              <Text style={[mainStyles.tagline, { color: c.textSecondary }]} numberOfLines={1}>{t('appNavigator.empoweringFarmers')}</Text>
             </View>
           </View>
 

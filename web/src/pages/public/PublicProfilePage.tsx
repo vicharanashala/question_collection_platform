@@ -265,9 +265,9 @@ export function PublicProfilePage() {
       if (updatedFields.length > 0) {
         const { user: fresh } = await authApi.me()
         updateUser({ ...fresh })
-        toast.success('Profile updated from Anveshan')
+        toast.success(t('publicProfilePage.profileUpdatedFromAnveshan'))
       } else {
-        toast.success('Your profile is already up to date')
+        toast.success(t('publicProfilePage.yourProfileIsAlready'))
       }
     } catch (e) {
       toast.error(getErrorMessage(e, 'Could not refresh from Anveshan'))
@@ -354,7 +354,7 @@ export function PublicProfilePage() {
                 className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20 disabled:opacity-60 sm:text-xs"
               >
                 <RefreshCw className={cn('h-3.5 w-3.5', refreshingAnveshan && 'animate-spin')} />
-                {refreshingAnveshan ? 'Refreshing...' : 'Refresh from Anveshan'}
+                {refreshingAnveshan ? t('publicProfilePage.refreshing') : t('publicProfilePage.refreshFromAnveshan')}
               </button>
             )}
 
@@ -429,13 +429,13 @@ export function PublicProfilePage() {
               </div>
               <div className="flex items-center justify-between text-[11px] font-medium text-text-tertiary">
                 <span>{t('profile.moreToNextTier', { count: remaining, tier: t(`home.${TIER_DISPLAY[nextTierIdx].key}`) })}</span>
-                <span className="font-bold" style={{ color: tierCfg.color }}>{REWARD_TIERS[nextTierIdx].min} pts</span>
+                <span className="font-bold" style={{ color: tierCfg.color }}>{t('publicProfilePage.pts', { min: REWARD_TIERS[nextTierIdx].min })}</span>
               </div>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2 rounded-lg py-2" style={{ backgroundColor: tierCfg.color + '1a', color: tierCfg.color }}>
               <Trophy className="h-4 w-4" />
-              <span className="text-xs font-bold">{t('profile.maxTierReached', "Highest tier reached!")}</span>
+              <span className="text-xs font-bold">{t('profile.maxTierReached')}</span>
             </div>
           )}
 
@@ -494,7 +494,7 @@ export function PublicProfilePage() {
                 {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} isLast />}
               </>
             ) : (
-              <p className="px-4 py-3 text-xs text-text-tertiary">No personal info set.</p>
+              <p className="px-4 py-3 text-xs text-text-tertiary">{t('publicProfilePage.noPersonalInfoSet')}</p>
             )}
           </AccountCard>
 
@@ -557,7 +557,7 @@ export function PublicProfilePage() {
 
           {/* Farming / agriculture focus — farmers and volunteers */}
           {(cat === 'farmer' || cat === 'volunteer') && (user.farmSize || user.cropType || user.season) && (
-            <AccountCard icon={Sprout} title={cat === 'volunteer' ? 'Agriculture Focus' : t('profile.farming')} className="lg:flex-1 lg:basis-[320px]">
+            <AccountCard icon={Sprout} title={cat === 'volunteer' ? t('publicProfilePage.agricultureFocus') : t('profile.farming')} className="lg:flex-1 lg:basis-[320px]">
               <>
                 {cat === 'farmer' && user.farmSize && <AccountRow icon={Ruler} label={t('profile.farmSize')} value={`${user.farmSize} ${t('profile.acres')}`} />}
                 {user.cropType && <AccountRow icon={Sprout} label={t('profile.crop')} value={user.cropType} isLast={!user.season} />}
@@ -583,13 +583,13 @@ export function PublicProfilePage() {
 
       {/* ── Preferences section ── */}
       <section>
-        <SectionHeader icon={SlidersHorizontal} title={t('profile.preferences', 'Preferences')} />
+        <SectionHeader icon={SlidersHorizontal} title={t('profile.preferences')} />
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <ActionRow icon={Languages} label={t('auth.selectLanguage')} onClick={() => setLanguageOpen(true)} />
             <ActionRow
               icon={theme === 'dark' ? Moon : Sun}
-              label={`${t('profile.theme', 'Theme')}: ${theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight')}`}
+              label={`${t('profile.theme')}: ${theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight')}`}
               onClick={toggleTheme}
             />
           </CardContent>
@@ -608,7 +608,7 @@ export function PublicProfilePage() {
             <ActionRow icon={Flag} label={t('report.title')} onClick={() => navigate('/home/reports')} />
             <ActionRow
               icon={LifeBuoy}
-              label={t('report.raiseSupportTicket', 'Raise Support Ticket')}
+              label={t('report.raiseSupportTicket')}
               onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
             />
             <ActionRow icon={HelpCircle} label={t('profile.helpAndFeedback')} onClick={() => navigate('/home/faqs')} newFeature="faq" />
@@ -619,7 +619,7 @@ export function PublicProfilePage() {
               label={t('profile.contactAdmin')}
               onClick={() => {
                 const email = ((import.meta as any).env?.VITE_SUPPORT_EMAIL as string | undefined)?.trim()
-                if (!email) { toast.error('Support email not configured.'); return }
+                if (!email) { toast.error(t('publicProfilePage.supportEmailNotConfigured')); return }
                 // mailto keeps the recipient on every platform; Gmail compose URLs drop it when Gmail redirects to sign-in or the account chooser.
                 window.location.href = `mailto:${email}?subject=${encodeURIComponent('AnnaDatha Support')}`
               }}
@@ -668,7 +668,7 @@ export function PublicProfilePage() {
           </div>
           <DialogPrimitive.Close className="absolute right-3 top-3 rounded-sm opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus sm:right-4 sm:top-4">
             <X className="h-4 w-4 text-text-tertiary" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </DialogPrimitive.Close>
         </DialogContent>
       </Dialog>

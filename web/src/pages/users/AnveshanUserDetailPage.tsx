@@ -17,9 +17,11 @@ import { AnveshanExportDialog } from '@/components/anveshan-user/AnveshanExportD
 import { AnveshanEntitiesTab } from '@/components/anveshan-user/AnveshanEntitiesTab'
 import { formatDate, formatDateTime, getInitials } from '@/lib/utils'
 import type { AnveshanUserDetail } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 /** Staff review page for one Anveshan user: profile, milestone progress, questions with answers, and entities. */
 export function AnveshanUserDetailPage() {
+  const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const [detail, setDetail] = useState<AnveshanUserDetail | null>(null)
@@ -49,9 +51,9 @@ export function AnveshanUserDetailPage() {
   if (!detail) {
     return (
       <div className="flex flex-col items-center gap-3 py-20">
-        <p className="text-muted-foreground">Anveshan user not found</p>
+        <p className="text-muted-foreground">{t('anveshanUserDetailPage.anveshanUserNotFound')}</p>
         <Button variant="outline" onClick={() => navigate('/users')}>
-          <ArrowLeft className="h-4 w-4" /> Back to Users
+          <ArrowLeft className="h-4 w-4" /> {t('anveshanUserDetailPage.backToUsers')}
         </Button>
       </div>
     )
@@ -66,7 +68,7 @@ export function AnveshanUserDetailPage() {
         onClick={() => navigate('/users')}
         className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Users
+        <ArrowLeft className="h-4 w-4" /> {t('anveshanUserDetailPage.backToUsers')}
       </button>
 
       <Card className="border-0 shadow-sm">
@@ -79,14 +81,14 @@ export function AnveshanUserDetailPage() {
               <h2 className="break-words text-lg font-extrabold leading-tight text-foreground sm:text-xl">{user.name || 'Unnamed user'}</h2>
               {user.username && <p className="text-xs text-text-tertiary sm:text-sm">@{user.username}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge className="gap-1 bg-emerald-600 text-white"><Sprout className="h-3 w-3" aria-hidden="true" />Anveshan user</Badge>
+                <Badge className="gap-1 bg-emerald-600 text-white"><Sprout className="h-3 w-3" aria-hidden="true" />{t('anveshanUserDetailPage.anveshanUser')}</Badge>
                 <Badge variant="secondary" className="capitalize">{user.verificationStatus.replace('_', ' ')}</Badge>
                 {user.isTester && <TesterTag />}
               </div>
             </div>
             <Button variant="outline" size="sm" className="shrink-0" onClick={() => { markFeatureSeen('anveshanUserExport'); setExportOpen(true) }}>
               <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              Export
+              {t('exportMenu.export')}
               <NewBadge feature="anveshanUserExport" className="ml-1.5" />
             </Button>
           </div>
@@ -117,8 +119,8 @@ export function AnveshanUserDetailPage() {
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="self-start">
-            <TabsTrigger value="questions">Questions ({questions.length})</TabsTrigger>
-            <TabsTrigger value="entities">Entities ({entities.length})</TabsTrigger>
+            <TabsTrigger value="questions">{t('anveshanUserDetailPage.questions', { length: questions.length })}</TabsTrigger>
+            <TabsTrigger value="entities">{t('anveshanUserDetailPage.entities', { length: entities.length })}</TabsTrigger>
           </TabsList>
           {tab === 'questions' && (
             <AnveshanQuestionsToolbar
@@ -130,7 +132,7 @@ export function AnveshanUserDetailPage() {
           )}
         </div>
         <TabsContent value="questions" className="space-y-3">
-          <p className="text-xs text-text-secondary">{answered} of {questions.length} questions answered</p>
+          <p className="text-xs text-text-secondary">{t('anveshanUserDetailPage.ofQuestionsAnswered', { answered, length: questions.length })}</p>
           <AnveshanQuestionsTab questions={questions} search={search} answeredOnly={answeredOnly} />
         </TabsContent>
         <TabsContent value="entities"><AnveshanEntitiesTab entities={entities} /></TabsContent>

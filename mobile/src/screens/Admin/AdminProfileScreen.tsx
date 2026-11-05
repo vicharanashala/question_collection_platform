@@ -50,7 +50,7 @@ export function AdminProfileScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text }]}>Admin Profile</Text>
+        <Text style={[styles.screenTitle, { color: c.text }]}>{t('adminProfileScreen.adminProfile')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -140,10 +140,10 @@ export function AdminProfileScreen() {
               </View>
               <View style={styles.themeOptionText}>
                 <Text style={[styles.themeOptionLabel, { color: c.text }]}>
-                  {mode === 'light' ? 'Light' : mode === 'dark' ? 'Dark' : 'System'}
+                  {mode === 'light' ? t('profile.themeLight') : mode === 'dark' ? 'Dark' : 'System'}
                 </Text>
                 <Text style={[styles.themeOptionSub, { color: c.textSecondary }]}>
-                  {mode === 'light' ? 'Always light theme'
+                  {mode === 'light' ? t('profile.themeLightDesc')
                     : mode === 'dark' ? 'Always dark theme'
                     : 'Follow device settings'}
                 </Text>

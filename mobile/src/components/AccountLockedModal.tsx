@@ -54,17 +54,15 @@ export function AccountLockedModal() {
 
           {/* Title */}
           <Text style={[styles.title, { color: accentColor }]}>
-            {isBan ? 'Account Permanently Banned' : 'Account Suspended'}
+            {isBan ? t('otp.accountBanned') : t('otp.accountSuspended')}
           </Text>
 
-          <Text style={[styles.subtitle, { color: '#FFFFFF99' }]}>
-            Your access has been revoked.
-          </Text>
+          <Text style={[styles.subtitle, { color: '#FFFFFF99' }]}>{t('accountLockedModal.yourAccessHasBeen')}</Text>
 
           {/* Reason card */}
           {lockedInfo?.reason && (
             <View style={[styles.reasonCard, { backgroundColor: '#FFFFFF0D' }]}>
-              <Text style={[styles.reasonLabel, { color: '#FFFFFF66' }]}>Reason</Text>
+              <Text style={[styles.reasonLabel, { color: '#FFFFFF66' }]}>{t('otp.reason')}</Text>
               <Text style={[styles.reasonText, { color: '#FFFFFF' }]}>
                 {lockedInfo.reason}
               </Text>
@@ -75,7 +73,7 @@ export function AccountLockedModal() {
           {(lockedInfo?.suspendedAt ?? lockedInfo?.bannedAt) && (
             <View style={[styles.dateCard, { backgroundColor: '#FFFFFF0D' }]}>
               <Text style={[styles.dateLabel, { color: '#FFFFFF66' }]}>
-                {isBan ? 'Banned on' : 'Suspended on'}
+                {isBan ? t('accountLockedModal.bannedOn') : t('accountLockedModal.suspendedOn')}
               </Text>
               <Text style={[styles.dateText, { color: '#FFFFFFCC' }]}>
                 {formatDate(lockedInfo?.suspendedAt ?? lockedInfo?.bannedAt)}
@@ -84,9 +82,7 @@ export function AccountLockedModal() {
           )}
 
           {/* Contact support */}
-          <Text style={[styles.contactLabel, { color: '#FFFFFF66' }]}>
-            If you believe this was a mistake, contact support
-          </Text>
+          <Text style={[styles.contactLabel, { color: '#FFFFFF66' }]}>{t('accountLockedModal.ifYouBelieveThis')}</Text>
           <TouchableOpacity
             style={styles.emailBtn}
             onPress={() => {
@@ -99,7 +95,7 @@ export function AccountLockedModal() {
             activeOpacity={0.7}
           >
             <Ionicons name="mail-outline" size={15} color={accentColor} />
-            <Text style={[styles.emailBtnLabel, { color: accentColor }]}>Send email</Text>
+            <Text style={[styles.emailBtnLabel, { color: accentColor }]}>{t('accountLockedModal.sendEmail')}</Text>
           </TouchableOpacity>
 
           {/* Logout button */}
@@ -108,14 +104,14 @@ export function AccountLockedModal() {
             onPress={handleLogoutPress}
             activeOpacity={0.8}
           >
-            <Text style={styles.logoutBtnText}>Log Out</Text>
+            <Text style={styles.logoutBtnText}>{t('accountLockedModal.logOut')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
       <ConfirmModal
         visible={showLogoutConfirm}
-        title="Sign Out"
+        title={t('profile.signOut')}
         message="Are you sure you want to sign out?"
         confirmLabel="Sign Out"
         cancelLabel="Cancel"

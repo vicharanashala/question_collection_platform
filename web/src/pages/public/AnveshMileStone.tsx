@@ -144,11 +144,11 @@ export function StepTimeline({ timeline }: { timeline?: AnveshanStepTimeline }) 
               {completed}
             </time>
           ) : (
-            <span>{t("anveshan.timelineInProgress", "—")}</span>
+            <span>{t("anveshan.timelineInProgress")}</span>
           )}
         </>
       ) : (
-        <span>{t("anveshan.timelineNotStarted", "Not started yet")}</span>
+        <span>{t("anveshan.timelineNotStarted")}</span>
       )}
     </p>
   );
@@ -167,6 +167,7 @@ interface MilestoneRowProps {
 
 // One requirement row with a staggered entrance, counting progress, a filling bar and its start/end times.
 function MilestoneRow({ icon: Icon, label, progress, required, index, open, timeline, onSelect }: MilestoneRowProps) {
+  const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const delay = 0.2 + index * ROW_STAGGER_SECONDS;
   const shownProgress = useCountUp(progress, { active: open, duration: 0.8, delay });
@@ -210,7 +211,7 @@ function MilestoneRow({ icon: Icon, label, progress, required, index, open, time
             "text-xs font-semibold tabular-nums",
             done ? "text-emerald-700 dark:text-emerald-400" : "text-text-tertiary",
           )}
-          aria-label={`${progress} of ${required}`}
+          aria-label={t('anveshMileStone.of', { progress, required })}
         >
           {shownProgress}/{required}
         </span>
@@ -253,14 +254,13 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
           <p className="text-sm font-medium text-text-secondary">
             {t("anveshan.answerTaskLockedTitle", {
               count: required,
-              defaultValue: "Final step: write advisories for {{count}} farmer queries",
             })}
           </p>
           <p className="text-xs text-text-tertiary">
-            {t("anveshan.answerTaskLockedHint", { defaultValue: "Unlocks after the goals above are complete." })}
+            {t("anveshan.answerTaskLockedHint")}
           </p>
         </div>
-        <span className="text-xs font-semibold tabular-nums text-text-tertiary" aria-label={`${answered} of ${required}`}>
+        <span className="text-xs font-semibold tabular-nums text-text-tertiary" aria-label={t('anveshMileStone.of2', { answered, required })}>
           {answered}/{required}
         </span>
       </div>
@@ -290,10 +290,9 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
         </span>
         <p className="min-w-0 flex-1 text-sm font-semibold text-foreground">
           {done
-            ? t("anveshan.answerTaskDoneTitle", { count: required, defaultValue: "{{count}} advisories submitted" })
+            ? t("anveshan.answerTaskDoneTitle", { count: required })
             : t("anveshan.answerTaskTitle", {
                 count: required,
-                defaultValue: "Final step: write advisories for {{count}} farmer queries",
               })}
         </p>
         <span
@@ -301,7 +300,7 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
             "text-xs font-semibold tabular-nums",
             done ? "text-emerald-700 dark:text-emerald-400" : "text-primary",
           )}
-          aria-label={`${answered} of ${required}`}
+          aria-label={t('anveshMileStone.of2', { answered, required })}
         >
           {answered}/{required}
         </span>
@@ -312,21 +311,17 @@ function AnswerTaskCard({ data, onStart }: AnswerTaskCardProps) {
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
             {t("anveshan.answerTaskMessage", {
               count: required,
-              defaultValue:
-                "Amazing work reaching 80%! You know these farmer queries best. Write an advisory, backed by a trusted source, for any {{count}} of them to complete your milestone.",
             })}
           </p>
           {isDesktop ? (
             <Button className="mt-3 w-full gap-1.5" onClick={onStart}>
-              {t("anveshan.answerTaskCta", { defaultValue: "Write advisories" })}
+              {t("anveshan.answerTaskCta")}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           ) : (
             <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-400">
               <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              {t("anveshan.answerTaskDesktopOnly", {
-                defaultValue: "Writing advisories is available only on a desktop or laptop. Please open AnnaDatha there to finish this step.",
-              })}
+              {t("anveshan.answerTaskDesktopOnly")}
             </p>
           )}
         </>
@@ -369,12 +364,10 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
             <Trophy className="h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           </motion.div>
           <DialogTitle className="text-center">
-            {t("anveshan.milestoneTitle", { defaultValue: "Your Progress" })}
+            {t("anveshan.milestoneTitle")}
           </DialogTitle>
           <DialogDescription className="text-center">
-            {t("anveshan.milestoneDescription", {
-              defaultValue: "Complete all requirements below to finish your milestone.",
-            })}
+            {t("anveshan.milestoneDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -387,15 +380,14 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
                   {t("anveshan.goalsMet", {
                     met: goalsMet,
                     total: ITEMS.length + 1,
-                    defaultValue: "{{met}} of {{total}} goals complete",
                   })}
                 </p>
                 <p className="mt-0.5 text-xs text-text-tertiary">
                   {data.completed
-                    ? t("anveshan.allGoalsDone", { defaultValue: "Every requirement is met." })
+                    ? t("anveshan.allGoalsDone")
                     : data.submissionsCompleted
-                      ? t("anveshan.answerToFinish", { defaultValue: "Write advisories for farmer queries to reach 100%." })
-                      : t("anveshan.keepGoing", { defaultValue: "Keep submitting to reach 80%, then write advisories to finish." })}
+                      ? t("anveshan.answerToFinish")
+                      : t("anveshan.keepGoing")}
                 </p>
               </div>
             </div>
@@ -429,22 +421,20 @@ export function AnveshanMilestoneModal({ open, onOpenChange, data }: AnveshanMil
             role="status"
           >
             <p>
-              {t("anveshan.milestoneComplete100", {
-                defaultValue: "🎉 Congratulations! You have reached 100%. Kindly go to the Anveshan platform and check your completion there.",
-              })}
+              {t("anveshan.milestoneComplete100")}
             </p>
             <Button asChild size="sm" className="mt-3 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700">
               <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
-                {t("anveshan.goToAnveshan", "Go to Anveshan")}
+                {t("anveshan.goToAnveshan")}
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                <span className="sr-only">{t("common.opensInNewTab", "(opens in a new tab)")}</span>
+                <span className="sr-only">{t("common.opensInNewTab")}</span>
               </a>
             </Button>
           </motion.div>
         )}
 
         <Button className="mt-4 w-full" variant="outline" onClick={() => onOpenChange(false)}>
-          {t("common.close", "Close")}
+          {t("common.close")}
         </Button>
       </DialogContent>
     </Dialog>

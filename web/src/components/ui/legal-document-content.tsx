@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, FileText, ShieldCheck } from 'lucide-react'
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
+import { useTranslation } from 'react-i18next'
 
 interface LegalDocumentContentProps {
   type: 'terms' | 'privacy'
@@ -8,6 +9,7 @@ interface LegalDocumentContentProps {
 }
 
 export function LegalDocumentContent({ type, showHeader = true }: LegalDocumentContentProps) {
+  const { t } = useTranslation()
   const [openId, setOpenId] = useState<string | null>('1')
   const sections = type === 'terms' ? TERMS_SECTIONS : PRIVACY_POLICY_SECTIONS
   const title = type === 'terms' ? 'Terms of Service' : 'Privacy Policy'
@@ -23,9 +25,7 @@ export function LegalDocumentContent({ type, showHeader = true }: LegalDocumentC
             </div>
             <div>
               <p className="font-semibold text-foreground">{title}</p>
-              <p className="text-[11px] sm:text-xs text-muted-foreground">
-                {sections.length} sections · June 2026
-              </p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground">{t('legalDocumentContent.sectionsJune2026', { length: sections.length })}</p>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagin
 import { feedbackApi, getErrorMessage } from '@/api/client'
 import { cn, formatDateTime } from '@/lib/utils'
 import type { AppFeedbackItem, AppFeedbackListResponse, FeedbackRatingSummary } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const PAGE_SIZE = 20
 const STAR_VALUES = [5, 4, 3, 2, 1] as const
@@ -17,9 +18,10 @@ type LoadState = 'loading' | 'ready' | 'error'
 
 // Row of five stars with the given number filled; the text alternative carries the value.
 function StarRating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' }) {
+  const { t } = useTranslation()
   const iconClass = size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'
   return (
-    <span className="inline-flex items-center gap-0.5" role="img" aria-label={`${value} out of 5 stars`}>
+    <span className="inline-flex items-center gap-0.5" role="img" aria-label={t('feedbacksPage.outOfStars', { value })}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
@@ -33,6 +35,7 @@ function StarRating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' 
 
 /** Admin page listing the app feedback Anveshan users give after reaching 100%. */
 export function FeedbacksPage() {
+  const { t } = useTranslation()
   const [data, setData] = useState<AppFeedbackListResponse | null>(null)
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [error, setError] = useState('')
@@ -72,10 +75,8 @@ export function FeedbacksPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div>
-        <h2 className="text-lg font-bold text-foreground sm:text-xl">App Feedback</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-          Ratings and comments Anveshan users shared after reaching 100% of their milestone
-        </p>
+        <h2 className="text-lg font-bold text-foreground sm:text-xl">{t('feedbacksPage.appFeedback')}</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{t('feedbacksPage.ratingsAndCommentsAnveshan')}</p>
       </div>
 
       {data && <FeedbackSummary summary={data.summary} activeRating={ratingFilter} onSelectRating={changeRating} />}
@@ -84,14 +85,14 @@ export function FeedbacksPage() {
       <Card>
         <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
           <Select value={ratingFilter ? String(ratingFilter) : 'all'} onValueChange={(v) => changeRating(v === 'all' ? null : Number(v))}>
-            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by rating">
+            <SelectTrigger className="w-full sm:w-44" aria-label={t('feedbacksPage.filterByRating')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All ratings</SelectItem>
+              <SelectItem value="all">{t('feedbacksPage.allRatings')}</SelectItem>
               {STAR_VALUES.map((value) => (
                 <SelectItem key={value} value={String(value)}>
-                  {value} {value === 1 ? 'star' : 'stars'}
+                  {value} {value === 1 ? t('feedbacksPage.star') : t('feedbacksPage.stars')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -103,13 +104,13 @@ export function FeedbacksPage() {
               setPage(1)
             }}
           >
-            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by how the comment was given">
+            <SelectTrigger className="w-full sm:w-44" aria-label={t('feedbacksPage.filterByHowThe')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Spoken and typed</SelectItem>
-              <SelectItem value="voice">Spoken (microphone)</SelectItem>
-              <SelectItem value="text">Typed</SelectItem>
+              <SelectItem value="all">{t('feedbacksPage.spokenAndTyped')}</SelectItem>
+              <SelectItem value="voice">{t('feedbacksPage.spokenMicrophone')}</SelectItem>
+              <SelectItem value="text">{t('feedbacksPage.typed')}</SelectItem>
             </SelectContent>
           </Select>
           <div className="w-full sm:w-44">
@@ -123,7 +124,7 @@ export function FeedbacksPage() {
           </div>
           {data && (
             <p className="text-xs text-muted-foreground sm:ml-auto" aria-live="polite">
-              {data.total} {data.total === 1 ? 'response' : 'responses'}
+              {data.total} {data.total === 1 ? t('feedbacksPage.response') : t('feedbacksPage.responses')}
             </p>
           )}
         </div>
@@ -136,7 +137,7 @@ export function FeedbacksPage() {
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center" role="alert">
             <AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />
             <p className="text-sm text-foreground">{error}</p>
-            <Button variant="outline" onClick={() => void load()}>Try again</Button>
+            <Button variant="outline" onClick={() => void load()}>{t('faq.retry')}</Button>
           </CardContent>
         </Card>
       )}
@@ -145,11 +146,11 @@ export function FeedbacksPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
             <MessageSquareText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-            <p className="text-sm font-medium text-foreground">No feedback found</p>
+            <p className="text-sm font-medium text-foreground">{t('feedbacksPage.noFeedbackFound')}</p>
             <p className="text-xs text-muted-foreground">
               {ratingFilter || inputFilter !== 'all'
-                ? 'Try clearing the filters.'
-                : 'Feedback appears here once Anveshan users reach 100% and share it.'}
+                ? t('feedbacksPage.tryClearingTheFilters')
+                : t('feedbacksPage.feedbackAppearsHereOnce')}
             </p>
           </CardContent>
         </Card>
@@ -177,26 +178,27 @@ interface FeedbackSummaryProps {
 
 // Average rating, total count and a clickable star breakdown that filters the list.
 function FeedbackSummary({ summary, activeRating, onSelectRating }: FeedbackSummaryProps) {
+  const { t } = useTranslation()
   const max = Math.max(1, ...STAR_VALUES.map((value) => summary.distribution[value]))
 
   return (
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
       <Card>
         <CardContent className="flex h-full flex-col items-center justify-center gap-1.5 p-5 text-center">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Average rating</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('feedbacksPage.averageRating')}</p>
           <p className="text-4xl font-extrabold tabular-nums text-foreground">
             {summary.averageRating != null ? summary.averageRating.toFixed(1) : '—'}
           </p>
           <StarRating value={summary.averageRating ?? 0} size="lg" />
           <p className="text-xs text-muted-foreground">
-            from {summary.total} {summary.total === 1 ? 'response' : 'responses'}
+            from {summary.total} {summary.total === 1 ? t('feedbacksPage.response') : t('feedbacksPage.responses')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="space-y-1.5 p-5">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Rating breakdown</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('feedbacksPage.ratingBreakdown')}</p>
           {STAR_VALUES.map((value) => {
             const count = summary.distribution[value]
             const active = activeRating === value
@@ -231,6 +233,7 @@ function FeedbackSummary({ summary, activeRating, onSelectRating }: FeedbackSumm
 
 // One feedback: who sent it, the stars, how the comment was given and the comment itself.
 function FeedbackCard({ item }: { item: AppFeedbackItem }) {
+  const { t } = useTranslation()
   const location = [item.user?.district, item.user?.state].filter(Boolean).join(', ')
   return (
     <li>
@@ -261,7 +264,7 @@ function FeedbackCard({ item }: { item: AppFeedbackItem }) {
           {item.comment ? (
             <p className="flex-1 whitespace-pre-wrap break-words rounded-md bg-muted/50 p-3 text-sm text-foreground">{item.comment}</p>
           ) : (
-            <p className="flex-1 text-sm italic text-muted-foreground">No comment, rating only</p>
+            <p className="flex-1 text-sm italic text-muted-foreground">{t('feedbacksPage.noCommentRatingOnly')}</p>
           )}
 
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -285,8 +288,9 @@ function FeedbackCard({ item }: { item: AppFeedbackItem }) {
 }
 
 function FeedbackListSkeleton() {
+  const { t } = useTranslation()
   return (
-    <ul className="grid gap-3 md:grid-cols-2" aria-busy="true" aria-label="Loading feedback">
+    <ul className="grid gap-3 md:grid-cols-2" aria-busy="true" aria-label={t('feedbacksPage.loadingFeedback')}>
       {Array.from({ length: 4 }, (_, i) => (
         <li key={i}>
           <Card>

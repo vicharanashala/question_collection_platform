@@ -30,9 +30,9 @@ export function PublicReportsPage(): ReactNode {
           size={"sm"}
           onClick={() => navigate(-1)}
           className="rounded-full"
-          aria-label="Back"
+          aria-label={t('common.back')}
         >
-          <ArrowLeft className="h-4 w-4" /> Back to profile
+          <ArrowLeft className="h-4 w-4" /> {t('faq.backToProfile')}
         </Button>
       </div>
 
@@ -52,17 +52,17 @@ export function PublicReportsPage(): ReactNode {
             <LifeBuoy className="h-8 w-8" />
           </div>
           <h2 className="mt-4 text-lg sm:text-xl font-extrabold text-foreground">
-            {t('report.raiseSupportTicket', 'Raise Support Ticket')}
+            {t('report.raiseSupportTicket')}
           </h2>
           <p className="mt-2 max-w-sm text-xs sm:text-sm text-text-secondary">
-            {t('report.raiseSupportTicketHint', 'Need help from our support team? Raise a ticket and we will reply to you by email.')}
+            {t('report.raiseSupportTicketHint')}
           </p>
           <Button
             size="lg"
             className="mt-6 rounded-full"
             onClick={() => window.open(RAISE_TICKET_URL, '_blank', 'noopener,noreferrer')}
           >
-            {t('report.raiseSupportTicket', 'Raise Support Ticket')}
+            {t('report.raiseSupportTicket')}
             <ExternalLink className="h-4 w-4" />
           </Button>
         </CardContent>

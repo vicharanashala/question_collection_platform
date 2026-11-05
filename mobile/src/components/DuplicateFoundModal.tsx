@@ -89,14 +89,14 @@ export function DuplicateFoundModal({
                 {submissionStatus === 'rejected' && (
                   <View style={[styles.statusBadge, { backgroundColor: c.error + '18', borderColor: c.error + '40' }]}>
                     <Text style={[styles.statusText, { color: c.error }]}>
-                      {t('question.submittedRejected', 'Submitted — Rejected')}
+                      {t('question.submittedRejected')}
                     </Text>
                   </View>
                 )}
               </View>
               {scorePct != null && (
                 <View style={[styles.scoreBadge, { backgroundColor: '#FACC15' + '18', borderColor: '#FACC15' + '60' }]}>
-                  <Text style={[styles.scoreText, { color: '#92400E' }]}>{scorePct}% match</Text>
+                  <Text style={[styles.scoreText, { color: '#92400E' }]}>{t('duplicateFoundModal.match', { scorePct })}</Text>
                 </View>
               )}
             </View>
@@ -115,7 +115,7 @@ export function DuplicateFoundModal({
           <View style={styles.qaSection}>
             <View style={styles.qaLabelRow}>
               <Ionicons name="help-circle" size={14} color={c.primary} />
-              <Text style={[styles.qaLabel, { color: c.primary }]}>Question</Text>
+              <Text style={[styles.qaLabel, { color: c.primary }]}>{t('faqAdmin.formQuestion')}</Text>
             </View>
             <Text style={[styles.questionText, { color: c.text }]}>{matchedQuestion}</Text>
           </View>
@@ -125,7 +125,7 @@ export function DuplicateFoundModal({
             <View style={styles.qaSection}>
               <View style={styles.qaLabelRow}>
                 <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
-                <Text style={[styles.qaLabel, { color: '#16a34a' }]}>Answer</Text>
+                <Text style={[styles.qaLabel, { color: '#16a34a' }]}>{t('faqAdmin.formAnswer')}</Text>
               </View>
 
               <ScrollView
@@ -152,8 +152,8 @@ export function DuplicateFoundModal({
                 >
                   <Text style={[styles.readMore, { color: c.primary }]}>
                     {answerExpanded
-                      ? 'Read less ▲'
-                      : 'Read more ▼'}
+                      ? t('duplicateFoundModal.readLess')
+                      : t('duplicateFoundModal.readMore')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -170,8 +170,8 @@ export function DuplicateFoundModal({
           >
             <Text style={[styles.btnText, { color: '#fff' }]}>
               {submissionStatus === 'rejected'
-                ? t('question.gotIt', 'Got It')
-                : t('question.tryAnotherQuestion', 'Try Another Question')}
+                ? t('question.gotIt')
+                : t('question.tryAnotherQuestion')}
             </Text>
           </TouchableOpacity>
         </View>

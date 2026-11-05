@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Ban, PauseCircle } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL as string | undefined;
 
@@ -33,6 +34,7 @@ function formatDate(iso: string | null): string | null {
 }
 
 export function LockedAccountModal() {
+  const { t } = useTranslation();
   const [lockedInfo, setLockedInfo] = useState<AccountLockedInfo | null>(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -90,20 +92,15 @@ export function LockedAccountModal() {
             )}
           </div>
           <DialogTitle className={cn("text-lg sm:text-lg sm:text-xl font-black", accentCls)}>
-            {isBan ? "Account Permanently Banned" : "Account Suspended"}
+            {isBan ? t('otp.accountBanned') : t('otp.accountSuspended')}
           </DialogTitle>
-          <DialogDescription className="text-center text-muted-foreground">
-            Your access has been revoked. Sign out to return to the login
-            screen.
-          </DialogDescription>
+          <DialogDescription className="text-center text-muted-foreground">{t('lockedAccountModal.yourAccessHasBeen')}</DialogDescription>
         </DialogHeader>
 
         <div className={cn("rounded-lg border p-4 space-y-3", bgCls)}>
           {lockedInfo.reason && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                Reason
-              </p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{t('otp.reason')}</p>
               <p className="text-xs sm:text-xs sm:text-sm text-foreground italic">
                 &ldquo;{lockedInfo.reason}&rdquo;
               </p>
@@ -116,10 +113,7 @@ export function LockedAccountModal() {
             <p className="text-xs sm:text-xs sm:text-sm text-foreground">
               {formatDate(date)}
               {!isBan && lockedInfo.suspendedUntil && (
-                <span className="text-muted-foreground">
-                  {" "}
-                  — until {formatDate(lockedInfo.suspendedUntil)}
-                </span>
+                <span className="text-muted-foreground">{t('lockedAccountModal.until', { value3: formatDate(lockedInfo.suspendedUntil) })}</span>
               )}
             </p>
           </div>
@@ -127,9 +121,7 @@ export function LockedAccountModal() {
 
         {SUPPORT_EMAIL ? (
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">
-              If you believe this was a mistake, contact support
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground text-center">{t('lockedAccountModal.ifYouBelieveThis')}</p>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(isBan ? "Account ban appeal" : "Account suspension appeal")}`}
               className={cn(
@@ -155,15 +147,11 @@ export function LockedAccountModal() {
             </a>
           </div>
         ) : (
-          <p className="text-[11px] sm:text-[11px] sm:text-xs text-center text-muted-foreground">
-            If you believe this was a mistake, contact support.
-          </p>
+          <p className="text-[11px] sm:text-[11px] sm:text-xs text-center text-muted-foreground">{t('lockedAccountModal.ifYouBelieveThis2')}</p>
         )}
 
         <DialogFooter className="sm:justify-center">
-          <Button className="w-full" onClick={handleLogout}>
-            Sign Out
-          </Button>
+          <Button className="w-full" onClick={handleLogout}>{t('profile.signOut')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

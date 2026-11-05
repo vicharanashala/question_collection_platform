@@ -12,8 +12,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { TERMS_SECTIONS } from '@/constants/legal'
+import { useTranslation } from 'react-i18next'
 
 export function PublicTermsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [openId, setOpenId] = useState<string | null>('1')
 
@@ -21,7 +23,7 @@ export function PublicTermsPage() {
     <div className="mx-auto max-w-2xl space-y-4 pb-4">
       <Button variant="outline" size="sm" onClick={() => navigate('/home/profile')} className="rounded-full">
         <ArrowLeft className="h-4 w-4" />
-        Back to profile
+        {t('faq.backToProfile')}
       </Button>
 
       {/* Hero */}
@@ -29,10 +31,8 @@ export function PublicTermsPage() {
         <div className="mb-3 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
           <FileText className="h-8 w-8" />
         </div>
-        <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">Terms of Service</h1>
-        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">
-          Last updated: June 2026 · {TERMS_SECTIONS.length} sections
-        </p>
+        <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">{t('profile.termsOfService')}</h1>
+        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-secondary">{t('publicPrivacyPage.lastUpdatedJune2026', { length: TERMS_SECTIONS.length })}</p>
       </div>
 
       {/* Accordion sections */}
@@ -68,9 +68,7 @@ export function PublicTermsPage() {
         })}
       </div>
 
-      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
-        AnnaDatha — To Strengthen Indian Farmers
-      </p>
+      <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">{t('questionDetailModal.annadathaToStrengthenIndian')}</p>
     </div>
   )
 }

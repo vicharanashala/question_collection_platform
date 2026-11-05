@@ -63,7 +63,7 @@ export function QuestionDetailScreen() {
             <Ionicons name="chevron-back" size={24} color={c.text} />
           </TouchableOpacity>
           <Text style={[styles.screenTitle, { color: c.text }]}>
-            {t('notifications.questionDetail', 'Question Detail')}
+            {t('notifications.questionDetail')}
           </Text>
           <View style={{ width: 24 }} />
         </View>
@@ -80,7 +80,7 @@ export function QuestionDetailScreen() {
             <Ionicons name="chevron-back" size={24} color={c.text} />
           </TouchableOpacity>
           <Text style={[styles.screenTitle, { color: c.text }]}>
-            {t('notifications.questionDetail', 'Question Detail')}
+            {t('notifications.questionDetail')}
           </Text>
           <View style={{ width: 24 }} />
         </View>
@@ -107,7 +107,7 @@ export function QuestionDetailScreen() {
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.screenTitle, { color: c.text }]} numberOfLines={1}>
-          {t('notifications.questionDetail', 'Question Detail')}
+          {t('notifications.questionDetail')}
         </Text>
         <View style={{ width: 24 }} />
       </View>
@@ -135,7 +135,7 @@ export function QuestionDetailScreen() {
         {/* Question text */}
         <View style={[styles.section, { backgroundColor: c.surface }]}>
           <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
-            {t('notifications.yourQuestion', 'Your Question')}
+            {t('notifications.yourQuestion')}
           </Text>
           <Text style={[styles.questionText, { color: c.text }]}>
             {q.questionText}
@@ -179,7 +179,7 @@ export function QuestionDetailScreen() {
         {/* Crop & Location metadata */}
         <View style={[styles.section, { backgroundColor: c.surface }]}>
           <Text style={[styles.sectionTitle, { color: c.textSecondary }]}>
-            {t('notifications.context', 'Context')}
+            {t('notifications.context')}
           </Text>
           <View style={styles.metaGrid}>
             {[
@@ -207,7 +207,7 @@ export function QuestionDetailScreen() {
             <View style={styles.reasonHeader}>
               <Ionicons name="close-circle" size={16} color="#b91c1c" />
               <Text style={[styles.reasonTitle, { color: '#b91c1c' }]}>
-                {t('notifications.rejectionReason', 'Rejection Reason')}
+                {t('notifications.rejectionReason')}
               </Text>
             </View>
             <Text style={[styles.reasonBody, { color: '#991b1b' }]}>
@@ -222,7 +222,7 @@ export function QuestionDetailScreen() {
             <View style={styles.reasonHeader}>
               <Ionicons name="pause-circle" size={16} color="#b45309" />
               <Text style={[styles.reasonTitle, { color: '#b45309' }]}>
-                {t('notifications.holdReason', 'Hold Reason')}
+                {t('notifications.holdReason')}
               </Text>
             </View>
             <Text style={[styles.reasonBody, { color: '#92400e' }]}>
@@ -237,7 +237,7 @@ export function QuestionDetailScreen() {
             <View style={styles.reasonHeader}>
               <Ionicons name="information-circle" size={16} color="#1d4ed8" />
               <Text style={[styles.reasonTitle, { color: '#1d4ed8' }]}>
-                {t('notifications.infoRequested', 'Additional Information Needed')}
+                {t('notifications.infoRequested')}
               </Text>
             </View>
             <Text style={[styles.reasonBody, { color: '#1e40af' }]}>
@@ -252,7 +252,7 @@ export function QuestionDetailScreen() {
             <View style={styles.reasonHeader}>
               <Ionicons name="checkmark-circle" size={16} color="#15803d" />
               <Text style={[styles.reasonTitle, { color: '#15803d' }]}>
-                {t('notifications.approvedNote', 'Approval Note')}
+                {t('notifications.approvedNote')}
               </Text>
             </View>
             <TranslatableTextReadOnly

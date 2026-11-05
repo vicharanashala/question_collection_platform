@@ -4,6 +4,7 @@ import { ApprovedQueue } from './ApprovedQueue'
 import { Send, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { isDistributor } from '@/lib/roles'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Distributor landing page.
@@ -17,6 +18,7 @@ import { isDistributor } from '@/lib/roles'
  * promote-to-final action.
  */
 export function DistributionsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const canAssign = isDistributor(user)
 
@@ -33,10 +35,8 @@ export function DistributionsPage() {
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div>
-          <h1 className="text-lg sm:text-lg sm:text-xl font-semibold">Distributions</h1>
-          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
-            Distribute approved questions to one or more Indian states.
-          </p>
+          <h1 className="text-lg sm:text-lg sm:text-xl font-semibold">{t('nav.distributions')}</h1>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('distributorDashboardPage.distributeApprovedQuestionsTo')}</p>
         </div>
       </header>
 
@@ -50,7 +50,7 @@ export function DistributionsPage() {
           }`}
         >
           <Send className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-          Distributions
+          {t('nav.distributions')}
         </button>
         {canAssign && (
           <button
@@ -62,7 +62,7 @@ export function DistributionsPage() {
             }`}
           >
             <CheckCircle2 className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-            Approved Queue
+            {t('distributionsPage.approvedQueue')}
           </button>
         )}
       </div>

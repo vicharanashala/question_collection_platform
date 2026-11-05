@@ -13,6 +13,7 @@ import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { INDIAN_STATES, CROP_OPTIONS } from '../../utils/constants';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -108,6 +109,7 @@ function ReasonModal({ visible, title, message, confirmLabel, loading, onConfirm
   visible: boolean; title: string; message?: string; confirmLabel: string;
   loading: boolean; onConfirm: (v: string) => void; onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [value, setValue] = useState('');
@@ -119,7 +121,7 @@ function ReasonModal({ visible, title, message, confirmLabel, loading, onConfirm
         {message && <Text style={[styles.modalMsg, { color: c.textSecondary }]}>{message}</Text>}
         <TextInput
           style={[styles.modalInput, { backgroundColor: c.input, borderColor: c.borderSubtle, color: c.text }]}
-          placeholder="Enter reason…"
+          placeholder={t('adminQuestionsScreen.enterReason')}
           placeholderTextColor={c.textTertiary}
           value={value}
           onChangeText={setValue}
@@ -129,7 +131,7 @@ function ReasonModal({ visible, title, message, confirmLabel, loading, onConfirm
         />
         <View style={styles.modalActions}>
           <TouchableOpacity style={[styles.modalBtn, { borderColor: c.border, borderWidth: 1 }]} onPress={() => { setValue(''); onClose(); }}>
-            <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>Cancel</Text>
+            <Text style={[styles.modalBtnText, { color: c.textSecondary }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modalBtn, { backgroundColor: value.trim() ? c.primary : c.textTertiary + '40' }]}
@@ -152,6 +154,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
   onAction: (id: string, action: 'approve' | 'reject' | 'hold') => void;
   onViewDetail: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [modal, setModal] = useState<{ action: 'approve' | 'reject' | 'hold' } | null>(null);
@@ -176,7 +179,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
           <Text style={[styles.statusPillText, { color }]}>{STATUS_LABELS[item.status] ?? item.status}</Text>
         </View>
         <TouchableOpacity onPress={() => onViewDetail(item.id)} style={styles.viewDetailBtn}>
-          <Text style={[styles.viewDetailText, { color: c.primary }]}>Full Details</Text>
+          <Text style={[styles.viewDetailText, { color: c.primary }]}>{t('adminQuestionsScreen.fullDetails')}</Text>
           <Ionicons name="arrow-forward" size={13} color={c.primary} />
         </TouchableOpacity>
       </View>
@@ -212,7 +215,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
 
         {/* Submitter */}
         <View style={styles.sectionLabel}>
-          <Text style={[styles.sectionLabelText, { color: c.textSecondary }]}>Submitted By</Text>
+          <Text style={[styles.sectionLabelText, { color: c.textSecondary }]}>{t('adminQuestionDetailScreen.submittedBy')}</Text>
         </View>
         <View style={styles.userRow}>
           <View style={[styles.avatar, { backgroundColor: c.primary + '22' }]}>
@@ -245,7 +248,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
           disabled={processing}
         >
           {processing ? <ActivityIndicator size="small" color="#fff" />
-            : <><Ionicons name="checkmark" size={16} color="#fff" /><Text style={styles.actionBtnText}> Approve</Text></>}
+            : <><Ionicons name="checkmark" size={16} color="#fff" /><Text style={styles.actionBtnText}>{t('admin.approve')}</Text></>}
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: '#f59e0b' }]}
@@ -253,7 +256,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
           disabled={processing}
         >
           {processing ? <ActivityIndicator size="small" color="#fff" />
-            : <><Ionicons name="pause" size={16} color="#fff" /><Text style={styles.actionBtnText}> Hold</Text></>}
+            : <><Ionicons name="pause" size={16} color="#fff" /><Text style={styles.actionBtnText}>{t('adminQuestionDetailScreen.hold')}</Text></>}
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: '#ef4444' }]}
@@ -261,13 +264,13 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
           disabled={processing}
         >
           {processing ? <ActivityIndicator size="small" color="#fff" />
-            : <><Ionicons name="close" size={16} color="#fff" /><Text style={styles.actionBtnText}> Reject</Text></>}
+            : <><Ionicons name="close" size={16} color="#fff" /><Text style={styles.actionBtnText}>{t('admin.reject')}</Text></>}
         </TouchableOpacity>
       </View>
 
       <ReasonModal
         visible={modal !== null}
-        title={modal?.action === 'approve' ? 'Approve Question' : modal?.action === 'reject' ? 'Reject Question' : 'Hold Question'}
+        title={modal?.action === 'approve' ? t('adminDashboardScreen.approveQuestion') : modal?.action === 'reject' ? 'Reject Question' : 'Hold Question'}
         message={modal?.action === 'approve' ? 'Enter reason for approval:' : modal?.action === 'reject' ? 'Enter reason for rejection:' : 'Enter reason for holding:'}
         confirmLabel={modal?.action === 'approve' ? 'Approve' : modal?.action === 'reject' ? 'Reject' : 'Hold'}
         loading={processing}
@@ -281,6 +284,7 @@ function DetailPanel({ item, processing, onAction, onViewDetail }: {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export function AdminQuestionsScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation<Nav>();
@@ -442,7 +446,7 @@ export function AdminQuestionsScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={22} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: c.text }]}>Question Review</Text>
+        <Text style={[styles.headerTitle, { color: c.text }]}>{t('adminQuestionsScreen.questionReview')}</Text>
         <View style={{ flex: 1 }} />
         <Text style={[styles.headerCount, { color: c.textSecondary }]}>{total}</Text>
         {(user?.role === 'admin' || user?.role === 'curator') && (
@@ -450,7 +454,7 @@ export function AdminQuestionsScreen() {
             onPress={() => nav.navigate('AdminProcessedQuestions')}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
           >
-            <Text style={[styles.headerProcessed, { color: c.primary }]}>Processed</Text>
+            <Text style={[styles.headerProcessed, { color: c.primary }]}>{t('withdrawalDetailModal.processed')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -484,8 +488,8 @@ export function AdminQuestionsScreen() {
                 {loading ? null : (
                   <>
                     <Ionicons name="document-text-outline" size={40} color={c.textTertiary} />
-                    <Text style={[styles.emptyTitle, { color: c.text }]}>No questions found</Text>
-                    <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>Adjust filters or check back later</Text>
+                    <Text style={[styles.emptyTitle, { color: c.text }]}>{t('common.noQuestionsFound')}</Text>
+                    <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>{t('adminQuestionsScreen.adjustFiltersOrCheck')}</Text>
                   </>
                 )}
               </View>
@@ -508,7 +512,7 @@ export function AdminQuestionsScreen() {
             <View style={[styles.mobileDetail, { backgroundColor: c.background }]}>
               <TouchableOpacity style={styles.backToList} onPress={() => setSelectedId(null)}>
                 <Ionicons name="chevron-back" size={18} color={c.primary} />
-                <Text style={[styles.backToListText, { color: c.primary }]}>Back to list</Text>
+                <Text style={[styles.backToListText, { color: c.primary }]}>{t('adminQuestionsScreen.backToList')}</Text>
               </TouchableOpacity>
               <DetailPanel
                 item={selectedItem}
@@ -521,8 +525,8 @@ export function AdminQuestionsScreen() {
             <View style={[styles.mobileDetail, { backgroundColor: c.background }]}>
               <View style={styles.emptyDetail}>
                 <Ionicons name="hand-left-outline" size={44} color={c.textTertiary} />
-                <Text style={[styles.emptyDetailTitle, { color: c.text }]}>Select a question</Text>
-                <Text style={[styles.emptyDetailMsg, { color: c.textSecondary }]}>Tap one from the list to review it</Text>
+                <Text style={[styles.emptyDetailTitle, { color: c.text }]}>{t('adminQuestionsScreen.selectQuestion')}</Text>
+                <Text style={[styles.emptyDetailMsg, { color: c.textSecondary }]}>{t('adminQuestionsScreen.tapOneFromThe')}</Text>
               </View>
             </View>
           )
@@ -536,8 +540,8 @@ export function AdminQuestionsScreen() {
         ) : (
           <View style={[styles.emptyDetail, { backgroundColor: c.surface }]}>
             <Ionicons name="hand-left-outline" size={44} color={c.textTertiary} />
-            <Text style={[styles.emptyDetailTitle, { color: c.text }]}>Select a question</Text>
-            <Text style={[styles.emptyDetailMsg, { color: c.textSecondary }]}>Tap one from the list to review it</Text>
+            <Text style={[styles.emptyDetailTitle, { color: c.text }]}>{t('adminQuestionsScreen.selectQuestion')}</Text>
+            <Text style={[styles.emptyDetailMsg, { color: c.textSecondary }]}>{t('adminQuestionsScreen.tapOneFromThe')}</Text>
           </View>
         )}
       </View>
@@ -549,7 +553,7 @@ export function AdminQuestionsScreen() {
         active={activeFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        title="Filter Questions"
+        title={t('adminQuestionsScreen.filterQuestions')}
       />
     </SafeAreaView>
   );

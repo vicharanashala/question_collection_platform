@@ -114,6 +114,7 @@ function Podium({ top3 }: { top3: LeaderboardEntry[] }) {
 // ─── List row ────────────────────────────────────────────────────────────────
 
 function ListRow({ entry }: { entry: LeaderboardEntry }) {
+  const { t } = useTranslation()
   const isMe = entry.isCurrentUser
   return (
     <div
@@ -130,7 +131,7 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
         <p className={cn('truncate text-xs sm:text-xs sm:text-sm', isMe ? 'font-extrabold text-foreground' : 'font-semibold text-foreground')}>
           {entry.name || 'Unknown'}
         </p>
-        {isMe && <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">You</p>}
+        {isMe && <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">{t('leaderboard.you')}</p>}
       </div>
       <div className="shrink-0 text-right">
         <p className={cn('text-xs sm:text-xs sm:text-sm font-extrabold', entry.totalEarned > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-text-tertiary')}>
