@@ -9,8 +9,7 @@ import {
 import { Inject } from '@nestjs/common';
 import { DataSource, Between, LessThanOrEqual, MoreThanOrEqual, Like, ArrayContains } from 'typeorm';
 // import { Question, AuditLog, Notification } from '../../shared/database/entities';
-import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus } from '../../shared/classes/enums';
-import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
+import { QuestionStatus, MediaType, AuditAction, ActorType, Season, VerificationStatus, NotificationType, NotificationTriggerType } from '../../shared/classes/enums';
 import { SubmitQuestionDto, SubmitQuestionResponseDto, PreviewQuestionDto } from './dto/submit-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { AttachQuestionAudioDto } from './dto/attach-question-audio.dto';

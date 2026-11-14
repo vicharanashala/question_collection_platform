@@ -12,8 +12,9 @@ import {
   ReportStatus,
   ReportPriority,
   UserRole,
+  NotificationType,
+  NotificationTriggerType,
 } from '../../shared/classes/enums';
-import { NotificationType, NotificationTriggerType } from '../../shared/database/entities/notification.entity';
 // import { Report } from '../../shared/database/entities/report.entity';
 // import { ReportReply } from '../../shared/database/entities/report-reply.entity';
 
