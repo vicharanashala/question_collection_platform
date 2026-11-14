@@ -57,7 +57,6 @@ import {
 } from "./dto";
 import { ConfigService } from "@nestjs/config";
 import { WalletsService } from "../wallets/wallets.service";
-import { NotificationsService } from "../notification/notifications.service";
 import { PinelabsService } from "../payment/pinelabs.service";
 import { RazorpayPayoutService } from "../payment/razorpay-payout.service";
 import { GdbService } from "../ai/gdb.service";
@@ -269,7 +268,6 @@ export class AdminService implements OnModuleInit {
     private readonly configService: ConfigService,
     @Inject(forwardRef(() => WalletsService))
     private readonly walletsService: WalletsService,
-    private readonly notificationsService: NotificationsService,
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
     private readonly redisService: RedisService,
@@ -2559,7 +2557,7 @@ async getUserStats(dto: ListUserStatsDto) {
       }),
     );
 
-    const notification = await this.notificationRepo.save(
+    await this.notificationRepo.save(
       await this.notificationRepo.create({
         userId: withdrawal.userId,
         type: NotificationType.WITHDRAWAL_REJECTED,
@@ -2574,21 +2572,6 @@ async getUserStats(dto: ListUserStatsDto) {
         triggerType: NotificationTriggerType.WITHDRAW,
       }),
     );
-
-    this.notificationsService
-      .sendToUser(withdrawal.userId, {
-        title: notification.title,
-        body: notification.body,
-        data: notification.data ?? undefined,
-        sound: "default",
-        priority: "high",
-      })
-      .catch((pushErr) =>
-        console.error(
-          "[AdminService] Failed to send withdrawal rejection push:",
-          pushErr,
-        ),
-      );
 
     return {
       success: true,
@@ -3593,7 +3576,7 @@ async getUserStats(dto: ListUserStatsDto) {
       const maskedDetails = maskPayout(withdrawal.payoutDetails ?? null);
 
       // Notify: withdrawal failed
-      const failedNotification = await this.notificationRepo.save(
+      await this.notificationRepo.save(
         await this.notificationRepo.create({
           userId: withdrawal.userId,
           type: NotificationType.WITHDRAWAL_FAILED,
@@ -3609,18 +3592,9 @@ async getUserStats(dto: ListUserStatsDto) {
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
-      this.notificationsService
-        .sendToUser(withdrawal.userId, {
-          title: failedNotification.title,
-          body: failedNotification.body,
-          data: failedNotification.data ?? undefined,
-        })
-        .catch((err) =>
-          this.logger.error(`Failed-withdrawal push failed: ${err.message}`),
-        );
 
       // Notify: refund completed
-      const refundNotification = await this.notificationRepo.save(
+      await this.notificationRepo.save(
         await this.notificationRepo.create({
           userId: withdrawal.userId,
           type: NotificationType.REFUND_COMPLETED,
@@ -3636,15 +3610,6 @@ async getUserStats(dto: ListUserStatsDto) {
           triggerType: NotificationTriggerType.WITHDRAW,
         }),
       );
-      this.notificationsService
-        .sendToUser(withdrawal.userId, {
-          title: refundNotification.title,
-          body: refundNotification.body,
-          data: refundNotification.data ?? undefined,
-        })
-        .catch((err) =>
-          this.logger.error(`Refund push failed: ${err.message}`),
-        );
     }
 
     return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };

@@ -1,7 +1,5 @@
 /**
- * Adds the `curatorDashboard` translation block to:
- *   • mobile/public/locales/{lang}/common.json   (×23 locales, source of truth)
- *   • web/src/i18n/resources.ts                  (auto-copied bundle)
+ * Adds the `curatorDashboard` translation block to web/src/i18n/resources.ts.
  *
  * Hindi gets real translations. The other 22 locales fall back to English
  * baseline values (i18next's `fallbackLng:'en'` would produce the same UX
@@ -115,47 +113,7 @@ function getTranslations(lang) {
 }
 
 
-// ─── 1. Patch mobile/public/locales/{lang}/common.json ────────────────────
-
-let mobileFilesChanged = 0
-let mobileKeysAdded = 0
-let mobileKeysUpdated = 0
-
-for (const lang of LANGS) {
-  const filePath = path.join(ROOT, 'mobile', 'public', 'locales', lang, 'common.json')
-  const raw = fs.readFileSync(filePath, 'utf8')
-  const json = JSON.parse(raw)
-
-  if (!json.curatorDashboard || typeof json.curatorDashboard !== 'object') {
-    json.curatorDashboard = {}
-  }
-
-  const tr = getTranslations(lang)
-  let addedHere = 0
-  let updatedHere = 0
-  for (const [k, v] of Object.entries(tr)) {
-    if (!(k in json.curatorDashboard)) {
-      json.curatorDashboard[k] = v
-      addedHere++
-    } else if (json.curatorDashboard[k] !== v) {
-      json.curatorDashboard[k] = v
-      updatedHere++
-    }
-  }
-
-  if (addedHere > 0 || updatedHere > 0) {
-    fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n', 'utf8')
-    mobileFilesChanged++
-    mobileKeysAdded += addedHere
-    mobileKeysUpdated += updatedHere
-    console.log(`[mobile] ${lang}: +${addedHere} keys, ~${updatedHere} updated`)
-  } else {
-    console.log(`[mobile] ${lang}: already up-to-date`)
-  }
-}
-
-
-// ─── 2. Patch web/src/i18n/resources.ts ───────────────────────────────────
+// ─── Patch web/src/i18n/resources.ts ───────────────────────────────────
 //
 // Strategy: for each locale, find the bounds of `"<lang>": { ... }` by
 // brace-counting, then find `"common": { ... }` inside it, then either add
@@ -309,10 +267,6 @@ fs.writeFileSync(webFilePath, webSrc, 'utf8')
 
 console.log()
 console.log(`Done.`)
-console.log(`  mobile source files changed: ${mobileFilesChanged}/${LANGS.length} (keys added: ${mobileKeysAdded}, updated: ${mobileKeysUpdated})`)
 console.log(`  web   resources.ts keys added: ${webKeysAdded}, updated: ${webKeysUpdated}`)
-console.log()
-console.log(`Next: regenerate mobile/src/i18n/resources.ts by running:`)
-console.log(`  cd mobile && node scripts/generate-i18n-resources.js`)
 
 

@@ -9,7 +9,6 @@ import {
 import { AdminService } from './admin.service';
 import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../wallets/wallets.service';
-import { NotificationsService } from '../notification/notifications.service';
 import { PinelabsService } from '../payment/pinelabs.service';
 import { RazorpayPayoutService } from '../payment/razorpay-payout.service';
 import { GdbService } from '../ai/gdb.service';
@@ -204,7 +203,6 @@ describe('AdminService', () => {
         { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: emptyMock },
         { provide: ConfigService, useFactory: () => ({ get: jest.fn() }) },
         { provide: WalletsService, useValue: mockWalletsService },
-        { provide: NotificationsService, useFactory: emptyMock },
         { provide: PinelabsService, useFactory: emptyMock },
         { provide: RazorpayPayoutService, useFactory: emptyMock },
         { provide: RedisService, useFactory: emptyMock },

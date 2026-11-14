@@ -6,7 +6,6 @@ export const MODULE_REGISTRY: Record<string, string> = {
   user:      'src/modules/user/user.module.ts',
   question:  'src/modules/question/question.module.ts',
   admin:     'src/modules/admin/admin.module.ts',
-  notification: 'src/modules/notification/notifications.module.ts',
   wallets:   'src/modules/wallets/wallets.module.ts',
   speech:    'src/modules/speech/speech.module.ts',
   lgd:       'src/modules/lgd/lgd.module.ts',

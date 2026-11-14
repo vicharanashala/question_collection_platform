@@ -1,6 +1,6 @@
 # AnnaDatha — Question Collection Platform
 
-A farmer-centric mobile and web platform that enables rural agricultural communities to submit questions via voice or text in their own language, earn rewards for contributions, and access a curated farming knowledge base.
+A farmer-centric web platform that enables rural agricultural communities to submit questions via voice or text in their own language, earn rewards for contributions, and access a curated farming knowledge base.
 
 ---
 
@@ -26,7 +26,6 @@ The platform comprises three distinct components:
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Backend** | Node.js / NestJS · TypeORM · MongoDB · Redis | REST API, authentication, AI processing, payment orchestration, notifications |
-| **Mobile (AnnaDatha)** | React Native (Expo) · i18n | Farmer-facing mobile application with 19 Indian language locales |
 | **Web (Admin Dashboard)** | React · Vite · Tailwind CSS · Radix UI | Internal administration and curator review interface |
 
 ---
@@ -55,16 +54,6 @@ question_collection_platform/
 │       ├── config/              # TypeORM configuration and environment setup
 │       ├── workers/             # Background job processors
 │       └── utils/scripts/       # One-off migration and seed scripts
-├── mobile/                      # React Native (Expo) mobile application
-│   └── src/
-│       ├── api/                 # Axios API client
-│       ├── components/          # Reusable UI components
-│       ├── context/             # React context (auth, theme, i18n)
-│       ├── hooks/               # Custom React hooks
-│       ├── i18n/                # 19 Indian language translation files
-│       ├── navigation/          # React Navigation configuration
-│       ├── screens/             # Application screens (Auth, Home, Question, Wallet, FAQ, Admin)
-│       └── utils/               # Helpers and on-device AI inference engines
 ├── web/                         # Admin and curator dashboard
 │   └── src/
 │       ├── api/                 # API client
@@ -82,14 +71,13 @@ question_collection_platform/
 
 ## 3. Key Features
 
-### 3.1 Mobile Application (AnnaDatha)
+### 3.1 Farmer Features (Web)
 
 - **Multi-language support** — 19 Indian languages: Assamese, Bengali, Bodo, Dogri, English, Gujarati, Hindi, Kannada, Konkani, Kashmiri, Maithili, Malayalam, Manipuri, Marathi, Nepali, Odia, Punjabi, Sanskrit, Santali, Tamil, Telugu, and Urdu.
 - **Voice input** — Audio recording for question submission; server-side Sarvam STT converts speech to text.
 - **On-device AI validation** — Local inference via HuggingFace Transformers.js provides spam classification, agriculture relevance scoring, and duplicate detection at submission time.
 - **Wallet and rewards** — Points accrue per approved question; withdrawals processed via Razorpay or PineLabs.
 - **Theme support** — Full dark and light mode.
-- **Push notifications** — Alerts for review status, payout events, and leaderboard updates.
 - **FAQ knowledge base** — Searchable, categorized farming FAQ repository with embedded video guide.
 
 ### 3.2 Admin Dashboard (Web)
@@ -100,14 +88,14 @@ question_collection_platform/
 - **Analytics** — Submission volumes, language distribution, approval rates, and fraud metrics displayed via Recharts.
 - **Audit logs** — Immutable action history for all administrative operations.
 - **FAQ management** — Create, curate, and publish knowledge articles.
-- **Notification broadcast** — Send application-wide or targeted push notifications.
+- **Notification broadcast** — Send application-wide or targeted in-app notifications.
 - **Role-based access control** — Granular permissions for Admin, Curator, and Finance roles.
 
 ### 3.3 Backend Services
 
 - **Authentication** — JWT access and refresh tokens with OTP verification via Fast2SMS. Redis enforces rate limiting on authentication endpoints.
 - **Fraud detection** — Pattern-based spam detection and Jaccard similarity duplicate detection (threshold 0.85, last 90 days of approved questions) run during the curator approval workflow.
-- **AI pipeline** — Server-side Gemma for question tagging; on-device HuggingFace Transformers.js (spam, relevance, duplicate) in the mobile app.
+- **AI pipeline** — Server-side Gemma for question tagging; on-device HuggingFace Transformers.js (spam, relevance, duplicate) in the web app.
 - **Payment orchestration** — Razorpay and PineLabs gateways handle withdrawal disbursements.
 - **Media storage** — GCP Cloud Storage for audio recordings and image uploads.
 - **Caching** — Redis for session state, JWT blocklist, rate limit counters, and leaderboard scoreboards.
@@ -125,7 +113,7 @@ PostgreSQL (via TypeORM) stores all structured relational data: user accounts, r
 Duplicate detection operates at two independent layers:
 
 1. **Backend — Jaccard similarity** (curator approve flow): When a curator clicks Approve, the backend tokenizes the question text (lowercase, strip punctuation, drop tokens shorter than 2 characters, sort), computes Jaccard similarity against the last 90 days of approved questions, and auto-holds the submission if the score is ≥ 0.85. Candidates are drawn from the most recent 200 approved questions, ordered descending.
-2. **Mobile — Embedding similarity** (submission time): The on-device HuggingFace Transformers.js pipeline generates embeddings for the submitted question and compares them against cached embeddings of previously submitted questions. Due to WebAssembly unavailability in the React Native JavaScript runtime, this layer falls back to keyword-based similarity when embeddings cannot be computed.
+2. **Web — On-device similarity** (submission time): The in-browser pipeline in `web/src/utils/onDeviceAI.ts` compares the submitted question against previously submitted questions before it is sent.
 
 ### 4.3 AI Decision Authority
 
@@ -133,7 +121,7 @@ All AI-generated classifications — question relevance, spam scoring, duplicate
 
 ### 4.4 Internationalization
 
-The mobile application uses i18next with 19 locale files loaded lazily based on user preference. All user-facing strings are externalized; locale switching does not require a rebuild.
+The web application uses i18next with locale resources bundled in `web/src/i18n/resources.ts`. All user-facing strings are externalized; locale switching does not require a rebuild.
 
 ---
 
@@ -160,23 +148,7 @@ pnpm build
 pnpm start:dev
 ```
 
-### 5.3 Mobile Application
-
-```bash
-cd mobile
-npm install --legacy-peer-deps
-npx expo prebuild --clean
-
-# iOS
-npx expo run:ios
-
-# Android
-npx expo run:android
-```
-
-For iOS development, open `ios/AnnaDatha.xcworkspace` in Xcode before running.
-
-### 5.4 Web Dashboard
+### 5.3 Web Dashboard
 
 ```bash
 cd web

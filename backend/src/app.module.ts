@@ -24,7 +24,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { QuestionModule } from './modules/question/question.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { NotificationsModule } from './modules/notification/notifications.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { SpeechModule } from './modules/speech/speech.module';
 import { LgdModule } from './modules/lgd/lgd.module';
@@ -88,7 +87,6 @@ import { SessionModule } from './modules/session/session.module';
     UserModule,
     QuestionModule,
     AdminModule,
-    NotificationsModule,
     WalletsModule,
     SpeechModule,
     LgdModule,

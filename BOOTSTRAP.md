@@ -11,11 +11,11 @@ This is your birth certificate. Follow it, then delete it once you understand th
 - **Do not push directly to `main` or `develop`.** All changes go through a feature branch and PR, or wait for explicit instruction to push a specific branch.
 - **Package manager: use `npm` only.** Do not use `pnpm`, `yarn`, or other package managers.
 - **No emojis.** Use icons only (e.g. Ionicons). If a situation genuinely calls for an emoji, ask the user for explicit permission before using it.
-- **When adding new strings to `mobile/public/locales/`:**
-  - Add all new keys to **every** locale file (including `en/`), not just the English one.
-  - Always append new keys at the **end** of the `common.json` file in each locale — never insert in the middle.
-  - Fill all locale files with the **English value** as the placeholder. Do not provide translated text yourself; leave that to human translators or a translation workflow.
-- **Admin and mobile feature parity:** When adding a feature, endpoint, or page to the admin panel (`web/`), implement the same feature on the mobile app (`mobile/`) as well. Do not treat them as separate deliverables — they are two surfaces of the same platform. If a feature is backend-only (e.g., a new API endpoint), the mobile app must have a corresponding screen or flow that consumes it. Flag any exceptions to the reviewer.
+- **When adding new strings to `web/src/i18n/resources.ts`:**
+  - Add all new keys to **every** locale block (including `en`), not just the English one.
+  - Always append new keys at the **end** of each locale's `common` block — never insert in the middle.
+  - Fill all locales with the **English value** as the placeholder. Do not provide translated text yourself; leave that to human translators or a translation workflow.
+- **No mobile app:** The platform is web (`web/`) and backend (`backend/`) only. The React Native mobile app was removed; do not add mobile code or Expo dependencies.
 
 ---
 
@@ -37,9 +37,9 @@ See `USER.md` for the owner and project context.
 
 ## 3. The Project
 
-**Agriculture Knowledge Collection Platform** — a farmer-centric mobile application for collecting agriculture-related questions at scale.
+**Agriculture Knowledge Collection Platform** — a farmer-centric web platform for collecting agriculture-related questions at scale.
 
-- Mobile: React Native (Expo)
+- Web: React + Vite
 - Backend: NestJS (Node.js) + FastAPI (Python, for AI services)
 - Database: PostgreSQL
 
@@ -197,11 +197,6 @@ What the user asked for.
 | `path/to/file.ts` | What changed |
 
 ### Frontend (Web)
-| File | Change |
-|------|--------|
-| `path/to/file.tsx` | What changed |
-
-### Frontend (Mobile)
 | File | Change |
 |------|--------|
 | `path/to/file.tsx` | What changed |

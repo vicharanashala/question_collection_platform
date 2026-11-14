@@ -10,7 +10,6 @@ import { CuratorService } from './curator.service';
 import { AnalyticsController, ExportController } from './analytics.controller';
 import { DbModule } from '../../shared/database/db.module';
 import { WalletsModule } from '../wallets/wallets.module';
-import { NotificationsModule } from '../notification/notifications.module';
 import { PaymentModule } from '../payment/payment.module';
 import { GdbModule } from '../ai/gdb.module';
 import { AuditService } from '../audit-logs/audit.service';
@@ -21,7 +20,6 @@ import { SessionModule } from '../session/session.module';
   imports: [
     DbModule,
     forwardRef(() => WalletsModule),
-    NotificationsModule,
     PaymentModule,
     forwardRef(() => GdbModule),
     SessionModule,

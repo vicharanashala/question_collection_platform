@@ -1,5 +1,4 @@
-// Web UI strings. This bundle is maintained directly and is not generated from
-// mobile/public/locales, because the web copy differs from the mobile wording.
+// Web UI strings. This bundle is maintained directly.
 // Add new keys to every language here.
 
 const resources = {

@@ -397,8 +397,6 @@ export class ReportsService {
       body,
       data: { reportId },
     } as never);
-
-    await this.sendPushNotification(userId, { title, body, data: { reportId } });
   }
 
   async updatePriority(
@@ -489,33 +487,6 @@ export class ReportsService {
     data: { reportId, replyId },
   });
 
-  await this.sendPushNotification(userId, {
-    title: 'Your report has been replied to',
-    body,
-    data: { reportId, replyId },
-  });
-
   return savedReply;
 }
-
-  private async sendPushNotification(
-    userId: string,
-    payload: { title: string; body: string; data: Record<string, unknown> },
-  ): Promise<void> {
-    const user = await this.userRepo.findById(userId);
-    if (!user) return;
-    const expoPushToken = (user as unknown as { expoPushToken?: string }).expoPushToken;
-    if (!expoPushToken) return;
-
-    try {
-      const axios = (await import('axios')).default;
-      await axios.post(
-        'https://exp.host/--/api/v2/push/send',
-        { ...payload, to: expoPushToken },
-        { headers: { 'Content-Type': 'application/json' }, timeout: 8_000 },
-      );
-    } catch {
-      // Silently ignore.
-    }
-  }
 }

@@ -1,6 +1,6 @@
 /**
- * Adds new translation keys to the `verificationPending` block across
- * mobile/public/locales/{lang}/common.json AND web/src/i18n/resources.ts.
+ * Adds new translation keys to the `verificationPending` block in
+ * web/src/i18n/resources.ts.
  *
  * English values are used as a baseline for all locales. Hindi gets proper
  * translations. Other locales fall back to English (i18next's fallbackLng:'en'
@@ -59,44 +59,7 @@ function getTranslations(lang) {
   return EN
 }
 
-// ─── 1. Patch mobile/public/locales/{lang}/common.json ────────────────────
-
-let mobileFilesChanged = 0
-let mobileKeysAdded = 0
-
-for (const lang of LANGS) {
-  const filePath = path.join(ROOT, 'mobile', 'public', 'locales', lang, 'common.json')
-  const raw = fs.readFileSync(filePath, 'utf8')
-  const json = JSON.parse(raw)
-
-  if (!json.verificationPending || typeof json.verificationPending !== 'object') {
-    throw new Error(`${filePath}: missing verificationPending block — aborting`)
-  }
-
-  const tr = getTranslations(lang)
-  let addedHere = 0
-  let updatedHere = 0
-  for (const [k, v] of Object.entries(tr)) {
-    if (!(k in json.verificationPending)) {
-      json.verificationPending[k] = v
-      addedHere++
-    } else if (json.verificationPending[k] !== v) {
-      json.verificationPending[k] = v
-      updatedHere++
-    }
-  }
-
-  if (addedHere > 0 || updatedHere > 0) {
-    fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n', 'utf8')
-    mobileFilesChanged++
-    mobileKeysAdded += addedHere + updatedHere
-    console.log(`[mobile] ${lang}: +${addedHere} keys, ~${updatedHere} updated`)
-  } else {
-    console.log(`[mobile] ${lang}: already up-to-date`)
-  }
-}
-
-// ─── 2. Patch web/src/i18n/resources.ts ───────────────────────────────────
+// ─── Patch web/src/i18n/resources.ts ───────────────────────────────────
 
 const webFilePath = path.join(ROOT, 'web', 'src', 'i18n', 'resources.ts')
 let webSrc = fs.readFileSync(webFilePath, 'utf8')
@@ -176,8 +139,4 @@ fs.writeFileSync(webFilePath, webSrc, 'utf8')
 
 console.log()
 console.log(`Done.`)
-console.log(`  mobile source files changed: ${mobileFilesChanged}/${LANGS.length} (keys added: ${mobileKeysAdded})`)
 console.log(`  web   resources.ts keys added: ${webKeysAdded}`)
-console.log()
-console.log(`Next: regenerate mobile/src/i18n/resources.ts by running:`)
-console.log(`  cd mobile && node scripts/generate-i18n-resources.js`)
