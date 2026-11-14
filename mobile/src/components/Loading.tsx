@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 
 interface LoadingScreenProps {
   message?: string;
@@ -25,13 +26,14 @@ interface ErrorBannerProps {
 }
 
 export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   return (
     <View style={[styles.banner, { backgroundColor: c.destructive + '18' }]}>
       <Text style={[styles.bannerText, { color: c.error }]}>{message}</Text>
       {onRetry && (
-        <Text style={[styles.retry, { color: c.primary }]} onPress={onRetry}>Retry</Text>
+        <Text style={[styles.retry, { color: c.primary }]} onPress={onRetry}>{t('common.retry')}</Text>
       )}
     </View>
   );

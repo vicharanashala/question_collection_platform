@@ -15,6 +15,7 @@ import { useToast } from '../components/Toast';
 import { adminApi, getErrorMessage } from '../api/client';
 import { tokens } from '../utils/theme';
 import type { WalletSummary, Transaction } from '../types';
+import { useTranslation } from 'react-i18next';
 
 const TX_TYPE_COLORS: Record<string, string> = {
   credit: '#22c55e',
@@ -86,6 +87,7 @@ interface WithdrawalItem {
 }
 
 export function WalletDetailModal({ walletId, userId, userName, visible, onClose, isSuperAdmin }: WalletDetailModalProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
@@ -260,7 +262,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
           {/* Handle + Header */}
           <View style={[styles.handleBar, { backgroundColor: c.border }]} />
           <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: c.text }]}>Wallet Details</Text>
+            <Text style={[styles.headerTitle, { color: c.text }]}>{t('walletDetailModal.walletDetails')}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="close" size={22} color={c.textSecondary} />
             </TouchableOpacity>
@@ -304,7 +306,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                   </View>
                 </View>
                 <View style={styles.balanceBlock}>
-                  <Text style={[styles.balanceLabel, { color: c.textTertiary }]}>BALANCE</Text>
+                  <Text style={[styles.balanceLabel, { color: c.textTertiary }]}>{t('walletDetailModal.balance')}</Text>
                   <Text style={[styles.balanceAmount, { color: c.primary }]}>
                     ₹{Number(balance).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
@@ -313,14 +315,14 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
 
               <View style={[styles.statsRow, { borderTopColor: c.border }]}>
                 <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, { color: c.textTertiary }]}>Total Earned</Text>
+                  <Text style={[styles.statLabel, { color: c.textTertiary }]}>{t('home.totalEarned')}</Text>
                   <Text style={[styles.statValue, { color: '#22c55e' }]}>
                     ₹{Number(totalEarned).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
                 </View>
                 <View style={[styles.statDivider, { backgroundColor: c.border }]} />
                 <View style={styles.statItem}>
-                  <Text style={[styles.statLabel, { color: c.textTertiary }]}>Withdrawn</Text>
+                  <Text style={[styles.statLabel, { color: c.textTertiary }]}>{t('admin.withdrawn')}</Text>
                   <Text style={[styles.statValue, { color: '#ef4444' }]}>
                     ₹{Number(totalWithdrawn).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
@@ -370,7 +372,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                 ) : txItems.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="receipt-outline" size={36} color={c.textTertiary} />
-                    <Text style={[styles.emptyTitle, { color: c.text }]}>No transactions yet</Text>
+                    <Text style={[styles.emptyTitle, { color: c.text }]}>{t('wallet.noTransactions')}</Text>
                   </View>
                 ) : (
                   <>
@@ -383,7 +385,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                       >
                         {loadingMoreTx
                           ? <ActivityIndicator size="small" color={c.primary} />
-                          : <Text style={[styles.loadMoreText, { color: c.primary }]}>Load More</Text>
+                          : <Text style={[styles.loadMoreText, { color: c.primary }]}>{t('walletDetailModal.loadMore')}</Text>
                         }
                       </TouchableOpacity>
                     )}
@@ -402,7 +404,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                 ) : wdItems.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="cash-outline" size={36} color={c.textTertiary} />
-                    <Text style={[styles.emptyTitle, { color: c.text }]}>No withdrawals yet</Text>
+                    <Text style={[styles.emptyTitle, { color: c.text }]}>{t('walletDetailModal.noWithdrawalsYet')}</Text>
                   </View>
                 ) : (
                   <>
@@ -415,7 +417,7 @@ export function WalletDetailModal({ walletId, userId, userName, visible, onClose
                       >
                         {loadingMoreWd
                           ? <ActivityIndicator size="small" color={c.primary} />
-                          : <Text style={[styles.loadMoreText, { color: c.primary }]}>Load More</Text>
+                          : <Text style={[styles.loadMoreText, { color: c.primary }]}>{t('walletDetailModal.loadMore')}</Text>
                         }
                       </TouchableOpacity>
                     )}

@@ -13,6 +13,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
 import { speechApi } from '../api/speech';
 import { LANGUAGES } from '../utils/constants';
+import { useTranslation } from 'react-i18next';
 
 const LANG_LABELS: Record<string, string> = Object.fromEntries(
   LANGUAGES.map((l) => [l.code, l.label]),
@@ -38,6 +39,7 @@ export function TranslatableTextReadOnly({
   sourceLanguage = 'en',
   style,
 }: TranslatableTextReadOnlyProps) {
+  const { t } = useTranslation();
   const { language: appLanguage } = useLanguage();
   const { theme } = useTheme();
   const c = theme.colors;
@@ -104,25 +106,21 @@ export function TranslatableTextReadOnly({
         >
           <Ionicons name="language" size={13} color={c.textSecondary} />
           <Text style={[styles.langBtnText, { color: c.textSecondary }]}>
-            {targetLang && targetLang !== sourceLanguage ? langLabel : 'Language'}
+            {targetLang && targetLang !== sourceLanguage ? langLabel : t('speech.stt.language')}
           </Text>
         </TouchableOpacity>
 
         {/* Translate / show / reset buttons */}
         {!isSameLang && !translated && !loading && targetLang && (
           <TouchableOpacity onPress={doTranslate} activeOpacity={0.7}>
-            <Text style={[styles.actionBtn, { color: c.primary }]}>
-              Translate to {langLabel}
-            </Text>
+            <Text style={[styles.actionBtn, { color: c.primary }]}>{t('translatableTextReadOnly.translateTo', { langLabel })}</Text>
           </TouchableOpacity>
         )}
 
         {loading && (
           <View style={styles.loadingRow}>
             <ActivityIndicator size="small" color={c.primary} />
-            <Text style={[styles.loadingText, { color: c.textSecondary }]}>
-              Translating…
-            </Text>
+            <Text style={[styles.loadingText, { color: c.textSecondary }]}>{t('translatableTextReadOnly.translating')}</Text>
           </View>
         )}
 
@@ -131,9 +129,7 @@ export function TranslatableTextReadOnly({
             onPress={() => { setTranslated(null) }}
             activeOpacity={0.7}
           >
-            <Text style={[styles.actionBtn, { color: c.textSecondary }]}>
-              Original
-            </Text>
+            <Text style={[styles.actionBtn, { color: c.textSecondary }]}>{t('translatableTextReadOnly.original')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -171,9 +167,7 @@ export function TranslatableTextReadOnly({
           onPress={() => setShowLangPicker(false)}
         >
           <View style={[styles.langModal, { backgroundColor: c.surface }]}>
-            <Text style={[styles.langModalTitle, { color: c.text }]}>
-              Select Language
-            </Text>
+            <Text style={[styles.langModalTitle, { color: c.text }]}>{t('auth.selectLanguage')}</Text>
             <FlatList
               data={LANGUAGES}
               keyExtractor={(item) => item.code}

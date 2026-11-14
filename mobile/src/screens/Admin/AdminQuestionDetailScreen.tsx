@@ -10,10 +10,12 @@ import { adminApi, getErrorMessage } from '../../api/client';
 import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AudioPlaybackCard } from '../../components/AudioPlaybackCard';
+import { useTranslation } from 'react-i18next';
 
 type Route = RouteProp<AdminStackParamList, 'AdminQuestionDetail'>;
 
 export function AdminQuestionDetailScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation();
@@ -73,7 +75,7 @@ export function AdminQuestionDetailScreen() {
   if (!q) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.background }]}>
-        <View style={styles.centered}><Text style={{ color: c.text }}>Question not found</Text></View>
+        <View style={styles.centered}><Text style={{ color: c.text }}>{t('question.notFound')}</Text></View>
       </SafeAreaView>
     );
   }
@@ -86,17 +88,17 @@ export function AdminQuestionDetailScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Question Detail</Text>
+        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>{t('notifications.questionDetail')}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
 
         <View style={[styles.section, { backgroundColor: c.surface }]}>
-          <Text style={[styles.label, { color: c.textSecondary }]}>Status</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>{t('submissions.status')}</Text>
           <Text style={[styles.value, { color: c.text }]}>{String(q.status)}</Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: c.surface }]}>
-          <Text style={[styles.label, { color: c.textSecondary }]}>Question</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>{t('faqAdmin.formQuestion')}</Text>
           <Text style={[styles.questionText, { color: c.text }]}>{String(q.questionText)}</Text>
         </View>
 
@@ -111,7 +113,7 @@ export function AdminQuestionDetailScreen() {
           if (allAudioUrls.length === 0) return null;
           return (
             <View style={[styles.section, { backgroundColor: c.surface }]}>
-              <Text style={[styles.label, { color: c.textSecondary }]}>Audio</Text>
+              <Text style={[styles.label, { color: c.textSecondary }]}>{t('adminQuestionDetailScreen.audio')}</Text>
               {allAudioUrls.map((uri, idx) => (
                 <View key={idx} style={{ marginTop: 8 }}>
                   <AudioPlaybackCard uri={uri} onDelete={undefined} />
@@ -122,7 +124,7 @@ export function AdminQuestionDetailScreen() {
         })()}
 
         <View style={[styles.section, { backgroundColor: c.surface }]}>
-          <Text style={[styles.label, { color: c.textSecondary }]}>Metadata</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>{t('adminAuditLogsScreen.metadata')}</Text>
           <View style={styles.metaGrid}>
             {[
               ['Language', String(q.language)],
@@ -142,7 +144,7 @@ export function AdminQuestionDetailScreen() {
 
         {user && (
           <View style={[styles.section, { backgroundColor: c.surface }]}>
-            <Text style={[styles.label, { color: c.textSecondary }]}>Submitted By</Text>
+            <Text style={[styles.label, { color: c.textSecondary }]}>{t('adminQuestionDetailScreen.submittedBy')}</Text>
             <Text style={[styles.value, { color: c.text }]}>{String(user.name ?? user.mobileNumber ?? 'Unknown')}</Text>
             <Text style={[styles.sub, { color: c.textSecondary }]}>{String(user.mobileNumber ?? '')} · {String(user.state ?? '')}</Text>
           </View>
@@ -150,28 +152,28 @@ export function AdminQuestionDetailScreen() {
 
         {!!q.rejectionReason && (
           <View style={[styles.section, { backgroundColor: c.error + '11' }]}>
-            <Text style={[styles.label, { color: c.error }]}>Rejection Reason</Text>
+            <Text style={[styles.label, { color: c.error }]}>{t('notifications.rejectionReason')}</Text>
             <Text style={[styles.value, { color: c.error }]}>{String(q.rejectionReason)}</Text>
           </View>
         )}
 
         {!!q.heldReason && (
           <View style={[styles.section, { backgroundColor: '#f59e0b11' }]}>
-            <Text style={[styles.label, { color: '#b45309' }]}>Hold Reason</Text>
+            <Text style={[styles.label, { color: '#b45309' }]}>{t('notifications.holdReason')}</Text>
             <Text style={[styles.value, { color: '#92400e' }]}>{String(q.heldReason)}</Text>
           </View>
         )}
 
         {!!q.approvalReason && (
           <View style={[styles.section, { backgroundColor: '#22c55e11' }]}>
-            <Text style={[styles.label, { color: '#15803d' }]}>Approval Reason</Text>
+            <Text style={[styles.label, { color: '#15803d' }]}>{t('wallet.approvalReason')}</Text>
             <Text style={[styles.value, { color: '#166534' }]}>{String(q.approvalReason)}</Text>
           </View>
         )}
 
         {!!q.reviewedByName && (
           <View style={[styles.section, { backgroundColor: c.surface }]}>
-            <Text style={[styles.label, { color: c.textSecondary }]}>Reviewed By</Text>
+            <Text style={[styles.label, { color: c.textSecondary }]}>{t('adminQuestionDetailScreen.reviewedBy')}</Text>
             <Text style={[styles.value, { color: c.text }]}>{String(q.reviewedByName)}</Text>
           </View>
         )}
@@ -185,7 +187,7 @@ export function AdminQuestionDetailScreen() {
             >
               {actionLoading === 'approve'
                 ? <ActivityIndicator size="small" color="#fff" />
-                : <><Ionicons name="checkmark-circle" size={15} color="#fff" /><Text style={styles.btnText}> Approve</Text></>}
+                : <><Ionicons name="checkmark-circle" size={15} color="#fff" /><Text style={styles.btnText}>{t('admin.approve')}</Text></>}
             </TouchableOpacity>
             <View style={styles.secondRow}>
               <TouchableOpacity
@@ -195,7 +197,7 @@ export function AdminQuestionDetailScreen() {
               >
                 {actionLoading === 'hold'
                   ? <ActivityIndicator size="small" color="#fff" />
-                  : <><Ionicons name="pause-circle" size={15} color="#fff" /><Text style={styles.btnTextHold}> Hold</Text></>}
+                  : <><Ionicons name="pause-circle" size={15} color="#fff" /><Text style={styles.btnTextHold}>{t('adminQuestionDetailScreen.hold')}</Text></>}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.btnReject, { opacity: actionLoading ? 0.6 : 1 }]}
@@ -204,7 +206,7 @@ export function AdminQuestionDetailScreen() {
               >
                 {actionLoading === 'reject'
                   ? <ActivityIndicator size="small" color="#ef4444" />
-                  : <><Ionicons name="close-circle" size={15} color="#ef4444" /><Text style={styles.btnTextReject}> Reject</Text></>}
+                  : <><Ionicons name="close-circle" size={15} color="#ef4444" /><Text style={styles.btnTextReject}>{t('admin.reject')}</Text></>}
               </TouchableOpacity>
             </View>
           </View>
@@ -214,7 +216,7 @@ export function AdminQuestionDetailScreen() {
       <ReasonModal
         visible={reasonAction !== null}
         title={
-          reasonAction === 'approve' ? 'Approve Question' :
+          reasonAction === 'approve' ? t('adminDashboardScreen.approveQuestion') :
           reasonAction === 'reject' ? 'Reject Question' :
           'Hold Question'
         }

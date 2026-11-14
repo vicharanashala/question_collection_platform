@@ -61,12 +61,12 @@ export function AnswerResponsePanel({
         <span className="rounded-lg bg-primary/10 p-2">
           <FileText className="h-5 w-5 text-primary" aria-hidden="true" />
         </span>
-        <CardTitle className="text-base sm:text-lg">{t('anveshanAnswers.responseTitle', 'Advisory')}</CardTitle>
+        <CardTitle className="text-base sm:text-lg">{t('anveshanAnswers.responseTitle')}</CardTitle>
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-5 p-4">
         <div>
-          <p className="text-sm font-medium text-text-secondary">{t('anveshanAnswers.currentQuery', 'Current Query:')}</p>
+          <p className="text-sm font-medium text-text-secondary">{t('anveshanAnswers.currentQuery')}</p>
           <p className="mt-1 break-words rounded-md border border-border-subtle p-3 text-sm text-text">{question.questionText}</p>
         </div>
 
@@ -96,14 +96,11 @@ function AnswerLimitNotice({ requiredAnswers }: { requiredAnswers: number }) {
       <p className="text-base font-semibold text-text">
         {t('anveshanAnswers.limitReachedTitle', {
           count: requiredAnswers,
-          defaultValue: "You've submitted all {{count}} required advisories",
         })}
       </p>
       <p className="max-w-sm text-sm leading-relaxed text-text-secondary">
         {t('anveshanAnswers.limitReachedDescription', {
           count: requiredAnswers,
-          defaultValue:
-            'Only {{count}} advisories are needed for your Anveshan milestone, so this query does not need one. You can still review the advisories you submitted.',
         })}
       </p>
     </div>
@@ -126,7 +123,7 @@ function SubmittedAnswer({ question, onScoreChange, scoringEnabled }: SubmittedA
     <div className="space-y-4">
       <p className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400" role="status">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-        {t('anveshanAnswers.alreadyAnswered', 'You have submitted an advisory for this query. Thank you!')}
+        {t('anveshanAnswers.alreadyAnswered')}
       </p>
       {scoringEnabled && (
         <AnswerScoreCard
@@ -136,19 +133,19 @@ function SubmittedAnswer({ question, onScoreChange, scoringEnabled }: SubmittedA
         />
       )}
       <div>
-        <p className="text-sm font-medium text-text">{t('anveshanAnswers.yourAnswer', 'Your Advisory')}</p>
+        <p className="text-sm font-medium text-text">{t('anveshanAnswers.yourAnswer')}</p>
         <p className="mt-1 whitespace-pre-wrap break-words rounded-md border border-border-subtle bg-surface-variant p-3 text-sm text-text">
           {answer.answer}
         </p>
       </div>
       {answer.remarks && (
         <div>
-          <p className="text-sm font-medium text-text">{t('anveshanAnswers.remarks', 'Remarks')}</p>
+          <p className="text-sm font-medium text-text">{t('anveshanAnswers.remarks')}</p>
           <p className="mt-1 whitespace-pre-wrap break-words text-sm text-text-secondary">{answer.remarks}</p>
         </div>
       )}
       <div>
-        <p className="mb-2 text-sm font-medium text-text">{t('anveshanAnswers.sourceReferences', 'Source References')}</p>
+        <p className="mb-2 text-sm font-medium text-text">{t('anveshanAnswers.sourceReferences')}</p>
         <SourceList sources={answer.sources} />
       </div>
     </div>
@@ -175,18 +172,16 @@ function validateDraft(draft: AnswerDraft, t: Translate): DraftErrors {
   const errors: DraftErrors = {}
   const answerLength = draft.answer.trim().length
   if (answerLength === 0) {
-    errors.answer = t('anveshanAnswers.errors.answerRequired', 'Please enter your advisory.')
+    errors.answer = t('anveshanAnswers.errors.answerRequired')
   } else if (answerLength < MIN_ANVESHAN_ANSWER_LENGTH) {
     errors.answer = t('anveshanAnswers.errors.answerTooShort', {
       min: MIN_ANVESHAN_ANSWER_LENGTH,
       count: answerLength,
-      defaultValue: 'Your advisory must be at least {{min}} characters. It is {{count}} characters now.',
     })
   }
   if (draft.sources.length === 0) {
     errors.sources = t(
       'anveshanAnswers.errors.sourceRequired',
-      'Add at least one source. Fill in the source details above and press + to add it.',
     )
   }
   return errors
@@ -234,7 +229,7 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
         <div>
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="anveshan-answer" className="text-sm font-medium">
-              {t('anveshanAnswers.draftResponse', 'Draft Advisory:')} *
+              {t('anveshanAnswers.draftResponse')} *
             </Label>
             <span
               id="anveshan-answer-count"
@@ -247,7 +242,6 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
                 count: answerLength,
                 min: MIN_ANVESHAN_ANSWER_LENGTH,
                 max: MAX_ANVESHAN_ANSWER_LENGTH,
-                defaultValue: '{{count}}/{{max}} (min {{min}})',
               })}
             </span>
           </div>
@@ -256,7 +250,6 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
             id="anveshan-answer"
             placeholder={t('anveshanAnswers.answerPlaceholder', {
               min: MIN_ANVESHAN_ANSWER_LENGTH,
-              defaultValue: 'Enter your advisory here (at least {{min}} characters)...',
             })}
             value={draft.answer}
             maxLength={MAX_ANVESHAN_ANSWER_LENGTH}
@@ -274,11 +267,11 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
 
         <div>
           <Label htmlFor="anveshan-remarks" className="text-sm font-medium">
-            {t('anveshanAnswers.remarks', 'Remarks')}
+            {t('anveshanAnswers.remarks')}
           </Label>
           <Textarea
             id="anveshan-remarks"
-            placeholder={t('anveshanAnswers.remarksPlaceholder', 'Enter remarks...')}
+            placeholder={t('anveshanAnswers.remarksPlaceholder')}
             value={draft.remarks}
             maxLength={MAX_ANVESHAN_REMARKS_LENGTH}
             onChange={(e) => update({ remarks: e.target.value })}
@@ -303,7 +296,7 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
           <FieldError id="anveshan-sources-error" message={errors.sources} />
           {draft.sources.length > 0 && (
             <p className="mt-4 border-t border-border-subtle pt-4 text-sm text-text-secondary">
-              {t('anveshanAnswers.sourcesAdded', { count: draft.sources.length, defaultValue: '{{count}} source(s) added' })}
+              {t('anveshanAnswers.sourcesAdded', { count: draft.sources.length })}
             </p>
           )}
         </div>
@@ -312,15 +305,15 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
       <div className="mt-auto flex items-center gap-3 pt-2">
         <Button onClick={requestSubmit} disabled={isSubmitting} className="gap-2">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {isSubmitting ? t('anveshanAnswers.submitting', 'Submitting…') : t('common.submit', 'Submit')}
+          {isSubmitting ? t('anveshanAnswers.submitting') : t('common.submit')}
         </Button>
         <Button
           variant="secondary"
           size="icon"
           onClick={resetDraft}
           disabled={isSubmitting}
-          aria-label={t('anveshanAnswers.resetAnswer', 'Reset advisory')}
-          title={t('anveshanAnswers.resetAnswer', 'Reset advisory')}
+          aria-label={t('anveshanAnswers.resetAnswer')}
+          title={t('anveshanAnswers.resetAnswer')}
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
@@ -332,9 +325,9 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
               <Send className="h-5 w-5 text-primary" aria-hidden="true" />
             </span>
-            <DialogTitle className="text-lg">{t('anveshanAnswers.confirmTitle', 'Submit your advisory?')}</DialogTitle>
+            <DialogTitle className="text-lg">{t('anveshanAnswers.confirmTitle')}</DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">
-              {t('anveshanAnswers.confirmLead', 'Please cross-check your advisory and sources carefully before submitting.')}
+              {t('anveshanAnswers.confirmLead')}
             </DialogDescription>
           </DialogHeader>
 
@@ -342,19 +335,19 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
             {/* What is about to be submitted, so the user can spot a missing piece before confirming. */}
             <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle text-sm">
               <li className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-text-secondary">{t('anveshanAnswers.confirmAnswerLength', 'Advisory length')}</span>
+                <span className="text-text-secondary">{t('anveshanAnswers.confirmAnswerLength')}</span>
                 <span className="font-semibold tabular-nums text-text">
-                  {t('anveshanAnswers.characters', { count: answerLength, defaultValue: '{{count}} characters' })}
+                  {t('anveshanAnswers.characters', { count: answerLength })}
                 </span>
               </li>
               <li className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-text-secondary">{t('anveshanAnswers.confirmSources', 'Sources')}</span>
+                <span className="text-text-secondary">{t('anveshanAnswers.confirmSources')}</span>
                 <span className="font-semibold tabular-nums text-text">{draft.sources.length}</span>
               </li>
               <li className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-text-secondary">{t('anveshanAnswers.remarks', 'Remarks')}</span>
+                <span className="text-text-secondary">{t('anveshanAnswers.remarks')}</span>
                 <span className="font-semibold text-text">
-                  {draft.remarks.trim() ? t('common.added', 'Added') : t('common.none', 'None')}
+                  {draft.remarks.trim() ? t('common.added') : t('common.none')}
                 </span>
               </li>
             </ul>
@@ -363,18 +356,17 @@ function AnswerForm({ draft, onDraftChange, onSubmit, isSubmitting }: AnswerForm
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {t(
                 'anveshanAnswers.confirmWarning',
-                'The quality of your advisory will be carefully reviewed during evaluation, and you cannot edit it after submitting.',
               )}
             </p>
           </div>
 
           <DialogFooter className="flex-col-reverse gap-2 border-t border-border-subtle bg-surface-variant/40 px-6 py-4 sm:flex-row sm:justify-end sm:gap-2">
             <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={isSubmitting}>
-              {t('anveshanAnswers.keepEditing', 'Keep editing')}
+              {t('anveshanAnswers.keepEditing')}
             </Button>
             <Button onClick={confirmSubmit} disabled={isSubmitting} className="gap-2">
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
-              {isSubmitting ? t('anveshanAnswers.submitting', 'Submitting…') : t('anveshanAnswers.confirmSubmit', 'Submit advisory')}
+              {isSubmitting ? t('anveshanAnswers.submitting') : t('anveshanAnswers.confirmSubmit')}
             </Button>
           </DialogFooter>
         </DialogContent>

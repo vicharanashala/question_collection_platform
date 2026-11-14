@@ -9,6 +9,7 @@ import {
   SelectTrigger,
 } from "./ui/select";
 import { Rings } from "react-loader-spinner";
+import { useTranslation } from 'react-i18next';
 
 type View = "original" | "en";
 
@@ -30,6 +31,7 @@ interface TranslatableTextProps {
  * lazily and cached until `text` changes.
  */
 export function TranslatableText({ text, className }: TranslatableTextProps) {
+  const { t } = useTranslation();
   const [view, setView] = useState<View>("original");
   const [english, setEnglish] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,7 +86,7 @@ export function TranslatableText({ text, className }: TranslatableTextProps) {
               color="#4fa94d"
               ariaLabel="rings-loading"
             />
-            <span>Translating...</span>
+            <span>{t('translatableText.translating')}</span>
           </div>
         ) : view === "en" && english !== null ? (
           english
@@ -99,8 +101,8 @@ export function TranslatableText({ text, className }: TranslatableTextProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="original">Original</SelectItem>
-            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="original">{t('translatableText.original')}</SelectItem>
+            <SelectItem value="en">{t('translatableText.english')}</SelectItem>
           </SelectContent>
         </Select>
       </div>

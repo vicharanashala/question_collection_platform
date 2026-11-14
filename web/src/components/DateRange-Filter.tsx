@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { Button } from './ui/button'
 import { Calendar } from './ui/calender'
 import { Label } from './ui/label'
+import { useTranslation } from 'react-i18next'
 
 interface DateRangeFilterProps {
   value?: DateRange
@@ -24,6 +25,7 @@ export function DateRangeFilter({
   hideLabel = false,
   placeholder = 'Select a start and end date',
 }: DateRangeFilterProps) {
+  const { t } = useTranslation()
   const [isCalendarVisible, setIsCalendarVisible] = React.useState(false)
 
   function handleDateSelect(range: DateRange | undefined) {
@@ -86,7 +88,7 @@ export function DateRangeFilter({
           {value?.from && (
             <div className="flex justify-end border-t border-border-subtle px-2 py-1">
               <Button type="button" variant="ghost" size="sm" onClick={clearDates}>
-                <RefreshCcw className="mr-2 h-4 w-4" />Clear
+                <RefreshCcw className="mr-2 h-4 w-4" />{t('dataTable.clear')}
               </Button>
             </div>
           )}

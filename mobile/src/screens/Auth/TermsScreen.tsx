@@ -9,6 +9,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
 import { config } from '../../config';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Terms'>;
@@ -74,6 +75,7 @@ const SECTIONS = [
 ];
 
 export function TermsScreen({ navigation, route }: Props) {
+  const { t } = useTranslation();
   const { mobileNumber } = route.params;
   const { theme } = useTheme();
   const c = theme.colors;
@@ -85,9 +87,9 @@ export function TermsScreen({ navigation, route }: Props) {
       {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
+          <Text style={[styles.backText, { color: c.primary }]}>{t('← Back')}</Text>
         </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: c.text }]}>Terms of Service</Text>
+        <Text style={[styles.topBarTitle, { color: c.text }]}>{t('profile.termsOfService')}</Text>
         <View style={styles.spacer} />
       </View>
 
@@ -97,10 +99,8 @@ export function TermsScreen({ navigation, route }: Props) {
           <View style={[styles.heroIcon, { backgroundColor: c.primary + '18' }]}>
             <Ionicons name="document-text-outline" size={32} color={c.primary} />
           </View>
-          <Text style={[styles.heroTitle, { color: c.text }]}>Terms of Service</Text>
-          <Text style={[styles.heroSub, { color: c.textSecondary }]}>
-            Read and accept to continue · {SECTIONS.length} sections
-          </Text>
+          <Text style={[styles.heroTitle, { color: c.text }]}>{t('profile.termsOfService')}</Text>
+          <Text style={[styles.heroSub, { color: c.textSecondary }]}>{t('termsScreen.readAndAcceptTo', { length: SECTIONS.length })}</Text>
         </View>
 
         {/* Accordion sections */}
@@ -144,9 +144,7 @@ export function TermsScreen({ navigation, route }: Props) {
           onPress={() => navigation.navigate('PrivacyPolicy')}
         >
           <Ionicons name="shield-checkmark-outline" size={16} color={c.primary} />
-          <Text style={[styles.policyLinkText, { color: c.primary }]}>
-            Read our Privacy Policy →
-          </Text>
+          <Text style={[styles.policyLinkText, { color: c.primary }]}>{t('termsScreen.readOurPrivacyPolicy')}</Text>
         </TouchableOpacity>
 
         {/* Checkbox */}
@@ -170,14 +168,14 @@ export function TermsScreen({ navigation, route }: Props) {
           </View>
           <Text style={[styles.checkboxLabel, { color: c.text }]}>
             I have read and agree to the{' '}
-            <Text style={{ fontWeight: '700' }}>Terms of Service</Text> and{' '}
-            <Text style={{ fontWeight: '700' }}>Privacy Policy</Text>
+            <Text style={{ fontWeight: '700' }}>{t('profile.termsOfService')}</Text> and{' '}
+            <Text style={{ fontWeight: '700' }}>{t('profile.privacyPolicy')}</Text>
           </Text>
         </TouchableOpacity>
 
         {/* Confirm */}
         <Button
-          title="Confirm & Continue"
+          title={t('termsScreen.confirmContinue')}
           onPress={() => navigation.navigate('Register', { mobileNumber })}
           disabled={!accepted}
         />

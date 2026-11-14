@@ -21,6 +21,7 @@ import { useGeolocation, type Coordinates } from "@/hooks/useGeolocation";
 import { lgdApi } from "@/api/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from 'react-i18next';
 
 export interface SubmissionLocation extends Coordinates {
   state: string;
@@ -45,6 +46,7 @@ export function LocationCaptureModal({
   onOpenChange,
   onConfirm,
 }: LocationCaptureModalProps) {
+  const { t } = useTranslation();
   const { getCurrentPosition } = useGeolocation();
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
@@ -126,7 +128,7 @@ export function LocationCaptureModal({
       .catch(() => {
         if (!isCurrent("states", requestId)) return;
         setStateApiFailed(true);
-        toast.error("Could not load states. Tap \"Try again\" below the State field.");
+        toast.error(t('locationCapture.couldNotLoadStates'));
       })
       .finally(() => {
         if (isCurrent("states", requestId)) setStatesLoading(false);
@@ -211,7 +213,7 @@ export function LocationCaptureModal({
         setManualBlock(true);
         setManualVillage(true);
 
-        toast.error("Could not load districts.");
+        toast.error(t('locationCapture.couldNotLoadDistricts'));
       })
       .finally(() => {
         if (isCurrent("districts", requestId)) setDistrictsLoading(false);
@@ -253,7 +255,7 @@ export function LocationCaptureModal({
         if (!isCurrent("blocks", requestId)) return;
         setBlockApiFailed(true);
         setManualVillage(true);
-        toast.error("Could not load blocks.");
+        toast.error(t('locationCapture.couldNotLoadBlocks'));
       })
       .finally(() => {
         if (isCurrent("blocks", requestId)) setBlocksLoading(false);
@@ -286,7 +288,7 @@ export function LocationCaptureModal({
       .catch(() => {
         if (!isCurrent("villages", requestId)) return;
         setVillageApiFailed(true);
-        toast.error("Could not load villages. Pick \"Enter village manually\" in the Village list, or try again.");
+        toast.error(t('locationCapture.couldNotLoadVillages'));
       })
       .finally(() => {
         if (isCurrent("villages", requestId)) setVillagesLoading(false);
@@ -314,7 +316,7 @@ export function LocationCaptureModal({
   function handleConfirm() {
     if (!coords) {
       toast.error(
-        "We need your location to continue — please allow location access.",
+        t('locationCapture.weNeedYourLocation'),
       );
       return;
     }
@@ -336,7 +338,7 @@ export function LocationCaptureModal({
       : villages.find((v) => v.code === villageCode)?.name;
 
     if (!state || !district || !block || !village) {
-      toast.error("Please provide State, District, Block, and Village");
+      toast.error(t('locationCapture.pleaseProvideStateDistrict'));
       return;
     }
 
@@ -368,12 +370,8 @@ export function LocationCaptureModal({
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40">
             <MapPin className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <DialogTitle className="text-center text-lg">
-            Confirm your location
-          </DialogTitle>
-          <DialogDescription className="max-w-xs text-center text-sm">
-            We need your current location to submit this question.
-          </DialogDescription>
+          <DialogTitle className="text-center text-lg">{t('locationCapture.confirmYourLocation')}</DialogTitle>
+          <DialogDescription className="max-w-xs text-center text-sm">{t('locationCapture.weNeedYourCurrent')}</DialogDescription>
         </DialogHeader>
 
         {/* Scrollable body, so the action buttons stay visible on small screens */}
@@ -399,7 +397,7 @@ export function LocationCaptureModal({
           <span className="min-w-0 flex-1">
             <span className="block font-medium">
               {coordsLoading
-                ? "Getting your location..."
+                ? t('locationCapture.gettingYourLocation')
                 : coords
                   ? "Location captured"
                   : (coordsError ?? "Waiting for location access")}
@@ -423,9 +421,7 @@ export function LocationCaptureModal({
                   .finally(() => setCoordsLoading(false));
               }}
               className="text-xs font-semibold underline underline-offset-2"
-            >
-              Retry
-            </button>
+            >{t('common.retry')}</button>
           )}
         </div>
 
@@ -464,7 +460,7 @@ export function LocationCaptureModal({
                 <SelectValue
                   placeholder={
                     !coords
-                      ? "Waiting for location..."
+                      ? t('locationCapture.waitingForLocation')
                       : statesLoading
                         ? "Loading..."
                         : "Select state"
@@ -478,22 +474,20 @@ export function LocationCaptureModal({
                   </SelectItem>
                 ))}
                 {stateApiFailed && (
-                  <SelectItem value={MANUAL_VALUE}>
-                    ✎ Enter state manually
-                  </SelectItem>
+                  <SelectItem value={MANUAL_VALUE}>{t('locationCapture.enterStateManually')}</SelectItem>
                 )}
               </SelectContent>
             </Select>
 
             {stateApiFailed && !statesLoading && !manualState && (
-              <LoadErrorRetry label="states" onRetry={() => loadStates()} />
+              <LoadErrorRetry label={t('locationCapture.states')} onRetry={() => loadStates()} />
             )}
 
             {manualState && (
               <Input
                 value={manualStateName}
                 onChange={(e) => setManualStateName(e.target.value)}
-                placeholder="Enter state name"
+                placeholder={t('locationCapture.enterStateName')}
                 className="mt-2"
               />
             )}
@@ -529,7 +523,7 @@ export function LocationCaptureModal({
                 <SelectValue
                   placeholder={
                     districtsLoading
-                      ? "Loading..."
+                      ? t('common.loading')
                       : !stateCode && !manualState
                         ? "Select state first"
                         : "Select district"
@@ -544,22 +538,20 @@ export function LocationCaptureModal({
                   </SelectItem>
                 ))}
                 {districtApiFailed && (
-                  <SelectItem value={MANUAL_VALUE}>
-                    ✎ Enter district manually
-                  </SelectItem>
+                  <SelectItem value={MANUAL_VALUE}>{t('locationCapture.enterDistrictManually')}</SelectItem>
                 )}
               </SelectContent>
             </Select>
 
             {districtApiFailed && !districtsLoading && !manualDistrict && !!stateCode && (
-              <LoadErrorRetry label="districts" onRetry={() => handleStateChange(stateCode)} />
+              <LoadErrorRetry label={t('locationCapture.districts')} onRetry={() => handleStateChange(stateCode)} />
             )}
 
             {manualDistrict && (
               <Input
                 value={manualDistrictName}
                 onChange={(e) => setManualDistrictName(e.target.value)}
-                placeholder="Enter district name"
+                placeholder={t('locationCapture.enterDistrictName')}
               />
             )}
           </div>
@@ -589,7 +581,7 @@ export function LocationCaptureModal({
                 <SelectValue
                   placeholder={
                     blocksLoading
-                      ? "Loading..."
+                      ? t('common.loading')
                       : !districtCode && !manualDistrict
                         ? "Select district first"
                         : "Select block"
@@ -603,21 +595,19 @@ export function LocationCaptureModal({
                   </SelectItem>
                 ))}
                 {blockApiFailed && (
-                  <SelectItem value={MANUAL_VALUE}>
-                    ✎ Enter block manually
-                  </SelectItem>
+                  <SelectItem value={MANUAL_VALUE}>{t('locationCapture.enterBlockManually')}</SelectItem>
                 )}
               </SelectContent>
             </Select>
             {blockApiFailed && !blocksLoading && !manualBlock && !!districtCode && (
-              <LoadErrorRetry label="blocks" onRetry={() => handleDistrictChange(districtCode)} />
+              <LoadErrorRetry label={t('locationCapture.blocks')} onRetry={() => handleDistrictChange(districtCode)} />
             )}
 
             {manualBlock && (
               <Input
                 value={manualBlockName}
                 onChange={(e) => setManualBlockName(e.target.value)}
-                placeholder="Enter block name"
+                placeholder={t('locationCapture.enterBlockName')}
               />
             )}
           </div>
@@ -642,7 +632,7 @@ export function LocationCaptureModal({
                 <SelectValue
                   placeholder={
                     villagesLoading
-                      ? "Loading..."
+                      ? t('common.loading')
                       : !blockCode && !manualBlock
                         ? "Select block first"
                         : "Select village"
@@ -656,22 +646,20 @@ export function LocationCaptureModal({
                   </SelectItem>
                 ))}
                 {villageApiFailed && (
-                  <SelectItem value={MANUAL_VALUE}>
-                    ✎ Enter village manually
-                  </SelectItem>
+                  <SelectItem value={MANUAL_VALUE}>{t('locationCapture.enterVillageManually')}</SelectItem>
                 )}
               </SelectContent>
             </Select>
 
             {villageApiFailed && !villagesLoading && !manualVillage && !!blockCode && (
-              <LoadErrorRetry label="villages" onRetry={() => handleBlockChange(blockCode)} />
+              <LoadErrorRetry label={t('locationCapture.villages')} onRetry={() => handleBlockChange(blockCode)} />
             )}
 
             {manualVillage && (
               <Input
                 value={manualVillageName}
                 onChange={(e) => setManualVillageName(e.target.value)}
-                placeholder="Enter village name"
+                placeholder={t('editProfile.orgLocationVillagePlaceholder')}
               />
             )}
           </div>
@@ -680,24 +668,18 @@ export function LocationCaptureModal({
 
         <DialogFooter className="flex-col gap-2 border-t border-border-subtle bg-surface px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-col sm:space-x-0 sm:px-6">
           {!canConfirm && !!coords && (
-            <p className="text-center text-xs text-text-tertiary">
-              Select your state, district, block and village to continue.
-            </p>
+            <p className="text-center text-xs text-text-tertiary">{t('locationCapture.selectYourStateDistrict')}</p>
           )}
           <Button
             className="h-11 w-full"
             onClick={handleConfirm}
             disabled={!canConfirm}
-          >
-            Confirm & Submit
-          </Button>
+          >{t('locationCapture.confirmSubmit')}</Button>
           <Button
             variant="ghost"
             className="w-full"
             onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
+          >{t('common.cancel')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -706,18 +688,19 @@ export function LocationCaptureModal({
 
 // Inline message shown when a location list fails to load, with a way to try again without a page refresh.
 function LoadErrorRetry({ label, onRetry }: { label: string; onRetry: () => void }) {
+  const { t } = useTranslation();
   return (
     <p role="alert" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-destructive">
-      <span>Couldn't load {label}.</span>
+      <span>{t('locationCapture.couldnLoad', { label })}</span>
       <button
         type="button"
         onClick={onRetry}
         className="inline-flex items-center gap-1 rounded-sm font-semibold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <RotateCw className="h-3 w-3" aria-hidden="true" />
-        Try again
+        {t('faq.retry')}
       </button>
-      <span className="text-muted-foreground">or choose "Enter manually" in the list.</span>
+      <span className="text-muted-foreground">{t('locationCapture.orChooseEnterManually')}</span>
     </p>
   );
 }

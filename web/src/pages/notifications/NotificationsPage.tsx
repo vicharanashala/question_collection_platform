@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Notification } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   question_approved:       { icon: CheckCircle,  color: 'text-success',     label: 'Approved' },
@@ -37,6 +38,7 @@ function groupByDate(items: Notification[]): Record<string, Notification[]> {
 }
 
 export function NotificationsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [items, setItems] = useState<Notification[]>([])
   const [page, setPage] = useState(1)
@@ -91,7 +93,7 @@ export function NotificationsPage() {
       await notificationApi.markAllRead()
       setItems((prev) => prev.map((n) => ({ ...n, isRead: true })))
       setUnreadCount(0)
-      toast.success('All notifications marked as read')
+      toast.success(t('notificationsPage.allNotificationsMarkedAs'))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to mark all as read'))
     } finally {
@@ -106,11 +108,11 @@ export function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Notifications</h2>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('notifications.title')}</h2>
           <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
             {unreadCount > 0
               ? `${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}`
-              : 'You\'re all caught up'}
+              : t('notificationsPage.youReAllCaught')}
           </p>
         </div>
         {unreadCount > 0 && (
@@ -122,7 +124,7 @@ export function NotificationsPage() {
             disabled={marking === 'all'}
           >
             <CheckCheck className="h-4 w-4" />
-            {marking === 'all' ? 'Marking...' : 'Mark all as read'}
+            {marking === 'all' ? t('notificationsPage.marking') : t('notificationsPage.markAllAsRead')}
           </Button>
         )}
       </div>
@@ -140,10 +142,8 @@ export function NotificationsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <BellOff className="h-12 w-12 text-muted-foreground/40 mb-3" />
-            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">No notifications yet</p>
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
-              We&apos;ll notify you when something important happens
-            </p>
+            <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">{t('notifications.emptyTitle')}</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">{t('notificationsPage.weLlNotifyYou')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -195,7 +195,7 @@ export function NotificationsPage() {
                           <button
                             className="shrink-0 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-primary transition-colors mt-0.5"
                             onClick={(e) => { e.stopPropagation(); handleMarkRead(notif.id) }}
-                            title="Mark as unread"
+                            title={t('notificationsPage.markAsUnread')}
                           >
                             <Bell className="h-4 w-4" />
                           </button>
@@ -220,7 +220,7 @@ export function NotificationsPage() {
                 onClick={() => { const next = page + 1; setPage(next); fetch_(next) }}
                 disabled={loading}
               >
-                {loading ? 'Loading...' : `Load more (${total - items.length} remaining)`}
+                {loading ? t('common.loading') : `Load more (${total - items.length} remaining)`}
               </Button>
             </div>
           )}

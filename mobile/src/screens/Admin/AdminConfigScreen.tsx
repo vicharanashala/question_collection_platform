@@ -9,6 +9,7 @@ import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { TextInputModal } from '../../components/TextInputModal';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 interface ConfigItem {
   key: string;
@@ -33,6 +34,7 @@ const HIDDEN_CONFIG_KEYS = new Set([
 ])
 
 export function AdminConfigScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation();
@@ -75,7 +77,7 @@ export function AdminConfigScreen() {
     if (!inputModal) return;
     const val = parseFloat(raw ?? '');
     if (isNaN(val) || val < 0) {
-      showToast('Invalid value', 'warning');
+      showToast(t('adminConfigScreen.invalidValue'), 'warning');
       return;
     }
     setInputModal((p) => p ? { ...p, loading: true } : null);
@@ -84,7 +86,7 @@ export function AdminConfigScreen() {
       setConfigs((prev) =>
         prev.map((c) => (c.key === inputModal.key ? { ...c, value: val } : c)),
       );
-      showToast('Config updated', 'success');
+      showToast(t('adminConfigScreen.configUpdated'), 'success');
       setInputModal(null);
     } catch (e) {
       showToast(getErrorMessage(e, 'Update failed'), 'error');
@@ -106,15 +108,13 @@ export function AdminConfigScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Configuration</Text>
+        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>{t('adminConfigScreen.configuration')}</Text>
       </View>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
       >
-        <Text style={[styles.subtitle, { color: c.textSecondary }]}>
-          Tap a config to edit. Changes apply immediately and are audit-logged.
-        </Text>
+        <Text style={[styles.subtitle, { color: c.textSecondary }]}>{t('adminConfigScreen.tapConfigToEdit')}</Text>
 
         {configs
           .filter((cfg) => !HIDDEN_CONFIG_KEYS.has(cfg.key))
@@ -147,7 +147,7 @@ export function AdminConfigScreen() {
                   </Text>
                 )}
                 <Text style={[styles.editHint, { color: c.textTertiary }]}>
-                  {isSuperAdmin ? 'Tap to edit' : 'Super admin only'}
+                  {isSuperAdmin ? t('adminConfigScreen.tapToEdit') : t('adminConfigScreen.superAdminOnly')}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -158,9 +158,9 @@ export function AdminConfigScreen() {
       {inputModal && (
         <TextInputModal
           visible
-          title="Update Config"
+          title={t('adminConfigScreen.updateConfig')}
           message={`Enter new value for ${inputModal.label}:`}
-          placeholder="Enter value…"
+          placeholder={t('adminConfigScreen.enterValue')}
           initialValue={inputModal.value}
           confirmLabel="Update"
           cancelLabel="Cancel"

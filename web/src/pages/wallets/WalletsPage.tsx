@@ -18,6 +18,7 @@ import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
 import type { ExportColumn } from '@/lib/exportData'
 import { useTesterScope } from '@/lib/testerMode'
+import { useTranslation } from 'react-i18next'
 
 const WALLET_EXPORT_COLUMNS: ExportColumn<WalletSummary>[] = [
   { header: 'Name', value: (w) => w.user.name },
@@ -112,6 +113,7 @@ function StatValue({ value, className }: { value: number | undefined; className:
 // ─── Main Wallets Page ───────────────────────────────────────────────────────
 
 export function WalletsPage() {
+  const { t } = useTranslation()
   const [wallets, setWallets] = useState<WalletSummary[]>([])
   const [total, setTotal] = useState(0)
   const [totals, setTotals] = useState<WalletTotals | null>(null)
@@ -245,7 +247,7 @@ export function WalletsPage() {
   const filterChips = totals ? buildFilterChips(totals.appliedFilters, testerFromHeader) : []
   const scopeCaption = totals
     ? `Across ${totals.isFiltered ? '' : 'all '}${totals.totalWallets.toLocaleString('en-IN')}${totals.isFiltered ? ' filtered' : ''} wallet${totals.totalWallets === 1 ? '' : 's'}`
-    : 'Across all wallets'
+    : t('walletsPage.acrossAllWallets')
 
   return (
     <div className="space-y-5">
@@ -254,7 +256,7 @@ export function WalletsPage() {
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-foreground flex items-center gap-2">
             <Wallet className="h-6 w-6" />
-            Wallet Management
+            {t('walletsPage.walletManagement')}
           </h2>
           <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
             {total.toLocaleString('en-IN')} wallet{total !== 1 ? 's' : ''} total
@@ -269,7 +271,7 @@ export function WalletsPage() {
           />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </Button>
         </div>
       </div>
@@ -282,7 +284,7 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Distributed</p>
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">{t('walletsPage.totalDistributed')}</p>
                 <StatValue value={totals?.totalDistributed} className="text-success" />
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">{scopeCaption}</p>
               </div>
@@ -297,7 +299,7 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Total Withdrawn</p>
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">{t('walletsPage.totalWithdrawn')}</p>
                 <StatValue value={totals?.totalWithdrawn} className="text-destructive" />
                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Completed withdrawal payouts</p>
               </div>
@@ -312,9 +314,9 @@ export function WalletsPage() {
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">Active Balance</p>
+                <p className="text-xs sm:text-xs sm:text-sm text-text-secondary">{t('walletsPage.activeBalance')}</p>
                 <StatValue value={totals?.totalBalance} className="text-primary" />
-                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">Available in wallets</p>
+                <p className="text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary mt-1">{t('walletsPage.availableInWallets')}</p>
               </div>
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Wallet className="h-5 w-5 text-primary" />
@@ -329,7 +331,7 @@ export function WalletsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
           <Input
-            placeholder="Search by name or mobile number…"
+            placeholder={t('walletsPage.searchByNameOr')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
@@ -341,7 +343,7 @@ export function WalletsPage() {
             onChange={changeTesterFilter}
           />
         </div>
-        <Button type="submit" size="sm">Search</Button>
+        <Button type="submit" size="sm">{t('common.search')}</Button>
         {searchQuery && (
           <Button
             type="button"
@@ -350,7 +352,7 @@ export function WalletsPage() {
             onClick={clearSearch}
           >
             <X className="h-4 w-4 mr-1" />
-            Clear
+            {t('dataTable.clear')}
           </Button>
         )}
       </form>
@@ -361,13 +363,13 @@ export function WalletsPage() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Category</th>
-                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Balance</th>
-                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Total Earned</th>
-                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Withdrawn</th>
-                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Status</th>
-                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Actions</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('roles.user')}</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('profile.completion.fieldCategory')}</th>
+                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">{t('admin.balance')}</th>
+                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">{t('home.totalEarned')}</th>
+                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">{t('admin.withdrawn')}</th>
+                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">{t('submissions.status')}</th>
+                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">{t('profile.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -382,7 +384,7 @@ export function WalletsPage() {
               ) : wallets.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-muted-foreground">
-                    {searchQuery ? 'No wallets match your search' : 'No wallets found'}
+                    {searchQuery ? t('walletsPage.noWalletsMatchYour') : t('walletsPage.noWalletsFound')}
                   </td>
                 </tr>
               ) : (
@@ -430,7 +432,7 @@ export function WalletsPage() {
                         onClick={() => openDetail(wallet)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        View
+                        {t('admin.view')}
                       </Button>
                     </td>
                   </tr>
@@ -449,7 +451,7 @@ export function WalletsPage() {
               onClick={() => fetchWallets(page + 1, searchQuery)}
               disabled={loading}
             >
-              {loading ? 'Loading…' : `Load More (${total - wallets.length} remaining)`}
+              {loading ? t('leaderboard.loading') : `Load More (${total - wallets.length} remaining)`}
             </Button>
           </div>
         )}

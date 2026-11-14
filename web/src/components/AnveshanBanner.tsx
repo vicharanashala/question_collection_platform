@@ -30,26 +30,23 @@ export function AnveshanAnswerTaskBanner({ visible, answered, required, onStart,
           {t("anveshan.answerTaskBannerMobile", {
             answered,
             required,
-            defaultValue: "80% done! Open AnnaDatha on a desktop or laptop to write advisories for {{required}} farmer queries ({{answered}}/{{required}}).",
           })}
         </span>
         <span className="hidden lg:inline">
           {t("anveshan.answerTaskBanner", {
             answered,
             required,
-            defaultValue:
-              "You're 80% there! Write advisories for {{required}} farmer queries to finish your milestone ({{answered}}/{{required}} done).",
           })}
         </span>
       </p>
       <Button size="sm" className="hidden h-8 shrink-0 gap-1 px-3 lg:inline-flex" onClick={onStart}>
-        {t("anveshan.answerTaskCta", { defaultValue: "Write advisories" })}
+        {t("anveshan.answerTaskCta")}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
       <button
         type="button"
         onClick={onDismiss}
-        aria-label={t("common.dismiss", "Dismiss")}
+        aria-label={t("common.dismiss")}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-variant hover:text-foreground sm:h-8 sm:w-8"
       >
         <X className="h-4 w-4" />
@@ -71,10 +68,7 @@ type Translate = ReturnType<typeof useTranslation>["t"];
 // Short label for one unmet goal, such as "16 questions" or "1 weed".
 function remainingLabel(key: MilestoneKey, count: number, t: Translate): string {
   if (key === "questions") {
-    return t("anveshan.progressRemainingQuestions", {
-      count,
-      defaultValue: count === 1 ? "{{count}} question" : "{{count}} questions",
-    });
+    return t("anveshan.progressRemainingQuestions", { count });
   }
   return t(`anveshan.progressRemaining.${key}`, { count, defaultValue: `{{count}} ${key}` });
 }
@@ -98,27 +92,26 @@ export function AnveshanProgressBanner({ visible, percent, remaining, onViewDeta
 
       <div className="min-w-0 flex-1">
         <p className="flex items-baseline gap-1.5 text-xs font-semibold leading-snug text-foreground sm:text-sm">
-          <span className="truncate">{t("anveshan.progressBannerTitle", "Your Anveshan milestone")}</span>
+          <span className="truncate">{t("anveshan.progressBannerTitle")}</span>
           <span className="shrink-0 tabular-nums text-primary dark:text-emerald-400">{percent}%</span>
         </p>
         {remainingText && (
           <p className="line-clamp-2 text-[11px] leading-snug text-text-secondary sm:line-clamp-none sm:truncate sm:text-xs">
             {t("anveshan.progressBannerRemaining", {
               items: remainingText,
-              defaultValue: "Left to unlock advisories: {{items}}",
             })}
           </p>
         )}
       </div>
 
       <Button variant="outline" size="sm" className="h-7 shrink-0 gap-1 px-2.5 text-[11px] sm:h-8 sm:px-3 sm:text-xs" onClick={onViewDetails}>
-        {t("anveshan.progressBannerDetails", "Details")}
+        {t("anveshan.progressBannerDetails")}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
       <button
         type="button"
         onClick={onDismiss}
-        aria-label={t("common.dismiss", "Dismiss")}
+        aria-label={t("common.dismiss")}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-variant hover:text-foreground sm:h-8 sm:w-8"
       >
         <X className="h-4 w-4" />
@@ -128,7 +121,7 @@ export function AnveshanProgressBanner({ visible, percent, remaining, onViewDeta
       <div
         className="absolute inset-x-0 bottom-0 h-0.5 bg-primary/10"
         role="progressbar"
-        aria-label={t("anveshan.progressBannerTitle", "Your Anveshan milestone")}
+        aria-label={t("anveshan.progressBannerTitle")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}

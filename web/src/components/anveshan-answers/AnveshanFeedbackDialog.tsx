@@ -70,7 +70,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
   // Validates the rating, then saves the feedback once.
   const submit = async () => {
     if (!rating) {
-      setRatingError(t('anveshanFeedback.ratingRequired', 'Please choose a star rating.'))
+      setRatingError(t('anveshanFeedback.ratingRequired'))
       return
     }
     if (submitting) return
@@ -89,7 +89,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
         setDone(true)
         onSubmitted()
       } else {
-        toast.error(getErrorMessage(err, t('anveshanFeedback.submitFailed', 'Could not send your feedback. Please try again.')))
+        toast.error(getErrorMessage(err, t('anveshanFeedback.submitFailed')))
       }
     } finally {
       setSubmitting(false)
@@ -113,12 +113,12 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
             >
               <CheckCircle2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             </motion.span>
-            <DialogTitle className="mt-4 text-center">{t('anveshanFeedback.thanksTitle', 'Thank you for your feedback!')}</DialogTitle>
+            <DialogTitle className="mt-4 text-center">{t('anveshanFeedback.thanksTitle')}</DialogTitle>
             <DialogDescription className="mt-1 text-center">
-              {t('anveshanFeedback.thanksBody', 'Your thoughts help us make AnnaDatha better for everyone.')}
+              {t('anveshanFeedback.thanksBody')}
             </DialogDescription>
             <Button className="mt-5 w-full" onClick={() => onOpenChange(false)}>
-              {t('common.close', 'Close')}
+              {t('common.close')}
             </Button>
           </div>
         ) : (
@@ -128,10 +128,10 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                 <MessageSquareHeart className="h-6 w-6 text-primary dark:text-emerald-400" aria-hidden="true" />
               </span>
               <DialogTitle className="text-center text-lg sm:text-xl">
-                {t('anveshanFeedback.title', 'How was your experience?')}
+                {t('anveshanFeedback.title')}
               </DialogTitle>
               <DialogDescription className="text-center text-sm leading-relaxed">
-                {t('anveshanFeedback.introShort', 'You reached 100%! Rate AnnaDatha and tell us what worked well or what we can improve.')}
+                {t('anveshanFeedback.introShort')}
               </DialogDescription>
             </DialogHeader>
 
@@ -139,7 +139,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
               {/* Rating */}
               <div className="rounded-xl border border-border-subtle bg-surface-variant/40 px-3 py-4 text-center">
                 <p id="feedback-rating-label" className="text-sm font-medium text-text">
-                  {t('anveshanFeedback.ratingLabel', 'Your rating')} <span className="text-destructive">*</span>
+                  {t('anveshanFeedback.ratingLabel')} <span className="text-destructive">*</span>
                 </p>
                 <div
                   role="radiogroup"
@@ -178,7 +178,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                   })}
                 </div>
                 <p className={cn('mt-1 h-5 text-sm font-semibold', shownRating ? 'text-amber-600 dark:text-amber-400' : 'text-text-tertiary')} aria-hidden="true">
-                  {shownRating ? ratingLabel(shownRating) : t('anveshanFeedback.tapToRate', 'Tap a star to rate')}
+                  {shownRating ? ratingLabel(shownRating) : t('anveshanFeedback.tapToRate')}
                 </p>
                 <FieldError id="feedback-rating-error" message={ratingError} />
               </div>
@@ -186,7 +186,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
               {/* Comment, typed or spoken */}
               <div>
                 <Label htmlFor="feedback-comment" className="text-sm font-medium">
-                  {t('anveshanFeedback.commentLabel', 'Tell us more (optional)')}
+                  {t('anveshanFeedback.commentLabel')}
                 </Label>
                 <div className="mt-1.5 overflow-hidden rounded-lg border border-input bg-background focus-within:ring-2 focus-within:ring-focus">
                   <Textarea
@@ -196,7 +196,7 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                     onChange={(e) => setComment(e.target.value)}
                     disabled={submitting}
                     aria-describedby="feedback-comment-hint"
-                    placeholder={t('anveshanFeedback.commentPlaceholderShort', 'What did you like? What can we do better?')}
+                    placeholder={t('anveshanFeedback.commentPlaceholderShort')}
                     className="min-h-[110px] resize-none rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                   <div className="flex items-center justify-between gap-2 border-t border-border-subtle bg-surface-variant/40 px-2 py-1.5">
@@ -207,18 +207,18 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
                   </div>
                 </div>
                 <p id="feedback-comment-hint" className="mt-1.5 text-xs text-text-tertiary">
-                  {t('anveshanFeedback.micHintShort', 'Tap Speak to talk in any language; your words appear in the box.')}
+                  {t('anveshanFeedback.micHintShort')}
                 </p>
               </div>
             </div>
 
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting} className="w-full sm:w-auto">
-                {t('anveshanFeedback.later', 'Maybe later')}
+                {t('anveshanFeedback.later')}
               </Button>
               <Button onClick={() => void submit()} disabled={submitting} className="w-full gap-2 sm:w-auto">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
-                {submitting ? t('anveshanFeedback.sending', 'Sending…') : t('anveshanFeedback.submit', 'Send feedback')}
+                {submitting ? t('anveshanFeedback.sending') : t('anveshanFeedback.submit')}
               </Button>
             </div>
           </>

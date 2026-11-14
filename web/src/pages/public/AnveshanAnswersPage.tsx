@@ -90,7 +90,7 @@ export function AnveshanAnswersPage() {
       setLoadState('ready')
     } catch (err) {
       if (mode === 'initial') setLoadState('error')
-      else toast.error(getErrorMessage(err, t('anveshanAnswers.errors.loadFailed', "Could not load farmers' queries.")))
+      else toast.error(getErrorMessage(err, t('anveshanAnswers.errors.loadFailed')))
     } finally {
       setIsRefreshing(false)
     }
@@ -136,11 +136,11 @@ export function AnveshanAnswersPage() {
       }
       toast.success(
         result.completed
-          ? t('anveshanAnswers.completedToast', '🎉 Congratulations! You have reached 100%. Check your completion on the Anveshan platform.')
-          : t('anveshanAnswers.submittedToast', 'Your advisory has been submitted. Thank you!'),
+          ? t('anveshanAnswers.completedToast')
+          : t('anveshanAnswers.submittedToast'),
       )
     } catch (err) {
-      toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed', 'Could not submit your advisory. Please try again.')))
+      toast.error(getErrorMessage(err, t('anveshanAnswers.errors.submitFailed')))
       // A 403 means the answer limit was reached elsewhere (for example another tab), so resync the list.
       if ((err as { status?: number }).status === 403) void load('refresh')
     } finally {
@@ -168,14 +168,13 @@ export function AnveshanAnswersPage() {
     return (
       <StatusCard
         icon={<MonitorSmartphone className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden="true" />}
-        title={t('anveshanAnswers.desktopOnlyTitle', 'Please open this on a desktop or laptop')}
+        title={t('anveshanAnswers.desktopOnlyTitle')}
         description={t(
           'anveshanAnswers.desktopOnlyDescription',
-          "Writing advisories uses the full review layout, with farmers' queries beside the advisory form and sources, just like the Ajrasakha expert system. It is not available on mobile phones. Open AnnaDatha on a desktop or laptop to continue; your progress is saved.",
         )}
         action={
           <Button asChild variant="outline">
-            <Link to="/home">{t('anveshanAnswers.backHome', 'Back to home')}</Link>
+            <Link to="/home">{t('anveshanAnswers.backHome')}</Link>
           </Button>
         }
       />
@@ -188,8 +187,8 @@ export function AnveshanAnswersPage() {
     return (
       <StatusCard
         icon={<AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />}
-        title={t('anveshanAnswers.errors.loadFailed', "Could not load farmers' queries.")}
-        action={<Button onClick={() => void load('initial')}>{t('common.retry', 'Try again')}</Button>}
+        title={t('anveshanAnswers.errors.loadFailed')}
+        action={<Button onClick={() => void load('initial')}>{t('common.retry')}</Button>}
       />
     )
   }
@@ -217,8 +216,8 @@ export function AnveshanAnswersPage() {
       {data.items.length === 0 ? (
         <StatusCard
           icon={<PenLine className="h-6 w-6 text-text-tertiary" aria-hidden="true" />}
-          title={t('anveshanAnswers.emptyTitle', 'No farmer queries yet')}
-          description={t('anveshanAnswers.emptyDescription', 'Queries you submit will appear here.')}
+          title={t('anveshanAnswers.emptyTitle')}
+          description={t('anveshanAnswers.emptyDescription')}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(320px,_1fr)_minmax(400px,_1.2fr)] lg:gap-6">
@@ -247,7 +246,7 @@ export function AnveshanAnswersPage() {
                 scoringEnabled={data.scoringEnabled === true}
               />
             ) : (
-              <StatusCard title={t('anveshanAnswers.selectPrompt', 'Select a farmer query to write your advisory.')} />
+              <StatusCard title={t('anveshanAnswers.selectPrompt')} />
             )}
           </div>
         </div>
@@ -274,11 +273,11 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
       <div className="flex items-center justify-between gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
           <ArrowLeft className="h-4 w-4" />
-          {t('common.back', 'Back')}
+          {t('common.back')}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={onOpenGuide} className="gap-1.5">
           <BookOpenCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t('anveshanGuide.open', 'Advisory guide')}
+          {t('anveshanGuide.open')}
         </Button>
       </div>
 
@@ -286,15 +285,13 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
         <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-1.5">
             <h1 className="text-lg font-bold text-foreground sm:text-xl">
-              {t('anveshanAnswers.titleAdvice', "Advisories for farmers' queries")}
+              {t('anveshanAnswers.titleAdvice')}
             </h1>
             <InfoTip
-              label={t('anveshanAnswers.aboutPage', 'About this page')}
+              label={t('anveshanAnswers.aboutPage')}
               className="p-1 text-text-tertiary hover:text-text"
               content={t('anveshanAnswers.subtitle', {
                 count: required,
-                defaultValue:
-                  "You know these farmer queries best. Write an advisory for any {{count}} of them, backed by at least one trusted source, to complete your Anveshan milestone.",
               })}
             >
               <Info className="h-4 w-4" aria-hidden="true" />
@@ -307,11 +304,10 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
               className="gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-700 hover:bg-amber-500/15 sm:text-xs dark:text-amber-400"
               content={t(
                 'anveshanAnswers.qualityNotice',
-                'The quality of every advisory you submit will be carefully reviewed during evaluation, so make it accurate, clear and well sourced.',
               )}
             >
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('anveshanAnswers.qualityChip', 'Quality is evaluated')}
+              {t('anveshanAnswers.qualityChip')}
               <Info className="h-3 w-3 opacity-70" aria-hidden="true" />
             </InfoTip>
             <InfoTip
@@ -319,25 +315,24 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
               content={
                 <>
                   <span className="block font-semibold">
-                    {t('anveshanAnswers.simulationTitle', 'This is a simulation of the Ajrasakha review system')}
+                    {t('anveshanAnswers.simulationTitle')}
                   </span>
                   {t(
                     'anveshanAnswers.simulationBody',
-                    'The layout, steps and checks here mirror the advisory creation screen experts use on Ajrasakha. Take your time: every clear, well-sourced advisory you write builds the skills that help farmers get advice they can trust. You are almost there!',
                   )}
                 </>
               }
             >
               <MonitorPlay className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('anveshanAnswers.simulationChip', 'Ajrasakha simulation')}
+              {t('anveshanAnswers.simulationChip')}
               <Info className="h-3 w-3 opacity-70" aria-hidden="true" />
             </InfoTip>
           </div>
         </div>
 
-        <div className="w-full sm:w-56" aria-label={`${answered} of ${required}`}>
+        <div className="w-full sm:w-56" aria-label={t('anveshMileStone.of2', { answered, required })}>
           <div className="flex items-center justify-between text-xs font-semibold">
-            <span className="text-text-secondary">{t('anveshanAnswers.progressLabel', 'Advisories')}</span>
+            <span className="text-text-secondary">{t('anveshanAnswers.progressLabel')}</span>
             <span className={completed ? 'text-emerald-700 dark:text-emerald-400' : 'text-primary'}>
               {answered}/{required}
             </span>
@@ -361,15 +356,14 @@ function PageHeader({ answered, required, completed, onBack, onOpenGuide }: Page
             <span>
               {t(
                 'anveshanAnswers.completedBanner100',
-                '🎉 Congratulations! You have reached 100%. Kindly go to the Anveshan platform and check your completion there.',
               )}
             </span>
           </div>
           <Button asChild size="sm" className="shrink-0 gap-1.5 self-start bg-emerald-600 text-white hover:bg-emerald-700 sm:self-auto">
             <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
-              {t('anveshan.goToAnveshan', 'Go to Anveshan')}
+              {t('anveshan.goToAnveshan')}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="sr-only">{t('common.opensInNewTab', '(opens in a new tab)')}</span>
+              <span className="sr-only">{t('common.opensInNewTab')}</span>
             </a>
           </Button>
         </div>

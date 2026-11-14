@@ -116,7 +116,7 @@ export function PublicFaqsPage() {
   }, [items, query])
 
   const isSearching = query.trim().length > 0
-  const searchLabel = t('faq.searchPlaceholder', { defaultValue: 'Search questions' })
+  const searchLabel = t('faq.searchPlaceholder')
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-6">
@@ -127,7 +127,7 @@ export function PublicFaqsPage() {
           size="icon"
           onClick={() => navigate(-1)}
           className="h-10 w-10 shrink-0 rounded-full"
-          aria-label={t('faq.backToProfile', { defaultValue: 'Back to profile' })}
+          aria-label={t('faq.backToProfile')}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
@@ -160,7 +160,7 @@ export function PublicFaqsPage() {
             <button
               type="button"
               onClick={() => setQuery('')}
-              aria-label={t('faq.clearSearch', { defaultValue: 'Clear search' })}
+              aria-label={t('faq.clearSearch')}
               className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-surface-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <X className="h-4 w-4" aria-hidden="true" />
@@ -170,7 +170,7 @@ export function PublicFaqsPage() {
 
         <div
           role="group"
-          aria-label={t('faq.categories', { defaultValue: 'Categories' })}
+          aria-label={t('faq.categories')}
           className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide sm:mx-0 sm:px-0"
         >
           {CATEGORIES.map((cat) => {
@@ -209,7 +209,7 @@ export function PublicFaqsPage() {
             <p role="alert" className="text-sm font-medium text-muted-foreground">{t('faq.loadError')}</p>
             <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
               <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-              {t('faq.retry', { defaultValue: 'Try again' })}
+              {t('faq.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -219,12 +219,12 @@ export function PublicFaqsPage() {
             <HelpCircle className="mb-3 h-12 w-12 text-muted-foreground/30" aria-hidden="true" />
             <p className="text-sm font-medium text-muted-foreground">
               {isSearching
-                ? t('faq.noResultsTitle', { defaultValue: 'No matching questions' })
+                ? t('faq.noResultsTitle')
                 : t('faq.emptyTitle')}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {isSearching
-                ? t('faq.noResultsSubtitle', { defaultValue: 'Try different words or clear the search' })
+                ? t('faq.noResultsSubtitle')
                 : t('faq.emptySubtitle')}
             </p>
           </CardContent>

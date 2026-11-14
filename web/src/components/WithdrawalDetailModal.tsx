@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Withdrawal, AuditLogEntry, PaymentLogEntry } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
@@ -62,6 +63,7 @@ interface WithdrawalDetailModalProps {
 }
 
 function Copyable({ value }: { value: string }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   async function copy() {
     await navigator.clipboard.writeText(value)
@@ -75,7 +77,7 @@ function Copyable({ value }: { value: string }) {
         type="button"
         onClick={copy}
         className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-        title="Copy"
+        title={t('withdrawalDetailModal.copy')}
       >
         {copied
           ? <CheckCheck className="h-3.5 w-3.5 text-success" />
@@ -98,6 +100,7 @@ function Info({ className }: { className?: string }) {
 export function WithdrawalDetailModal({
   withdrawal: initial, open, onClose, onActioned, readOnly = false,
 }: WithdrawalDetailModalProps) {
+  const { t } = useTranslation()
   const [withdrawal, setWithdrawal] = useState<Withdrawal>(initial)
   const [loading, setLoading] = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -142,7 +145,7 @@ export function WithdrawalDetailModal({
 
   async function loadAuditHistory() {
     setAuditCollapsed(false)
-    toast.info('Entity-specific audit history is now available from the Audit Logs page.')
+    toast.info(t('withdrawalDetailModal.entitySpecificAuditHistory'))
   }
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
@@ -151,14 +154,14 @@ export function WithdrawalDetailModal({
     try {
       if (mode === 'fail') {
         await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
-        toast.success('Transaction marked as failed')
+        toast.success(t('withdrawalDetailModal.transactionMarkedAsFailed'))
         onActioned?.(withdrawal.id)
         onClose()
         return
       }
       const res = await adminApi.processWithdrawal(withdrawal.id, { action: mode, rejectionReason: reason })
       if (mode === 'reject') {
-        toast.success('Withdrawal rejected')
+        toast.success(t('withdrawalDetailModal.withdrawalRejected'))
         onActioned?.(withdrawal.id)
         onClose()
         return
@@ -171,7 +174,7 @@ export function WithdrawalDetailModal({
         setWithdrawal((prev) => ({ ...prev, status: 'processing' }))
         onActioned?.(withdrawal.id)
       } else {
-        toast.success('Withdrawal approved and completed')
+        toast.success(t('withdrawalDetailModal.withdrawalApprovedAndCompleted'))
         onActioned?.(withdrawal.id)
         onClose()
       }
@@ -233,7 +236,7 @@ export function WithdrawalDetailModal({
                   <Banknote className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <DialogTitle className="text-sm sm:text-sm sm:text-base font-bold leading-none">Withdrawal Request</DialogTitle>
+                  <DialogTitle className="text-sm sm:text-sm sm:text-base font-bold leading-none">{t('withdrawalDetailModal.withdrawalRequest')}</DialogTitle>
                   {/* ID */}
                   <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground font-mono mt-1">{w.id}</p>
                 </div>
@@ -267,7 +270,7 @@ export function WithdrawalDetailModal({
                 <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[11px] sm:text-[11px] sm:text-xs font-semibold text-destructive">
-                    {w.status === 'failed' ? 'Failure Reason' : 'Rejection Reason'}
+                    {w.status === 'failed' ? t('withdrawalDetailModal.failureReason') : t('notifications.rejectionReason')}
                   </p>
                   <p className="text-xs sm:text-xs sm:text-sm text-foreground mt-0.5">
                     {w.status === 'failed' ? w.failureReason : w.rejectionReason}
@@ -290,43 +293,43 @@ export function WithdrawalDetailModal({
               <div className="space-y-3">
 
                 {/* ── User Info ───────────────────────────────── */}
-                <Section label="User Information" icon={User}>
+                <Section label={t('withdrawalDetailModal.userInformation')} icon={User}>
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Full Name"     value={w.user?.name} />
-                    <Field label="Mobile"        value={w.user?.mobileNumber} />
-                    <Field label="State"         value={w.user?.state} />
+                    <Field label={t('fullName')}     value={w.user?.name} />
+                    <Field label={t('anveshan.detailMobile')}        value={w.user?.mobileNumber} />
+                    <Field label={t('admin.state')}         value={w.user?.state} />
                     {/* <Field label="Category"      value={w.user?.category} /> */}
                   </div>
                 </Section>
 
                 {/* ── Withdrawal Details ─────────────────────── */}
-                <Section label="Withdrawal Details" icon={Hash}>
+                <Section label={t('withdrawalDetailModal.withdrawalDetails')} icon={Hash}>
                   <div className="grid grid-cols-2 gap-3">
                     <Field
-                      label="Requested On"
+                      label={t('withdrawalDetailModal.requestedOn')}
                       value={w.createdAt ? formatDisplayDate(w.createdAt) : undefined}
                     />
                     {w.processedAt && (
                       <Field
-                        label="Processed On"
+                        label={t('withdrawalDetailModal.processedOn')}
                         value={formatDisplayDate(w.processedAt)}
                       />
                     )}
                     <div className="col-span-2">
-                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">Payout Method</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">{t('wallet.payoutMethod')}</p>
                       <Badge variant="secondary" className="text-[11px] sm:text-[11px] sm:text-xs capitalize font-medium">
                         {w.payoutMethod?.replace(/_/g, ' ') ?? '—'}
                       </Badge>
                     </div>
                     {w.utrNumber && (
                       <div className="col-span-2">
-                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">UTR Number</p>
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">{t('wallet.utrNumber')}</p>
                         <Copyable value={w.utrNumber} />
                       </div>
                     )}
                     {w.razorpayPayoutId && (
                       <div className="col-span-2">
-                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">Razorpay Payout ID</p>
+                        <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mb-1">{t('wallet.razorpayPayoutId')}</p>
                         <Copyable value={w.razorpayPayoutId} />
                       </div>
                     )}
@@ -334,7 +337,7 @@ export function WithdrawalDetailModal({
                 </Section>
 
                 {/* ── Payout Details ─────────────────────────── */}
-                <Section label="Payout Details" icon={Wallet}>
+                <Section label={t('withdrawalDetailModal.payoutDetails')} icon={Wallet}>
                   {hasPayoutDetails ? (
                     <div className="grid grid-cols-2 gap-3">
                       {payoutFields.map(({label, value }) => (
@@ -345,13 +348,13 @@ export function WithdrawalDetailModal({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground italic">No payout details recorded.</p>
+                    <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground italic">{t('withdrawalDetailModal.noPayoutDetailsRecorded')}</p>
                   )}
                 </Section>
 
                 {/* ── Transaction History ─────────────────────── */}
                 {transactions.length > 0 && (
-                  <Section label="Transaction History" icon={ArrowRightLeft}>
+                  <Section label={t('wallet.history')} icon={ArrowRightLeft}>
                     <div className="space-y-2">
                       {transactions.map((tx) => (
                         <div key={tx.id} className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20">
@@ -403,7 +406,7 @@ export function WithdrawalDetailModal({
 
                 {/* ── Payment Attempts ─────────────────────────── */}
                 {w.status === 'failed' && paymentLogs.length > 0 && (
-                  <Section label="Payment Attempts" icon={RefreshCw}>
+                  <Section label={t('withdrawalDetailModal.paymentAttempts')} icon={RefreshCw}>
                     <div className="space-y-2">
                       {paymentLogs.map((pl, idx) => (
                         <div key={pl.id} className="rounded-lg border border-border-subtle px-3 py-2.5 bg-muted/20">
@@ -427,13 +430,13 @@ export function WithdrawalDetailModal({
                                 </p>
                                 <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                                   {pl.orderId && <span className="font-mono mr-2">{pl.orderId}</span>}
-                                  {pl.pinelabsTransactionId && <span className="font-mono mr-2">PL: {pl.pinelabsTransactionId}</span>}
-                                  {pl.razorpayPayoutId && <span className="font-mono mr-2">RZ: {pl.razorpayPayoutId}</span>}
+                                  {pl.pinelabsTransactionId && <span className="font-mono mr-2">{t('withdrawalDetailModal.pl', { pinelabsTransactionId: pl.pinelabsTransactionId })}</span>}
+                                  {pl.razorpayPayoutId && <span className="font-mono mr-2">{t('withdrawalDetailModal.rz', { razorpayPayoutId: pl.razorpayPayoutId })}</span>}
                                 </p>
                                 {(pl.utrNumber || pl.razorpayPayoutId) && (
                                   <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-0.5">
-                                    {pl.utrNumber && <span className="font-mono mr-2">UTR: {pl.utrNumber}</span>}
-                                    {pl.razorpayPayoutId && <span className="font-mono">RZ Payout: {pl.razorpayPayoutId}</span>}
+                                    {pl.utrNumber && <span className="font-mono mr-2">{t('withdrawalDetailModal.utr', { utrNumber: pl.utrNumber })}</span>}
+                                    {pl.razorpayPayoutId && <span className="font-mono">{t('withdrawalDetailModal.rzPayout', { razorpayPayoutId: pl.razorpayPayoutId })}</span>}
                                   </p>
                                 )}
                               </div>
@@ -467,9 +470,7 @@ export function WithdrawalDetailModal({
 
                           {pl.rawResponse && Object.keys(pl.rawResponse).length > 0 && (
                             <details className="mt-2">
-                              <summary className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                Raw response ({Object.keys(pl.rawResponse).length} fields)
-                              </summary>
+                              <summary className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground cursor-pointer hover:text-foreground">{t('withdrawalDetailModal.rawResponseFields', { length: Object.keys(pl.rawResponse).length })}</summary>
                               <pre className="mt-1 rounded bg-muted p-2 text-[11px] sm:text-[11px] sm:text-xs font-mono text-muted-foreground overflow-auto max-h-32">
                                 {JSON.stringify(pl.rawResponse, null, 2)}
                               </pre>
@@ -482,7 +483,7 @@ export function WithdrawalDetailModal({
                 )}
 
                 {/* ── Audit History ───────────────────────────── */}
-                <Section label="Audit History" icon={ScrollText}>
+                <Section label={t('withdrawalDetailModal.auditHistory')} icon={ScrollText}>
                   {/* Load button / count row */}
                   <div className="flex items-center justify-between mb-3">
                     <button
@@ -493,15 +494,13 @@ export function WithdrawalDetailModal({
                         ? <span className="h-3 w-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
                         : <ScrollText className="h-3 w-3" />}
                       {auditLoading
-                        ? 'Loading...'
+                        ? t('common.loading')
                         : auditCollapsed && auditEntries.length === 0
                           ? 'Load audit history'
                           : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
                     </button>
                     {!auditCollapsed && auditEntries.length > 0 && (
-                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                        {auditEntries.length} total
-                      </span>
+                      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('withdrawalDetailModal.total', { length: auditEntries.length })}</span>
                     )}
                   </div>
 
@@ -509,7 +508,7 @@ export function WithdrawalDetailModal({
                   {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
                     <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
                       <ScrollText className="h-7 w-7 opacity-25" />
-                      <p className="text-[11px] sm:text-[11px] sm:text-xs">No audit history for this withdrawal</p>
+                      <p className="text-[11px] sm:text-[11px] sm:text-xs">{t('withdrawalDetailModal.noAuditHistoryFor')}</p>
                     </div>
                   )}
 
@@ -598,7 +597,7 @@ export function WithdrawalDetailModal({
 
           {/* ── Footer ─────────────────────────────────────── */}
           <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/20 flex items-center justify-between gap-3">
-            <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+            <Button variant="outline" size="sm" onClick={onClose}>{t('common.close')}</Button>
 
             {/* Pending — approve / reject */}
             {!readOnly && isPending && (
@@ -614,7 +613,7 @@ export function WithdrawalDetailModal({
                   })}
                   disabled={processing}
                 >
-                  <XCircle className="h-4 w-4 mr-1.5" />Reject
+                  <XCircle className="h-4 w-4 mr-1.5" />{t('admin.reject')}
                 </Button>
                 <Button
                   size="sm"
@@ -623,7 +622,7 @@ export function WithdrawalDetailModal({
                   disabled={processing}
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />
-                  {processing ? 'Processing…' : 'Approve'}
+                  {processing ? t('agriEntity.processingImage') : t('admin.approve')}
                 </Button>
               </div>
             )}
@@ -643,7 +642,7 @@ export function WithdrawalDetailModal({
                         toast.error(`Retry failed${res.errorMessage ? ': ' + res.errorMessage : ''}`, { duration: 6000 })
                         setWithdrawal((prev) => ({ ...prev, status: res.status as any }))
                       } else {
-                        toast.success('Payment succeeded — withdrawal completed')
+                        toast.success(t('withdrawalDetailModal.paymentSucceededWithdrawalCompleted'))
                       }
                       onActioned?.(w.id)
                     } catch (e) {
@@ -655,7 +654,7 @@ export function WithdrawalDetailModal({
                   disabled={processing}
                 >
                   <RefreshCw className="h-4 w-4 mr-1.5" />
-                  {processing ? 'Processing…' : 'Retry Payment'}
+                  {processing ? t('agriEntity.processingImage') : t('withdrawalDetailModal.retryPayment')}
                 </Button>
                 <Button
                   size="sm"
@@ -669,7 +668,7 @@ export function WithdrawalDetailModal({
                   disabled={processing}
                 >
                   <XCircle className="h-4 w-4 mr-1.5" />
-                  Mark Failed
+                  {t('withdrawalDetailModal.markFailed')}
                 </Button>
               </div>
             )}
@@ -678,8 +677,8 @@ export function WithdrawalDetailModal({
             {!readOnly && !isPending && (w.status === 'completed' || w.status === 'rejected') && (
               <div className="flex items-center gap-1.5">
                 {w.status === 'completed'
-                  ? <><BadgeCheck className="h-4 w-4 text-success mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawal completed</span></>
-                  : <><XCircle className="h-4 w-4 text-muted-foreground mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">Withdrawal rejected</span></>
+                  ? <><BadgeCheck className="h-4 w-4 text-success mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('withdrawalDetailModal.withdrawalCompleted')}</span></>
+                  : <><XCircle className="h-4 w-4 text-muted-foreground mr-1" /><span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('withdrawalDetailModal.withdrawalRejected')}</span></>
                 }
               </div>
             )}

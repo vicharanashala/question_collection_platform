@@ -30,6 +30,7 @@ import { formatDateTime } from "@/lib/utils";
 import type { DateRange } from "@daypicker/react";
 import type { AuditLogEntry, AuditLogQuery, AuditLogsResponse } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 50;
 type ViewMode = "list" | "grid";
@@ -115,9 +116,10 @@ function KeyValueFields({
   value: Record<string, unknown> | null | undefined;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   const entries = Object.entries(value ?? {});
   if (!entries.length)
-    return <p className="text-xs text-text-tertiary">No details recorded.</p>;
+    return <p className="text-xs text-text-tertiary">{t('auditLogsPage.noDetailsRecorded')}</p>;
   return (
     <dl
       className={
@@ -169,6 +171,7 @@ function DetailBlock({
 }
 
 function EntryDetails({ entry }: { entry: AuditLogEntry }) {
+  const { t } = useTranslation();
   const actorDetails = {
     actor: entry.actor?.name ?? entry.actor?.id ?? "System",
     role: entry.actor?.actorType ? prettify(entry.actor.actorType) : null,
@@ -178,26 +181,24 @@ function EntryDetails({ entry }: { entry: AuditLogEntry }) {
   };
   return (
     <div className="space-y-5 border-t border-border-subtle pt-4">
-      <DetailBlock title="Audit information" value={actorDetails} />
-      <DetailBlock title="Context" value={entry.context} />
+      <DetailBlock title={t('auditLogsPage.auditInformation')} value={actorDetails} />
+      <DetailBlock title={t('notifications.context')} value={entry.context} />
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-text">Changes</h3>
+        <h3 className="mb-3 text-sm font-semibold text-text">{t('auditLogsPage.changes')}</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-border-subtle p-3">
-            <p className="mb-3 text-xs font-medium text-text-tertiary">
-              Before
-            </p>
+            <p className="mb-3 text-xs font-medium text-text-tertiary">{t('auditLogsPage.before')}</p>
             <KeyValueFields value={entry.changes?.before} compact />
           </div>
           <div className="rounded-lg border border-border-subtle p-3">
-            <p className="mb-3 text-xs font-medium text-text-tertiary">After</p>
+            <p className="mb-3 text-xs font-medium text-text-tertiary">{t('auditLogsPage.after')}</p>
             <KeyValueFields value={entry.changes?.after} compact />
           </div>
         </div>
       </section>
       {entry.outcome && (
         <DetailBlock
-          title="Outcome details"
+          title={t('auditLogsPage.outcomeDetails')}
           value={entry.outcome as Record<string, unknown>}
         />
       )}
@@ -244,6 +245,7 @@ function ListEntry({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <article className="px-5 py-4">
       <button
@@ -254,7 +256,7 @@ function ListEntry({
       >
         <EntryHeading entry={entry} />
         <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary">
-          {expanded ? "Hide details" : "View details"}
+          {expanded ? t('auditLogsPage.hideDetails') : t('auditLogsPage.viewDetails')}
           {expanded ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -276,6 +278,7 @@ function GridEntry({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="shadow-xs">
       <CardContent className="p-4">
@@ -287,7 +290,7 @@ function GridEntry({
             onClick={onToggle}
             aria-expanded={expanded}
           >
-            {expanded ? "Hide details" : "View details"}
+            {expanded ? t('auditLogsPage.hideDetails') : t('auditLogsPage.viewDetails')}
             {expanded ? (
               <ChevronUp className="ml-1 h-4 w-4" />
             ) : (
@@ -306,6 +309,7 @@ function GridEntry({
 }
 
 export function AuditLogsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "super_admin";
   const canUseFilters = isSuperAdmin || user?.role === "admin";
@@ -340,7 +344,7 @@ export function AuditLogsPage() {
       setExpandedIds(new Set());
     } catch (error) {
       toast.error(
-        `Failed to load audit logs: ${getErrorMessage(error, "Unknown error")}`,
+        t('auditLogsPage.failedToLoadAudit', { value1: getErrorMessage(error, "Unknown error") }),
       );
     } finally {
       setLoading(false);
@@ -381,12 +385,12 @@ export function AuditLogsPage() {
       <header>
         <h1 className="flex items-center gap-2 text-xl font-bold text-text sm:text-2xl">
           <ScrollText className="h-6 w-6" />
-          Audit Logs
+          {t('nav.auditLogs')}
         </h1>
         <p className="mt-0.5 text-sm text-text-secondary">
           {canUseFilters
-            ? "A chronological record of administrative and curator actions."
-            : "A record of your own actions."}
+            ? t('auditLogsPage.chronologicalRecordOfAdministrative')
+            : t('auditLogsPage.recordOfYourOwn')}
         </p>
       </header>
       <Card className="shadow-xs">
@@ -396,15 +400,13 @@ export function AuditLogsPage() {
           }`}
         >
           <div className="xl:col-span-2">
-            <Label htmlFor="audit-search" className="text-xs">
-              Search actor name or email
-            </Label>
+            <Label htmlFor="audit-search" className="text-xs">{t('auditLogsPage.searchActorNameOr')}</Label>
             <div className="relative mt-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-text-tertiary" />
               <Input
                 id="audit-search"
                 className="pl-9"
-                placeholder="Search audit logs"
+                placeholder={t('auditLogsPage.searchAuditLogs')}
                 value={filters.search ?? ""}
                 onChange={(event) =>
                   updateFilters({ search: event.target.value || undefined })
@@ -415,7 +417,7 @@ export function AuditLogsPage() {
           {canUseFilters && (
             <>
               <div>
-                <Label className="text-xs">Actor role</Label>
+                <Label className="text-xs">{t('auditLogsPage.actorRole')}</Label>
                 <Select
                   value={filters.role ?? "all"}
                   onValueChange={(role) =>
@@ -426,7 +428,7 @@ export function AuditLogsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All roles</SelectItem>
+                    <SelectItem value="all">{t('auditLogsPage.allRoles')}</SelectItem>
                     {roleOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
@@ -436,7 +438,7 @@ export function AuditLogsPage() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Action type</Label>
+                <Label className="text-xs">{t('auditLogsPage.actionType')}</Label>
                 <Select
                   value={filters.actionType ?? "all"}
                   onValueChange={(actionType) =>
@@ -449,7 +451,7 @@ export function AuditLogsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All actions</SelectItem>
+                    <SelectItem value="all">{t('auditLogsPage.allActions')}</SelectItem>
                     {AUDIT_ACTIONS.map((action) => (
                       <SelectItem key={action} value={action}>
                         {prettify(action)}
@@ -482,25 +484,25 @@ export function AuditLogsPage() {
                 }
               >
                 <X className="mr-1 h-4 w-4" />
-                Clear filters
+                {t('wallet.clearFilters')}
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
-      <section aria-label="Audit log entries">
+      <section aria-label={t('auditLogsPage.auditLogEntries')}>
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium">
               {loading
-                ? "Loading entries…"
+                ? t('auditLogsPage.loadingEntries')
                 : `${total.toLocaleString()} ${total === 1 ? "entry" : "entries"}`}
             </p>
-            <p className="mt-0.5 text-xs text-text-tertiary">Newest first</p>
+            <p className="mt-0.5 text-xs text-text-tertiary">{t('agriEntitySubmissionsList.newestFirst')}</p>
           </div>
           <div
             className="flex rounded-md border border-border-subtle p-1"
-            aria-label="View mode"
+            aria-label={t('auditLogsPage.viewMode')}
           >
             <Button
               type="button"
@@ -510,7 +512,7 @@ export function AuditLogsPage() {
               aria-pressed={view === "list"}
             >
               <List className="mr-1 h-4 w-4" />
-              List
+              {t('auditLogsPage.list')}
             </Button>
             <Button
               type="button"
@@ -520,7 +522,7 @@ export function AuditLogsPage() {
               aria-pressed={view === "grid"}
             >
               <Grid3X3 className="mr-1 h-4 w-4" />
-              Grid
+              {t('auditLogsPage.grid')}
             </Button>
           </div>
         </div>
@@ -537,9 +539,7 @@ export function AuditLogsPage() {
           </Card>
         ) : logs.length === 0 ? (
           <Card className="shadow-xs">
-            <CardContent className="py-16 text-center text-sm text-text-tertiary">
-              No audit entries match these filters.
-            </CardContent>
+            <CardContent className="py-16 text-center text-sm text-text-tertiary">{t('auditLogsPage.noAuditEntriesMatch')}</CardContent>
           </Card>
         ) : view === "list" ? (
           <Card className="divide-y divide-border-subtle shadow-xs">
@@ -566,9 +566,7 @@ export function AuditLogsPage() {
         )}
         {!loading && totalPages > 1 && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-text-tertiary">
-              Showing {visibleFrom}–{visibleTo} of {total.toLocaleString()}
-            </p>
+            <p className="text-xs text-text-tertiary">{t('auditLogsPage.showingOf', { visibleFrom, visibleTo, value5: total.toLocaleString() })}</p>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -582,7 +580,7 @@ export function AuditLogsPage() {
                 }
               >
                 <ChevronLeft className="mr-1 h-4 w-4" />
-                Previous
+                {t('auditLogsPage.previous')}
               </Button>
               <Button
                 size="sm"
@@ -595,7 +593,7 @@ export function AuditLogsPage() {
                   }))
                 }
               >
-                Next
+                {t('common.next')}
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>

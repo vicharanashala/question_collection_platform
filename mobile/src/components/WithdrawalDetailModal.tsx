@@ -16,6 +16,7 @@ import { ResultModal } from './ResultModal';
 import { TextInputModal } from './TextInputModal';
 import { adminApi, auditApi, getErrorMessage } from '../api/client';
 import { tokens } from '../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
@@ -94,6 +95,7 @@ export function WithdrawalDetailModal({
   isSuperAdmin = false,
   onStatusChange,
 }: WithdrawalDetailModalProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { showToast } = useToast();
@@ -174,7 +176,7 @@ export function WithdrawalDetailModal({
         showToast(data.pinelabsTransactionId
           ? `Approved — Txn: ${data.pinelabsTransactionId}` : 'Approved', 'success');
       } else {
-        showToast('Processed', 'success');
+        showToast(t('withdrawalDetailModal.processed'), 'success');
       }
       onStatusChange?.(item.id, data.status);
       onClose();
@@ -194,7 +196,7 @@ export function WithdrawalDetailModal({
       if (data.paymentFailed) {
         setErrorModal({ visible: true, message: data.errorMessage ?? data.errorCode ?? 'Unknown error' });
       } else {
-        showToast('Payment retried successfully', 'success');
+        showToast(t('withdrawalDetailModal.paymentRetriedSuccessfully'), 'success');
         onStatusChange?.(item.id, 'completed');
         onClose();
       }
@@ -210,7 +212,7 @@ export function WithdrawalDetailModal({
     setProcessing(true);
     try {
       await adminApi.markWithdrawalFailed(item.id, { reason });
-      showToast('Marked as failed', 'success');
+      showToast(t('withdrawalDetailModal.markedAsFailed'), 'success');
       onStatusChange?.(item.id, 'failed');
       onClose();
     } catch (e) {
@@ -233,7 +235,7 @@ export function WithdrawalDetailModal({
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.headerTitle, { color: c.text }]}>Withdrawal Request</Text>
+              <Text style={[styles.headerTitle, { color: c.text }]}>{t('withdrawalDetailModal.withdrawalRequest')}</Text>
               <TouchableOpacity
                 onPress={() => Linking.openURL(`https://pinelabs.com/orders/${item.orderId}`)}
                 disabled={!item.orderId}
@@ -262,7 +264,7 @@ export function WithdrawalDetailModal({
             {/* ── Amount Hero ─────────────────────────────────────────────── */}
             <View style={[styles.amountHero, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.amountLeft}>
-                <Text style={[styles.amountLabel, { color: c.textTertiary }]}>Amount Requested</Text>
+                <Text style={[styles.amountLabel, { color: c.textTertiary }]}>{t('withdrawalDetailModal.amountRequested')}</Text>
                 <Text style={[styles.amountValue, { color: c.text }]}>
                   ₹
                   <Text style={styles.amountMain}>
@@ -283,7 +285,7 @@ export function WithdrawalDetailModal({
               <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
                 <View style={styles.cardHeader}>
                   <Ionicons name="person-outline" size={14} color={c.primary} />
-                  <Text style={[styles.cardHeaderTitle, { color: c.text }]}>User Details</Text>
+                  <Text style={[styles.cardHeaderTitle, { color: c.text }]}>{t('withdrawalDetailModal.userDetails')}</Text>
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.userRow}>
@@ -318,7 +320,7 @@ export function WithdrawalDetailModal({
             <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.cardHeader}>
                 <Ionicons name="send-outline" size={14} color={c.primary} />
-                <Text style={[styles.cardHeaderTitle, { color: c.text }]}>Payout Destination</Text>
+                <Text style={[styles.cardHeaderTitle, { color: c.text }]}>{t('withdrawalDetailModal.payoutDestination')}</Text>
               </View>
               <View style={styles.divider} />
 
@@ -334,26 +336,24 @@ export function WithdrawalDetailModal({
               {hasPayoutData ? (
                 isUPI ? (
                   <View style={styles.payoutDataGrid}>
-                    <PayoutRow label="UPI ID" value={pd.upiId ?? pd.upi_id ?? '—'} c={c} />
+                    <PayoutRow label={t('wallet.withdrawal.upiId')} value={pd.upiId ?? pd.upi_id ?? '—'} c={c} />
                   </View>
                 ) : (
                   <View style={styles.payoutDataGrid}>
-                    <PayoutRow label="Account Number" value={pd.accountNumber ?? pd.account_number ?? '—'} c={c} selectable />
-                    <PayoutRow label="IFSC Code" value={pd.ifsc ?? pd.ifscCode ?? '—'} c={c} selectable />
+                    <PayoutRow label={t('wallet.withdrawal.accountNumber')} value={pd.accountNumber ?? pd.account_number ?? '—'} c={c} selectable />
+                    <PayoutRow label={t('wallet.withdrawal.ifsc')} value={pd.ifsc ?? pd.ifscCode ?? '—'} c={c} selectable />
                     {(pd.bankName ?? pd.bank_name) && (
-                      <PayoutRow label="Bank Name" value={pd.bankName ?? pd.bank_name ?? '—'} c={c} />
+                      <PayoutRow label={t('withdrawalDetailModal.bankName')} value={pd.bankName ?? pd.bank_name ?? '—'} c={c} />
                     )}
                     {(pd.accountHolderName ?? pd.account_holder_name) && (
-                      <PayoutRow label="A/C Holder" value={pd.accountHolderName ?? pd.account_holder_name ?? '—'} c={c} />
+                      <PayoutRow label={t('withdrawalDetailModal.holder')} value={pd.accountHolderName ?? pd.account_holder_name ?? '—'} c={c} />
                     )}
                   </View>
                 )
               ) : (
                 <View style={[styles.emptyPayout, { backgroundColor: c.muted }]}>
                   <Ionicons name="alert-circle-outline" size={15} color={c.textTertiary} />
-                  <Text style={[styles.emptyPayoutText, { color: c.textTertiary }]}>
-                    No payout details recorded
-                  </Text>
+                  <Text style={[styles.emptyPayoutText, { color: c.textTertiary }]}>{t('withdrawalDetailModal.noPayoutDetailsRecorded')}</Text>
                 </View>
               )}
             </View>
@@ -362,13 +362,13 @@ export function WithdrawalDetailModal({
             <View style={[styles.card, { backgroundColor: c.surface, ...tokens.shadowSm }]}>
               <View style={styles.cardHeader}>
                 <Ionicons name="time-outline" size={14} color={c.primary} />
-                <Text style={[styles.cardHeaderTitle, { color: c.text }]}>Timeline</Text>
+                <Text style={[styles.cardHeaderTitle, { color: c.text }]}>{t('withdrawalDetailModal.timeline')}</Text>
               </View>
               <View style={styles.divider} />
 
               <View style={styles.timeline}>
                 <TimelineRow
-                  label="Requested"
+                  label={t('withdrawalDetailModal.requested')}
                   value={fmt(item.createdAt)}
                   icon="arrow-up-circle-outline"
                   color={c.textSecondary}
@@ -376,7 +376,7 @@ export function WithdrawalDetailModal({
                 />
                 {item.processedAt && (
                   <TimelineRow
-                    label={status === 'completed' ? 'Completed' : status === 'failed' || status === 'rejected' ? 'Processed' : 'Processed'}
+                    label={status === 'completed' ? t('wallet.statusCompleted') : status === 'failed' || status === 'rejected' ? 'Processed' : 'Processed'}
                     value={fmt(item.processedAt)}
                     icon={
                       status === 'completed' ? 'checkmark-circle'
@@ -389,7 +389,7 @@ export function WithdrawalDetailModal({
                 )}
                 {item.orderId && (
                   <TimelineRow
-                    label="Order ID"
+                    label={t('withdrawalDetailModal.orderId')}
                     value={item.orderId}
                     icon="key-outline"
                     color={c.primary}
@@ -399,7 +399,7 @@ export function WithdrawalDetailModal({
                 )}
                 {item.pinelabsTransactionId && (
                   <TimelineRow
-                    label="PineLabs Txn"
+                    label={t('withdrawalDetailModal.pinelabsTxn')}
                     value={item.pinelabsTransactionId}
                     icon="link-outline"
                     color={c.success}
@@ -416,7 +416,7 @@ export function WithdrawalDetailModal({
                 <View style={styles.cardHeader}>
                   <Ionicons name="alert-circle" size={14} color={c.error} />
                   <Text style={[styles.cardHeaderTitle, { color: c.error }]}>
-                    {status === 'rejected' ? 'Rejection Reason' : 'Failure Reason'}
+                    {status === 'rejected' ? t('notifications.rejectionReason') : t('withdrawalDetailModal.failureReason')}
                   </Text>
                 </View>
                 <View style={[styles.divider, { backgroundColor: '#FECACA' }]} />
@@ -431,10 +431,8 @@ export function WithdrawalDetailModal({
               <View style={[styles.processingBanner, { backgroundColor: '#EDE9FE' }]}>
                 <Ionicons name="hourglass-outline" size={15} color="#7C3AED" />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.processingTitle, { color: '#7C3AED' }]}>Awaiting PineLabs confirmation</Text>
-                  <Text style={[styles.processingSub, { color: '#7C3AED', opacity: 0.8 }]}>
-                    The payout has been sent to PineLabs. It usually completes within a few minutes.
-                  </Text>
+                  <Text style={[styles.processingTitle, { color: '#7C3AED' }]}>{t('withdrawalDetailModal.awaitingPinelabsConfirmation')}</Text>
+                  <Text style={[styles.processingSub, { color: '#7C3AED', opacity: 0.8 }]}>{t('withdrawalDetailModal.thePayoutHasBeen')}</Text>
                 </View>
               </View>
             )}
@@ -455,7 +453,7 @@ export function WithdrawalDetailModal({
                       ) : (
                         <>
                           <Ionicons name="checkmark-circle" size={17} color="#fff" />
-                          <Text style={styles.actionBtnText}>Approve & Pay</Text>
+                          <Text style={styles.actionBtnText}>{t('withdrawalDetailModal.approvePay')}</Text>
                         </>
                       )}
                     </TouchableOpacity>
@@ -467,7 +465,7 @@ export function WithdrawalDetailModal({
                       activeOpacity={0.8}
                     >
                       <Ionicons name="close-circle" size={17} color="#fff" />
-                      <Text style={styles.actionBtnText}>Reject</Text>
+                      <Text style={styles.actionBtnText}>{t('admin.reject')}</Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -484,7 +482,7 @@ export function WithdrawalDetailModal({
                     ) : (
                       <>
                         <Ionicons name="refresh" size={17} color="#fff" />
-                        <Text style={styles.actionBtnText}>Retry Payment</Text>
+                        <Text style={styles.actionBtnText}>{t('withdrawalDetailModal.retryPayment')}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -502,7 +500,7 @@ export function WithdrawalDetailModal({
                     ) : (
                       <>
                         <Ionicons name="close-circle" size={17} color="#fff" />
-                        <Text style={styles.actionBtnText}>Mark Failed</Text>
+                        <Text style={styles.actionBtnText}>{t('withdrawalDetailModal.markFailed')}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -528,23 +526,19 @@ export function WithdrawalDetailModal({
                   ) : (
                     <Text style={[styles.auditToggleText, { color: c.primary }]}>
                       {auditCollapsed && auditEntries.length === 0
-                        ? 'Load Audit History'
+                        ? t('withdrawalDetailModal.loadAuditHistory')
                         : `${auditEntries.length} audit ${auditEntries.length === 1 ? 'entry' : 'entries'}`}
                     </Text>
                   )}
                   {!auditCollapsed && auditEntries.length > 0 && (
-                    <Text style={[styles.auditCountText, { color: c.textTertiary }]}>
-                      {auditEntries.length} total
-                    </Text>
+                    <Text style={[styles.auditCountText, { color: c.textTertiary }]}>{t('withdrawalDetailModal.total', { length: auditEntries.length })}</Text>
                   )}
                 </TouchableOpacity>
 
                 {!auditCollapsed && auditEntries.length === 0 && !auditLoading && (
                   <View style={styles.auditEmpty}>
                     <Ionicons name="git-branch-outline" size={28} color={c.textTertiary} style={{ opacity: 0.4 }} />
-                    <Text style={[styles.auditEmptyText, { color: c.textTertiary }]}>
-                      No audit history for this withdrawal
-                    </Text>
+                    <Text style={[styles.auditEmptyText, { color: c.textTertiary }]}>{t('withdrawalDetailModal.noAuditHistoryFor')}</Text>
                   </View>
                 )}
 
@@ -632,16 +626,16 @@ export function WithdrawalDetailModal({
       <ResultModal
         visible={errorModal.visible}
         variant="error"
-        title="Payment Failed"
+        title={t('withdrawalDetailModal.paymentFailed')}
         message={errorModal.message}
         onClose={() => setErrorModal((p) => ({ ...p, visible: false }))}
       />
 
       <TextInputModal
         visible={textInputModal !== null}
-        title="Reject Withdrawal"
+        title={t('withdrawalDetailModal.rejectWithdrawal')}
         message="Enter a reason for the user (optional):"
-        placeholder="Reason…"
+        placeholder={t('withdrawalDetailModal.reason')}
         confirmLabel="Reject"
         cancelLabel="Cancel"
         variant="danger"

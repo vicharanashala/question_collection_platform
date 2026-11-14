@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { AuthStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
 import { config } from '../../config';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'PrivacyPolicy'>;
@@ -70,6 +71,7 @@ const SECTIONS = [
 ];
 
 export function PrivacyPolicyScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [openId, setOpenId] = useState<string | null>('1');
@@ -79,9 +81,9 @@ export function PrivacyPolicyScreen({ navigation }: Props) {
       {/* Header */}
       <View style={[styles.topBar, { borderBottomColor: c.borderSubtle }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: c.primary }]}>← Back</Text>
+          <Text style={[styles.backText, { color: c.primary }]}>{t('← Back')}</Text>
         </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: c.text }]}>Privacy Policy</Text>
+        <Text style={[styles.topBarTitle, { color: c.text }]}>{t('profile.privacyPolicy')}</Text>
         <View style={styles.spacer} />
       </View>
 
@@ -91,18 +93,14 @@ export function PrivacyPolicyScreen({ navigation }: Props) {
           <View style={[styles.heroIcon, { backgroundColor: c.primary + '18' }]}>
             <Ionicons name="shield-checkmark" size={32} color={c.primary} />
           </View>
-          <Text style={[styles.heroTitle, { color: c.text }]}>Privacy Policy</Text>
-          <Text style={[styles.heroSub, { color: c.textSecondary }]}>
-            Last updated: June 2026 · {SECTIONS.length} sections
-          </Text>
+          <Text style={[styles.heroTitle, { color: c.text }]}>{t('profile.privacyPolicy')}</Text>
+          <Text style={[styles.heroSub, { color: c.textSecondary }]}>{t('privacyPolicyScreen.lastUpdatedJune2026', { length: SECTIONS.length })}</Text>
         </View>
 
         {/* Info banner */}
         <View style={[styles.banner, { backgroundColor: c.primary + '12' }]}>
           <Ionicons name="lock-closed-outline" size={16} color={c.primary} />
-          <Text style={[styles.bannerText, { color: c.primary }]}>
-            Your data is stored securely and never sold to third parties.
-          </Text>
+          <Text style={[styles.bannerText, { color: c.primary }]}>{t('privacyPolicyScreen.yourDataIsStored')}</Text>
         </View>
 
         {/* Sections */}

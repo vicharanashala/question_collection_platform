@@ -4,6 +4,7 @@ import { WarningModal } from './WarningModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tokens } from '../utils/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 
 interface Option {
   value: string;
@@ -43,6 +44,7 @@ export const Select = React.memo(function Select({
   multi = false,
   required = false,
 }: SelectProps) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [open, setOpen] = useState(false);
@@ -163,7 +165,7 @@ export const Select = React.memo(function Select({
                     styles.searchInput,
                     { color: c.text, backgroundColor: c.input },
                   ]}
-                  placeholder="Search…"
+                  placeholder={t('select.search')}
                   placeholderTextColor={c.textTertiary}
                   value={query}
                   onChangeText={setQuery}
@@ -175,9 +177,7 @@ export const Select = React.memo(function Select({
 
             {filtered.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={[styles.emptyText, { color: c.textSecondary }]}>
-                  No results found
-                </Text>
+                <Text style={[styles.emptyText, { color: c.textSecondary }]}>{t('select.noResultsFound')}</Text>
               </View>
             ) : (
               <FlatList
@@ -235,9 +235,7 @@ export const Select = React.memo(function Select({
                   style={[styles.doneBtn, { backgroundColor: c.primary }]}
                   onPress={closeModal}
                 >
-                  <Text style={[styles.doneBtnText, { color: c.primaryForeground }]}>
-                    Done
-                  </Text>
+                  <Text style={[styles.doneBtnText, { color: c.primaryForeground }]}>{t('common.done')}</Text>
                 </TouchableOpacity>
               </View>
             )}

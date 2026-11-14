@@ -92,7 +92,7 @@ export function AIValidationBanner({
             onPress={onDismiss}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.dismissBtn}
-            aria-label="Dismiss warning"
+            aria-label={t('aIValidationBanner.dismissWarning')}
           >
             <Ionicons name="close" size={14} color={textColor} />
           </TouchableOpacity>

@@ -192,7 +192,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
         {/* Fields */}
         {payoutMethod === 'upi' ? (
           <div className="space-y-1.5">
-            <Label htmlFor="pm-upi" className="sr-only">UPI ID</Label>
+            <Label htmlFor="pm-upi" className="sr-only">{t('wallet.withdrawal.upiId')}</Label>
             <Input
               id="pm-upi"
               value={upiId}
@@ -207,7 +207,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
         ) : (
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pm-acct" className="sr-only">Account number</Label>
+              <Label htmlFor="pm-acct" className="sr-only">{t('publicPaymentMethodsPage.accountNumber')}</Label>
               <Input
                 id="pm-acct"
                 value={accountNumber}
@@ -218,7 +218,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pm-acct2" className="sr-only">Confirm account number</Label>
+              <Label htmlFor="pm-acct2" className="sr-only">{t('paymentMethods.confirmAccountNumberPlaceholder')}</Label>
               <Input
                 id="pm-acct2"
                 value={confirmAccountNumber}
@@ -229,7 +229,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pm-ifsc" className="sr-only">IFSC code</Label>
+              <Label htmlFor="pm-ifsc" className="sr-only">{t('publicPaymentMethodsPage.ifscCode')}</Label>
               <Input
                 id="pm-ifsc"
                 value={ifsc}
@@ -241,7 +241,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pm-holder" className="sr-only">Account holder name</Label>
+              <Label htmlFor="pm-holder" className="sr-only">{t('publicPaymentMethodsPage.accountHolderName')}</Label>
               <Input
                 id="pm-holder"
                 value={accountHolderName}
@@ -251,7 +251,7 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pm-bank" className="sr-only">Bank name (optional)</Label>
+              <Label htmlFor="pm-bank" className="sr-only">{t('paymentMethods.bankNamePlaceholder')}</Label>
               <Input
                 id="pm-bank"
                 value={bankName}
@@ -326,7 +326,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
                 {detail.accountHolderName && ` · ${detail.accountHolderName}`}
               </p>
               {!isUpi && detail.ifsc && (
-                <p className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-text-tertiary">IFSC {detail.ifsc}</p>
+                <p className="mt-0.5 font-mono text-[9px] sm:text-[10px] text-text-tertiary">{t('publicPaymentMethodsPage.ifsc', { ifsc: detail.ifsc })}</p>
               )}
             </div>
             <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider', cfg.cls)}>
@@ -346,7 +346,7 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
                 onClick={() => onDelete(detail.id)}
                 disabled={true}
                 className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Remove"
+                aria-label={t('paymentMethods.remove')}
               >
                 <Trash2 className="h-3 w-3" />
                 {t('paymentMethods.remove')}
@@ -409,7 +409,7 @@ export function PublicPaymentMethodsPage() {
             type="button"
             onClick={() => navigate(-1)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
-            aria-label="Back"
+            aria-label={t('common.back')}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -422,7 +422,7 @@ export function PublicPaymentMethodsPage() {
           disabled={true}
         >
           {mode === 'add' ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {mode === 'add' ? t('common.close', 'Close') : t('paymentMethods.addButton')}
+          {mode === 'add' ? t('common.close') : t('paymentMethods.addButton')}
         </Button>
       </div>
 
@@ -430,9 +430,9 @@ export function PublicPaymentMethodsPage() {
       <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
         <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
         <div>
-          <h3 className="text-sm font-bold">{t('paymentMethods.disabledTitle', 'Payment Methods Disabled')}</h3>
+          <h3 className="text-sm font-bold">{t('paymentMethods.disabledTitle')}</h3>
           <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-            {t('paymentMethods.disabledDesc', 'Adding and modifying payment methods is currently disabled as we are preparing for the upcoming wallet feature. Please check back soon.')}
+            {t('paymentMethods.disabledDesc')}
           </p>
         </div>
       </div>

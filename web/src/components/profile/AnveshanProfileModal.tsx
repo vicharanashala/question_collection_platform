@@ -75,16 +75,16 @@ function buildDetails(user: AuthUser | null, t: TranslateFn): DetailItem[] {
     .join(", ");
   const items: (DetailItem | null)[] = [
     user.name
-      ? { key: "name", icon: UserIcon, label: t("anveshan.detailName", { defaultValue: "Name" }), value: user.name }
+      ? { key: "name", icon: UserIcon, label: t("anveshan.detailName"), value: user.name }
       : null,
     user.mobileNumber
-      ? { key: "mobile", icon: Phone, label: t("anveshan.detailMobile", { defaultValue: "Mobile" }), value: user.mobileNumber }
+      ? { key: "mobile", icon: Phone, label: t("anveshan.detailMobile"), value: user.mobileNumber }
       : null,
     user.category
-      ? { key: "category", icon: Tag, label: t("anveshan.detailCategory", { defaultValue: "Category" }), value: categoryLabel(t, user.category) }
+      ? { key: "category", icon: Tag, label: t("anveshan.detailCategory"), value: categoryLabel(t, user.category) }
       : null,
     location
-      ? { key: "location", icon: MapPin, label: t("anveshan.detailLocation", { defaultValue: "Location" }), value: location }
+      ? { key: "location", icon: MapPin, label: t("anveshan.detailLocation"), value: location }
       : null,
   ];
   return items.filter((item): item is DetailItem => item !== null);
@@ -93,8 +93,8 @@ function buildDetails(user: AuthUser | null, t: TranslateFn): DetailItem[] {
 // Returns the translated display title of a legal document.
 function legalTitle(tab: LegalTab, t: TranslateFn): string {
   return tab === "terms"
-    ? t("anveshan.terms", { defaultValue: "Terms of Service" })
-    : t("anveshan.privacy", { defaultValue: "Privacy Policy" });
+    ? t("anveshan.terms")
+    : t("anveshan.privacy");
 }
 
 // Small "Step X of 2" label with a two-segment progress indicator.
@@ -113,7 +113,7 @@ function StepIndicator({ current, t }: { current: 1 | 2; t: TranslateFn }) {
         ))}
       </div>
       <span className="text-xs font-medium text-muted-foreground">
-        {t("anveshan.stepOf", { current, total: 2, defaultValue: `Step ${current} of 2` })}
+        {t("anveshan.stepOf", { current, total: 2 })}
       </span>
     </div>
   );
@@ -188,12 +188,11 @@ function CandidateWelcomeNote({ t }: { t: TranslateFn }) {
         </div>
         <div className="min-w-0 space-y-1.5">
           <h3 id="anveshan-candidate-welcome" className="text-sm font-semibold text-foreground sm:text-base">
-            {t("anveshan.candidateGreeting", { defaultValue: "Dear Aspiring Candidate," })}
+            {t("anveshan.candidateGreeting")}
           </h3>
           <p className="text-sm leading-6 text-muted-foreground">
             {t("anveshan.candidateWelcome", {
               app: ANVESHAN_TAGLINE,
-              defaultValue: `We are delighted to welcome you to the ${ANVESHAN_TAGLINE} application by Annam.ai. Before you begin, please read the Terms of Service and Privacy Policy below.`,
             })}
           </p>
         </div>
@@ -306,22 +305,20 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                   <div className="space-y-2">
                     <DialogTitle className="text-2xl font-semibold leading-tight sm:text-3xl">
                       {name
-                        ? t("anveshan.welcomeTitleNamed", { name, defaultValue: `Welcome, ${name}` })
-                        : t("anveshan.welcomeTitle", { defaultValue: "Welcome" })}
+                        ? t("anveshan.welcomeTitleNamed", { name })
+                        : t("anveshan.welcomeTitle")}
                     </DialogTitle>
                     <DialogDescription className="text-sm leading-6 sm:text-base sm:leading-7">
-                      {t("anveshan.welcomeDescriptionShort", {
-                        defaultValue: "Your account is ready. We've brought over these details from your",
-                      })}{" "}
+                      {t("anveshan.welcomeDescriptionShort")}{" "}
                       <a
                         href={ANVESHAN_PLATFORM_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        {t("anveshan.profileLink", { defaultValue: "Anveshan profile" })}
+                        {t("anveshan.profileLink")}
                         <ExternalLink className="size-3" aria-hidden="true" />
-                        <span className="sr-only">{t("anveshan.opensNewTab", { defaultValue: "(opens in a new tab)" })}</span>
+                        <span className="sr-only">{t("anveshan.opensNewTab")}</span>
                       </a>
                       .
                     </DialogDescription>
@@ -351,13 +348,13 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                 )}
 
                 <p className="mt-3 text-xs text-muted-foreground">
-                  {t("anveshan.detailsHint", { defaultValue: "You can update these details later from your profile." })}
+                  {t("anveshan.detailsHint")}
                 </p>
               </div>
 
               <footer className="shrink-0 px-5 pb-5 pt-4 sm:flex sm:justify-end sm:px-10 sm:pb-8 sm:pt-6">
                 <Button size="lg" className="w-full sm:w-auto sm:min-w-40" onClick={() => setStep("legal")}>
-                  {t("anveshan.next", { defaultValue: "Next" })}
+                  {t("anveshan.next")}
                   <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                 </Button>
               </footer>
@@ -373,18 +370,16 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                     className="-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                   >
                     <ArrowLeft className="size-4" aria-hidden="true" />
-                    {t("anveshan.back", { defaultValue: "Back" })}
+                    {t("anveshan.back")}
                   </button>
                   <StepIndicator current={2} t={t} />
                 </div>
                 <DialogHeader className="mt-3 space-y-1 text-left sm:mt-4">
                   <DialogTitle className="text-lg font-semibold sm:text-2xl">
-                    {t("anveshan.legalTitle", { defaultValue: "Terms & Privacy" })}
+                    {t("anveshan.legalTitle")}
                   </DialogTitle>
                   <DialogDescription className="text-xs sm:text-sm">
-                    {t("anveshan.legalDescription", {
-                      defaultValue: "Read both documents to the end to accept them.",
-                    })}
+                    {t("anveshan.legalDescription")}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -404,7 +399,7 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                           <ShieldCheck className="size-4" aria-hidden="true" />
                         )}
                         {legalTitle(tab, t)}
-                        {hasRead(tab) && <span className="sr-only">{t("anveshan.read", { defaultValue: "(read)" })}</span>}
+                        {hasRead(tab) && <span className="sr-only">{t("anveshan.read")}</span>}
                       </TabsTrigger>
                     ))}
                   </TabsList>
@@ -436,17 +431,17 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                   activeTab === "terms" && !hasRead("privacy") ? (
                     <>
                       <p className="text-sm text-muted-foreground">
-                        {t("anveshan.termsDone", { defaultValue: "You've reached the end of the Terms of Service." })}
+                        {t("anveshan.termsDone")}
                       </p>
                       <Button variant="outline" onClick={() => setActiveTab("privacy")}>
-                        {t("anveshan.readPrivacyNext", { defaultValue: "Continue to Privacy Policy" })}
+                        {t("anveshan.readPrivacyNext")}
                         <ArrowRight className="ml-2 size-4" aria-hidden="true" />
                       </Button>
                     </>
                   ) : (
                     <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                       <CircleCheck className="size-4 text-primary" aria-hidden="true" />
-                      {t("anveshan.docDone", { defaultValue: "You've reached the end of this document." })}
+                      {t("anveshan.docDone")}
                     </p>
                   )
                 }
@@ -462,7 +457,7 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                         enabled={hasRead(tab)}
                         onToggle={() => toggleAccepted(tab)}
                         label={t(tab === "terms" ? "anveshan.acceptTerms" : "anveshan.acceptPrivacy", {
-                          defaultValue: `I agree to the ${legalTitle(tab, t)}`,
+                          title: legalTitle(tab, t),
                         })}
                       />
                     ))}
@@ -472,10 +467,10 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
                     {submitting ? (
                       <>
                         <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />
-                        {t("anveshan.saving", { defaultValue: "Saving..." })}
+                        {t("anveshan.saving")}
                       </>
                     ) : (
-                      t("anveshan.agreeContinue", { defaultValue: "Agree & Continue" })
+                      t("anveshan.agreeContinue")
                     )}
                   </Button>
                 </div>

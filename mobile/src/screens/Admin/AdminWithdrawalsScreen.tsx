@@ -15,6 +15,7 @@ import { WalletDetailModal } from '../../components/WalletDetailModal';
 import { ResultModal } from '../../components/ResultModal';
 import { WithdrawalDetailModal, WithdrawalDetailData } from '../../components/WithdrawalDetailModal';
 import { INDIAN_STATES } from '../../utils/constants';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    '#f59e0b',
@@ -117,6 +118,7 @@ function buildQueryParams(active: ActiveFilters, page: number): Record<string, s
 }
 
 export function AdminWithdrawalsScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation();
@@ -239,7 +241,7 @@ export function AdminWithdrawalsScreen() {
           await fetch(1, true, activeFilters);
         }
       } else {
-        showToast('Withdrawal rejected', 'success');
+        showToast(t('adminWithdrawalsScreen.withdrawalRejected'), 'success');
         setItems((prev) => prev.filter((w) => w.id !== id));
       }
     } catch (e) {
@@ -259,7 +261,7 @@ export function AdminWithdrawalsScreen() {
         // Refresh to get updated failure reason
         await fetch(1, true, activeFilters);
       } else {
-        showToast('Payment successful!', 'success');
+        showToast(t('adminWithdrawalsScreen.paymentSuccessful'), 'success');
         await fetch(1, true, activeFilters);
       }
     } catch (e) {
@@ -283,7 +285,7 @@ export function AdminWithdrawalsScreen() {
       } else {
         setProcessingId(id);
         await adminApi.markWithdrawalFailed(id, reason ? { reason } : undefined);
-        showToast('Marked as failed', 'success');
+        showToast(t('withdrawalDetailModal.markedAsFailed'), 'success');
         await fetch(1, true, activeFilters);
         setProcessingId(null);
       }
@@ -324,20 +326,14 @@ export function AdminWithdrawalsScreen() {
         </View>
 
         <View style={styles.amountRow}>
-          <Text style={[styles.amountLabel, { color: c.textSecondary }]}>Amount</Text>
-          <Text style={[styles.amountValue, { color: c.text }]}>
-            Rs.{Number(item.amount).toLocaleString('en-IN')}
-          </Text>
+          <Text style={[styles.amountLabel, { color: c.textSecondary }]}>{t('wallet.withdrawal.amount')}</Text>
+          <Text style={[styles.amountValue, { color: c.text }]}>{t('adminWithdrawalsScreen.rs', { value1: Number(item.amount).toLocaleString('en-IN') })}</Text>
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={[styles.date, { color: c.textTertiary }]}>
-            Requested {new Date(item.createdAt).toLocaleDateString('en-IN')}
-          </Text>
+          <Text style={[styles.date, { color: c.textTertiary }]}>{t('adminWithdrawalsScreen.requested', { value1: new Date(item.createdAt).toLocaleDateString('en-IN') })}</Text>
           {item.processedAt && (
-            <Text style={[styles.date, { color: c.textTertiary }]}>
-              Processed {new Date(item.processedAt).toLocaleDateString('en-IN')}
-            </Text>
+            <Text style={[styles.date, { color: c.textTertiary }]}>{t('adminWithdrawalsScreen.processed', { value1: new Date(item.processedAt).toLocaleDateString('en-IN') })}</Text>
           )}
         </View>
 
@@ -351,7 +347,7 @@ export function AdminWithdrawalsScreen() {
               {processingId === item.id ? (
                 <ActivityIndicator size="small" color="#22c55e" />
               ) : (
-                <Text style={styles.btnApprove}>Approve</Text>
+                <Text style={styles.btnApprove}>{t('admin.approve')}</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -359,7 +355,7 @@ export function AdminWithdrawalsScreen() {
               onPress={() => handleAction(item.id, 'reject')}
               disabled={processingId === item.id}
             >
-              <Text style={styles.btnReject}>Reject</Text>
+              <Text style={styles.btnReject}>{t('admin.reject')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -374,7 +370,7 @@ export function AdminWithdrawalsScreen() {
               {processingId === item.id ? (
                 <ActivityIndicator size="small" color={c.warning} />
               ) : (
-                <Text style={[styles.btnRetry, { color: c.warning }]}>Retry Payment</Text>
+                <Text style={[styles.btnRetry, { color: c.warning }]}>{t('withdrawalDetailModal.retryPayment')}</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -382,7 +378,7 @@ export function AdminWithdrawalsScreen() {
               onPress={() => handleMarkFailed(item.id)}
               disabled={processingId === item.id}
             >
-              <Text style={styles.btnReject}>Mark Failed</Text>
+              <Text style={styles.btnReject}>{t('withdrawalDetailModal.markFailed')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -397,7 +393,7 @@ export function AdminWithdrawalsScreen() {
               {processingId === item.id ? (
                 <ActivityIndicator size="small" color={c.error} />
               ) : (
-                <Text style={styles.btnReject}>Mark Failed</Text>
+                <Text style={styles.btnReject}>{t('withdrawalDetailModal.markFailed')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -406,29 +402,27 @@ export function AdminWithdrawalsScreen() {
         {item.status === 'processing' && (
           <View style={[styles.paymentInfoBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
             <Ionicons name="hourglass-outline" size={13} color={c.warning} />
-            <Text style={[styles.paymentInfoText, { color: c.warning }]}>Awaiting PineLabs confirmation</Text>
+            <Text style={[styles.paymentInfoText, { color: c.warning }]}>{t('withdrawalDetailModal.awaitingPinelabsConfirmation')}</Text>
           </View>
         )}
 
         {item.status === 'completed' && item.pinelabsTransactionId && (
           <View style={[styles.paymentInfoBox, { borderColor: c.success + '44', backgroundColor: c.success + '0a' }]}>
             <Ionicons name="checkmark-circle-outline" size={13} color={c.success} />
-            <Text style={[styles.paymentInfoText, { color: c.success }]}>
-              PineLabs Txn: {item.pinelabsTransactionId}
-            </Text>
+            <Text style={[styles.paymentInfoText, { color: c.success }]}>{t('adminWithdrawalsScreen.pinelabsTxn', { pinelabsTransactionId: item.pinelabsTransactionId })}</Text>
           </View>
         )}
 
         {item.rejectionReason && (
           <Text style={[styles.failureReason, { color: c.error }]}>
-            {item.status === 'rejected' ? 'Rejection: ' : item.status === 'failed' ? 'Failure: ' : ''}{item.rejectionReason}
+            {item.status === 'rejected' ? t('adminWithdrawalsScreen.rejection') : item.status === 'failed' ? 'Failure: ' : ''}{item.rejectionReason}
           </Text>
         )}
 
         {item.payoutDetails ? (
           <View style={[styles.payoutBox, { borderColor: c.border, backgroundColor: c.surfaceVariant }]}>
             <Text style={[styles.payoutBoxLabel, { color: c.textTertiary }]}>
-              {item.payoutMethod === 'upi' ? 'UPI ID' : 'Bank Account'}
+              {item.payoutMethod === 'upi' ? t('wallet.withdrawal.upiId') : t('wallet.bankTab')}
             </Text>
             <Text style={[styles.payoutBoxValue, { color: c.text }]}>
               {item.payoutMethod === 'upi'
@@ -445,7 +439,7 @@ export function AdminWithdrawalsScreen() {
             onPress={() => setWalletModal({ userId: item.user!.id, userName: item.user!.name ?? item.user!.mobileNumber ?? '' })}
           >
             <Ionicons name="wallet-outline" size={14} color={c.primary} />
-            <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
+            <Text style={[styles.walletBtnText, { color: c.primary }]}>{t('adminUsersScreen.viewWallet')}</Text>
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -473,8 +467,8 @@ export function AdminWithdrawalsScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Withdrawals</Text>
-        <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>{t('adminWithdrawalsScreen.withdrawals')}</Text>
+        <Text style={[styles.count, { color: c.textSecondary }]}>{t('adminProcessedQuestionsScreen.total', { total })}</Text>
         <TouchableOpacity
           style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
           onPress={() => setFilterVisible(true)}
@@ -500,10 +494,10 @@ export function AdminWithdrawalsScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyTitle, { color: c.text }]}>
-              {loading ? '' : 'No withdrawals match your filters'}
+              {loading ? '' : t('adminWithdrawalsScreen.noWithdrawalsMatchYour')}
             </Text>
             {!loading && (
-              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>Try adjusting the filter criteria</Text>
+              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>{t('adminUsersScreen.tryAdjustingTheFilter')}</Text>
             )}
           </View>
         }
@@ -516,7 +510,7 @@ export function AdminWithdrawalsScreen() {
         active={activeFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        title="Filter Withdrawals"
+        title={t('adminWithdrawalsScreen.filterWithdrawals')}
       />
 
       {walletModal && (
@@ -540,9 +534,9 @@ export function AdminWithdrawalsScreen() {
       {textInputModal && (
         <TextInputModal
           visible
-          title={textInputModal.action === 'reject' ? 'Reject Withdrawal' : 'Mark as Failed'}
+          title={textInputModal.action === 'reject' ? t('withdrawalDetailModal.rejectWithdrawal') : t('adminWithdrawalsScreen.markAsFailed')}
           message="Enter a reason (optional):"
-          placeholder="Reason…"
+          placeholder={t('withdrawalDetailModal.reason')}
           confirmLabel={textInputModal.action === 'reject' ? 'Reject' : 'Mark Failed'}
           cancelLabel="Cancel"
           variant={textInputModal.action === 'reject' ? 'danger' : 'default'}

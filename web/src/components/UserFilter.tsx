@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { NewBadge } from '@/components/ui/new-badge'
 import { markFeatureSeen } from '@/lib/newFeatures'
 import { MultiSearchableSelect } from '@/components/ui/multi-searchable-select'
+import { useTranslation } from 'react-i18next'
 
 interface UserFilterProps {
   /** Applied user ids. */
@@ -29,6 +30,7 @@ const labelOf = (user: UserFilterOption) => `${user.name} (${user.mobileNumber})
 
 // Super Admin multi-select of users with Apply and Reset controls. The list follows the header scopes.
 export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps) {
+  const { t } = useTranslation()
   const anveshanScope = useAnveshanScope()
   const testerScope = useTesterScope()
   // The header tester scope overrides the table's own tester filter on requests.
@@ -80,8 +82,8 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
         />
       </div>
       <div className="flex gap-2">
-        <Button size="sm" onClick={() => { markFeatureSeen('entityUserFilter'); onApply(draft) }} disabled={disabled}>Apply</Button>
-        <Button size="sm" variant="outline" onClick={reset} disabled={!draft.length && !value.length}>Reset</Button>
+        <Button size="sm" onClick={() => { markFeatureSeen('entityUserFilter'); onApply(draft) }} disabled={disabled}>{t('userFilter.apply')}</Button>
+        <Button size="sm" variant="outline" onClick={reset} disabled={!draft.length && !value.length}>{t('submissions.reset')}</Button>
       </div>
     </div>
   )

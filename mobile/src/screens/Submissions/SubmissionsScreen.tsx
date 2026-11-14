@@ -308,25 +308,25 @@ function QuestionViewModal({ question, onClose }: QuestionViewModalProps) {
 
             {/* Details list */}
             <View style={[styles.detailsCard, { backgroundColor: c.input, borderColor: c.borderSubtle }]}>
-              <DetailRow icon="leaf-outline" label="Crop" value={question.cropType} />
+              <DetailRow icon="leaf-outline" label={t('profile.crop')} value={question.cropType} />
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
               <DetailRow
                 icon="grid-outline"
-                label="Category"
+                label={t('profile.completion.fieldCategory')}
                 value={getDomainSummary(question.domains)}
               />
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
-              <DetailRow icon="calendar-outline" label="Season" value={SEASON_LABELS[question.season] ?? question.season} />
+              <DetailRow icon="calendar-outline" label={t('profile.season')} value={SEASON_LABELS[question.season] ?? question.season} />
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
-              <DetailRow icon="location-outline" label="Location" value={`${question.district}${question.state ? ', ' + question.state : ''}`} />
+              <DetailRow icon="location-outline" label={t('profile.location')} value={`${question.district}${question.state ? ', ' + question.state : ''}`} />
               {question.block && (
                 <>
                   <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
-                  <DetailRow icon="map-outline" label="Block" value={question.block} />
+                  <DetailRow icon="map-outline" label={t('block')} value={question.block} />
                 </>
               )}
               <View style={[styles.detailDivider, { backgroundColor: c.borderSubtle }]} />
-              <DetailRow icon="time-outline" label="Submitted" value={submittedDate} />
+              <DetailRow icon="time-outline" label={t('submissions.submitted')} value={submittedDate} />
             </View>
 
             {/* Image — shown when mediaType is 'image' */}
@@ -554,7 +554,7 @@ export function SubmissionsScreen() {
               <Text style={[styles.langPickerText, { color: c.primary }]}>
                 {currentLang
                   ? `${SUPPORTED_LANGUAGES.find((l) => l.code === currentLang)?.nativeName ?? ''}`
-                  : 'Translate'}
+                  : t('submissionsScreen.translate')}
               </Text>
             </>
           )}
@@ -575,7 +575,7 @@ export function SubmissionsScreen() {
               onPress={() => clearTranslation(q.id)}
             >
               <Ionicons name="eye-off-outline" size={12} color={c.textTertiary} />
-              <Text style={[styles.showOriginalText, { color: c.textTertiary }]}>Original</Text>
+              <Text style={[styles.showOriginalText, { color: c.textTertiary }]}>{t('translatableTextReadOnly.original')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -734,9 +734,9 @@ export function SubmissionsScreen() {
         >
           <View style={[langStyles.sheet, { backgroundColor: c.surface }]}>
             <View style={[langStyles.sheetHeader, { borderBottomColor: c.border }]}>
-              <Text style={[langStyles.sheetTitle, { color: c.text }]}>Translate to</Text>
+              <Text style={[langStyles.sheetTitle, { color: c.text }]}>{t('submissionsScreen.translateTo')}</Text>
               <TouchableOpacity onPress={() => setLangPickerVisible(false)}>
-                <Text style={[langStyles.closeBtn, { color: c.textSecondary }]}>Cancel</Text>
+                <Text style={[langStyles.closeBtn, { color: c.textSecondary }]}>{t('common.cancel')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView style={langStyles.scroll} showsVerticalScrollIndicator={false}>

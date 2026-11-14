@@ -3,6 +3,7 @@ import { Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { speechApi } from '../api/speech';
 import { LANGUAGES } from '../utils/constants';
 import { useLanguage } from '../hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 
 interface TrnscberProps {
   /** The source text to display — always rendered when language matches source */
@@ -31,6 +32,7 @@ export function Trnscber({
   style,
   showIndicator = false,
 }: TrnscberProps) {
+  const { t } = useTranslation();
   const { language: userLang } = useLanguage();
   const targetLang = language ?? userLang;
 
@@ -72,11 +74,11 @@ export function Trnscber({
       {loading && (
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="small" color="#888" />
-          <Text style={styles.loadingText}>Translating to {langLabel}…</Text>
+          <Text style={styles.loadingText}>{t('trnscber.translatingTo', { langLabel })}</Text>
         </View>
       )}
       {showIndicator && isTranslated && !loading && (
-        <Text style={styles.indicator}>Translated from English</Text>
+        <Text style={styles.indicator}>{t('trnscber.translatedFromEnglish')}</Text>
       )}
     </>
   );

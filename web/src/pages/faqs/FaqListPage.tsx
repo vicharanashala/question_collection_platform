@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Faq } from '@/types'
+import { useTranslation } from 'react-i18next'
 // ─── Category config ──────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -68,6 +69,7 @@ function FaqItem({ item }: { item: Faq }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function FaqListPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   // Opening the page counts as having seen the new feature.
@@ -118,10 +120,8 @@ export function FaqListPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">Help & FAQ</h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Find answers to common questions
-          </p>
+          <h2 className="text-lg sm:text-lg sm:text-xl font-bold text-foreground">{t('faq.title')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-0.5">{t('faq.subtitle')}</p>
         </div>
       </div>
 
@@ -132,14 +132,14 @@ export function FaqListPage() {
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search questions or answers"
-          aria-label="Search FAQs"
+          placeholder={t('faqListPage.searchQuestionsOrAnswers')}
+          aria-label={t('faqListPage.searchFaqs')}
           className="h-10 pl-9 pr-9 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
-            aria-label="Clear search"
+            aria-label={t('faq.clearSearch')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -180,9 +180,7 @@ export function FaqListPage() {
       ) : error ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              We could not load the FAQs
-            </p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">{t('faqListPage.weCouldNotLoad')}</p>
             <Button
               variant="outline"
               size="sm"
@@ -190,7 +188,7 @@ export function FaqListPage() {
               onClick={() => setReloadKey((k) => k + 1)}
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              Try again
+              {t('faq.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -199,10 +197,10 @@ export function FaqListPage() {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30 mb-3" />
             <p className="text-xs sm:text-xs sm:text-sm font-medium text-muted-foreground">
-              {hasFilters ? 'No FAQs match your search' : 'No FAQs available yet'}
+              {hasFilters ? t('faqListPage.noFaqsMatchYour') : t('faqListPage.noFaqsAvailableYet')}
             </p>
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
-              {hasFilters ? 'Try different words or another category' : 'Check back later for help content'}
+              {hasFilters ? t('faqListPage.tryDifferentWordsOr') : t('faq.emptySubtitle')}
             </p>
             {hasFilters && (
               <Button
@@ -210,9 +208,7 @@ export function FaqListPage() {
                 size="sm"
                 className="mt-3"
                 onClick={() => { setSearch(''); setActiveCat('all') }}
-              >
-                Clear filters
-              </Button>
+              >{t('wallet.clearFilters')}</Button>
             )}
           </CardContent>
         </Card>
@@ -221,7 +217,7 @@ export function FaqListPage() {
           {/* Results count */}
           <div className="flex items-center justify-between px-1">
             <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              {items.length} {items.length === 1 ? 'article' : 'articles'}
+              {items.length} {items.length === 1 ? t('faq.group.article_one') : t('faq.group.article_other')}
             </p>
           </div>
 

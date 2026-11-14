@@ -190,15 +190,13 @@ export function ProfileScreen() {
                     <Ionicons name="medal" size={20} color={tierColor} />
                   </View>
                   <View style={styles.tierMeta}>
-                    <Text style={[styles.tierLabel, { color: tierColor }]}>{label} Member</Text>
-                    <Text style={[styles.tierApproved, { color: c.textSecondary }]}>
-                      {totalApproved} approved questions
-                    </Text>
+                    <Text style={[styles.tierLabel, { color: tierColor }]}>{t('profileScreen.member', { label })}</Text>
+                    <Text style={[styles.tierApproved, { color: c.textSecondary }]}>{t('profileScreen.approvedQuestions', { totalApproved })}</Text>
                   </View>
                   {tier !== 'gold' && (
                     <View style={[styles.nextTierPill, { backgroundColor: tierColor + '15' }]}>
                       <Text style={[styles.nextTierText, { color: tierColor }]}>
-                        {next - totalApproved} to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                        {next - totalApproved} to {tier === 'bronze' ? t('home.silver') : t('home.gold')}
                       </Text>
                     </View>
                   )}
@@ -216,7 +214,7 @@ export function ProfileScreen() {
                       />
                     </View>
                     <Text style={[styles.tierProgressLabel, { color: c.textTertiary }]}>
-                      {next - totalApproved} more to {tier === 'bronze' ? 'Silver' : 'Gold'}
+                      {next - totalApproved} more to {tier === 'bronze' ? t('home.silver') : t('home.gold')}
                     </Text>
                   </View>
                 )}
@@ -312,7 +310,7 @@ export function ProfileScreen() {
                 <View style={[styles.accountRow, { borderBottomColor: c.borderSubtle }]}>
                   <View style={styles.accountRowLeft}>
                     <Ionicons name="at-outline" size={13} color={c.textTertiary} />
-                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>Username</Text>
+                    <Text style={[styles.accountLabel, { color: c.textTertiary }]}>{t('username')}</Text>
                   </View>
                   <Text style={[styles.accountValue, { color: c.text }]}>{user.username}</Text>
                 </View>

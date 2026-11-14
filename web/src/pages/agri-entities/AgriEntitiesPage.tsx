@@ -5,6 +5,7 @@ import { SubmissionTypeTabs } from '@/components/agri-entity/SubmissionTypeTabs'
 import { AgriEntitySubmissionsList } from '@/components/agri-entity/AgriEntitySubmissionsList'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import type { AgriEntityType } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 // Reads the active type from the URL, falling back to crop.
 function parseType(value: string | null): AgriEntityType {
@@ -13,6 +14,7 @@ function parseType(value: string | null): AgriEntityType {
 
 /** Staff view of every user's crop / weed / pest / disease submissions. */
 export function AgriEntitiesPage() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeType = parseType(searchParams.get('tab'))
   const typeLabel = AGRI_ENTITY_TYPES.find((type) => type.value === activeType)?.label ?? ''
@@ -40,10 +42,8 @@ export function AgriEntitiesPage() {
           <Sprout className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">Agri Entities</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Crop, weed, pest and disease records submitted by all users
-          </p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">{t('agriEntitiesPage.agriEntities')}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{t('agriEntitiesPage.cropWeedPestAnd')}</p>
         </div>
       </div>
 

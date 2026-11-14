@@ -221,9 +221,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
           {editWindowSec === 0 && (
             <View style={[styles.notEditableNotice, { backgroundColor: '#FFF3CD' }]}>
               <Ionicons name="information-circle" size={18} color="#B45309" />
-              <Text style={[styles.notEditableText, { color: '#B45309' }]}>
-                This question is not editable after submission
-              </Text>
+              <Text style={[styles.notEditableText, { color: '#B45309' }]}>{t('questionPreviewScreen.thisQuestionIsNot')}</Text>
             </View>
           )}
 
@@ -286,7 +284,7 @@ export function QuestionPreviewScreen({ route }: QuestionPreviewScreenProps) {
                   <Text style={{ color: theme.colors.error }}> *</Text>
                 }
               </Text>
-              <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>Select one or more</Text>
+              <Text style={[styles.domainSublabel, { color: theme.colors.textSecondary }]}>{t('questionPreviewScreen.selectOneOrMore')}</Text>
               <View style={styles.domainPills}>
                 {DOMAINS.map((d) => {
                   const selected = domains.includes(d);

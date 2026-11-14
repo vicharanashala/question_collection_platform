@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ANVESHAN_PLATFORM_URL } from "@/constants/public";
 import { cn } from "@/lib/utils";
 import { JOURNEY, JourneyStep, type PhaseStatus } from "@/components/AnveshanJourney";
+import { useTranslation } from 'react-i18next';
 
 interface AnveshanPhaseGateState {
   currentPhase: string;
@@ -46,6 +47,7 @@ function segmentClass(status: PhaseStatus): string {
 
 /** Shown to Anveshan candidates who signed in before reaching the phase that unlocks this app. */
 export function AnveshanPhaseGatePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, isAuthenticated } = useAuth();
@@ -91,24 +93,24 @@ export function AnveshanPhaseGatePage() {
     <div className="space-y-2">
       <Button className="w-full gap-2" onClick={checkAgain}>
         <RotateCw className="h-4 w-4" aria-hidden="true" />
-        Check again
+        {t('anveshanPhaseGate.checkAgain')}
       </Button>
       <Button variant="outline" className="w-full gap-2" asChild>
         <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
           Go to Anveshan
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          <span className="sr-only">(opens in a new tab)</span>
+          <span className="sr-only">{t('common.opensInNewTab')}</span>
         </a>
       </Button>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-1">
         <Button variant="link" size="sm" className="gap-1.5 text-muted-foreground" onClick={backToLogin}>
           <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
-          Back to login
+          {t('anveshanPhaseGate.backToLogin')}
         </Button>
         {SUPPORT_EMAIL && (
           <Button variant="link" size="sm" className="gap-1.5 text-muted-foreground" onClick={contactSupport}>
             <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-            Contact support
+            {t('anveshanPhaseGate.contactSupport')}
           </Button>
         )}
       </div>
@@ -125,15 +127,13 @@ export function AnveshanPhaseGatePage() {
       >
         <div className="mb-5 flex items-center justify-center gap-2">
           <BrandLogo className="h-8 w-8" />
-          <span className="text-sm font-bold text-foreground">AnnaDatha × Anveshan</span>
+          <span className="text-sm font-bold text-foreground">{t('anveshanCompletionScreen.annadathaAnveshan')}</span>
         </div>
 
         <Card className="overflow-hidden rounded-2xl p-0 shadow-lg lg:grid lg:grid-cols-[0.9fr_1.1fr]">
           {/* Progress summary; actions sit here on desktop */}
           <div className="flex flex-col px-6 pb-6 pt-8 lg:border-r lg:border-border-subtle">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary dark:text-emerald-400">
-              Towards Verified Agriculture Expert
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary dark:text-emerald-400">{t('anveshanPhaseGate.towardsVerifiedAgricultureExpert')}</p>
 
             {currentLabel && (
               <>
@@ -141,12 +141,12 @@ export function AnveshanPhaseGatePage() {
                   <span className="text-6xl font-extrabold leading-none text-primary dark:text-emerald-400">
                     {progressPercent}%
                   </span>
-                  <span className="pb-1 text-sm text-muted-foreground">journey complete</span>
+                  <span className="pb-1 text-sm text-muted-foreground">{t('anveshanPhaseGate.journeyComplete')}</span>
                 </div>
                 <div
                   className="mt-5 flex gap-1.5"
                   role="progressbar"
-                  aria-label="Journey progress"
+                  aria-label={t('anveshanPhaseGate.journeyProgress')}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={progressPercent}
@@ -165,7 +165,7 @@ export function AnveshanPhaseGatePage() {
               </>
             )}
 
-            <h1 className="mt-6 text-xl font-bold text-foreground">You're almost there</h1>
+            <h1 className="mt-6 text-xl font-bold text-foreground">{t('anveshanPhaseGate.youReAlmostThere')}</h1>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               AnnaDatha unlocks at <strong className="text-foreground">{requiredLabel}</strong>.{" "}
               {moduleIncomplete ? (
@@ -185,7 +185,7 @@ export function AnveshanPhaseGatePage() {
           </div>
 
           {/* Journey list */}
-          <section aria-label="Your Anveshan journey" className="px-5 pb-6 sm:px-6 lg:bg-surface-variant/20 lg:py-8">
+          <section aria-label={t('anveshanComplete.journeyHeading')} className="px-5 pb-6 sm:px-6 lg:bg-surface-variant/20 lg:py-8">
             <ol className="space-y-2">
               {JOURNEY.map((phase, i) => (
                 <JourneyStep key={phase.id} phase={phase} status={statuses[i]} badgeLabel={badgeFor(i)} />

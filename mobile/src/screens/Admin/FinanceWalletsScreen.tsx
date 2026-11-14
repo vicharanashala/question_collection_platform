@@ -93,7 +93,7 @@ export function FinanceWalletsScreen() {
       key: 'search',
       label: t('admin.search'),
       type: 'text',
-      placeholder: t('question.searchPlaceholder', 'Search name, mobile, district…'),
+      placeholder: t('question.searchPlaceholder'),
     },
     {
       key: 'state',
@@ -226,26 +226,22 @@ export function FinanceWalletsScreen() {
             <Text style={[styles.balanceValue, { color: c.primary }]}>
               {formatINR(item.balance)}
             </Text>
-            <Text style={[styles.balanceLabel, { color: c.mutedForeground }]}>Balance</Text>
+            <Text style={[styles.balanceLabel, { color: c.mutedForeground }]}>{t('admin.balance')}</Text>
           </View>
         </View>
 
         <View style={[styles.cardFooter, { borderTopColor: c.border }]}>
           <View style={styles.footerStat}>
             <Ionicons name="gift-outline" size={11} color={c.mutedForeground} />
-            <Text style={[styles.footerText, { color: c.mutedForeground }]}>
-              Earned: {formatINR(item.totalEarned)}
-            </Text>
+            <Text style={[styles.footerText, { color: c.mutedForeground }]}>{t('financeWalletsScreen.earned', { value1: formatINR(item.totalEarned) })}</Text>
           </View>
           <View style={styles.footerStat}>
             <Ionicons name="send-outline" size={11} color={c.mutedForeground} />
-            <Text style={[styles.footerText, { color: c.mutedForeground }]}>
-              Withdrawn: {formatINR(item.totalWithdrawn)}
-            </Text>
+            <Text style={[styles.footerText, { color: c.mutedForeground }]}>{t('financeWalletsScreen.withdrawn', { value1: formatINR(item.totalWithdrawn) })}</Text>
           </View>
           <View style={styles.footerStat}>
             <Ionicons name="wallet-outline" size={11} color={c.primary} />
-            <Text style={[styles.footerText, { color: c.primary }]}>View</Text>
+            <Text style={[styles.footerText, { color: c.primary }]}>{t('admin.view')}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -258,7 +254,7 @@ export function FinanceWalletsScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: c.background }]} edges={['top']}>
       {/* ── Header ── */}
       <View style={[styles.headerBar, { borderBottomColor: c.border }]}>
-        <Text style={[styles.screenTitle, { color: c.text }]}>Wallets</Text>
+        <Text style={[styles.screenTitle, { color: c.text }]}>{t('admin.wallets')}</Text>
         <TouchableOpacity
           style={styles.filterBtn}
           onPress={() => setFilterVisible(true)}
@@ -311,7 +307,7 @@ export function FinanceWalletsScreen() {
             <View style={styles.emptyWrap}>
               <Ionicons name="wallet-outline" size={40} color={c.mutedForeground} />
               <Text style={[styles.emptyText, { color: c.mutedForeground }]}>
-                {loading ? '' : 'No wallets match your filters'}
+                {loading ? '' : t('admin.noWallets')}
               </Text>
             </View>
           }

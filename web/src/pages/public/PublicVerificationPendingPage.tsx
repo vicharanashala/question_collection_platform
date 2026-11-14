@@ -99,7 +99,7 @@ export function PublicVerificationPendingPage() {
           {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
           {checking
             ? t('verificationPending.checkingStatus')
-            : t('verificationPending.checkStatus', 'Check verification status')}
+            : t('verificationPending.checkStatus')}
         </Button>
 
         <Button

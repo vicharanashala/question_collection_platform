@@ -46,7 +46,7 @@ export function LanguageSwitcher({ open, onClose }: LanguageSwitcherProps) {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[80vh] max-w-sm overflow-hidden p-0">
         <DialogHeader className="border-b border-border-subtle px-4 py-3">
-          <DialogTitle>{t('auth.selectLanguage', 'Select Language')}</DialogTitle>
+          <DialogTitle>{t('auth.selectLanguage')}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[65vh] overflow-y-auto py-1">
           {SUPPORTED_LANGUAGES.map((lang) => {

@@ -1,4 +1,5 @@
 import { Treemap, Tooltip, ResponsiveContainer } from 'recharts'
+import { useTranslation } from 'react-i18next'
 
 interface TreemapDataPoint {
   name: string
@@ -110,11 +111,10 @@ export function TreemapChartComponent({
   data,
   height = 220,
 }: TreemapChartComponentProps) {
+  const { t } = useTranslation()
   if (!data.length) {
     return (
-      <div className="flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary" style={{ height }}>
-        No district data available
-      </div>
+      <div className="flex items-center justify-center text-xs sm:text-xs sm:text-sm text-text-tertiary" style={{ height }}>{t('treemapChartComponent.noDistrictDataAvailable')}</div>
     )
   }
 
