@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { tokens } from '../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -135,6 +136,7 @@ export function AdminFilterModal({
   onReset,
   title = 'Advance Filters',
 }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const [draft, setDraft] = useState<ActiveFilters>({});
@@ -270,18 +272,14 @@ export function AdminFilterModal({
                   disabled={appliedCount === 0}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.footerBtnText, { color: appliedCount > 0 ? c.text : c.textTertiary }]}>
-                    Reset
-                  </Text>
+                  <Text style={[styles.footerBtnText, { color: appliedCount > 0 ? c.text : c.textTertiary }]}>{t('submissions.reset')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.footerBtn, styles.footerBtnPrimary, { backgroundColor: c.primary }]}
                   onPress={handleApply}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.footerBtnText, { color: '#fff', fontWeight: '700' }]}>
-                    Apply Filters
-                  </Text>
+                  <Text style={[styles.footerBtnText, { color: '#fff', fontWeight: '700' }]}>{t('submissions.applyFilters')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

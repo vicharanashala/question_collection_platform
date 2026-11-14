@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import { tokens } from '../utils/theme';
 import { AccountLockedInfo } from '../api/client';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   visible: boolean;
@@ -40,6 +41,7 @@ function formatDate(iso: string | null) {
 }
 
 export function SuspendBanModal({ visible, action, currentStatus, onClose, onConfirm }: Props) {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
 
@@ -57,11 +59,11 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
 
   async function handleConfirm() {
     if (!reason.trim()) {
-      setError('Please provide a reason for the record');
+      setError(t('suspendBanModal.pleaseProvideReasonFor'));
       return;
     }
     if (!isBan && !selectedDays && !customUntil) {
-      setError('Please select a suspension duration');
+      setError(t('suspendBanModal.pleaseSelectSuspensionDuration'));
       return;
     }
 
@@ -79,7 +81,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
       setCustomUntil('');
       setError('');
     } catch {
-      setError('Action failed. Please try again.');
+      setError(t('suspendBanModal.actionFailedPleaseTry'));
     } finally {
       setLoading(false);
     }
@@ -113,18 +115,14 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
                   color={currentAccent}
                 />
                 <Text style={[styles.currentStatusLabel, { color: currentAccent }]}>
-                  Currently {currentIsBan ? 'banned' : 'suspended'}
+                  Currently {currentIsBan ? t('suspendBanModal.banned') : t('suspendBanModal.suspended')}
                 </Text>
               </View>
               {currentStatus?.reason && (
-                <Text style={[styles.currentStatusReason, { color: c.text }]}>
-                  Reason: {currentStatus.reason}
-                </Text>
+                <Text style={[styles.currentStatusReason, { color: c.text }]}>{t('suspendBanModal.reason', { reason: currentStatus.reason })}</Text>
               )}
               {(currentStatus?.suspendedAt ?? currentStatus?.bannedAt) && (
-                <Text style={[styles.currentStatusDate, { color: c.textSecondary }]}>
-                  Since: {formatDate(currentStatus?.suspendedAt ?? currentStatus?.bannedAt)}
-                </Text>
+                <Text style={[styles.currentStatusDate, { color: c.textSecondary }]}>{t('suspendBanModal.since', { value1: formatDate(currentStatus?.suspendedAt ?? currentStatus?.bannedAt) })}</Text>
               )}
             </View>
           )}
@@ -140,12 +138,12 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
             </View>
             <View style={styles.headerText}>
               <Text style={[styles.title, { color: c.text }]}>
-                {isBan ? 'Ban User' : 'Suspend User'}
+                {isBan ? t('suspendBanModal.banUser') : t('suspendBanModal.suspendUser')}
               </Text>
               <Text style={[styles.subtitle, { color: c.textSecondary }]}>
                 {isBan
-                  ? 'Permanently block the user from logging in.'
-                  : 'Temporarily block the user until the set end date.'}
+                  ? t('suspendBanModal.permanentlyBlockTheUser')
+                  : t('suspendBanModal.temporarilyBlockTheUser')}
               </Text>
             </View>
           </View>
@@ -191,7 +189,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
                     borderColor: c.borderSubtle,
                   },
                 ]}
-                placeholder="Or enter custom end date (YYYY-MM-DD)"
+                placeholder={t('suspendBanModal.orEnterCustomEnd')}
                 placeholderTextColor={c.textTertiary}
                 value={customUntil}
                 onChangeText={(t) => {
@@ -201,9 +199,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
                 editable={!loading}
               />
               {selectedDays && (
-                <Text style={[styles.durationHint, { color: c.textSecondary }]}>
-                  Suspension ends: {formatDate(addDays(selectedDays))}
-                </Text>
+                <Text style={[styles.durationHint, { color: c.textSecondary }]}>{t('suspendBanModal.suspensionEnds', { value1: formatDate(addDays(selectedDays)) })}</Text>
               )}
             </View>
           )}
@@ -222,7 +218,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
                   borderColor: error ? c.error : c.borderSubtle,
                 },
               ]}
-              placeholder="e.g. Repeated spam, fraudulent activity…"
+              placeholder={t('suspendBanModal.repeatedSpamFraudulentActivity')}
               placeholderTextColor={c.textTertiary}
               value={reason}
               onChangeText={(t) => { setReason(t); setError(''); }}
@@ -241,7 +237,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
               onPress={handleClose}
               disabled={loading}
             >
-              <Text style={[styles.btnCancelText, { color: c.text }]}>Cancel</Text>
+              <Text style={[styles.btnCancelText, { color: c.text }]}>{t('common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -256,7 +252,7 @@ export function SuspendBanModal({ visible, action, currentStatus, onClose, onCon
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.btnConfirmText}>
-                  {isBan ? 'Confirm Ban' : 'Confirm Suspension'}
+                  {isBan ? t('suspendBanModal.confirmBan') : t('suspendBanModal.confirmSuspension')}
                 </Text>
               )}
             </TouchableOpacity>

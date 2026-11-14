@@ -266,7 +266,7 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
       formatTimestamp(takenAt),
       location.fix
         ? formatCoordinates(location.fix)
-        : t('agriEntity.camera.stampNoLocation', 'Location not available'),
+        : t('agriEntity.camera.stampNoLocation'),
     ], logoRef.current)
     canvas.toBlob(
       (blob) => {
@@ -291,18 +291,18 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
   }
 
   const messages: Record<CameraError, string> = {
-    denied: t('agriEntity.camera.denied', 'Camera access was blocked. Allow camera permission for this site in your browser settings, or add a photo from your files instead.'),
-    notFound: t('agriEntity.camera.notFound', 'No camera was found on this device. You can add a photo from your files instead.'),
-    inUse: t('agriEntity.camera.inUse', 'The camera is being used by another app. Close it and try again.'),
-    insecure: t('agriEntity.camera.insecure', 'The camera needs a secure (HTTPS) connection.'),
-    unsupported: t('agriEntity.camera.unsupported', 'This browser does not support camera capture. You can add a photo from your files instead.'),
-    unknown: t('agriEntity.camera.unknown', 'The camera could not be started. Please try again or add a photo from your files.'),
+    denied: t('agriEntity.camera.denied'),
+    notFound: t('agriEntity.camera.notFound'),
+    inUse: t('agriEntity.camera.inUse'),
+    insecure: t('agriEntity.camera.insecure'),
+    unsupported: t('agriEntity.camera.unsupported'),
+    unknown: t('agriEntity.camera.unknown'),
   }
 
   const locationNotice: Record<'off' | 'denied' | 'unavailable', string> = {
-    off: t('agriEntity.camera.locationOff', 'Location is off'),
-    denied: t('agriEntity.camera.locationDenied', 'Location blocked in browser settings'),
-    unavailable: t('agriEntity.camera.locationUnavailable', 'Location unavailable'),
+    off: t('agriEntity.camera.locationOff'),
+    denied: t('agriEntity.camera.locationDenied'),
+    unavailable: t('agriEntity.camera.locationUnavailable'),
   }
 
   return (
@@ -320,12 +320,12 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <DialogTitle className="text-base font-semibold text-white">
-            {captured ? t('agriEntity.camera.review', 'Review photo') : t('agriEntity.takePhoto', 'Take photo')}
+            {captured ? t('agriEntity.camera.review') : t('agriEntity.takePhoto')}
           </DialogTitle>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            aria-label={t('common.close', 'Close')}
+            aria-label={t('common.close')}
             className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -349,13 +349,13 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
             />
 
             {captured && (
-              <img src={captured.url} alt={t('agriEntity.camera.capturedAlt', 'Captured photo')} className="absolute inset-0 h-full w-full object-contain" />
+              <img src={captured.url} alt={t('agriEntity.camera.capturedAlt')} className="absolute inset-0 h-full w-full object-contain" />
             )}
 
             {status === 'starting' && (
               <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/80">
                 <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
-                <span className="text-sm">{t('agriEntity.camera.starting', 'Starting camera…')}</span>
+                <span className="text-sm">{t('agriEntity.camera.starting')}</span>
               </div>
             )}
 
@@ -384,7 +384,7 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
                     ) : location.status === 'locating' ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-white/80" aria-hidden="true" />
-                        <span className="text-white/80">{t('agriEntity.camera.locating', 'Getting location…')}</span>
+                        <span className="text-white/80">{t('agriEntity.camera.locating')}</span>
                       </>
                     ) : (
                       <>
@@ -398,8 +398,8 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
                           className="ml-1 shrink-0 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold text-neutral-900 transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                         >
                           {location.status === 'off'
-                            ? t('agriEntity.camera.enableLocation', 'Enable')
-                            : t('agriEntity.camera.tryAgain', 'Retry')}
+                            ? t('agriEntity.camera.enableLocation')
+                            : t('agriEntity.camera.tryAgain')}
                         </button>
                       </>
                     )}
@@ -430,11 +430,11 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
                 className="h-12 flex-1 gap-2 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
-                {t('agriEntity.camera.retake', 'Retake')}
+                {t('agriEntity.camera.retake')}
               </Button>
               <Button type="button" onClick={confirmPhoto} className="h-12 flex-1 gap-2">
                 <Check className="h-4 w-4" aria-hidden="true" />
-                {t('agriEntity.camera.usePhoto', 'Use photo')}
+                {t('agriEntity.camera.usePhoto')}
               </Button>
             </div>
           ) : (
@@ -444,7 +444,7 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
                   <button
                     type="button"
                     onClick={() => setFacing((f) => (f === 'environment' ? 'user' : 'environment'))}
-                    aria-label={t('agriEntity.camera.switch', 'Switch camera')}
+                    aria-label={t('agriEntity.camera.switch')}
                     className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     <SwitchCamera className="h-5 w-5" aria-hidden="true" />
@@ -455,7 +455,7 @@ export function CameraCaptureModal({ open, onOpenChange, onCapture }: CameraCapt
                 type="button"
                 onClick={capture}
                 disabled={status !== 'live'}
-                aria-label={t('agriEntity.camera.capture', 'Capture')}
+                aria-label={t('agriEntity.camera.capture')}
                 className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-4 border-white transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 disabled:opacity-40"
               >
                 <Camera className="h-7 w-7 text-white" aria-hidden="true" />

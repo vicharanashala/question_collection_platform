@@ -128,7 +128,7 @@ export function QuestionDetailModal({
         <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
           <AlertCircle className="h-8 w-8 text-rose-500" />
           <p className="mt-3 text-xs sm:text-sm font-semibold text-foreground">
-            {t('notifications.notFound')}
+            {t('question.notFound')}
           </p>
           {questionId && (
             <button
@@ -178,9 +178,7 @@ export function QuestionDetailModal({
           {body}
         </div>
 
-        <p className="border-t border-border-subtle px-4 py-3 text-center text-[11px] sm:text-xs text-text-tertiary sm:px-5">
-          AnnaDatha &mdash; To Strengthen Indian Farmers
-        </p>
+        <p className="border-t border-border-subtle px-4 py-3 text-center text-[11px] sm:text-xs text-text-tertiary sm:px-5">{t('questionDetailModal.annadathaToStrengthenIndian')}</p>
       </DialogContent>
     </Dialog>
   )
@@ -260,7 +258,7 @@ function QuestionBody({ question, hideStatus }: { question: Question; hideStatus
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
                     <img
                       src={url}
-                      alt={`upload-${i}`}
+                      alt={t('questionDetailModal.upload', { i })}
                       className="h-24 w-full rounded-md border border-border-subtle object-cover transition-opacity hover:opacity-80"
                     />
                   </a>

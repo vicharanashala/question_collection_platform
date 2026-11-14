@@ -22,6 +22,7 @@ import type { Withdrawal } from '@/types'
 import { ExportMenu } from '@/components/ExportMenu'
 import { TesterTag } from '@/components/TesterTag'
 import { exportDate, type ExportColumn } from '@/lib/exportData'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_COLORS: Record<string, string> = {
   pending:    'bg-warning text-white',
@@ -99,6 +100,7 @@ const WITHDRAWAL_EXPORT_COLUMNS: ExportColumn<Withdrawal>[] = [
 ]
 
 export function WithdrawalsPage() {
+  const { t } = useTranslation()
   const { user: currentUser } = useAuth()
   const navigate = useNavigate()
   const isSuperAdmin = currentUser?.role === 'super_admin'
@@ -282,7 +284,7 @@ export function WithdrawalsPage() {
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-foreground flex items-center gap-2">
             <CreditCard className="h-6 w-6" />
-            Withdrawals
+            {t('nav.withdrawals')}
           </h2>
           <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
             {total.toLocaleString('en-IN')} withdrawal{total !== 1 ? 's' : ''} total
@@ -298,7 +300,7 @@ export function WithdrawalsPage() {
           />
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </Button>
           <Button variant="outline" size="sm" onClick={openFilters}>
             <Filter className="h-4 w-4 mr-1.5" />
@@ -334,9 +336,7 @@ export function WithdrawalsPage() {
               </button>
             </Badge>
           ))}
-          <Button variant="ghost" size="sm" className="text-[11px] sm:text-[11px] sm:text-xs h-6" onClick={resetFilters}>
-            Clear all
-          </Button>
+          <Button variant="ghost" size="sm" className="text-[11px] sm:text-[11px] sm:text-xs h-6" onClick={resetFilters}>{t('dataTable.clearAll')}</Button>
         </div>
       )}
 
@@ -346,14 +346,14 @@ export function WithdrawalsPage() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">User</th>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Method</th>
-                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Amount</th>
-                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Status</th>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Requested</th>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Processed</th>
-                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Wallet</th>}
-                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">Details</th>}
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('roles.user')}</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('wallet.withdrawal.method')}</th>
+                <th className="text-right px-4 py-3 font-semibold text-muted-foreground">{t('wallet.withdrawal.amount')}</th>
+                <th className="text-center px-4 py-3 font-semibold text-muted-foreground">{t('submissions.status')}</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('withdrawalsPage.requested')}</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">{t('withdrawalsPage.processed')}</th>
+                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">{t('nav.wallet')}</th>}
+                {(isSuperAdmin) && <th className="text-center px-4 py-3 font-semibold text-muted-foreground">{t('stepDetails')}</th>}
               </tr>
             </thead>
             <tbody>
@@ -367,9 +367,7 @@ export function WithdrawalsPage() {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={isSuperAdmin ? 8 : 7} className="text-center py-12 text-muted-foreground">
-                    No withdrawals match your filters
-                  </td>
+                  <td colSpan={isSuperAdmin ? 8 : 7} className="text-center py-12 text-muted-foreground">{t('withdrawalsPage.noWithdrawalsMatchYour')}</td>
                 </tr>
               ) : (
                 items.map((w) => (
@@ -417,7 +415,7 @@ export function WithdrawalsPage() {
                           }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          View
+                          {t('admin.view')}
                         </Button>
                       </td>
                     )}
@@ -434,7 +432,7 @@ export function WithdrawalsPage() {
                           disabled={processingId === w.id}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Details
+                          {t('stepDetails')}
                         </Button>
                       </td>
                     )}
@@ -448,9 +446,7 @@ export function WithdrawalsPage() {
         {/* Pagination */}
         {total > limit && (
           <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/30">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-              Showing {items.length} of {total.toLocaleString('en-IN')} results
-            </p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('withdrawalsPage.showingOfResults', { length: items.length, value3: total.toLocaleString('en-IN') })}</p>
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -460,7 +456,7 @@ export function WithdrawalsPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-xs sm:text-xs sm:text-sm px-2">Page {page} of {totalPages}</span>
+              <span className="text-xs sm:text-xs sm:text-sm px-2">{t('usersPage.pageOf', { page, totalPages })}</span>
               <Button
                 variant="outline"
                 size="sm"
@@ -478,20 +474,20 @@ export function WithdrawalsPage() {
       <Dialog open={filterOpen} onOpenChange={(o) => !o && setFilterOpen(false)}>
         <DialogContent className="gap-5 p-6">
           <DialogHeader>
-            <DialogTitle>Filter Withdrawals</DialogTitle>
+            <DialogTitle>{t('withdrawalsPage.filterWithdrawals')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Search</Label>
+              <Label>{t('common.search')}</Label>
               <Input
-                placeholder="Name or mobile number…"
+                placeholder={t('withdrawalsPage.nameOrMobileNumber')}
                 value={draftFilters.search}
                 onChange={(e) => setDraftFilters((f) => ({ ...f, search: e.target.value }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Status</Label>
+                <Label>{t('submissions.status')}</Label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.status}
@@ -503,13 +499,13 @@ export function WithdrawalsPage() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>State</Label>
+                <Label>{t('admin.state')}</Label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.state}
                   onChange={(e) => setDraftFilters((f) => ({ ...f, state: e.target.value }))}
                 >
-                  <option value="">All States</option>
+                  <option value="">{t('admin.allStates')}</option>
                   {states.map((s) => (
                     <option key={s.code} value={s.name}>{s.name}</option>
                   ))}
@@ -518,19 +514,19 @@ export function WithdrawalsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Accounts</Label>
+                <Label>{t('withdrawalsPage.accounts')}</Label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.tester}
                   onChange={(e) => setDraftFilters((f) => ({ ...f, tester: e.target.value }))}
                 >
-                  <option value="">All accounts</option>
-                  <option value="only">Testers only</option>
-                  <option value="exclude">Exclude testers</option>
+                  <option value="">{t('withdrawalsPage.allAccounts')}</option>
+                  <option value="only">{t('withdrawalsPage.testersOnly')}</option>
+                  <option value="exclude">{t('withdrawalsPage.excludeTesters')}</option>
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>Sort By</Label>
+                <Label>{t('common.sortBy')}</Label>
                 <select
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm"
                   value={draftFilters.sortBy}
@@ -544,7 +540,7 @@ export function WithdrawalsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>From Date</Label>
+                <Label>{t('withdrawalsPage.fromDate')}</Label>
                 <Input
                   type="date"
                   value={draftFilters.fromDate}
@@ -552,7 +548,7 @@ export function WithdrawalsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>To Date</Label>
+                <Label>{t('withdrawalsPage.toDate')}</Label>
                 <Input
                   type="date"
                   value={draftFilters.toDate}
@@ -562,9 +558,9 @@ export function WithdrawalsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFilterOpen(false)}>Cancel</Button>
-            <Button variant="secondary" onClick={resetFilters}>Reset</Button>
-            <Button onClick={applyFilters}>Apply Filters</Button>
+            <Button variant="outline" onClick={() => setFilterOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="secondary" onClick={resetFilters}>{t('submissions.reset')}</Button>
+            <Button onClick={applyFilters}>{t('submissions.applyFilters')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -138,7 +138,7 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="rounded-md border border-border-subtle bg-muted/30 p-3 text-center">
-            <p className="text-[11px] sm:text-[11px] sm:text-xs uppercase tracking-wider text-text-tertiary">Amount</p>
+            <p className="text-[11px] sm:text-[11px] sm:text-xs uppercase tracking-wider text-text-tertiary">{t('wallet.withdrawal.amount')}</p>
             <p className={cn('mt-1 text-xl sm:text-2xl font-extrabold tabular-nums', TX_TYPE_COLORS[tx.type] ?? 'text-foreground')}>
               {tx.type === 'credit' ? '+' : '−'}₹{formatINRFull(Number(tx.amount))}
             </p>
@@ -150,13 +150,13 @@ function TxDetailDialog({ tx, open, onClose }: TxDetailProps) {
           </div>
           <Row label={t('wallet.txType')} value={<span className="capitalize">{tx.type === 'credit' ? t('wallet.credit') : t('wallet.debit')}</span>} />
           <Row label={t('wallet.txSource')} value={txSourceLabel(t, tx.source)} />
-          <Row label="Status" value={
+          <Row label={t('submissions.status')} value={
             <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', TX_STATUS_COLORS[tx.status] ?? 'bg-muted text-muted-foreground')}>
               {tx.status}
             </span>
           } />
           {tx.description && <Row label={t('wallet.txDescription')} value={tx.description} />}
-          {tx.referenceId && <Row label="Reference" value={<span className="font-mono text-[11px] sm:text-[11px] sm:text-xs">{tx.referenceId}</span>} />}
+          {tx.referenceId && <Row label={t('publicWalletPage.reference')} value={<span className="font-mono text-[11px] sm:text-[11px] sm:text-xs">{tx.referenceId}</span>} />}
           {tx.rejectionReason && <Row label={t('wallet.rejectionReason')} value={<span className="text-destructive">{tx.rejectionReason}</span>} />}
           <Row label={t('wallet.txDate')} value={formatDateTime(tx.createdAt)} />
         </div>
@@ -393,12 +393,12 @@ export function PublicWalletPage() {
                   onClick={onRefresh}
                   disabled={refreshing}
                   className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 disabled:opacity-50"
-                  aria-label="Refresh"
+                  aria-label={t('common.refresh')}
                 >
                   <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
+              <TooltipContent>{t('common.refresh')}</TooltipContent>
             </Tooltip>
             <Link
               to="/home/payment-methods"
@@ -414,9 +414,9 @@ export function PublicWalletPage() {
         <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 p-4 text-warning">
           <Info className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
-            <h3 className="text-sm font-bold">{t('wallet.comingSoonTitle', 'Wallet Coming Soon!')}</h3>
+            <h3 className="text-sm font-bold">{t('wallet.comingSoonTitle')}</h3>
             <p className="mt-1 text-xs opacity-90">
-              {t('wallet.comingSoonDesc', 'We are working hard to bring you the wallet feature. Stay tuned for updates on when you can start earning and withdrawing rewards.')}
+              {t('wallet.comingSoonDesc')}
             </p>
           </div>
         </div>
@@ -515,7 +515,7 @@ export function PublicWalletPage() {
                     <button
                       type="button"
                       className="flex h-7 w-7 items-center justify-center rounded-md text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
-                      aria-label="About transactions"
+                      aria-label={t('publicWalletPage.aboutTransactions')}
                     >
                       <Info className="h-4 w-4" />
                     </button>
@@ -533,7 +533,7 @@ export function PublicWalletPage() {
                       ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                       : 'text-text-tertiary hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300',
                   )}
-                  aria-label="Toggle filters"
+                  aria-label={t('publicWalletPage.toggleFilters')}
                 >
                   <FilterIcon className="h-4 w-4" />
                   {hasActiveFilters && (

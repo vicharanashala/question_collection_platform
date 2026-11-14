@@ -12,6 +12,7 @@ import { formatDateTime } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Eye, Flag } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Report } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -72,6 +73,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default function ReportsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [items, setItems] = useState<Report[]>([])
   const [total, setTotal] = useState(0)
@@ -93,7 +95,7 @@ export default function ReportsPage() {
       setItems((prev) =>
         prev.map((r) => (r.id === reportId ? { ...r, priority: priority as Report['priority'] } : r)),
       )
-      toast.success('Priority updated')
+      toast.success(t('reportDetailPage.priorityUpdated'))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to update priority'))
     } finally {
@@ -139,8 +141,8 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3">
           <Flag className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-base sm:text-base sm:text-lg font-semibold">Reports</h1>
-          <Badge variant="secondary">{total} total</Badge>
+          <h1 className="text-base sm:text-base sm:text-lg font-semibold">{t('nav.reports')}</h1>
+          <Badge variant="secondary">{t('reportsPage.total', { total })}</Badge>
         </div>
       </div>
 
@@ -151,7 +153,7 @@ export default function ReportsPage() {
           onValueChange={(v) => { setStatusFilter(v); setPage(1) }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder={t('reportsPage.allStatuses')} />
           </SelectTrigger>
           <SelectContent>
             {STATUS_OPTIONS.map((o) => (
@@ -165,7 +167,7 @@ export default function ReportsPage() {
           onValueChange={(v) => { setCategoryFilter(v); setPage(1) }}
         >
           <SelectTrigger className="w-48">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder={t('submissions.allCategories')} />
           </SelectTrigger>
           <SelectContent>
             {CATEGORY_OPTIONS.map((o) => (
@@ -179,7 +181,7 @@ export default function ReportsPage() {
           onValueChange={(v) => { setPriorityFilter(v); setPage(1) }}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Priorities" />
+            <SelectValue placeholder={t('reportsPage.allPriorities')} />
           </SelectTrigger>
           <SelectContent>
             {PRIORITY_OPTIONS.map((o) => (
@@ -197,9 +199,7 @@ export default function ReportsPage() {
             variant="ghost"
             size="sm"
             onClick={() => { setStatusFilter(''); setCategoryFilter(''); setPriorityFilter(''); setTesterFilter('') }}
-          >
-            Clear filters
-          </Button>
+          >{t('wallet.clearFilters')}</Button>
         )}
       </div>
 
@@ -208,13 +208,13 @@ export default function ReportsPage() {
         <table className="w-full text-xs sm:text-xs sm:text-sm">
           <thead className="sticky top-0 bg-surface border-b border-border">
             <tr className="text-left text-muted-foreground">
-              <th className="px-4 py-3 font-medium">Reporter</th>
-              <th className="px-4 py-3 font-medium">Title</th>
-              <th className="px-4 py-3 font-medium">Category</th>
-              <th className="px-4 py-3 font-medium">Priority</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Created</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
+              <th className="px-4 py-3 font-medium">{t('reportDetailPage.reporter')}</th>
+              <th className="px-4 py-3 font-medium">{t('report.titleField')}</th>
+              <th className="px-4 py-3 font-medium">{t('profile.completion.fieldCategory')}</th>
+              <th className="px-4 py-3 font-medium">{t('reportDetailPage.priority2')}</th>
+              <th className="px-4 py-3 font-medium">{t('submissions.status')}</th>
+              <th className="px-4 py-3 font-medium">{t('distributionsList.created')}</th>
+              <th className="px-4 py-3 font-medium text-right">{t('profile.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -232,9 +232,7 @@ export default function ReportsPage() {
 
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                  No reports found
-                </td>
+                <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">{t('reportsPage.noReportsFound')}</td>
               </tr>
             )}
 
@@ -254,9 +252,7 @@ export default function ReportsPage() {
                 <td className="px-4 py-3 max-w-xs">
                   <div className="truncate font-medium">{report.title}</div>
                   {report.relatedEntityId && (
-                    <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">
-                      Ref: {report.relatedEntityType} #{report.relatedEntityId.slice(0, 8)}
-                    </div>
+                    <div className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground">{t('reportsPage.ref', { relatedEntityType: report.relatedEntityType, value3: report.relatedEntityId.slice(0, 8) })}</div>
                   )}
                 </td>
                 <td className="px-4 py-3">
@@ -295,7 +291,7 @@ export default function ReportsPage() {
                     onClick={() => navigate(`/reports/${report.id}`)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    View
+                    {t('admin.view')}
                   </Button>
                 </td>
               </tr>
@@ -307,9 +303,7 @@ export default function ReportsPage() {
       {/* Pagination */}
       {pages > 1 && (
         <div className="flex items-center justify-between px-6 py-3 border-t border-border bg-surface">
-          <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">
-            Page {page} of {pages} — {total} total
-          </span>
+          <span className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('reportsPage.pageOfTotal', { page, pages, total })}</span>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -318,7 +312,7 @@ export default function ReportsPage() {
               onClick={() => setPage((p) => p - 1)}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
+              {t('auditLogsPage.previous')}
             </Button>
             <Button
               variant="outline"
@@ -326,7 +320,7 @@ export default function ReportsPage() {
               disabled={page >= pages}
               onClick={() => setPage((p) => p + 1)}
             >
-              Next
+              {t('common.next')}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>

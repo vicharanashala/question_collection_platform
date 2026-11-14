@@ -190,11 +190,11 @@ export function NotificationScreen() {
 
   const ListHeader = (
     <View style={styles.headerRow}>
-      <Text style={[styles.screenTitle, { color: c.text }]}>{t('notifications.title', 'Notifications')}</Text>
+      <Text style={[styles.screenTitle, { color: c.text }]}>{t('notifications.title')}</Text>
       {data && data.unread > 0 && (
         <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
           <Text style={[styles.markAllText, { color: c.primary }]}>
-            {t('notifications.markAllRead', 'Mark all read')}
+            {t('notifications.markAllRead')}
           </Text>
         </TouchableOpacity>
       )}
@@ -205,10 +205,10 @@ export function NotificationScreen() {
     <View style={styles.emptyState}>
       <Ionicons name="notifications-outline" size={56} color={c.textTertiary} />
       <Text style={[styles.emptyTitle, { color: c.text }]}>
-        {t('notifications.emptyTitle', 'No notifications yet')}
+        {t('notifications.emptyTitle')}
       </Text>
       <Text style={[styles.emptySubtitle, { color: c.textSecondary }]}>
-        {t('notifications.emptySubtitle', "You're all caught up!")}
+        {t('notifications.emptySubtitle')}
       </Text>
     </View>
   ) : null;
@@ -220,7 +220,7 @@ export function NotificationScreen() {
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.topBarTitle, { color: c.text }]} numberOfLines={1}>
-          {t('notifications.title', 'Notifications')}
+          {t('notifications.title')}
         </Text>
         <View style={styles.topBarRight} />
       </View>

@@ -1,6 +1,7 @@
 import { AlertTriangle, Info, ShieldAlert, X } from 'lucide-react'
 import type { AIValidationResult } from '@/utils/onDeviceAI'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 type BannerVariant = 'warning' | 'error' | 'info'
 
@@ -58,6 +59,7 @@ function resolveIcon(variant: BannerVariant) {
  *   • Exposes a dismiss button when `onDismiss` is provided
  */
 export function AIValidationBanner({ result, onDismiss, className }: AIValidationBannerProps) {
+  const { t } = useTranslation()
   if (!result.ran || result.verdict === 'pass' || !result.message) {
     return null
   }
@@ -81,7 +83,7 @@ export function AIValidationBanner({ result, onDismiss, className }: AIValidatio
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Dismiss"
+          aria-label={t('common.dismiss')}
           className={cn(
             '-mr-1 -mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors',
             cls.close,

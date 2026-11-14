@@ -77,7 +77,7 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
           </button>
         )}
         <BrandLogo className="h-8 w-8 shrink-0" />
-        <span className="text-sm sm:text-base font-bold text-text leading-tight">AnnaDatha</span>
+        <span className="text-sm sm:text-base font-bold text-text leading-tight">{t('app.name')}</span>
       </div>
 
       <div className="flex items-center gap-2">

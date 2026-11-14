@@ -42,7 +42,7 @@ export function PublicBottomNav() {
 
   return (
     <nav
-      aria-label="Public navigation"
+      aria-label={t('publicBottomNav.publicNavigation')}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-white/95 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] backdrop-blur dark:border-border-subtle dark:bg-surface/95 md:hidden"
     >
       <div className="mx-auto flex max-w-2xl items-stretch justify-around pb-[env(safe-area-inset-bottom)]">
@@ -110,7 +110,7 @@ export function PublicBottomNav() {
                 <Icon className="h-5 w-5" />
                 {to === '/home/wallet' && (
                   <span className="absolute -right-4 -top-1.5 flex h-3.5 items-center justify-center rounded bg-warning px-1 text-[8px] font-bold uppercase tracking-wider text-warning-foreground shadow-sm">
-                    {t('common.soon', 'Soon')}
+                    {t('common.soon')}
                   </span>
                 )}
                 {to === '/home/faqs' && (

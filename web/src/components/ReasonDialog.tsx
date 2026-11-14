@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface ReasonDialogProps {
   open: boolean
@@ -43,6 +44,7 @@ const SUGGESTED_REASONS: Record<'reject' | 'fail', string[]> = {
 }
 
 export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initialReason, onConfirm }: ReasonDialogProps) {
+  const { t } = useTranslation()
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -69,11 +71,11 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
     if (mode === 'reject' || mode === 'fail') {
       const trimmed = reason.trim()
       if (!trimmed) {
-        setError('Please provide a reason.')
+        setError(t('reasonDialog.pleaseProvideReason'))
         return
       }
       if (trimmed.length > MAX_REASON_LENGTH) {
-        setError(`Reason must not exceed ${MAX_REASON_LENGTH} characters.`)
+        setError(t('reasonDialog.reasonMustNotExceed', { MAX_REASON_LENGTH }))
         return
       }
       onConfirm(trimmed)
@@ -140,7 +142,7 @@ function toggleReason(suggestion: string) {
         {/* Header */}
         <DialogHeader className="px-6 pt-5 pb-3 border-b border-border-subtle shrink-0">
           <DialogTitle className="text-sm sm:text-sm sm:text-base font-semibold">
-            {mode === 'approve' ? 'Approve Withdrawal' : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
+            {mode === 'approve' ? t('reasonDialog.approveWithdrawal') : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
           </DialogTitle>
           <p className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground mt-1">
             {mode === 'approve'
@@ -158,7 +160,7 @@ function toggleReason(suggestion: string) {
               {/* Suggested reasons */}
               <div>
                 <p className="text-[11px] sm:text-[11px] sm:text-xs font-medium text-muted-foreground mb-2">
-                  Suggested reasons <span className="text-muted-foreground/60 font-normal">(click to use)</span>
+                  Suggested reasons <span className="text-muted-foreground/60 font-normal">{t('reasonDialog.clickToUse')}</span>
                 </p>
                 <div className="space-y-1.5">
                   {suggestions.map((suggestion, i) => (
@@ -171,7 +173,7 @@ function toggleReason(suggestion: string) {
                           'border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:border-destructive/40',
                         )}
                         onClick={() => selectOnly(suggestion)}
-                        title="Replace reason with this suggestion"
+                        title={t('reasonDialog.replaceReasonWithThis')}
                       >
                         {suggestion}
                       </button>
@@ -184,9 +186,9 @@ function toggleReason(suggestion: string) {
       : "text-muted-foreground border-border-subtle hover:bg-muted hover:text-foreground",
   )}
   onClick={() => toggleReason(suggestion)}
-  title={isReasonAdded(suggestion) ? "Remove this reason" : "Add as additional reason"}
+  title={isReasonAdded(suggestion) ? t('reasonDialog.removeThisReason') : t('reasonDialog.addAsAdditionalReason')}
 >
-  {isReasonAdded(suggestion) ? "− Remove" : "+ Add"}
+  {isReasonAdded(suggestion) ? t('reasonDialog.remove') : t('reasonDialog.add')}
 </button>
                     </div>
                   ))}
@@ -196,7 +198,7 @@ function toggleReason(suggestion: string) {
               {/* Custom reason textarea */}
               <div className="space-y-1.5">
                 <Label htmlFor="withdrawal-reject-reason">
-                  Custom Reason <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">(or write your own)</span>
+                  Custom Reason <span className="text-muted-foreground/60 font-normal text-[11px] sm:text-[11px] sm:text-xs">{t('reasonDialog.orWriteYourOwn')}</span>
                 </Label>
                 <textarea
                   ref={textareaRef}
@@ -210,8 +212,8 @@ function toggleReason(suggestion: string) {
                   )}
                   placeholder={
                     mode === 'fail'
-                      ? 'Enter reason for marking transaction as failed…'
-                      : 'Enter reason for rejection…'
+                      ? t('reasonDialog.enterReasonForMarking')
+                      : t('reasonDialog.enterReasonForRejection')
                   }
                   value={reason}
                   maxLength={MAX_REASON_LENGTH}
@@ -248,13 +250,13 @@ function toggleReason(suggestion: string) {
           {mode === 'approve' && (
             <div className="space-y-1.5">
               <Label htmlFor="withdrawal-approve-note">
-                Note <span className="text-muted-foreground font-normal">(optional)</span>
+                Note <span className="text-muted-foreground font-normal">{t('reasonDialog.optional')}</span>
               </Label>
               <textarea
                 id="withdrawal-approve-note"
                 rows={4}
                 className="w-full rounded-lg border border-border-subtle bg-background px-3 py-2 text-xs sm:text-xs sm:text-sm resize-none focus:outline-none focus:ring-2 focus:ring-focus focus:border-focus placeholder:text-muted-foreground"
-                placeholder="Add an optional note for this approval…"
+                placeholder={t('reasonDialog.addAnOptionalNote')}
                 value={reason}
                 maxLength={MAX_REASON_LENGTH}
                 onChange={(e) => setReason(e.target.value)}
@@ -265,12 +267,12 @@ function toggleReason(suggestion: string) {
 
         {/* Footer */}
         <DialogFooter className="px-6 py-4 border-t border-border-subtle shrink-0 gap-2">
-          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancel}>{t('common.cancel')}</Button>
           <Button
             variant={mode === 'approve' ? 'success' : 'destructive'}
             onClick={handleConfirm}
           >
-            {mode === 'approve' ? 'Approve Withdrawal' : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
+            {mode === 'approve' ? t('reasonDialog.approveWithdrawal') : mode === 'reject' ? 'Reject Withdrawal' : 'Mark Transaction as Failed'}
           </Button>
         </DialogFooter>
       </DialogContent>

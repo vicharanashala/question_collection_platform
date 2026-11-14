@@ -81,10 +81,10 @@ export function PublicQuestionsPage() {
             size="sm"
             onClick={() => navigate('/home/reports')}
             className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
-            aria-label={t('report.title', 'Report an Issue')}
+            aria-label={t('report.title')}
           >
             <Flag className="h-4 w-4 sm:mr-1.5" />
-            <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
+            <span className="hidden sm:inline-block">{t('report.title')}</span>
           </Button>
           {activeTab === 'question' ? (
             <Button onClick={() => navigate('/home/ask')} className="bg-emerald-500 hover:bg-emerald-600 shrink-0" aria-label={t('question.askQuestion')}>
@@ -95,10 +95,10 @@ export function PublicQuestionsPage() {
             <Button
               onClick={() => navigate(`/home/ask?tab=${activeTab}`)}
               className="bg-emerald-500 hover:bg-emerald-600 shrink-0"
-              aria-label={t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}
+              aria-label={t('agriEntity.submit', { type: typeLabel })}
             >
               <MessageSquarePlus className="h-4 w-4 sm:hidden" />
-              <span className="hidden sm:inline">{t('agriEntity.submit', { type: typeLabel, defaultValue: 'Submit {{type}}' })}</span>
+              <span className="hidden sm:inline">{t('agriEntity.submit', { type: typeLabel })}</span>
             </Button>
           )}
         </div>
@@ -160,7 +160,7 @@ function QuestionSubmissions() {
       )}
 
       {!loading && total > 0 && (
-        <SubmissionCount total={total} label={t('submissions.questionsCount', { count: total, defaultValue: total === 1 ? 'question' : 'questions' })} />
+        <SubmissionCount total={total} label={t('submissions.questionsCount', { count: total })} />
       )}
 
       <Card className="overflow-hidden rounded-xl">
@@ -171,7 +171,7 @@ function QuestionSubmissions() {
             <SubmissionEmptyState
               icon={MessageCircleQuestion}
               title={t('common.noQuestionsFound')}
-              description={t('submissions.emptyQuestionsHint', 'Questions you ask will appear here so you can revisit them anytime.')}
+              description={t('submissions.emptyQuestionsHint')}
               actionLabel={t('common.askYourFirstQuestion')}
               onAction={() => navigate('/home/ask')}
             />

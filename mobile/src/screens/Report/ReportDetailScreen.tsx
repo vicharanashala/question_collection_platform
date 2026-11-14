@@ -108,13 +108,13 @@ export function ReportDetailScreen({ route, navigation }: Props) {
         <View style={[styles.metaCard, { backgroundColor: c.surface, borderColor: c.border }]}>
           <View style={styles.metaRow}>
             <View>
-              <Text style={[styles.metaLabel, { color: c.textTertiary }]}>Category</Text>
+              <Text style={[styles.metaLabel, { color: c.textTertiary }]}>{t('profile.completion.fieldCategory')}</Text>
               <Text style={[styles.metaValue, { color: c.text }]}>
                 {t(`report.categories.${report.category}` as any) ?? report.category}
               </Text>
             </View>
             <View>
-              <Text style={[styles.metaLabel, { color: c.textTertiary }]}>Status</Text>
+              <Text style={[styles.metaLabel, { color: c.textTertiary }]}>{t('submissions.status')}</Text>
               <Text style={[styles.statusText, { color: STATUS_COLORS[report.status] }]}>
                 {t(STATUS_LABEL_KEYS[report.status] as any)}
               </Text>

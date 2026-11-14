@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
 import { Check, ChevronDown, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 // Re-export the single-select component from the original file so consumers
 // can import both variants from this one module.
@@ -46,6 +47,7 @@ export function MultiSearchableSelect({
   helperText,
   onSearchChange,
 }: MultiSearchableSelectProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -122,7 +124,7 @@ export function MultiSearchableSelect({
       </span>
     )
   } else {
-    triggerLabel = <span className="text-foreground">{values.length} selected</span>
+    triggerLabel = <span className="text-foreground">{t('completeProfileWizard.selected', { length: values.length })}</span>
   }
 
   return (
@@ -178,9 +180,7 @@ export function MultiSearchableSelect({
           </div>
 
           {limitReached && (
-            <p className="border-b border-border-subtle px-3 py-2 text-[11px] sm:text-xs text-amber-600">
-              You can select up to {maxSelected} items.
-            </p>
+            <p className="border-b border-border-subtle px-3 py-2 text-[11px] sm:text-xs text-amber-600">{t('multiSearchableSelect.youCanSelectUp', { maxSelected })}</p>
           )}
 
           <CommandPrimitive

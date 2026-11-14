@@ -33,6 +33,7 @@ import {
 import { getLocationPart } from "@/lib/questionExport";
 import { cn, formatDate, getInitials } from "@/lib/utils";
 import type { Question } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 const AUDIO_EXT = /\.(mp3|m4a|aac|ogg|wav|flac|aiff)$/i;
 // Signed storage URLs carry a query string, so only the path is matched.
@@ -45,6 +46,7 @@ interface StaffQuestionDetailDialogProps {
 
 // Read-only dialog showing a question, the Anveshan user's answer, and submitter and review details.
 export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestionDetailDialogProps) {
+  const { t } = useTranslation();
   const [lang, setLang] = useState("");
 
   const mediaUrls = q.mediaUrls ?? [];
@@ -63,8 +65,8 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
   const copyId = () => {
     navigator.clipboard
       .writeText(q.id)
-      .then(() => toast.success("Question ID copied"))
-      .catch(() => toast.error("Could not copy the ID"));
+      .then(() => toast.success(t('staffQuestionDetailDialog.questionIdCopied')))
+      .catch(() => toast.error(t('staffQuestionDetailDialog.couldNotCopyThe')));
   };
 
   return (
@@ -72,41 +74,37 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
       <DialogContent className="flex max-h-[92dvh] w-[95vw] flex-col gap-0 overflow-hidden p-0 sm:max-w-[90vw] xl:max-w-7xl">
         <DialogHeader className="shrink-0 space-y-0 border-b border-border-subtle bg-muted/30 px-4 py-4 pr-12 sm:px-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <DialogTitle className="text-lg font-bold sm:text-xl">Question Details</DialogTitle>
+            <DialogTitle className="text-lg font-bold sm:text-xl">{t('submissions.questionDetails')}</DialogTitle>
             <QuestionStatusBadge question={q} />
             {q.isAnveshan && !isStatusHidden(q) && (
               <Badge className="bg-emerald-600 px-2 py-0.5 text-[11px] text-white sm:text-xs">
-                <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> Anveshan
+                <Sprout className="mr-1 h-3 w-3" aria-hidden="true" /> {t('questionStatusBadge.anveshan')}
               </Badge>
             )}
             {q.user?.isTester && <TesterTag />}
             {q.duplicateFlag && (
               <Badge variant="destructive" className="px-2 py-0.5 text-[11px] sm:text-xs">
-                <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" /> Duplicate
+                <AlertTriangle className="mr-1 h-3 w-3" aria-hidden="true" /> {t('myQuestions.status.duplicate')}
               </Badge>
             )}
             <button
               type="button"
               onClick={copyId}
-              title="Copy question ID"
+              title={t('staffQuestionDetailDialog.copyQuestionId')}
               className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
             >
               #{q.id.slice(-8)}
               <Copy className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
-          <DialogDescription className="mt-1 text-xs">
-            Submitted {formatDate(q.submittedAt)} by {submitterName}
-          </DialogDescription>
+          <DialogDescription className="mt-1 text-xs">{t('staffQuestionDetailDialog.submittedBy', { value1: formatDate(q.submittedAt), submitterName })}</DialogDescription>
         </DialogHeader>
 
         <div className="grid flex-1 gap-5 overflow-y-auto px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           {/* Main column */}
           <div className="min-w-0 space-y-5">
             <section className="rounded-xl border border-border-subtle border-l-4 border-l-primary bg-surface p-4 sm:p-5">
-              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Question
-              </h3>
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t('wallet.questionText')}</h3>
               <div className="text-base leading-relaxed">
                 <TranslatableText
                   text={q.questionText}
@@ -133,23 +131,23 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
             {showAnswer && <StaffAnveshanAnswerSection questionId={q.id} />}
 
             {hasReviewNotes && (
-              <Panel title="Review Notes">
+              <Panel title={t('admin.reviewNotes')}>
                 <div className="space-y-2">
                   {q.rejectionReason && (
-                    <ReviewNote tone="rejected" icon={XCircle} title="Rejection Reason" body={q.rejectionReason} />
+                    <ReviewNote tone="rejected" icon={XCircle} title={t('notifications.rejectionReason')} body={q.rejectionReason} />
                   )}
                   {q.approvalReason && (
-                    <ReviewNote tone="approved" icon={CheckCircle} title="Approval Reason" body={q.approvalReason} />
+                    <ReviewNote tone="approved" icon={CheckCircle} title={t('submissions.approvalReason')} body={q.approvalReason} />
                   )}
                   {q.heldReason && (
-                    <ReviewNote tone="held" icon={PauseCircle} title="Hold Reason" body={q.heldReason} />
+                    <ReviewNote tone="held" icon={PauseCircle} title={t('notifications.holdReason')} body={q.heldReason} />
                   )}
                 </div>
               </Panel>
             )}
 
             {imageUrls.length > 0 && (
-              <Panel title={`Images (${imageUrls.length})`} icon={Film}>
+              <Panel title={t('staffQuestionDetailDialog.images', { length: imageUrls.length })} icon={Film}>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                   {imageUrls.map((url, i) => (
                     <a key={url} href={url} target="_blank" rel="noopener noreferrer">
@@ -165,7 +163,7 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
             )}
 
             {audioUrls.length > 0 && (
-              <Panel title="Audio Recordings" icon={Mic}>
+              <Panel title={t('staffQuestionDetailDialog.audioRecordings')} icon={Mic}>
                 <div className="space-y-2">
                   {audioUrls.map((url) => (
                     <AudioPlayer key={url} src={url} className="w-full max-w-md" />
@@ -177,7 +175,7 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
 
           {/* Side column */}
           <aside className="space-y-5">
-            <Panel title="Submitted By">
+            <Panel title={t('staffQuestionDetailDialog.submittedBy2')}>
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
@@ -188,7 +186,7 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{submitterName}</p>
                   <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                    {q.isAnveshan ? "Anveshan User" : "Regular User"}
+                    {q.isAnveshan ? t('staffQuestionDetailDialog.anveshanUser') : t('staffQuestionDetailDialog.regularUser')}
                     {q.user?.isTester && <TesterTag />}
                   </p>
                 </div>
@@ -201,34 +199,34 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
               )}
             </Panel>
 
-            <Panel title="Location" icon={MapPin}>
+            <Panel title={t('profile.location')} icon={MapPin}>
               {locationText ? (
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-3">
-                  <Field label="State" value={getLocationPart(q, "state")} />
-                  <Field label="District" value={getLocationPart(q, "district")} />
-                  <Field label="Block" value={getLocationPart(q, "block")} />
-                  <Field label="Village" value={getLocationPart(q, "village")} />
+                  <Field label={t('admin.state')} value={getLocationPart(q, "state")} />
+                  <Field label={t('auth.district')} value={getLocationPart(q, "district")} />
+                  <Field label={t('block')} value={getLocationPart(q, "block")} />
+                  <Field label={t('village')} value={getLocationPart(q, "village")} />
                   {q.isAnveshan &&
                     q.submissionLocation?.latitude != null &&
                     q.submissionLocation?.longitude != null && (
                       <Field
-                        label="Coordinates"
+                        label={t('staffQuestionDetailDialog.coordinates')}
                         wide
                         value={`${q.submissionLocation.latitude.toFixed(5)}, ${q.submissionLocation.longitude.toFixed(5)}`}
                       />
                     )}
                 </dl>
               ) : (
-                <p className="text-sm text-muted-foreground">No location recorded.</p>
+                <p className="text-sm text-muted-foreground">{t('staffQuestionDetailDialog.noLocationRecorded')}</p>
               )}
             </Panel>
 
-            <Panel title="Timeline">
+            <Panel title={t('staffQuestionDetailDialog.timeline')}>
               <ol className="space-y-3 border-l border-border-subtle pl-4">
-                <TimelineItem label="Submitted" date={formatDate(q.submittedAt)} />
+                <TimelineItem label={t('submissions.submitted')} date={formatDate(q.submittedAt)} />
                 {q.reviewedAt && (
                   <TimelineItem
-                    label="Reviewed"
+                    label={t('staffQuestionDetailDialog.reviewed')}
                     date={formatDate(q.reviewedAt)}
                     note={q.reviewedByName ? `by ${q.reviewedByName}` : undefined}
                   />
@@ -236,16 +234,14 @@ export function StaffQuestionDetailDialog({ question: q, onClose }: StaffQuestio
               </ol>
             </Panel>
 
-            <Panel title="Question ID">
+            <Panel title={t('staffQuestionDetailDialog.questionId')}>
               <p className="break-all font-mono text-[11px] text-muted-foreground">{q.id}</p>
             </Panel>
           </aside>
         </div>
 
         <DialogFooter className="shrink-0 border-t border-border-subtle px-4 py-3 sm:px-6">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('common.close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

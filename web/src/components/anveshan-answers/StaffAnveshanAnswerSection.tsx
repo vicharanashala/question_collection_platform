@@ -5,6 +5,7 @@ import { getErrorMessage, questionApi } from '@/api/client'
 import { formatDate } from '@/lib/utils'
 import type { AnveshanAnswer } from '@/types'
 import { SourceList } from './SourceUrlManager'
+import { useTranslation } from 'react-i18next'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -14,6 +15,7 @@ interface StaffAnveshanAnswerSectionProps {
 
 // Shows staff the answer (with sources) an Anveshan user submitted for their own question.
 export function StaffAnveshanAnswerSection({ questionId }: StaffAnveshanAnswerSectionProps) {
+  const { t } = useTranslation()
   const [answer, setAnswer] = useState<AnveshanAnswer | null>(null)
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [error, setError] = useState('')
@@ -40,17 +42,17 @@ export function StaffAnveshanAnswerSection({ questionId }: StaffAnveshanAnswerSe
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 id="anveshan-answer-heading" className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <MessageSquareReply className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-          Anveshan User&apos;s Answer
+          {t('staffAnveshanAnswerSection.anveshanUserAnswer')}
         </h3>
         {answer && (
-          <span className="text-xs text-muted-foreground">Answered {formatDate(answer.answeredAt)}</span>
+          <span className="text-xs text-muted-foreground">{t('staffAnveshanAnswerSection.answered', { value1: formatDate(answer.answeredAt) })}</span>
         )}
       </div>
 
       {loadState === 'loading' && (
         <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Loading answer…
+          {t('staffAnveshanAnswerSection.loadingAnswer')}
         </p>
       )}
 
@@ -60,14 +62,12 @@ export function StaffAnveshanAnswerSection({ questionId }: StaffAnveshanAnswerSe
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
             {error}
           </span>
-          <Button variant="outline" size="sm" onClick={() => void load()}>
-            Retry
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => void load()}>{t('common.retry')}</Button>
         </div>
       )}
 
       {loadState === 'ready' && !answer && (
-        <p className="text-sm text-muted-foreground">The user has not answered this question yet.</p>
+        <p className="text-sm text-muted-foreground">{t('staffAnveshanAnswerSection.theUserHasNot')}</p>
       )}
 
       {loadState === 'ready' && answer && (
@@ -77,14 +77,12 @@ export function StaffAnveshanAnswerSection({ questionId }: StaffAnveshanAnswerSe
           </p>
           {answer.remarks && (
             <div>
-              <p className="mb-1 text-xs font-medium text-muted-foreground">Remarks</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{t('anveshanAnswers.remarks')}</p>
               <p className="whitespace-pre-wrap break-words text-sm text-foreground">{answer.remarks}</p>
             </div>
           )}
           <div>
-            <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-              Sources ({answer.sources.length})
-            </p>
+            <p className="mb-1.5 text-xs font-medium text-muted-foreground">{t('staffAnveshanAnswerSection.sources', { length: answer.sources.length })}</p>
             <SourceList sources={answer.sources} />
           </div>
         </div>

@@ -84,7 +84,7 @@ export function QuestionRejectedModal({
                 {t(copy.titleKey, copy.titleFallback)}
               </Text>
               <Text style={[styles.notCountedText, { color: c.textSecondary }]}>
-                {t('question.rejectedNotCounted', 'This was not submitted and does not count against your daily limit.')}
+                {t('question.rejectedNotCounted')}
               </Text>
             </View>
           </View>
@@ -96,7 +96,7 @@ export function QuestionRejectedModal({
           {Boolean(questionText.trim()) && (
             <View style={[styles.quoteBox, { borderColor: c.borderSubtle }]}>
               <Text style={[styles.quoteLabel, { color: c.textSecondary }]}>
-                {t('question.rejectedYourQuestion', 'Your question')}
+                {t('question.rejectedYourQuestion')}
               </Text>
               <Text style={[styles.quoteText, { color: c.text }]} numberOfLines={4}>
                 {questionText.trim()}
@@ -111,7 +111,7 @@ export function QuestionRejectedModal({
             accessibilityRole="button"
           >
             <Text style={styles.btnText}>
-              {t('question.rejectedEditQuestion', 'Edit My Question')}
+              {t('question.rejectedEditQuestion')}
             </Text>
           </TouchableOpacity>
         </View>

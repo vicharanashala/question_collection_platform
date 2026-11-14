@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface DataPoint {
   name: string
@@ -25,6 +26,7 @@ export function RankedBarList({
   showPercentage = true,
   valueFormatter = (v) => formatNumber(v),
 }: RankedBarListProps) {
+  const { t } = useTranslation()
   const total = data.reduce((s, d) => s + d.value, 0)
   const max = Math.max(...data.map((d) => d.value), 1)
 
@@ -87,9 +89,7 @@ export function RankedBarList({
       })}
 
       {data.length === 0 && (
-        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">
-          No data available
-        </div>
+        <div className="flex items-center justify-center h-full text-xs sm:text-xs sm:text-sm text-text-tertiary">{t('bulletChartComponent.noDataAvailable')}</div>
       )}
     </div>
   )

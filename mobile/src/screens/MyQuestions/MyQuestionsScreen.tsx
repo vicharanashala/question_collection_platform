@@ -210,7 +210,7 @@ export function MyQuestionsScreen() {
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: c.text }]}>{t('myQuestions.title')}</Text>
               <TooltipIcon
-                description="All your submitted questions are listed here. Tap any question to view details, edit within the window, or check its approval status."
+                description={t('myQuestionsScreen.allYourSubmittedQuestions')}
                 size={18}
               />
             </View>

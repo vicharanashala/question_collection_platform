@@ -11,6 +11,7 @@ import { useToast } from '../../components/Toast';
 import { adminApi, getErrorMessage } from '../../api/client';
 import { AdminStackParamList } from '../../navigation/types';
 import { tokens } from '../../utils/theme';
+import { useTranslation } from 'react-i18next';
 
 interface FinSummary {
   totalPaidOut: number;
@@ -87,6 +88,7 @@ function MiniBarChart({ data }: { data: Array<{ date: string; amount: number }> 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export function FinanceDashboardScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const { user } = useAuth();
@@ -120,7 +122,7 @@ export function FinanceDashboardScreen() {
     return (
       <SafeAreaView style={[styles.root, { backgroundColor: c.background }]} edges={['top']}>
         <View style={styles.headerBar}>
-          <Text style={[styles.screenTitle, { color: c.text }]}>Finance Dashboard</Text>
+          <Text style={[styles.screenTitle, { color: c.text }]}>{t('financeDashboardScreen.financeDashboard')}</Text>
         </View>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={c.primary} />
@@ -133,7 +135,7 @@ export function FinanceDashboardScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: c.background }]} edges={['top']}>
       {/* ── Header ── */}
       <View style={[styles.headerBar, { borderBottomColor: c.border }]}>
-        <Text style={[styles.screenTitle, { color: c.text }]}>Finance Dashboard</Text>
+        <Text style={[styles.screenTitle, { color: c.text }]}>{t('financeDashboardScreen.financeDashboard')}</Text>
       </View>
 
       <ScrollView
@@ -160,7 +162,7 @@ export function FinanceDashboardScreen() {
                   <Text style={[styles.heroName, { color: c.heroFg }]}>{user?.name ?? 'Finance'}</Text>
                   <View style={[styles.heroRolePill, { backgroundColor: c.heroFg + '22' }]}>
                     <Ionicons name="cash" size={13} color={c.heroFg} />
-                    <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>Finance Team</Text>
+                    <Text style={[styles.heroRoleText, { color: c.heroFg + 'dd' }]}>{t('financeDashboardScreen.financeTeam')}</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -177,21 +179,15 @@ export function FinanceDashboardScreen() {
                 <View style={styles.heroStatPills}>
                   <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                     <Ionicons name="time" size={11} color={c.heroFg + 'cc'} />
-                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                      {summary.pendingWithdrawals.count} pending
-                    </Text>
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('financeDashboardScreen.pending', { count: summary.pendingWithdrawals.count })}</Text>
                   </View>
                   <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                     <Ionicons name="checkmark-circle" size={11} color={c.heroFg + 'cc'} />
-                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                      {summary.completedWithdrawals.count} completed
-                    </Text>
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('financeDashboardScreen.completed', { count: summary.completedWithdrawals.count })}</Text>
                   </View>
                   <View style={[styles.heroStatPill, { backgroundColor: c.heroFg + '18' }]}>
                     <Ionicons name="ban" size={11} color={c.heroFg + 'cc'} />
-                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>
-                      {summary.failedWithdrawals.count} failed
-                    </Text>
+                    <Text style={[styles.heroStatPillText, { color: c.heroFg + 'cc' }]}>{t('financeDashboardScreen.failed', { count: summary.failedWithdrawals.count })}</Text>
                   </View>
                 </View>
               </View>
@@ -201,14 +197,14 @@ export function FinanceDashboardScreen() {
             <View style={styles.statsGrid}>
               <StatCard
                 icon="wallet"
-                label="Total Paid Out"
+                label={t('financeDashboardScreen.totalPaidOut')}
                 value={formatINR(summary.totalPaidOut)}
                 iconColor="#059669"
                 bgColor="#05966918"
               />
               <StatCard
                 icon="time"
-                label="Pending Withdrawals"
+                label={t('financeDashboardScreen.pendingWithdrawals')}
                 value={String(summary.pendingWithdrawals.count)}
                 sub={formatINR(summary.pendingWithdrawals.amount)}
                 iconColor="#D97706"
@@ -216,7 +212,7 @@ export function FinanceDashboardScreen() {
               />
               <StatCard
                 icon="checkmark-circle"
-                label="Completed"
+                label={t('wallet.statusCompleted')}
                 value={String(summary.completedWithdrawals.count)}
                 sub={formatINR(summary.completedWithdrawals.amount)}
                 iconColor="#22c55e"
@@ -224,7 +220,7 @@ export function FinanceDashboardScreen() {
               />
               <StatCard
                 icon="ban"
-                label="Failed"
+                label={t('wallet.statusFailed')}
                 value={String(summary.failedWithdrawals.count)}
                 iconColor="#ef4444"
                 bgColor="#ef444418"
@@ -237,7 +233,7 @@ export function FinanceDashboardScreen() {
                 <Ionicons name="card" size={18} color="#0891B2" />
               </View>
               <View style={styles.balanceTexts}>
-                <Text style={[styles.balanceLabel, { color: c.mutedForeground }]}>Total Wallet Balance</Text>
+                <Text style={[styles.balanceLabel, { color: c.mutedForeground }]}>{t('financeDashboardScreen.totalWalletBalance')}</Text>
                 <Text style={[styles.balanceValue, { color: '#0891B2' }]}>
                   {formatINR(summary.totalWalletBalance)}
                 </Text>
@@ -246,20 +242,20 @@ export function FinanceDashboardScreen() {
 
             {/* ── Today stats ── */}
             <View style={[styles.todayCard, { backgroundColor: c.card, borderColor: c.border }]}>
-              <Text style={[styles.sectionTitle, { color: c.foreground }]}>Today's Payouts</Text>
+              <Text style={[styles.sectionTitle, { color: c.foreground }]}>{t('financeDashboardScreen.todayPayouts')}</Text>
               <View style={styles.todayRow}>
                 <View style={styles.todayCell}>
                   <Text style={[styles.todayValue, { color: c.foreground }]}>
                     {summary.today.payoutCount}
                   </Text>
-                  <Text style={[styles.todayLabel, { color: c.mutedForeground }]}>Transactions</Text>
+                  <Text style={[styles.todayLabel, { color: c.mutedForeground }]}>{t('financeDashboardScreen.transactions')}</Text>
                 </View>
                 <View style={[styles.todayDivider, { backgroundColor: c.border }]} />
                 <View style={styles.todayCell}>
                   <Text style={[styles.todayValue, { color: c.foreground }]}>
                     {formatINR(summary.today.payoutAmount)}
                   </Text>
-                  <Text style={[styles.todayLabel, { color: c.mutedForeground }]}>Amount</Text>
+                  <Text style={[styles.todayLabel, { color: c.mutedForeground }]}>{t('wallet.withdrawal.amount')}</Text>
                 </View>
               </View>
             </View>
@@ -267,9 +263,7 @@ export function FinanceDashboardScreen() {
             {/* ── Daily trend ── */}
             {summary.dailyPayoutTrend.length > 0 && (
               <View style={[styles.chartCard, { backgroundColor: c.card, borderColor: c.border }]}>
-                <Text style={[styles.sectionTitle, { color: c.foreground }]}>
-                  Daily Payout Trend (Last 7 days)
-                </Text>
+                <Text style={[styles.sectionTitle, { color: c.foreground }]}>{t('financeDashboardScreen.dailyPayoutTrendLast')}</Text>
                 <MiniBarChart data={summary.dailyPayoutTrend} />
                 <View style={styles.trendTotal}>
                   <Text style={[styles.trendTotalText, { color: c.mutedForeground }]}>
@@ -282,7 +276,7 @@ export function FinanceDashboardScreen() {
 
             {/* ── Quick Access ── */}
             <View style={styles.quickSection}>
-              <Text style={[styles.sectionTitle, { color: c.foreground }]}>Quick Access</Text>
+              <Text style={[styles.sectionTitle, { color: c.foreground }]}>{t('adminDashboardScreen.quickAccess')}</Text>
               <TouchableOpacity
                 style={[styles.quickCard, { backgroundColor: c.card, borderColor: c.border }]}
                 onPress={() => navigation.navigate('FinanceWithdrawals')}
@@ -292,10 +286,8 @@ export function FinanceDashboardScreen() {
                   <Ionicons name="cash" size={20} color="#D97706" />
                 </View>
                 <View style={styles.quickTexts}>
-                  <Text style={[styles.quickLabel, { color: c.foreground }]}>Withdrawals</Text>
-                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>
-                    {summary.pendingWithdrawals.count} pending · {formatINR(summary.pendingWithdrawals.amount)}
-                  </Text>
+                  <Text style={[styles.quickLabel, { color: c.foreground }]}>{t('adminWithdrawalsScreen.withdrawals')}</Text>
+                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>{t('financeDashboardScreen.pending2', { count: summary.pendingWithdrawals.count, value3: formatINR(summary.pendingWithdrawals.amount) })}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
               </TouchableOpacity>
@@ -308,10 +300,8 @@ export function FinanceDashboardScreen() {
                   <Ionicons name="wallet" size={20} color="#0891B2" />
                 </View>
                 <View style={styles.quickTexts}>
-                  <Text style={[styles.quickLabel, { color: c.foreground }]}>Wallets</Text>
-                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>
-                    {formatINR(summary.totalWalletBalance)} total balance
-                  </Text>
+                  <Text style={[styles.quickLabel, { color: c.foreground }]}>{t('admin.wallets')}</Text>
+                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>{t('financeDashboardScreen.totalBalance', { value1: formatINR(summary.totalWalletBalance) })}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
               </TouchableOpacity>
@@ -324,10 +314,8 @@ export function FinanceDashboardScreen() {
                   <Ionicons name="people" size={20} color="#7C3AED" />
                 </View>
                 <View style={styles.quickTexts}>
-                  <Text style={[styles.quickLabel, { color: c.foreground }]}>Users</Text>
-                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>
-                    View & verify user accounts
-                  </Text>
+                  <Text style={[styles.quickLabel, { color: c.foreground }]}>{t('admin.users')}</Text>
+                  <Text style={[styles.quickSub, { color: c.mutedForeground }]}>{t('financeDashboardScreen.viewVerifyUserAccounts')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={c.mutedForeground} />
               </TouchableOpacity>
@@ -335,7 +323,7 @@ export function FinanceDashboardScreen() {
           </>
         ) : (
           <View style={styles.emptyWrap}>
-            <Text style={[styles.emptyText, { color: c.mutedForeground }]}>No financial data available</Text>
+            <Text style={[styles.emptyText, { color: c.mutedForeground }]}>{t('financeDashboardScreen.noFinancialDataAvailable')}</Text>
           </View>
         )}
       </ScrollView>

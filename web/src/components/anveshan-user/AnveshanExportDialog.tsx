@@ -7,6 +7,7 @@ import { downloadWorkbook, exportDateTime, workbookSheet, type ExportColumn, typ
 import type { AnveshanUserDetail, AnveshanUserQuestion, AgriEntitySubmission } from '@/types'
 import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 type Section = 'user' | 'questions' | 'entities'
 
@@ -78,6 +79,7 @@ interface AnveshanExportDialogProps {
 
 /** Asks which data to include, then downloads it as one Excel workbook with a sheet per choice. */
 export function AnveshanExportDialog({ detail, open, onOpenChange }: AnveshanExportDialogProps) {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState<Record<Section, boolean>>({ user: true, questions: true, entities: true })
   const [exporting, setExporting] = useState(false)
   const options: { key: Section; label: string; hint: string; icon: LucideIcon }[] = [
@@ -114,13 +116,13 @@ export function AnveshanExportDialog({ detail, open, onOpenChange }: AnveshanExp
             <FileSpreadsheet className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0 space-y-1">
-            <DialogTitle>Export Anveshan user data</DialogTitle>
-            <DialogDescription>Choose what to include. Each choice becomes its own sheet in one Excel file.</DialogDescription>
+            <DialogTitle>{t('anveshanExportDialog.exportAnveshanUserData')}</DialogTitle>
+            <DialogDescription>{t('anveshanExportDialog.chooseWhatToInclude')}</DialogDescription>
           </div>
         </DialogHeader>
 
         <fieldset className="space-y-2 px-5 pb-5">
-          <legend className="sr-only">Data to export</legend>
+          <legend className="sr-only">{t('anveshanExportDialog.dataToExport')}</legend>
           {options.map(({ key, label, hint, icon: Icon }) => {
             const checked = selected[key]
             return (
@@ -157,13 +159,13 @@ export function AnveshanExportDialog({ detail, open, onOpenChange }: AnveshanExp
 
         <DialogFooter className="items-center gap-3 border-t border-border-subtle bg-surface-variant/40 px-5 py-4 sm:justify-between sm:space-x-0">
           <span className="text-xs text-text-secondary" aria-live="polite">
-            {anySelected ? `${selectedCount} ${selectedCount === 1 ? 'sheet' : 'sheets'} selected` : 'Select at least one'}
+            {anySelected ? `${selectedCount} ${selectedCount === 1 ? 'sheet' : 'sheets'} selected` : t('anveshanExportDialog.selectAtLeastOne')}
           </span>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleDownload} disabled={!anySelected || exporting}>
               <Download className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              {exporting ? 'Preparing…' : 'Download Excel'}
+              {exporting ? t('anveshanExportDialog.preparing') : t('anveshanExportDialog.downloadExcel')}
             </Button>
           </div>
         </DialogFooter>

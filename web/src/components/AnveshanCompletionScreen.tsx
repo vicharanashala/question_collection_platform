@@ -54,30 +54,30 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
   const actions = (
     <div className="space-y-3">
       <p className="text-center text-sm text-muted-foreground">
-        {t("anveshanComplete.next", "Your last step is to upload your documents on the Anveshan platform.")}
+        {t("anveshanComplete.next")}
       </p>
       <Button className="w-full gap-2" asChild>
         <a href={ANVESHAN_PLATFORM_URL} target="_blank" rel="noopener noreferrer">
-          {t("anveshan.goToAnveshan", "Go to Anveshan")}
+          {t("anveshan.goToAnveshan")}
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          <span className="sr-only">{t("common.opensInNewTab", "(opens in a new tab)")}</span>
+          <span className="sr-only">{t("common.opensInNewTab")}</span>
         </a>
       </Button>
       {milestone.feedbackSubmitted ? (
         <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-primary dark:text-emerald-400" role="status">
           <Check className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("anveshanComplete.feedbackThanks", "Thanks for sharing your feedback!")}
+          {t("anveshanComplete.feedbackThanks")}
         </p>
       ) : (
         <Button variant="outline" className="w-full gap-2" onClick={onShareFeedback}>
           <MessageSquareHeart className="h-4 w-4" aria-hidden="true" />
-          {t("anveshanComplete.shareFeedback", "Share your feedback")}
+          {t("anveshanComplete.shareFeedback")}
         </Button>
       )}
       <div className="flex justify-center pt-1">
         <Button variant="link" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setSignOutOpen(true)}>
           <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("common.signOut", "Sign out")}
+          {t("common.signOut")}
         </Button>
       </div>
     </div>
@@ -93,7 +93,7 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
       >
         <div className="mb-5 flex items-center justify-center gap-2">
           <BrandLogo className="h-8 w-8" />
-          <span className="text-sm font-bold text-foreground">AnnaDatha × Anveshan</span>
+          <span className="text-sm font-bold text-foreground">{t('anveshanCompletionScreen.annadathaAnveshan')}</span>
         </div>
 
         <Card className="overflow-hidden rounded-2xl p-0 shadow-lg lg:grid lg:grid-cols-2">
@@ -110,24 +110,23 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
               </motion.div>
 
               <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-primary dark:text-emerald-400">
-                {t("anveshanComplete.eyebrow", "Milestone complete · 100%")}
+                {t("anveshanComplete.eyebrow")}
               </p>
               <h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">
                 {firstName
-                  ? t("anveshanComplete.titleNamed", { name: firstName, defaultValue: "Congratulations, {{name}}!" })
-                  : t("anveshanComplete.title", "Congratulations!")}
+                  ? t("anveshanComplete.titleNamed", { name: firstName })
+                  : t("anveshanComplete.title")}
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {t(
                   "anveshanComplete.description",
-                  "You have completed your Anveshan milestone on AnnaDatha. Thank you for the questions, observations and advisories you contributed.",
                 )}
               </p>
 
               <p className="mt-6 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("anveshanComplete.milestoneHeading", "AnnaDatha milestone")}
+                {t("anveshanComplete.milestoneHeading")}
               </p>
-              <ul className="mt-2 grid grid-cols-1 gap-2 text-left sm:grid-cols-2" aria-label={t("anveshanComplete.summary", "What you completed")}>
+              <ul className="mt-2 grid grid-cols-1 gap-2 text-left sm:grid-cols-2" aria-label={t("anveshanComplete.summary")}>
                 {GOALS.map(({ key, icon: Icon, label }) => (
                   <li key={key} className="flex items-start gap-2 rounded-lg border border-border-subtle bg-surface-variant/40 px-2.5 py-2">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary dark:text-emerald-400">
@@ -160,13 +159,12 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
           >
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 id="anveshan-journey-heading" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("anveshanComplete.journeyHeading", "Your Anveshan journey")}
+                {t("anveshanComplete.journeyHeading")}
               </h2>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary dark:text-emerald-400">
                 {t("anveshanComplete.journeyDone", {
                   done: COMPLETED_PHASES,
                   total: JOURNEY.length,
-                  defaultValue: "{{done}}/{{total}} done",
                 })}
               </span>
             </div>
@@ -177,8 +175,8 @@ export function AnveshanCompletionScreen({ milestone, userName, onShareFeedback 
                     key={phase.id}
                     phase={phase}
                     status="current"
-                    badgeLabel={t("anveshanComplete.nextPhase", "Next")}
-                    description={t("anveshanComplete.documentsPending", "Complete this on the Anveshan platform.")}
+                    badgeLabel={t("anveshanComplete.nextPhase")}
+                    description={t("anveshanComplete.documentsPending")}
                   />
                 ) : (
                   <JourneyStep key={phase.id} phase={phase} status="done" />

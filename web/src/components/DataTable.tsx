@@ -15,6 +15,7 @@ import {
   ChevronUp, ChevronDown, ChevronsUpDown,
   LayoutGrid, List, SlidersHorizontal, X,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -127,12 +128,13 @@ interface ActiveFiltersBarProps {
 }
 
 function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFiltersBarProps) {
+  const { t } = useTranslation()
   const entries = Object.entries(filters).filter(([, vals]) => vals.length > 0)
   if (entries.length === 0) return null
 
   return (
     <div className="flex items-center flex-wrap gap-2">
-      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0">Active filters:</span>
+      <span className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground shrink-0">{t('dataTable.activeFilters')}</span>
       {entries.map(([key, values]) => {
         const col = columns.find((c) => c.key === key)
         const label = col?.header ?? key
@@ -150,7 +152,7 @@ function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFilt
               <button
                 className="ml-0.5 rounded hover:bg-muted transition-colors"
                 onClick={() => onRemove(key, v)}
-                aria-label={`Remove ${display} filter`}
+                aria-label={t('dataTable.removeFilter', { display })}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -161,9 +163,7 @@ function ActiveFiltersBar({ filters, columns, onRemove, onClearAll }: ActiveFilt
       <button
         onClick={onClearAll}
         className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
-      >
-        Clear all
-      </button>
+      >{t('dataTable.clearAll')}</button>
     </div>
   )
 }
@@ -185,6 +185,7 @@ export function DataTable<T>({
   onRowClick,
   hideSearch,
 }: DataTableProps<T>) {
+  const { t } = useTranslation()
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDirection>('asc')
   const [colFilters, setColFilters] = useState<FilterState>({})
@@ -286,7 +287,7 @@ export function DataTable<T>({
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search records..."
+            placeholder={t('dataTable.searchRecords')}
             value={searchValue ?? ""}
             onChange={(e) => onSearchChange?.(e.target.value)}
             className="pl-9 pr-4"
@@ -327,7 +328,7 @@ export function DataTable<T>({
                     className="text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => clearFilter(col.key)}
                   >
-                    {selected.length === 0 ? 'Select all' : 'Clear'}
+                    {selected.length === 0 ? t('dataTable.selectAll') : t('dataTable.clear')}
                   </button>
                 </div>
 
@@ -378,9 +379,7 @@ export function DataTable<T>({
               <button
                 className="text-[11px] sm:text-[11px] sm:text-xs text-primary hover:underline"
                 onClick={clearAllFilters}
-              >
-                Clear filters
-              </button>
+              >{t('wallet.clearFilters')}</button>
             )}
           </div>
         ) : (
@@ -469,6 +468,7 @@ export function ViewToggle({
   view: 'table' | 'card'
   onChange: (v: 'table' | 'card') => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center border border-border-subtle rounded-lg overflow-hidden shrink-0">
       <button
@@ -479,10 +479,10 @@ export function ViewToggle({
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-foreground',
         )}
-        title="Table view"
+        title={t('dataTable.tableView')}
       >
         <List className="h-3.5 w-3.5" />
-        Table
+        {t('dataTable.table')}
       </button>
       <button
         onClick={() => onChange('card')}
@@ -492,10 +492,10 @@ export function ViewToggle({
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-foreground',
         )}
-        title="Card view"
+        title={t('dataTable.cardView')}
       >
         <LayoutGrid className="h-3.5 w-3.5" />
-        Card
+        {t('dataTable.card')}
       </button>
     </div>
   )

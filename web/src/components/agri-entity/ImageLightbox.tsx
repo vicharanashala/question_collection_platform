@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface ImageLightboxProps {
   images: string[]
@@ -22,6 +23,7 @@ function buildDownloadName(title: string, index: number, url: string): string {
 
 /** Full size image viewer with previous and next controls and a thumbnail strip when there are several images. */
 export function ImageLightbox({ images, index, title, onIndexChange }: ImageLightboxProps) {
+  const { t } = useTranslation()
   const isOpen = index !== null && images[index] !== undefined
   const hasMany = images.length > 1
 
@@ -57,7 +59,7 @@ export function ImageLightbox({ images, index, title, onIndexChange }: ImageLigh
               <Button asChild variant="outline" size="sm" className="shrink-0">
                 <a href={images[index]} download={buildDownloadName(title, index, images[index])}>
                   <Download className="mr-1.5 h-3.5 w-3.5" />
-                  Download
+                  {t('imageLightbox.download')}
                 </a>
               </Button>
             </div>
@@ -69,7 +71,7 @@ export function ImageLightbox({ images, index, title, onIndexChange }: ImageLigh
                   <button
                     type="button"
                     onClick={() => step(-1)}
-                    aria-label="Previous image"
+                    aria-label={t('imageLightbox.previousImage')}
                     className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-focus"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -77,7 +79,7 @@ export function ImageLightbox({ images, index, title, onIndexChange }: ImageLigh
                   <button
                     type="button"
                     onClick={() => step(1)}
-                    aria-label="Next image"
+                    aria-label={t('imageLightbox.nextImage')}
                     className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-focus"
                   >
                     <ChevronRight className="h-5 w-5" />

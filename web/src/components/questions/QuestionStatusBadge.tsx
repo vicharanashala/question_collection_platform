@@ -2,6 +2,7 @@ import { Sprout } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Question } from "@/types";
+import { useTranslation } from 'react-i18next';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-warning text-white",
@@ -37,9 +38,10 @@ interface QuestionStatusBadgeProps {
 
 // Small tag marking a question submitted by an Anveshan user.
 export function AnveshanTag() {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap text-[11px] text-emerald-600 dark:text-emerald-400">
-      <Sprout className="h-3 w-3" aria-hidden="true" /> Anveshan
+      <Sprout className="h-3 w-3" aria-hidden="true" /> {t('questionStatusBadge.anveshan')}
     </span>
   );
 }

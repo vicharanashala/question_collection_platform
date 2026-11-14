@@ -33,17 +33,16 @@ export function SubmissionCriteriaGate({ requirements, progress }: SubmissionCri
           <Lock className="h-6 w-6 text-amber-600 dark:text-amber-400" aria-hidden="true" />
         </div>
         <h1 className="text-lg font-semibold text-text">
-          {t('anveshanAnswers.gateTitle', 'Complete your submissions first')}
+          {t('anveshanAnswers.gateTitle')}
         </h1>
         <p className="text-sm text-text-secondary">
           {t(
             'anveshanAnswers.gateDescription',
-            "You need to complete the submission criteria below before entering the advisory phase. Once every item is done, you can come back here to write advisories for farmers' queries.",
           )}
         </p>
       </div>
 
-      <ul className="mt-5 space-y-2" aria-label={t('anveshanAnswers.gateListLabel', 'Submission criteria')}>
+      <ul className="mt-5 space-y-2" aria-label={t('anveshanAnswers.gateListLabel')}>
         {CRITERIA.map(({ key, icon: Icon, label, to }) => {
           const required = requirements[key]
           const done = progress[key] >= required
@@ -70,11 +69,11 @@ export function SubmissionCriteriaGate({ requirements, progress }: SubmissionCri
                 <p className="text-sm font-medium text-text">{t(`anveshanAnswers.criteria.${key}`, label)}</p>
                 <p className={cn('text-xs', done ? 'text-emerald-700 dark:text-emerald-400' : 'text-text-tertiary')}>
                   {done
-                    ? t('anveshanAnswers.criteriaDone', 'Completed')
-                    : t('anveshanAnswers.criteriaRemaining', { count: remaining, defaultValue: '{{count}} more to submit' })}
+                    ? t('anveshanAnswers.criteriaDone')
+                    : t('anveshanAnswers.criteriaRemaining', { count: remaining })}
                 </p>
               </div>
-              <span className="text-xs font-semibold tabular-nums text-text-tertiary" aria-label={`${progress[key]} of ${required}`}>
+              <span className="text-xs font-semibold tabular-nums text-text-tertiary" aria-label={t('submissionCriteriaGate.of', { value1: progress[key], required })}>
                 {progress[key]}/{required}
               </span>
               {!done && (
@@ -82,7 +81,7 @@ export function SubmissionCriteriaGate({ requirements, progress }: SubmissionCri
                   to={to}
                   className="rounded-md px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 >
-                  {t('anveshanAnswers.criteriaGo', 'Submit')}
+                  {t('anveshanAnswers.criteriaGo')}
                 </Link>
               )}
             </li>
@@ -92,7 +91,7 @@ export function SubmissionCriteriaGate({ requirements, progress }: SubmissionCri
 
       <Button asChild className="mt-5 w-full gap-1.5">
         <Link to={firstPending?.to ?? '/home/ask'}>
-          {t('anveshanAnswers.goSubmit', 'Continue submitting')}
+          {t('anveshanAnswers.goSubmit')}
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </Button>

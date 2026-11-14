@@ -37,9 +37,9 @@ export function AnswerScoreDialog({ target, onScoreChange, onClose }: AnswerScor
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10">
               <CheckCircle2 className="h-5 w-5 text-emerald-700 dark:text-emerald-400" aria-hidden="true" />
             </span>
-            <DialogTitle className="text-lg">{t('anveshanAnswers.score.dialogTitle', 'Advisory submitted')}</DialogTitle>
+            <DialogTitle className="text-lg">{t('anveshanAnswers.score.dialogTitle')}</DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">
-              {t('anveshanAnswers.score.dialogLead', 'Here is how the system scored your advisory.')}
+              {t('anveshanAnswers.score.dialogLead')}
             </DialogDescription>
           </DialogHeader>
 
@@ -54,8 +54,8 @@ export function AnswerScoreDialog({ target, onScoreChange, onClose }: AnswerScor
           <DialogFooter className="border-t border-border-subtle bg-surface-variant/40 px-6 py-4">
             <Button onClick={() => onClose(target)}>
               {target.completesMilestone
-                ? t('anveshanAnswers.score.viewCompletion', 'View my completion')
-                : t('anveshanAnswers.score.continue', 'Continue')}
+                ? t('anveshanAnswers.score.viewCompletion')
+                : t('anveshanAnswers.score.continue')}
             </Button>
           </DialogFooter>
         </DialogContent>

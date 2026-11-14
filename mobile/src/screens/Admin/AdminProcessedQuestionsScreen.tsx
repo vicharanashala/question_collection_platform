@@ -11,6 +11,7 @@ import { tokens } from '../../utils/theme';
 import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { INDIAN_STATES } from '../../utils/constants';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -123,6 +124,7 @@ function buildQueryParams(active: ActiveFilters, page: number): Record<string, s
 }
 
 export function AdminProcessedQuestionsScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation<Nav>();
@@ -262,7 +264,7 @@ export function AdminProcessedQuestionsScreen() {
             </Text>
           </View>
           {item.reviewedByName && (
-            <Text style={[styles.reviewer, { color: c.textTertiary }]}>by {item.reviewedByName}</Text>
+            <Text style={[styles.reviewer, { color: c.textTertiary }]}>{t('adminProcessedQuestionsScreen.by', { reviewedByName: item.reviewedByName })}</Text>
           )}
         </View>
 
@@ -271,19 +273,19 @@ export function AdminProcessedQuestionsScreen() {
           <View style={[styles.reasonBox, { borderTopColor: c.surfaceVariant }]}>
             {item.status === 'approved' && item.approvalReason && (
               <View style={[styles.reasonSection, { backgroundColor: '#22c55e11' }]}>
-                <Text style={[styles.reasonLabel, { color: '#15803d' }]}>Approval Reason</Text>
+                <Text style={[styles.reasonLabel, { color: '#15803d' }]}>{t('wallet.approvalReason')}</Text>
                 <Text style={[styles.reasonText, { color: '#166534' }]}>{item.approvalReason}</Text>
               </View>
             )}
             {item.status === 'rejected' && item.rejectionReason && (
               <View style={[styles.reasonSection, { backgroundColor: '#ef444411' }]}>
-                <Text style={[styles.reasonLabel, { color: '#b91c1c' }]}>Rejection Reason</Text>
+                <Text style={[styles.reasonLabel, { color: '#b91c1c' }]}>{t('notifications.rejectionReason')}</Text>
                 <Text style={[styles.reasonText, { color: '#991b1b' }]}>{item.rejectionReason}</Text>
               </View>
             )}
             {item.status === 'held' && item.heldReason && (
               <View style={[styles.reasonSection, { backgroundColor: '#f59e0b11' }]}>
-                <Text style={[styles.reasonLabel, { color: '#b45309' }]}>Hold Reason</Text>
+                <Text style={[styles.reasonLabel, { color: '#b45309' }]}>{t('notifications.holdReason')}</Text>
                 <Text style={[styles.reasonText, { color: '#92400e' }]}>{item.heldReason}</Text>
               </View>
             )}
@@ -291,7 +293,7 @@ export function AdminProcessedQuestionsScreen() {
               style={[styles.viewBtn]}
               onPress={() => nav.navigate('AdminQuestionDetail', { questionId: item.id })}
             >
-              <Text style={styles.viewBtnText}>View Full Details</Text>
+              <Text style={styles.viewBtnText}>{t('adminProcessedQuestionsScreen.viewFullDetails')}</Text>
               <Ionicons name="chevron-forward" size={14} color="#8b5cf6" />
             </TouchableOpacity>
           </View>
@@ -311,8 +313,8 @@ export function AdminProcessedQuestionsScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Processed</Text>
-        <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>{t('withdrawalDetailModal.processed')}</Text>
+        <Text style={[styles.count, { color: c.textSecondary }]}>{t('adminProcessedQuestionsScreen.total', { total })}</Text>
         <TouchableOpacity
           style={[styles.filterBtn, { backgroundColor: countBadge > 0 ? c.primary + '18' : c.surfaceVariant }]}
           onPress={() => setFilterVisible(true)}
@@ -339,10 +341,8 @@ export function AdminProcessedQuestionsScreen() {
           <View style={styles.empty}>
             {loading ? null : (
               <>
-                <Text style={[styles.emptyTitle, { color: c.text }]}>No processed questions</Text>
-                <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>
-                  Approved, rejected, and held questions will appear here
-                </Text>
+                <Text style={[styles.emptyTitle, { color: c.text }]}>{t('adminProcessedQuestionsScreen.noProcessedQuestions')}</Text>
+                <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>{t('adminProcessedQuestionsScreen.approvedRejectedAndHeld')}</Text>
               </>
             )}
           </View>
@@ -356,7 +356,7 @@ export function AdminProcessedQuestionsScreen() {
         active={activeFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        title="Filter Processed"
+        title={t('adminProcessedQuestionsScreen.filterProcessed')}
       />
     </SafeAreaView>
   );

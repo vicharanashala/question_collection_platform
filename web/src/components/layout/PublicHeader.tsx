@@ -89,11 +89,11 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
         <button
           onClick={() => navigate('/home')}
           className="flex min-w-0 items-center gap-1.5 hover:opacity-80 transition-opacity sm:gap-2"
-          aria-label="AnnaDatha — go to home"
+          aria-label={t('publicHeader.annadathaGoToHome')}
         >
           <BrandLogo className="h-6 w-6 shrink-0 sm:h-8 sm:w-8" />
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">AnnaDatha</span>
+            <span className="truncate text-sm sm:text-base font-bold text-foreground leading-tight">{t('app.name')}</span>
             {isAnveshanUser && (
               <span className="truncate text-[10px] font-medium leading-tight text-text-tertiary sm:text-[11px]">{ANVESHAN_TAGLINE}</span>
             )}

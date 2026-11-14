@@ -51,7 +51,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                 <BrandLogo className="h-9 w-9" />
               </div>
               <div>
-                <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground leading-tight">AnnaDatha</p>
+                <p className="text-xs sm:text-xs sm:text-sm font-bold text-foreground leading-tight">{t('app.name')}</p>
                 <p className="text-[11px] text-text-tertiary leading-tight">{user?.isAnveshanUser ? ANVESHAN_TAGLINE : t('app.publicPortal')}</p>
               </div>
             </div>
@@ -89,7 +89,7 @@ export function PublicMobileNav({ open, onClose }: PublicMobileNavProps) {
                   <span>{t(labelKey)}</span>
                   {to === '/home/wallet' && (
                     <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">
-                      {t('common.comingSoon', 'Coming Soon')}
+                      {t('common.comingSoon')}
                     </span>
                   )}
                 </span>

@@ -3,14 +3,16 @@ import { motion } from 'framer-motion'
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 const ROW_STAGGER_SECONDS = 0.03
 const MAX_STAGGERED_ROWS = 10
 
 // Placeholder rows shown while a submissions page loads, shaped like the real rows.
 export function SubmissionListSkeleton({ rows = 5 }: { rows?: number }) {
+  const { t } = useTranslation()
   return (
-    <ul className="divide-y divide-border-subtle" aria-busy="true" aria-label="Loading submissions">
+    <ul className="divide-y divide-border-subtle" aria-busy="true" aria-label={t('submissionListParts.loadingSubmissions')}>
       {Array.from({ length: rows }, (_, i) => (
         <li key={i} className="flex items-center gap-3 px-3 py-4 sm:px-4 sm:py-5">
           <div className="h-11 w-11 shrink-0 animate-pulse rounded-lg bg-surface-variant" />

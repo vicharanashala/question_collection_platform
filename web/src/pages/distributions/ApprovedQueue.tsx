@@ -9,12 +9,14 @@ import { toast } from 'sonner'
 import type { Question } from '@/types'
 import { Pagination } from './Pagination'
 import { AssignStatesDialog } from './AssignStatesDialog'
+import { useTranslation } from 'react-i18next'
 
 /**
  * "Approved Queue" tab — lists questions in `approved` status so the
  * distributor can pick states to assign them to.
  */
 export function ApprovedQueue() {
+  const { t } = useTranslation()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
   const [search, setSearch] = useState('')
@@ -48,7 +50,7 @@ export function ApprovedQueue() {
           <div className="flex items-center gap-2 flex-1 min-w-[200px]">
             <Search className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search approved questions..."
+              placeholder={t('approvedQueue.searchApprovedQuestions')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
@@ -58,7 +60,7 @@ export function ApprovedQueue() {
           </div>
           <Button variant="outline" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </Button>
         </CardContent>
       </Card>
@@ -68,21 +70,19 @@ export function ApprovedQueue() {
           <table className="w-full text-xs sm:text-xs sm:text-sm">
             <thead className="bg-surface text-muted-foreground">
               <tr>
-                <th className="text-left px-4 py-2 font-medium">Question</th>
-                <th className="text-left px-4 py-2 font-medium">Origin</th>
-                <th className="text-left px-4 py-2 font-medium">Approved</th>
-                <th className="text-right px-4 py-2 font-medium">Actions</th>
+                <th className="text-left px-4 py-2 font-medium">{t('wallet.questionText')}</th>
+                <th className="text-left px-4 py-2 font-medium">{t('approvedQueue.origin')}</th>
+                <th className="text-left px-4 py-2 font-medium">{t('myQuestions.approved')}</th>
+                <th className="text-right px-4 py-2 font-medium">{t('profile.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {loading && items.length === 0 ? (
                 <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                  <Loader2 className="inline h-4 w-4 mr-2 animate-spin" /> Loading...
+                  <Loader2 className="inline h-4 w-4 mr-2 animate-spin" /> {t('common.loading')}
                 </td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                  No approved questions waiting.
-                </td></tr>
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">{t('approvedQueue.noApprovedQuestionsWaiting')}</td></tr>
               ) : items.map((q) => (
                 <tr key={q.id} className="border-t border-border">
                   <td className="px-4 py-2 max-w-md">
@@ -97,7 +97,7 @@ export function ApprovedQueue() {
                   <td className="px-4 py-2 text-right">
                     <Button size="sm" onClick={() => setAssignFor(q)}>
                       <Send className="h-4 w-4 mr-1.5" />
-                      Assign states
+                      {t('approvedQueue.assignStates')}
                     </Button>
                   </td>
                 </tr>

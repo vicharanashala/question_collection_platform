@@ -94,12 +94,12 @@ function MilestoneProgressButton({ percent, onClick }: MilestoneProgressButtonPr
         variant="ghost"
         size="sm"
         onClick={onClick}
-        aria-label={t('anveshan.myProgressWithPercent', { percent: clamped, defaultValue: 'My Progress, {{percent}}% complete' })}
+        aria-label={t('anveshan.myProgressWithPercent', { percent: clamped })}
         className="gap-1.5 rounded-full bg-background hover:bg-surface-variant"
       >
         <Award className="h-4 w-4" aria-hidden="true" />
         {/* Label is hidden on phones to keep the header compact; the aria-label still names the button. */}
-        <span className="hidden sm:inline">{t('anveshan.myProgress', 'My Progress')}</span>
+        <span className="hidden sm:inline">{t('anveshan.myProgress')}</span>
         <span className="tabular-nums text-text-secondary">{clamped}%</span>
       </Button>
     </span>
@@ -121,7 +121,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
-          <ArrowLeft className="h-4 w-4" />{t('common.back', 'Back')}
+          <ArrowLeft className="h-4 w-4" />{t('common.back')}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -132,10 +132,10 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
               size="sm"
               onClick={onReport}
               className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
-              aria-label={t('report.title', 'Report an Issue')}
+              aria-label={t('report.title')}
             >
               <Flag className="h-4 w-4 sm:mr-1.5" />
-              <span className="hidden sm:inline-block">{t('report.title', 'Report an Issue')}</span>
+              <span className="hidden sm:inline-block">{t('report.title')}</span>
             </Button>
           )}
           {/* Anveshan users have no daily limit, so the "N of M left today" chip is hidden for them. */}
@@ -168,7 +168,7 @@ function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, da
       {/* Progress — current step is marked by weight and an aria-current, not
           colour alone, and completed steps carry a check icon. Hidden on small
           screens to save vertical space. */}
-      {step && <ol className="hidden items-center gap-3 sm:flex" aria-label={t('common.steps', 'Steps')}>
+      {step && <ol className="hidden items-center gap-3 sm:flex" aria-label={t('common.steps')}>
         {steps.map(({ n, label }) => {
           const done = n < step
           const current = n === step
@@ -288,9 +288,7 @@ useEffect(() => anveshanProgressEmitter.on(fetchMilestone), [fetchMilestone]);
 useEffect(() => {
   if (milestoneJustCompleted) {
     toast.success(
-      t("anveshan.milestoneCompleteToast", {
-        defaultValue: "🎉 Congratulations! You've completed your Anveshan milestone.",
-      }),
+      t("anveshan.milestoneCompleteToast"),
       { duration: 6000 },
     );
     setMilestoneJustCompleted(false);
@@ -554,7 +552,7 @@ useEffect(() => {
 async function handleFinalSubmit(e: React.FormEvent) {
   console.log("Inside final submit...")
   e.preventDefault()
-  if (!previewMeta) { toast.error("somethig wen wrong..."); return}
+  if (!previewMeta) { toast.error(t('publicAskPage.somethigWenWrong')); return}
   if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
   if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
   if (!season) { toast.error(t('question.errors.pickSeason')); return }
@@ -705,7 +703,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
         {/* Warning banner */}
         <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-          <span>{t('question.notEditableAfterSubmission', 'This question is not editable after submission')}</span>
+          <span>{t('question.notEditableAfterSubmission')}</span>
         </div>
 
         {/* Question preview card — prominent display of what the user typed */}
@@ -760,7 +758,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
 
                   {previewMeta.agroClimaticZone && (
                     <div>
-                      <span className="text-xs text-text-tertiary mb-1.5 block">{t('question.agroClimaticZone', 'Agro-Climatic Zone')}</span>
+                      <span className="text-xs text-text-tertiary mb-1.5 block">{t('question.agroClimaticZone')}</span>
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         {previewMeta.agroClimaticZone}
@@ -775,7 +773,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                   <div className="space-y-2.5">
                     <div>
                       <Label className="text-sm">{t('question.domainSelect')} <span className="text-rose-600">*</span></Label>
-                      <p className="text-[11px] text-text-tertiary mt-0.5">{t('question.selectOneOrMore', 'Select one or more')}</p>
+                      <p className="text-[11px] text-text-tertiary mt-0.5">{t('question.selectOneOrMore')}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {DOMAINS.map((d) => {
@@ -839,14 +837,13 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
                       <p className="min-w-0 flex-1">
                         {t('question.cropAutoSelectedNotice', {
                           crop: cropType,
-                          defaultValue: 'The crop "{{crop}}" was selected automatically. Please cross-check it and change it if it is wrong.',
                         })}{' '}
                         <button
                           type="button"
                           onClick={() => setCropPickerOpen(true)}
                           className="font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded-sm"
                         >
-                          {t('question.changeCrop', 'Change crop')}
+                          {t('question.changeCrop')}
                         </button>
                       </p>
                     </div>
@@ -876,7 +873,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
               {/* Submit row */}
               <div className="flex items-center justify-between gap-3 pt-2 border-t border-border-subtle">
                 <Button type="button" variant="outline" size="sm" onClick={() => setStep('ask')}>
-                  {t('common.back', 'Back')}
+                  {t('common.back')}
                 </Button>
                 <Button
                   type="submit"
@@ -932,8 +929,8 @@ if (activeTab !== 'question') {
     return (
       <div className="mx-auto max-w-4xl space-y-4">
         <AskHeader
-          title={t('agriEntity.title', { type: typeLabel, defaultValue: 'Submit a {{type}}' })}
-          subtitle={t('agriEntity.subtitle', 'Share names, sources and photos. All fields are required.')}
+          title={t('agriEntity.title', { type: typeLabel })}
+          subtitle={t('agriEntity.subtitle')}
           onBack={() => navigate(-1)}
           onReport={() => navigate('/home/reports')}
           atLimit={false}
@@ -1020,7 +1017,7 @@ if (activeTab !== 'question') {
               <div className="flex flex-col gap-2 lg:col-span-2">
                 <div>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice', 'Add voice')}</span>
+                    <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice')}</span>
                     {/* Controlled so the tooltip also opens on tap for touch devices. */}
                     <Tooltip open={voiceInfoOpen} onOpenChange={setVoiceInfoOpen}>
                       <TooltipTrigger asChild>
@@ -1028,14 +1025,13 @@ if (activeTab !== 'question') {
                           type="button"
                           onClick={() => setVoiceInfoOpen((open) => !open)}
                           className="flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-variant hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
-                          aria-label={t('question.voiceLimitInfoAria', 'About voice recording limit')}
+                          aria-label={t('question.voiceLimitInfoAria')}
                         >
                           <Info className="h-3.5 w-3.5" aria-hidden />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         {t('question.voiceLimitInfo', {
-                          defaultValue: 'You can record up to {{minutes}} minutes. Recording also stops automatically if no speech is heard for {{silenceMinutes}} minute. Your voice is then converted to text.',
                           minutes: DEFAULT_MAX_RECORDING_MS / 60_000,
                           silenceMinutes: SILENCE_TIMEOUT_MS / 60_000,
                         })}
@@ -1089,7 +1085,7 @@ if (activeTab !== 'question') {
                         className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-variant/40 px-3 py-1.5 text-xs text-text-tertiary hover:border-emerald-300 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                       >
                         <Mic className="h-3.5 w-3.5" />
-                        <span>{t('question.addVoice', 'Add voice')}</span>
+                        <span>{t('question.addVoice')}</span>
                       </button>
                     </motion.div>
                   )}
@@ -1098,7 +1094,7 @@ if (activeTab !== 'question') {
             </div>
 
             <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => navigate(-1)} className="justify-center">{t('common.cancel', 'Cancel')}</Button>
+              <Button type="button" variant="outline" onClick={() => navigate(-1)} className="justify-center">{t('common.cancel')}</Button>
               {/*
                 Mirror mobile `QuestionScreen`'s Continue button: when the AI
                 flags the text as spam or "too short" (verdict === 'fail'),
@@ -1115,7 +1111,7 @@ if (activeTab !== 'question') {
                 ) : (
                   <ArrowRight className="h-4 w-4" />
                 )}
-                {blockedByAi ? t('question.notRelevant') : t('common.continue', 'Continue')}
+                {blockedByAi ? t('question.notRelevant') : t('common.continue')}
               </Button>
             </div>
           </form>

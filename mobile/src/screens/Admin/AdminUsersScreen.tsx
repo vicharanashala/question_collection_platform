@@ -13,6 +13,7 @@ import { AdminStackParamList } from '../../navigation/types';
 import { AdminFilterModal, FilterOption, ActiveFilters } from '../../components/AdminFilterModal';
 import { WalletDetailModal } from '../../components/WalletDetailModal';
 import { INDIAN_STATES } from '../../utils/constants';
+import { useTranslation } from 'react-i18next';
 
 type Nav = NativeStackNavigationProp<AdminStackParamList>;
 
@@ -120,6 +121,7 @@ function buildQueryParams(active: ActiveFilters, page: number): Record<string, s
 }
 
 export function AdminUsersScreen() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
   const c = theme.colors;
   const nav = useNavigation<Nav>();
@@ -216,7 +218,7 @@ export function AdminUsersScreen() {
                 {displayName}
               </Text>
               <Text style={[styles.userMeta, { color: c.textSecondary }]}>
-                {item.username ? `@${item.username}  ·  ` : ''}{item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'Uncategorised'}
+                {item.username ? `@${item.username}  ·  ` : ''}{item.mobileNumber} · {item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : t('adminUsersScreen.uncategorised')}
               </Text>
             </View>
             <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
@@ -230,13 +232,13 @@ export function AdminUsersScreen() {
                 { backgroundColor: isBanned ? '#dc2626' : '#d97706', marginLeft: 4 },
               ]}>
                 <Text style={[styles.badgeText, { color: '#fff' }]}>
-                  {isBanned ? 'BANNED' : 'SUSPENDED'}
+                  {isBanned ? t('adminUsersScreen.banned') : t('adminUsersScreen.suspended')}
                 </Text>
               </View>
             )}
             {isCurrentUser && (
               <View style={[styles.badge, { backgroundColor: c.primary + '22', marginLeft: 4 }]}>
-                <Text style={[styles.badgeText, { color: c.primary }]}>This is you</Text>
+                <Text style={[styles.badgeText, { color: c.primary }]}>{t('adminUsersScreen.thisIsYou')}</Text>
               </View>
             )}
           </View>
@@ -255,7 +257,7 @@ export function AdminUsersScreen() {
           disabled={isCurrentUser}
         >
           <Ionicons name="wallet-outline" size={13} color={c.primary} />
-          <Text style={[styles.walletBtnText, { color: c.primary }]}>View Wallet</Text>
+          <Text style={[styles.walletBtnText, { color: c.primary }]}>{t('adminUsersScreen.viewWallet')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -269,8 +271,8 @@ export function AdminUsersScreen() {
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={24} color={c.text} />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>Users</Text>
-        <Text style={[styles.count, { color: c.textSecondary }]}>{total} total</Text>
+        <Text style={[styles.screenTitle, { color: c.text, flex: 1 }]}>{t('admin.users')}</Text>
+        <Text style={[styles.count, { color: c.textSecondary }]}>{t('adminProcessedQuestionsScreen.total', { total })}</Text>
         <TouchableOpacity
           style={[styles.addBtn, { backgroundColor: c.primary + '18' }]}
           onPress={() => nav.navigate('AdminCreateUser')}
@@ -303,10 +305,10 @@ export function AdminUsersScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyTitle, { color: c.text }]}>
-              {loading ? '' : 'No users match your filters'}
+              {loading ? '' : t('adminUsersScreen.noUsersMatchYour')}
             </Text>
             {!loading && (
-              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>Try adjusting the filter criteria</Text>
+              <Text style={[styles.emptyMsg, { color: c.textSecondary }]}>{t('adminUsersScreen.tryAdjustingTheFilter')}</Text>
             )}
           </View>
         }
@@ -319,7 +321,7 @@ export function AdminUsersScreen() {
         active={activeFilters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        title="Filter Users"
+        title={t('adminUsersScreen.filterUsers')}
       />
 
       {walletModal && (

@@ -246,9 +246,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               <View style={[txModalStyles.questionSection, { borderColor: c.border }]}>
                 <View style={txModalStyles.questionSectionHeader}>
                   <Ionicons name="cash-outline" size={16} color={c.primary} />
-                  <Text style={[txModalStyles.questionSectionTitle, { color: c.text }]}>
-                    Payout Details
-                  </Text>
+                  <Text style={[txModalStyles.questionSectionTitle, { color: c.text }]}>{t('walletScreen.payoutDetails')}</Text>
                 </View>
                 {loadingWd ? (
                   <ActivityIndicator size="small" color={c.primary} />
@@ -273,7 +271,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                     {/* UPI or Bank details */}
                     {(wd['payoutMethod'] === 'upi' || wd['payoutMethod'] === 'UPI') ? (
                       <View style={txModalStyles.payoutRow}>
-                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>UPI ID</Text>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('wallet.withdrawal.upiId')}</Text>
                         <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
                           {String((wd['payoutDetails'] && (wd['payoutDetails'] as Record<string,unknown>)['upiId']) ?? '—')}
                         </Text>
@@ -281,20 +279,20 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                     ) : (
                       <>
                         <View style={txModalStyles.payoutRow}>
-                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Account Number</Text>
+                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('wallet.withdrawal.accountNumber')}</Text>
                           <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
                             {String((wd['payoutDetails'] as Record<string,unknown>)?.['accountNumber'] ?? (wd['payoutDetails'] as Record<string,unknown>)?.['account_number'] ?? '—')}
                           </Text>
                         </View>
                         <View style={txModalStyles.payoutRow}>
-                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>IFSC</Text>
+                          <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('walletScreen.ifsc')}</Text>
                           <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
                             {String((wd['payoutDetails'] as Record<string,unknown>)?.['ifsc'] ?? (wd['payoutDetails'] as Record<string,unknown>)?.['ifscCode'] ?? '—')}
                           </Text>
                         </View>
                         {(wd['payoutDetails'] as Record<string,unknown>)?.['bankName'] && (
                           <View style={txModalStyles.payoutRow}>
-                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Bank</Text>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('walletScreen.bank')}</Text>
                             <Text style={[txModalStyles.payoutValue, { color: c.text }]}>
                               {String((wd['payoutDetails'] as Record<string,unknown>)['bankName'])}
                             </Text>
@@ -306,7 +304,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                     {/* Rejection reason */}
                     {wd['rejectionReason'] && (
                       <View style={[txModalStyles.payoutRow, { flexDirection: 'column', alignItems: 'flex-start' }]}>
-                        <Text style={[txModalStyles.payoutLabel, { color: c.error }]}>Rejection Reason</Text>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.error }]}>{t('notifications.rejectionReason')}</Text>
                         <Text style={[txModalStyles.payoutValue, { color: c.error }]} selectable>
                           {String(wd['rejectionReason'])}
                         </Text>
@@ -316,7 +314,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                     {/* Processed at */}
                     {wd['processedAt'] && (
                       <View style={txModalStyles.payoutRow}>
-                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Processed</Text>
+                        <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('withdrawalDetailModal.processed')}</Text>
                         <Text style={[txModalStyles.payoutValue, { color: c.text }]}>
                           {new Date(wd['processedAt'] as string).toLocaleString('en-IN', {
                             day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -330,7 +328,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                       <>
                         {wd['utrNumber'] && (
                           <View style={txModalStyles.payoutRow}>
-                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>UTR Number</Text>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('wallet.utrNumber')}</Text>
                             <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
                               {String(wd['utrNumber'])}
                             </Text>
@@ -338,7 +336,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
                         )}
                         {wd['razorpayPayoutId'] && (
                           <View style={txModalStyles.payoutRow}>
-                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Razorpay Payout ID</Text>
+                            <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('wallet.razorpayPayoutId')}</Text>
                             <Text style={[txModalStyles.payoutValue, { color: c.text }]} selectable>
                               {String(wd['razorpayPayoutId'])}
                             </Text>
@@ -349,7 +347,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
 
                     {/* Withdrawal ID */}
                     <View style={txModalStyles.payoutRow}>
-                      <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>Withdrawal ID</Text>
+                      <Text style={[txModalStyles.payoutLabel, { color: c.textTertiary }]}>{t('walletScreen.withdrawalId')}</Text>
                       <Text style={[txModalStyles.payoutValue, { color: c.text, fontSize: 11 }]} selectable>
                         {String(wd['id'] ?? tx.referenceId)}
                       </Text>
@@ -370,7 +368,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
               <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
                 {String((wd.retryCount as number) ?? 0) > 0
                   ? `Your payment was attempted but could not be completed (Attempt ${(wd.retryCount as number) + 1}). We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.`
-                  : 'Your payment was attempted but could not be completed. We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.'}
+                  : t('walletScreen.yourPaymentWasAttempted')}
               </Text>
             </View>
           )}
@@ -378,9 +376,7 @@ function TxDetailModal({ tx, visible, onClose, statusColors, c, onRevoke }: TxDe
           {/* Reversal disclaimer — for payouts that were reversed (money returned to wallet) */}
           {tx.source === 'withdrawal' && wd && tx.status === 'reversed' && (
             <View style={{ backgroundColor: c.surfaceHighlight ?? '#FEF3E7', borderRadius: 10, padding: 12, marginBottom: 16 }}>
-              <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>
-                Your payment was reversed and the amount has been credited back to your wallet. Please add a different payment detail and try again.
-              </Text>
+              <Text style={{ color: c.textSecondary, fontSize: 12, lineHeight: 18 }}>{t('walletScreen.yourPaymentWasReversed')}</Text>
             </View>
           )}
 
@@ -736,7 +732,7 @@ export function WalletScreen() {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.primary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
                 <Ionicons name="card-outline" size={15} color={c.primary} />
-                <Text style={{ color: c.primary, fontSize: 13, fontWeight: '700' }}>Payment Methods</Text>
+                <Text style={{ color: c.primary, fontSize: 13, fontWeight: '700' }}>{t('profile.paymentMethods')}</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -758,7 +754,7 @@ export function WalletScreen() {
               <Text style={[styles.balanceAmount, { color: c.heroFg, fontSize: getBalanceFontSize(balance ?? 0) }]}>
                 ₹{formatINRFull(balance ?? 0)}
               </Text>
-              <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>Indian Rupees</Text>
+              <Text style={[styles.balanceCurrency, { color: c.heroFg }]}>{t('wallet.currency')}</Text>
             </View>
             <View style={styles.balanceRight}>
               {(balance ?? 0) >= minWithdrawal ? (
@@ -774,9 +770,7 @@ export function WalletScreen() {
               ) : (
                 <View style={[styles.balanceMinAlert, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
                   <Ionicons name="information-circle" size={15} color="rgba(255,255,255,0.85)" />
-                  <Text style={styles.balanceMinAlertText}>
-                    Min ₹{minWithdrawal.toLocaleString('en-IN')} to withdraw
-                  </Text>
+                  <Text style={styles.balanceMinAlertText}>{t('walletScreen.minToWithdraw', { value1: minWithdrawal.toLocaleString('en-IN') })}</Text>
                 </View>
               )}
             </View>
@@ -790,7 +784,7 @@ export function WalletScreen() {
             <Text style={[styles.statValue, { color: c.success }]}>
               {formatINRCompact(totalEarned)}
             </Text>
-            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Earned</Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('admin.earned')}</Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: c.primary + '12', borderColor: c.primary + '25' }]}>
@@ -798,7 +792,7 @@ export function WalletScreen() {
             <Text style={[styles.statValue, { color: c.primary }]}>
               {formatINRCompact(totalWithdrawn)}
             </Text>
-            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Withdrawn</Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('admin.withdrawn')}</Text>
           </View>
 
           <View style={[styles.statCard, {
@@ -809,7 +803,7 @@ export function WalletScreen() {
             <Text style={[styles.statValue, { color: pendingCount > 0 ? c.warning : c.text }]}>
               {formatINRCompact(pendingCount)}
             </Text>
-            <Text style={[styles.statLabel, { color: c.textSecondary }]}>Pending</Text>
+            <Text style={[styles.statLabel, { color: c.textSecondary }]}>{t('myQuestions.pending')}</Text>
           </View>
         </View>
 
@@ -987,26 +981,18 @@ export function WalletScreen() {
               />
             </View>
             {!isValidAmount && withdrawAmount.length > 0 && (
-              <Text style={[confirmModalStyles.errorText, { color: c.error }]}>
-                Min ₹{minWithdrawal.toLocaleString('en-IN')} · Max ₹{(balance ?? 0).toLocaleString('en-IN')}
-              </Text>
+              <Text style={[confirmModalStyles.errorText, { color: c.error }]}>{t('walletScreen.minMax', { value1: minWithdrawal.toLocaleString('en-IN'), value3: (balance ?? 0).toLocaleString('en-IN') })}</Text>
             )}
 
             {/* Payment method selector */}
-            <Text style={[confirmModalStyles.sectionLabel, { color: c.textSecondary }]}>
-              Payment Method
-            </Text>
+            <Text style={[confirmModalStyles.sectionLabel, { color: c.textSecondary }]}>{t('walletScreen.paymentMethod')}</Text>
 
             {loadingDetails ? (
               <ActivityIndicator size="small" color={c.primary} style={{ marginVertical: tokens.spacing4 }} />
             ) : paymentDetails.length === 0 ? (
               <View style={[confirmModalStyles.noDetailsBox, { borderColor: c.warning + '44', backgroundColor: c.warning + '0a' }]}>
-                <Text style={[confirmModalStyles.noDetailsText, { color: c.warning }]}>
-                  No payment methods found.
-                </Text>
-                <Text style={[confirmModalStyles.noDetailsSub, { color: c.textSecondary }]}>
-                  Add one in Payment Methods first.
-                </Text>
+                <Text style={[confirmModalStyles.noDetailsText, { color: c.warning }]}>{t('walletScreen.noPaymentMethodsFound')}</Text>
+                <Text style={[confirmModalStyles.noDetailsSub, { color: c.textSecondary }]}>{t('walletScreen.addOneInPayment')}</Text>
               </View>
             ) : (
               <View style={confirmModalStyles.pdList}>
@@ -1040,9 +1026,7 @@ export function WalletScreen() {
                     </TouchableOpacity>
                   ))}
                 {paymentDetails.filter((d) => d.status === 'verified').length === 0 && (
-                  <Text style={[confirmModalStyles.noVerified, { color: c.textTertiary }]}>
-                    No verified payment methods. Add one in Payment Methods.
-                  </Text>
+                  <Text style={[confirmModalStyles.noVerified, { color: c.textTertiary }]}>{t('walletScreen.noVerifiedPaymentMethods')}</Text>
                 )}
               </View>
             )}

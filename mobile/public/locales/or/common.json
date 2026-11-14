@@ -53,7 +53,10 @@
     "doneSpeakAgain": "ସମ୍ପୂର୍ଣ୍ଣ — ଯେକୌଣସି ସମୟରେ ପୁନର୍ବାର କୁହନ୍ତୁ",
     "notSupportedShort": "ଏହି ବ୍ରାଉଜରରେ ମାଇକ୍ ସମର୍ଥିତ ନୁହେଁ",
     "stopRecordingAria": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
-    "startRecordingAria": "ସ୍ୱର ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ"
+    "startRecordingAria": "ସ୍ୱର ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ",
+    "translateError": "Translation failed. Please try again.",
+    "textPlaceholder": "Type your question in English…",
+    "translateHint": "Translate to {{language}}"
   },
   "speech": {
     "stt": {
@@ -65,7 +68,10 @@
       "errorTooShort": "ଅଡିଓ ଅତ୍ୟନ୍ତ ଛୋଟ। ଦୟାକରି ଏକ ଲମ୍ବା ସନ୍ଦେଶ ରେକର୍ଡ କରନ୍ତୁ।",
       "errorFailed": "ଟ୍ରାନ୍ସକ୍ରିପସନ୍ ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।",
       "language": "ଭାଷା",
-      "languageHint": "ଆପଣ କହିବାକୁ ଚାହୁଁଥିବା ଭାଷା ଚୟନ କରନ୍ତୁ"
+      "languageHint": "ଆପଣ କହିବାକୁ ଚାହୁଁଥିବା ଭାଷା ଚୟନ କରନ୍ତୁ",
+      "uploading": "Uploading…",
+      "startRecording": "Start recording",
+      "stopRecording": "Stop recording"
     }
   },
   "agreeToConsent": "ମୁଁ ସେବା ନିୟମାବଳୀ ଏବଂ ଗୋପନୀୟତା ନୀତି ପଢ଼ିଛି ଏବଂ ସେଥିରେ ସହମତ",
@@ -234,7 +240,10 @@
     "steps": "ପର୍ଯ୍ୟାୟ",
     "continue": "ଜାରି ରଖନ୍ତୁ",
     "noQuestionsFound": "କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ",
-    "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ"
+    "askYourFirstQuestion": "ଆପଣଙ୍କର ପ୍ରଥମ ପ୍ରଶ୍ନ ପଚାରନ୍ତୁ",
+    "failedToLoad": "Failed to load",
+    "failedToUpdate": "Failed to update",
+    "failedToDelete": "Failed to delete"
   },
   "completeRegistration": "ପଞ୍ଜୀକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
   "consentClause1": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର ଏବଂ ପଞ୍ଜୀକରଣ ବିବରଣୀ ସୁରକ୍ଷିତ ଭାବରେ ସଂରକ୍ଷିତ ରହିବ ଏବଂ କେବଳ ପ୍ଲାଟଫର୍ମ ପ୍ରମାଣୀକରଣ ଓ କୃଷି ଜ୍ଞାନ ସେବା ପାଇଁ ବ୍ୟବହୃତ ହେବ।",
@@ -390,7 +399,8 @@
     "loading": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ ହେଉଛି…",
     "loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
     "loadError": "ବିଜ୍ଞପ୍ତି ଲୋଡ୍ କରିବାରେ ବିଫଳ",
-    "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ"
+    "markAllReadError": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକୁ ପଢ଼ାଯାଇଛି ବୋଲି ଚିହ୍ନିତ କରିବାରେ ବିଫଳ",
+    "emptySubtitle": "You're all caught up!"
   },
   "organisationName": "ସଂସ୍ଥାର ନାମ",
   "organisationNamePlaceholder": "ସଂସ୍ଥାର ନାମ ଦିଅନ୍ତୁ",
@@ -582,7 +592,11 @@
     "tipDetailed": "ବିସ୍ତୃତ ଭାବରେ ଲେଖନ୍ତୁ — ଫସଲ, ସ୍ଥାନ ଏବଂ ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କଣ ଚେଷ୍ଟା କରିଛନ୍ତି ଉଲ୍ଲେଖ କରନ୍ତୁ।",
     "dailyLimitIndicator": "ଦୈନିକ ସୀମା ଶେଷ",
     "expertWillRespond": "ଜଣେ ବିଶେଷଜ୍ଞ ଆପଣଙ୍କୁ ଉତ୍ତର ଦେବେ।",
-    "questionExample": "ଉଦାହରଣ: ମୋ ଟମାଟୋ ପତ୍ର ହଳଦିଆ ହେଉଛି — ମୁଁ କଣ କରିବି?"
+    "questionExample": "ଉଦାହରଣ: ମୋ ଟମାଟୋ ପତ୍ର ହଳଦିଆ ହେଉଛି — ମୁଁ କଣ କରିବି?",
+    "submittedRejected": "Submitted — Rejected",
+    "gotIt": "Got It",
+    "location": "Location",
+    "locationLockedNote": "Location is locked to your profile and cannot be changed"
   },
   "readFullPolicy": "ସମ୍ପୂର୍ଣ୍ଣ ଗୋପନୀୟତା ନୀତି ପଢ଼ନ୍ତୁ →",
   "resendOtp": "OTP ପୁନର୍ବାର ପଠାନ୍ତୁ",
@@ -970,7 +984,9 @@
     "orgLocationVillagePlaceholder": "ଗାଁ ନାମ ଦିଅନ୍ତୁ",
     "collegeName": "କଲେଜ ନାମ",
     "collegeNamePlaceholder": "ଆପଣଙ୍କ କଲେଜ ନାମ ଦିଅନ୍ତୁ",
-    "collegeNameRequired": "କଲେଜ ନାମ ଆବଶ୍ୟକ"
+    "collegeNameRequired": "କଲେଜ ନାମ ଆବଶ୍ୟକ",
+    "organisationType": "Organisation Type",
+    "organisationTypePlaceholder": "Select organisation type"
   },
   "verificationPending": {
     "title": "ଯାଞ୍ଚ ବିଚାରାଧୀନ ଅଛି",
@@ -1352,10 +1368,337 @@
     "yourSubmissions": "ଆପଣଙ୍କ ଦାଖଲ କରାଯାଇଥିବା ପ୍ରଶ୍ନ ଏବଂ ସେଗୁଡ଼ିକର ସ୍ଥିତି।"
   },
   "cat": {
-    "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ"
+    "volunteer": "ସ୍ୱେଚ୍ଛାସେବୀ",
+    "studentDesc": "Agriculture / allied sciences student"
   },
   "leaderboard.loadError": "ଲିଡରବୋର୍ଡ ଲୋଡ୍ କରିବାରେ ବିଫଳ",
   "leaderboard.loadMore": "ଅଧିକ ଲୋଡ୍ କରନ୍ତୁ",
   "leaderboard.loadingMore": "ଲୋଡ୍ ହେଉଛି...",
-  "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।"
+  "leaderboard.reachedEnd": "ଆପଣ ଲିଡରବୋର୍ଡର ଶେଷରେ ପହଞ୍ଚିଗଲେଣି।",
+  "aIValidationBanner": {
+    "dismissWarning": "Dismiss warning"
+  },
+  "accountLockedModal": {
+    "yourAccessHasBeen": "Your access has been revoked.",
+    "bannedOn": "Banned on",
+    "suspendedOn": "Suspended on",
+    "ifYouBelieveThis": "If you believe this was a mistake, contact support",
+    "sendEmail": "Send email",
+    "logOut": "Log Out"
+  },
+  "confirmModal": {
+    "pleaseWait": "Please wait…"
+  },
+  "duplicateFoundModal": {
+    "match": "{{scorePct}}% match",
+    "readLess": "Read less ▲",
+    "readMore": "Read more ▼"
+  },
+  "select": {
+    "search": "Search…",
+    "noResultsFound": "No results found"
+  },
+  "suspendBanModal": {
+    "pleaseProvideReasonFor": "Please provide a reason for the record",
+    "pleaseSelectSuspensionDuration": "Please select a suspension duration",
+    "actionFailedPleaseTry": "Action failed. Please try again.",
+    "banned": "banned",
+    "suspended": "suspended",
+    "reason": "Reason: {{reason}}",
+    "since": "Since: {{value1}}",
+    "banUser": "Ban User",
+    "suspendUser": "Suspend User",
+    "permanentlyBlockTheUser": "Permanently block the user from logging in.",
+    "temporarilyBlockTheUser": "Temporarily block the user until the set end date.",
+    "orEnterCustomEnd": "Or enter custom end date (YYYY-MM-DD)",
+    "suspensionEnds": "Suspension ends: {{value1}}",
+    "repeatedSpamFraudulentActivity": "e.g. Repeated spam, fraudulent activity…",
+    "confirmBan": "Confirm Ban",
+    "confirmSuspension": "Confirm Suspension"
+  },
+  "translatableTextReadOnly": {
+    "translateTo": "Translate to {{langLabel}}",
+    "translating": "Translating…",
+    "original": "Original"
+  },
+  "trnscber": {
+    "translatingTo": "Translating to {{langLabel}}…",
+    "translatedFromEnglish": "Translated from English"
+  },
+  "walletAdjustModal": {
+    "adjustWalletBalance": "Adjust Wallet Balance",
+    "manuallyAdjustWalletBalance": "Manually adjust {{userName}}'s wallet balance",
+    "transactionType": "Transaction Type",
+    "credit": "Credit (+)",
+    "debit": "Debit (−)",
+    "refundForRejectedQuestion": "e.g. Refund for rejected question, correction for duplicate payment…",
+    "newBalance": "New balance:",
+    "confirmAdjustment": "Confirm Adjustment"
+  },
+  "walletDetailModal": {
+    "walletDetails": "Wallet Details",
+    "balance": "BALANCE",
+    "loadMore": "Load More",
+    "noWithdrawalsYet": "No withdrawals yet"
+  },
+  "withdrawalDetailModal": {
+    "processed": "Processed",
+    "paymentRetriedSuccessfully": "Payment retried successfully",
+    "markedAsFailed": "Marked as failed",
+    "withdrawalRequest": "Withdrawal Request",
+    "amountRequested": "Amount Requested",
+    "userDetails": "User Details",
+    "payoutDestination": "Payout Destination",
+    "bankName": "Bank Name",
+    "holder": "A/C Holder",
+    "noPayoutDetailsRecorded": "No payout details recorded",
+    "timeline": "Timeline",
+    "requested": "Requested",
+    "orderId": "Order ID",
+    "pinelabsTxn": "PineLabs Txn",
+    "failureReason": "Failure Reason",
+    "awaitingPinelabsConfirmation": "Awaiting PineLabs confirmation",
+    "thePayoutHasBeen": "The payout has been sent to PineLabs. It usually completes within a few minutes.",
+    "approvePay": "Approve & Pay",
+    "retryPayment": "Retry Payment",
+    "markFailed": "Mark Failed",
+    "loadAuditHistory": "Load Audit History",
+    "total": "{{length}}total",
+    "noAuditHistoryFor": "No audit history for this withdrawal",
+    "paymentFailed": "Payment Failed",
+    "rejectWithdrawal": "Reject Withdrawal",
+    "reason": "Reason…"
+  },
+  "appNavigator": {
+    "empoweringFarmers": "Empowering Farmers"
+  },
+  "adminAuditLogsScreen": {
+    "previous": "Previous",
+    "metadata": "Metadata",
+    "filterAuditLogs": "Filter Audit Logs",
+    "auditLogs": "Audit Logs",
+    "entries": "{{value0}}entries",
+    "superAdministrator": "Super Administrator",
+    "activityOverview": "Activity Overview",
+    "totalActions": "Total Actions",
+    "activeAdmins": "Active Admins",
+    "configChanges": "Config Changes",
+    "usersBanned": "Users Banned",
+    "dailyActivityLastDays": "Daily Activity (Last 7 Days)",
+    "moderationLeaderboard": "Moderation Leaderboard",
+    "clearAll": "Clear all",
+    "noAuditLogsFound": "No audit logs found",
+    "logsWillAppearHere": "Logs will appear here as actions are performed"
+  },
+  "adminConfigScreen": {
+    "invalidValue": "Invalid value",
+    "configUpdated": "Config updated",
+    "configuration": "Configuration",
+    "tapConfigToEdit": "Tap a config to edit. Changes apply immediately and are audit-logged.",
+    "tapToEdit": "Tap to edit",
+    "superAdminOnly": "Super admin only",
+    "updateConfig": "Update Config",
+    "enterValue": "Enter value…"
+  },
+  "adminCreateUserScreen": {
+    "userCreatedSuccessfully": "User created successfully",
+    "createUser": "Create User",
+    "addNewUserAccount": "Add a new user account manually"
+  },
+  "adminDashboardScreen": {
+    "question": "Question {{label}}",
+    "loadingDashboard": "Loading dashboard...",
+    "administrator": "Administrator",
+    "questions": "{{value1}}questions",
+    "users": "{{value1}}users",
+    "approved": "{{approvalRate}}% approved",
+    "approvalRate": "Approval Rate",
+    "rewardsPayouts": "Rewards & Payouts",
+    "totalRewarded": "Total Rewarded",
+    "rewardsGiven": "Rewards Given",
+    "avgPerReward": "Avg per Reward",
+    "payoutsSent": "Payouts Sent",
+    "payoutPipeline": "Payout Pipeline",
+    "transactions": "{{withdrawalCount}}transactions",
+    "sent": "{{value1}}sent",
+    "remaining": "{{value1}}remaining",
+    "needsReview": "Needs Review",
+    "quickAccess": "Quick Access",
+    "config": "Config",
+    "approveQuestion": "Approve Question"
+  },
+  "adminProcessedQuestionsScreen": {
+    "by": "by {{reviewedByName}}",
+    "viewFullDetails": "View Full Details",
+    "total": "{{total}}total",
+    "noProcessedQuestions": "No processed questions",
+    "approvedRejectedAndHeld": "Approved, rejected, and held questions will appear here",
+    "filterProcessed": "Filter Processed"
+  },
+  "adminProfileScreen": {
+    "adminProfile": "Admin Profile"
+  },
+  "adminQuestionDetailScreen": {
+    "audio": "Audio",
+    "submittedBy": "Submitted By",
+    "reviewedBy": "Reviewed By",
+    "hold": "Hold"
+  },
+  "adminQuestionsScreen": {
+    "enterReason": "Enter reason…",
+    "fullDetails": "Full Details",
+    "questionReview": "Question Review",
+    "adjustFiltersOrCheck": "Adjust filters or check back later",
+    "backToList": "Back to list",
+    "selectQuestion": "Select a question",
+    "tapOneFromThe": "Tap one from the list to review it",
+    "filterQuestions": "Filter Questions"
+  },
+  "adminSuperAdminScreen": {
+    "adminLeaderboard": "Admin Leaderboard"
+  },
+  "adminUserDetailScreen": {
+    "userVerifiedSuccessfully": "User verified successfully",
+    "userNotFound": "User not found",
+    "userDetail": "User Detail",
+    "kvk": "KVK: {{value1}}",
+    "until": "Until",
+    "accountInfo": "Account Info",
+    "joined": "Joined",
+    "lastLogin": "Last Login",
+    "never": "Never",
+    "currentBalance": "Current Balance",
+    "adminActions": "Admin Actions",
+    "suspend": "Suspend",
+    "temporaryLockout": "Temporary lockout",
+    "permanentRemoval": "Permanent removal",
+    "restoreAccess": "Restore Access",
+    "thisUserHasBeen": "This user has been permanently banned. You can reverse this action.",
+    "thisUserIsCurrently": "This user is currently suspended. You can lift the suspension early.",
+    "unbanUser": "Unban User",
+    "liftSuspension": "Lift Suspension",
+    "awaitingVerification": "Awaiting Verification",
+    "thisUserHasCompleted": "This user has completed registration but is awaiting admin verification.",
+    "orgType": "Org Type",
+    "orgName": "Org Name",
+    "auditHistory": "Audit History",
+    "noAuditHistoryFor": "No audit history for this user",
+    "unbanUser2": "Unban User?",
+    "liftSuspension2": "Lift Suspension?"
+  },
+  "adminUsersScreen": {
+    "uncategorised": "Uncategorised",
+    "banned": "BANNED",
+    "suspended": "SUSPENDED",
+    "thisIsYou": "This is you",
+    "viewWallet": "View Wallet",
+    "noUsersMatchYour": "No users match your filters",
+    "tryAdjustingTheFilter": "Try adjusting the filter criteria",
+    "filterUsers": "Filter Users"
+  },
+  "adminWithdrawalsScreen": {
+    "withdrawalRejected": "Withdrawal rejected",
+    "paymentSuccessful": "Payment successful!",
+    "rs": "Rs.{{value1}}",
+    "requested": "Requested {{value1}}",
+    "processed": "Processed {{value1}}",
+    "pinelabsTxn": "PineLabs Txn: {{pinelabsTransactionId}}",
+    "rejection": "Rejection:",
+    "withdrawals": "Withdrawals",
+    "noWithdrawalsMatchYour": "No withdrawals match your filters",
+    "filterWithdrawals": "Filter Withdrawals",
+    "markAsFailed": "Mark as Failed"
+  },
+  "financeDashboardScreen": {
+    "financeDashboard": "Finance Dashboard",
+    "financeTeam": "Finance Team",
+    "pending": "{{count}}pending",
+    "completed": "{{count}}completed",
+    "failed": "{{count}}failed",
+    "totalPaidOut": "Total Paid Out",
+    "pendingWithdrawals": "Pending Withdrawals",
+    "totalWalletBalance": "Total Wallet Balance",
+    "todayPayouts": "Today's Payouts",
+    "transactions": "Transactions",
+    "dailyPayoutTrendLast": "Daily Payout Trend (Last 7 days)",
+    "pending2": "{{count}}pending · {{value3}}",
+    "totalBalance": "{{value1}}total balance",
+    "viewVerifyUserAccounts": "View & verify user accounts",
+    "noFinancialDataAvailable": "No financial data available"
+  },
+  "financeWalletsScreen": {
+    "earned": "Earned: {{value1}}",
+    "withdrawn": "Withdrawn: {{value1}}"
+  },
+  "privacyPolicyScreen": {
+    "lastUpdatedJune2026": "Last updated: June 2026 · {{length}}sections",
+    "yourDataIsStored": "Your data is stored securely and never sold to third parties."
+  },
+  "termsOfServiceScreen": {
+    "lastUpdatedJune2026": "Last updated: June 2026 · 11 sections"
+  },
+  "termsScreen": {
+    "readAndAcceptTo": "Read and accept to continue · {{length}}sections",
+    "readOurPrivacyPolicy": "Read our Privacy Policy →",
+    "confirmContinue": "Confirm & Continue"
+  },
+  "myQuestionsScreen": {
+    "allYourSubmittedQuestions": "All your submitted questions are listed here. Tap any question to view details, edit within the window, or check its approval status."
+  },
+  "editProfileScreen": {
+    "updateYourAdminProfile": "Update your admin profile"
+  },
+  "profileScreen": {
+    "member": "{{label}}Member",
+    "approvedQuestions": "{{totalApproved}}approved questions"
+  },
+  "questionPreviewScreen": {
+    "thisQuestionIsNot": "This question is not editable after submission",
+    "selectOneOrMore": "Select one or more"
+  },
+  "speechToTextScreen": {
+    "yourTranscribedTextWill": "Your transcribed text will appear here"
+  },
+  "submissionsScreen": {
+    "translate": "Translate",
+    "translateTo": "Translate to"
+  },
+  "paymentDetailsScreen": {
+    "ifsc": "{{accountHolderName}}· IFSC: {{ifsc}}",
+    "remove": "Remove",
+    "verificationFailedCheckDetails": "Verification failed. Check details and try again.",
+    "retryVerification": "Retry Verification",
+    "bankAccount": "bank account",
+    "netBanking": "Net Banking",
+    "paymentLinkWillBe": "Payment link will be sent via SMS shortly.",
+    "paymentMethodsAreVerified": "Payment methods are verified with a ₹1 micro-transaction before use.",
+    "addPaymentMethod": "Add Payment Method",
+    "yournameUpi": "yourname@upi",
+    "accountNumber": "Account number",
+    "confirmAccountNumber": "Confirm account number",
+    "ifscCodeSbin0001234": "IFSC code (e.g. SBIN0001234)",
+    "accountHolderName": "Account holder name",
+    "bankNameOptional": "Bank name (optional)",
+    "addVerify": "Add & Verify",
+    "verificationChargeWillBe": "A ₹1 verification charge will be applied and refunded upon confirmation.",
+    "noPaymentMethods": "No payment methods",
+    "addUpiIdOr": "Add a UPI ID or bank account to enable withdrawals.",
+    "removePaymentMethod": "Remove Payment Method"
+  },
+  "walletScreen": {
+    "payoutDetails": "Payout Details",
+    "ifsc": "IFSC",
+    "bank": "Bank",
+    "withdrawalId": "Withdrawal ID",
+    "yourPaymentWasAttempted": "Your payment was attempted but could not be completed. We will retry the transaction and finalize your withdrawal shortly. You will be notified once the process is complete.",
+    "yourPaymentWasReversed": "Your payment was reversed and the amount has been credited back to your wallet. Please add a different payment detail and try again.",
+    "minToWithdraw": "Min ₹{{value1}}to withdraw",
+    "minMax": "Min ₹{{value1}}· Max ₹{{value3}}",
+    "paymentMethod": "Payment Method",
+    "noPaymentMethodsFound": "No payment methods found.",
+    "addOneInPayment": "Add one in Payment Methods first.",
+    "noVerifiedPaymentMethods": "No verified payment methods. Add one in Payment Methods."
+  },
+  "selectDistrictBeforeKvk": "Please select a district before selecting a KVK.",
+  "kvkLoadingMessage": "Please wait, KVKs are being loaded."
 }

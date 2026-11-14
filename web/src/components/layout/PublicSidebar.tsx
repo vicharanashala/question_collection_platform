@@ -57,11 +57,9 @@ export function PublicSidebar() {
         </div>
 
         <div>
-          <p className="text-xs font-bold leading-tight text-foreground sm:text-sm">
-            AnnaDatha
-          </p>
+          <p className="text-xs font-bold leading-tight text-foreground sm:text-sm">{t('app.name')}</p>
           <p className="text-[11px] leading-tight text-text-tertiary">
-            {user?.isAnveshanUser ? ANVESHAN_TAGLINE : "Public Portal"}
+            {user?.isAnveshanUser ? ANVESHAN_TAGLINE : t('app.publicPortal')}
           </p>
         </div>
       </div>
@@ -108,16 +106,14 @@ export function PublicSidebar() {
         <span>{t(labelKey)}</span>
         {to === '/home/wallet' && (
           <span className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-warning">
-            {t('common.comingSoon', 'Coming Soon')}
+            {t('common.comingSoon')}
           </span>
         )}
       </span>
 
       {isSubmitTab && hasDraft && !isOnSubmitPage && (
         <FilePenLine
-          aria-label={t('nav.draftQuestion', {
-            defaultValue: 'Draft question',
-          })}
+          aria-label={t('nav.draftQuestion')}
           className="h-4 w-4 shrink-0 text-orange-500"
         />
       )}

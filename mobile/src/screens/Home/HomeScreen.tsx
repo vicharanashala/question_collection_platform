@@ -285,7 +285,7 @@ export function HomeScreen() {
                       {tier.min}–{tier.max}{t('home.questions')}
                     </Text>
                     <Text style={[styles.tierStepReward, { color: c.text }]}>
-                      {t('common.rupee', 'Rs.')}{tier.reward}{t('home.perQuestion')}
+                      {t('common.rupee')}{tier.reward}{t('home.perQuestion')}
                     </Text>
                   </View>
                 </View>

@@ -21,6 +21,7 @@ import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
 import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
 import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
 import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers/feedbackPrompt'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Shell for the public-user app (role="user"). Visually distinct from the
@@ -32,6 +33,7 @@ import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers
  *    drawer in the header for secondary actions.
  */
 export function PublicLayout() {
+  const { t } = useTranslation()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user } = useAuth()
   const [milestone, setMilestone] = useState<AnveshanMilestoneResponse | null>(null)
@@ -84,7 +86,7 @@ export function PublicLayout() {
     return (
       <div className="flex h-dvh w-full items-center justify-center bg-background" role="status">
         <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden="true" />
-        <span className="sr-only">Loading…</span>
+        <span className="sr-only">{t('leaderboard.loading')}</span>
       </div>
     )
   }

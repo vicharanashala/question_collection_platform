@@ -45,6 +45,7 @@ import type {
   LgdVillage,
   LgdKvk,
 } from "@/api/client";
+import { useTranslation } from 'react-i18next';
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -209,6 +210,7 @@ function EditProfileDialog({
   onClose: () => void;
   onSaved: (u: AuthUser) => void;
 }) {
+  const { t } = useTranslation();
   const { setLanguage } = useLanguage();
   const [tab, setTab] = useState("personal");
   const [saving, setSaving] = useState(false);
@@ -401,7 +403,7 @@ function EditProfileDialog({
 
   async function handleSave() {
     if (!form.name.trim()) {
-      toast.error("Name cannot be empty");
+      toast.error(t('profilePage.nameCannotBeEmpty'));
       return;
     }
     setSaving(true);
@@ -448,7 +450,7 @@ function EditProfileDialog({
 
       const { user: updated } = await authApi.updateMe(payload);
       onSaved(updated);
-      toast.success("Profile updated");
+      toast.success(t('profilePage.profileUpdated'));
       onClose();
     } catch (e) {
       toast.error(getErrorMessage(e, "Failed to update profile"));
@@ -471,14 +473,14 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit2 className="h-4 w-4" />
-            Edit Profile
+            {t('profile.editProfile')}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab} className="mt-2">
           <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="location">Location</TabsTrigger>
+            <TabsTrigger value="personal">{t('profilePage.personal')}</TabsTrigger>
+            <TabsTrigger value="location">{t('profile.location')}</TabsTrigger>
           </TabsList>
 
           {/* ── Personal ── */}
@@ -487,7 +489,7 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
   <div className={gridCls}>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Full Name *</Label>
+      <Label className={labelCls}>{t('profilePage.fullName')}</Label>
       <Input
         className={inputCls}
         value={form.name}
@@ -497,7 +499,7 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Age</Label>
+      <Label className={labelCls}>{t('age')}</Label>
       <Input
         className={inputCls}
         type="number"
@@ -505,18 +507,18 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
         max={120}
         value={form.age}
         onChange={(e) => set("age", e.target.value)}
-        placeholder="e.g. 35"
+        placeholder={t('profilePage.35')}
       />
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Gender</Label>
+      <Label className={labelCls}>{t('profile.gender')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
         value={form.gender}
         onChange={(e) => set("gender", e.target.value)}
       >
-        <option value="">Select…</option>
+        <option value="">{t('profilePage.select')}</option>
         {GENDERS.map((g) => (
           <option key={g} value={g}>
             {g}
@@ -526,7 +528,7 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Language</Label>
+      <Label className={labelCls}>{t('speech.stt.language')}</Label>
 
       {isEndUser(user) ? (
         <select
@@ -545,9 +547,7 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
           ))}
         </select>
       ) : (
-        <div className="h-9 flex items-center text-xs sm:text-sm text-text-secondary">
-          English
-        </div>
+        <div className="h-9 flex items-center text-xs sm:text-sm text-text-secondary">{t('translatableText.english')}</div>
       )}
     </div>
 
@@ -560,13 +560,13 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
   <div className={gridCls}>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>State</Label>
+      <Label className={labelCls}>{t('admin.state')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus"
         value={form.state}
         onChange={(e) => onStateChange(e.target.value)}
       >
-        <option value="">Select State…</option>
+        <option value="">{t('profilePage.selectState')}</option>
         {states.map((s) => (
           <option key={s.code} value={s.code}>
             {s.name}
@@ -576,14 +576,14 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>District</Label>
+      <Label className={labelCls}>{t('auth.district')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
         value={form.district}
         onChange={(e) => onDistrictChange(e.target.value)}
         disabled={!form.state || loadingDistricts}
       >
-        <option value="">Select District…</option>
+        <option value="">{t('profilePage.selectDistrict')}</option>
         {districts.map((d) => (
           <option key={d.code} value={d.code}>
             {d.name}
@@ -593,14 +593,14 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Block</Label>
+      <Label className={labelCls}>{t('block')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
         value={form.block}
         onChange={(e) => onBlockChange(e.target.value)}
         disabled={!form.district || loadingSubdistricts}
       >
-        <option value="">Select Block…</option>
+        <option value="">{t('profilePage.selectBlock')}</option>
         {subdistricts.map((b) => (
           <option key={b.code} value={b.code}>
             {b.name}
@@ -610,14 +610,14 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>Village</Label>
+      <Label className={labelCls}>{t('village')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
         value={form.village}
         onChange={(e) => onVillageChange(e.target.value)}
         disabled={!form.block || loadingVillages}
       >
-        <option value="">Select Village…</option>
+        <option value="">{t('profilePage.selectVillage')}</option>
         {villages.map((v) => (
           <option key={v.code} value={v.name}>
             {v.name}
@@ -627,14 +627,14 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
     </div>
 
     <div className={fieldCls}>
-      <Label className={labelCls}>KVK</Label>
+      <Label className={labelCls}>{t('profile.kvk')}</Label>
       <select
         className="h-9 w-full rounded-md border border-border-subtle bg-surface-variant px-2 text-xs sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-focus disabled:opacity-50"
         value={form.kvk}
         onChange={(e) => onKvkChange(e.target.value)}
         disabled={!form.district || loadingKvks}
       >
-        <option value="">Select KVK…</option>
+        <option value="">{t('profilePage.selectKvk')}</option>
         {kvks.map((k) => (
           <option key={k.code} value={k.address}>
             {k.address}
@@ -649,11 +649,9 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
         </Tabs>
 
         <DialogFooter className="gap-2 border-t border-border-subtle px-4 py-3 sm:gap-0 sm:px-6 sm:py-4">
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>{t('common.cancel')}</Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? t('profilePage.saving') : t('editProfile.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -664,6 +662,7 @@ const inputCls = "h-9 text-xs sm:text-sm w-full"
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user, updateUser } = useAuth();
   const { setLanguage } = useLanguage();
   const [editOpen, setEditOpen] = useState(false);
@@ -690,16 +689,12 @@ export function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-text">
-            My Profile
-          </h2>
-          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-0.5">
-            Manage your account and preferences
-          </p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text">{t('profilePage.myProfile')}</h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-0.5">{t('profilePage.manageYourAccountAnd')}</p>
         </div>
         <Button onClick={() => setEditOpen(true)}>
           <Edit2 className="h-4 w-4 mr-1.5" />
-          Edit Profile
+          {t('profile.editProfile')}
         </Button>
       </div>
 
@@ -716,7 +711,7 @@ export function ProfilePage() {
               </div>
               <span
                 className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface bg-emerald-500"
-                title="Active"
+                title={t('profilePage.active')}
               />
             </div>
 
@@ -760,20 +755,20 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <User className="h-4 w-4 text-primary" />
-              Account Details
+              {t('userDetailPage.accountDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <FieldRow icon={Phone} label="Mobile" value={user.mobileNumber} />
-            <FieldRow icon={MapPin} label="Location" value={locationStr} />
+            <FieldRow icon={Phone} label={t('anveshan.detailMobile')} value={user.mobileNumber} />
+            <FieldRow icon={MapPin} label={t('profile.location')} value={locationStr} />
             <FieldRow
               icon={Calendar}
-              label="Joined"
+              label={t('profilePage.joined')}
               value={user.createdAt ? formatDate(user.createdAt) : "—"}
             />
             <FieldRow
               icon={Globe}
-              label="Language"
+              label={t('speech.stt.language')}
               value={
                 LANGUAGES.find((l) => l.value === user.languagePreference)
                   ?.label ??
@@ -788,28 +783,28 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Shield className="h-4 w-4 text-primary" />
-              Security & Access
+              {t('profilePage.securityAccess')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow
               icon={Lock}
-              label="Role"
+              label={t('profile.completion.fieldRole')}
               value={ROLE_LABELS[user.role] ?? user.role}
             />
             <FieldRow
               icon={Clock}
-              label="Last Login"
+              label={t('profilePage.lastLogin')}
               value={user.lastLoginAt ? formatDate(user.lastLoginAt) : "—"}
             />
             <FieldRow
               icon={Shield}
-              label="Consent"
+              label={t('auth.consentTitle')}
               value={user.consentGiven ? "Given" : "Not Given"}
             />
             <FieldRow
               icon={MapPin}
-              label="Active State"
+              label={t('profilePage.activeState')}
               value={user.state || "—"}
             />
           </CardContent>
@@ -821,7 +816,7 @@ export function ProfilePage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
             <MapPinned className="h-4 w-4 text-primary" />
-            Personal Location
+            {t('userDetailPage.personalLocation')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -844,7 +839,7 @@ export function ProfilePage() {
           </div>
           {user.kvk && (
             <div className="mt-3 flex items-center gap-2 text-xs sm:text-xs sm:text-sm">
-              <span className="font-medium text-text-tertiary">KVK:</span>
+              <span className="font-medium text-text-tertiary">{t('profilePage.kvk')}</span>
               <span className="text-text">{user.kvk}</span>
             </div>
           )}
@@ -855,16 +850,14 @@ export function ProfilePage() {
       {(user.age || user.gender) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold">
-              Personal Details
-            </CardTitle>
+            <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold">{t('profilePage.personalDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.age && (
-              <FieldRow icon={User} label="Age" value={String(user.age)} />
+              <FieldRow icon={User} label={t('age')} value={String(user.age)} />
             )}
             {user.gender && (
-              <FieldRow icon={User} label="Gender" value={user.gender} />
+              <FieldRow icon={User} label={t('profile.gender')} value={user.gender} />
             )}
           </CardContent>
         </Card>
@@ -881,35 +874,35 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
-              Organisation
+              {t('profile.completion.fieldOrganisationName')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.organizationName && (
               <FieldRow
                 icon={Building2}
-                label="Org. Name"
+                label={t('profilePage.orgName')}
                 value={user.organizationName}
               />
             )}
             {user.organizationRole && (
               <FieldRow
                 icon={Building2}
-                label="Your Role"
+                label={t('yourRole')}
                 value={user.organizationRole}
               />
             )}
             {user.organisationType && (
               <FieldRow
                 icon={Building2}
-                label="Org. Type"
+                label={t('profile.orgType')}
                 value={user.organisationType}
               />
             )}
             {user.numberOfFarmers && (
               <FieldRow
                 icon={Users}
-                label="No. of Farmers"
+                label={t('editProfile.numberOfFarmers')}
                 value={String(user.numberOfFarmers)}
               />
             )}
@@ -943,18 +936,18 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Leaf className="h-4 w-4 text-emerald-500" />
-              Farming Details
+              {t('profilePage.farmingDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.farmSize && (
-              <FieldRow icon={Leaf} label="Farm Size" value={user.farmSize} />
+              <FieldRow icon={Leaf} label={t('profile.completion.fieldFarmSize')} value={user.farmSize} />
             )}
             {user.cropType && (
-              <FieldRow icon={Leaf} label="Crop Type" value={user.cropType} />
+              <FieldRow icon={Leaf} label={t('profile.completion.fieldCropType')} value={user.cropType} />
             )}
             {user.season && (
-              <FieldRow icon={Leaf} label="Season" value={user.season} />
+              <FieldRow icon={Leaf} label={t('profile.season')} value={user.season} />
             )}
           </CardContent>
         </Card>
@@ -965,28 +958,28 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-purple-500" />
-              Education Details
+              {t('profilePage.educationDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.courseName && (
               <FieldRow
                 icon={GraduationCap}
-                label="Course"
+                label={t('profile.course')}
                 value={user.courseName}
               />
             )}
             {user.collegeName && (
               <FieldRow
                 icon={GraduationCap}
-                label="College"
+                label={t('profile.college')}
                 value={user.collegeName}
               />
             )}
             {user.universityName && (
               <FieldRow
                 icon={GraduationCap}
-                label="University"
+                label={t('profile.completion.fieldUniversityName')}
                 value={user.universityName}
               />
             )}
@@ -999,22 +992,22 @@ export function ProfilePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm sm:text-sm sm:text-base font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-orange-500" />
-              Volunteer / NGO Details
+              {t('profilePage.volunteerNgoDetails')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {user.organisationType && (
               <FieldRow
                 icon={Building2}
-                label="Org. Type"
+                label={t('profile.orgType')}
                 value={user.organisationType}
               />
             )}
             {user.season && (
-              <FieldRow icon={Leaf} label="Season" value={user.season} />
+              <FieldRow icon={Leaf} label={t('profile.season')} value={user.season} />
             )}
             {user.cropType && (
-              <FieldRow icon={Leaf} label="Crop Type" value={user.cropType} />
+              <FieldRow icon={Leaf} label={t('profile.completion.fieldCropType')} value={user.cropType} />
             )}
           </CardContent>
         </Card>

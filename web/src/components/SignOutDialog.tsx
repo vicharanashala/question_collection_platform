@@ -64,7 +64,7 @@ export function SignOutDialog({ open, onOpenChange, onSignOut }: SignOutDialogPr
         {/* Close button */}
         <DialogPrimitive.Close className="absolute right-3 top-3 rounded-sm opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-focus sm:right-4 sm:top-4">
           <X className="h-4 w-4 text-text-tertiary" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">{t('common.close')}</span>
         </DialogPrimitive.Close>
       </DialogContent>
     </Dialog>

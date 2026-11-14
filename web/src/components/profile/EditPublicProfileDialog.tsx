@@ -225,6 +225,7 @@ function LocationSelect({
   required?: boolean;
   error?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-1.5">
       {label}
@@ -235,7 +236,7 @@ function LocationSelect({
         onChange={(event) => onChange(event.target.value)}
         className="flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <option value="">{disabled ? "Loading options…" : placeholder}</option>
+        <option value="">{disabled ? t('editPublicProfileDialog.loadingOptions') : placeholder}</option>
         {options.map((option) => (
           <option
             key={option.name}
@@ -259,6 +260,7 @@ function CropSelector({
   onClick: () => void;
   error?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-1.5">
       Primary crops <span className="text-red-500">*</span>
@@ -270,7 +272,7 @@ function CropSelector({
       >
         {crops.length
           ? `${crops.length} crop${crops.length === 1 ? "" : "s"} selected`
-          : "Select crops"}
+          : t('editPublicProfileDialog.selectCrops')}
       </Button>
       {crops.length > 0 && (
         <p className="line-clamp-2 text-xs text-text-secondary">
@@ -305,6 +307,7 @@ export function EditPublicProfileDialog({
   /** Blocks dismissal while an admin-created account completes its first profile. */
   required?: boolean;
 }) {
+  const { t } = useTranslation();
   // Declared first so its `i18n.language` can seed the initial form below.
   const { i18n } = useTranslation();
 
@@ -466,7 +469,7 @@ export function EditPublicProfileDialog({
         const villageResult = await lgdApi.getVillages(block.code);
         if (active) setVillages(villageResult.villages);
       } catch {
-        toast.error("Unable to load location options. Please try again.");
+        toast.error(t('editPublicProfileDialog.unableToLoadLocation'));
       } finally {
         if (active) setLoadingLocation(false);
       }
@@ -505,7 +508,7 @@ export function EditPublicProfileDialog({
     try {
       setDistricts((await lgdApi.getDistricts(state.code)).districts);
     } catch {
-      toast.error("Unable to load districts.");
+      toast.error(t('editPublicProfileDialog.unableToLoadDistricts'));
     } finally {
       setLoadingLocation(false);
     }
@@ -540,7 +543,7 @@ export function EditPublicProfileDialog({
       setBlocks(blockResult.subdistricts);
       setKvks(kvkResult.kvks);
     } catch {
-      toast.error("Unable to load blocks and KVKs.");
+      toast.error(t('editPublicProfileDialog.unableToLoadBlocks'));
     } finally {
       setLoadingLocation(false);
     }
@@ -557,7 +560,7 @@ export function EditPublicProfileDialog({
     try {
       setVillages((await lgdApi.getVillages(block.code)).villages);
     } catch {
-      toast.error("Unable to load villages.");
+      toast.error(t('editPublicProfileDialog.unableToLoadVillages'));
     } finally {
       setLoadingLocation(false);
     }
@@ -598,20 +601,16 @@ export function EditPublicProfileDialog({
       {key === "username" ? (
         <>
           {usernameStatus === "checking" && (
-            <p className="text-sm text-muted-foreground">
-              Checking username availability...
-            </p>
+            <p className="text-sm text-muted-foreground">{t('editPublicProfileDialog.checkingUsernameAvailability')}</p>
           )}
 
           {usernameStatus === "available" && (
-            <p className="text-sm text-green-600">Username is available.</p>
+            <p className="text-sm text-green-600">{t('editPublicProfileDialog.usernameIsAvailable')}</p>
           )}
 
           {usernameStatus === "taken" && (
             <div className="space-y-1">
-              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">
-                Taken. Try one of these:
-              </p>
+              <p className="text-[11px] sm:text-[11px] sm:text-xs text-rose-600">{t('completeProfileWizard.takenTryOneOf')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {usernameSuggestions.map((s) => (
                   <button
@@ -918,10 +917,10 @@ export function EditPublicProfileDialog({
       const result = await authApi.updateMe(payload);
       onSaved(result.user);
       onOpenChange(false);
-      toast.success("Profile Completed Successfully");
+      toast.success(t('editPublicProfileDialog.profileCompletedSuccessfully'));
       navigate("/home", { replace: true });
     } catch {
-      toast.error("Unable to update your profile. Please try again.");
+      toast.error(t('editPublicProfileDialog.unableToUpdateYour'));
     } finally {
       setSaving(false);
     }
@@ -949,12 +948,12 @@ export function EditPublicProfileDialog({
             <div className="shrink-0 border-b border-border-subtle px-5 py-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <DialogTitle>Complete Profile</DialogTitle>
+                  <DialogTitle>{t('editPublicProfileDialog.completeProfile')}</DialogTitle>
 
                   <p className="mt-1 text-xs text-text-secondary">
                     Complete you profile
                     {category === "fpo"
-                      ? "FPO membership"
+                      ? t('editPublicProfileDialog.fpoMembership')
                       : (category ?? "account")}
                     .
                   </p>
@@ -968,7 +967,7 @@ export function EditPublicProfileDialog({
                   className="gap-1.5"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  Logout
+                  {t('auth.logout')}
                 </Button>
               </div>
 
@@ -1014,21 +1013,19 @@ export function EditPublicProfileDialog({
               {step === 1 && (
                 <>
                   <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-primary">
-                      Your location
-                    </h3>
+                    <h3 className="text-sm font-bold text-primary">{t('editPublicProfileDialog.yourLocation')}</h3>
                     <LocationSelect
-                      label="State"
+                      label={t('admin.state')}
                       value={form.state}
                       options={states}
                       disabled={loadingLocation || states.length === 0}
                       onChange={selectState}
-                      placeholder="Select state"
+                      placeholder={t('question.selectState')}
                       required
                       error={errors.state}
                     />
                     <LocationSelect
-                      label="District"
+                      label={t('auth.district')}
                       value={form.district}
                       options={districts}
                       disabled={
@@ -1037,13 +1034,13 @@ export function EditPublicProfileDialog({
                         districts.length === 0
                       }
                       onChange={selectDistrict}
-                      placeholder="Select district"
+                      placeholder={t('question.districtPlaceholder')}
                       required
                       error={errors.district}
                     />
                     {category === "farmer" && (
                       <LocationSelect
-                        label="Block"
+                        label={t('block')}
                         value={form.block}
                         options={blocks}
                         disabled={
@@ -1052,14 +1049,14 @@ export function EditPublicProfileDialog({
                           blocks.length === 0
                         }
                         onChange={selectBlock}
-                        placeholder="Select block"
+                        placeholder={t('editPublicProfileDialog.selectBlock')}
                         required
                         error={errors.block}
                       />
                     )}
                     {category === "farmer" && (
                       <LocationSelect
-                        label="Village"
+                        label={t('village')}
                         value={form.village}
                         options={villages}
                         disabled={
@@ -1074,14 +1071,14 @@ export function EditPublicProfileDialog({
                             village ? undefined : "Please select a village.",
                           );
                         }}
-                        placeholder="Select village"
+                        placeholder={t('editPublicProfileDialog.selectVillage')}
                         required
                         error={errors.village}
                       />
                     )}
                     {category === "farmer" && (
                       <LocationSelect
-                        label="KVK"
+                        label={t('profile.kvk')}
                         value={form.kvk}
                         options={kvks}
                         disabled={
@@ -1096,7 +1093,7 @@ export function EditPublicProfileDialog({
                             kvk ? undefined : "Please select a KVK.",
                           );
                         }}
-                        placeholder="Select KVK"
+                        placeholder={t('editPublicProfileDialog.selectKvk')}
                         required
                         error={errors.kvk}
                       />
@@ -1108,9 +1105,7 @@ export function EditPublicProfileDialog({
               {step === 2 && (
                 <>
                   <section className="space-y-3">
-                    <h3 className="text-sm font-bold text-primary">
-                      Personal information
-                    </h3>
+                    <h3 className="text-sm font-bold text-primary">{t('editPublicProfileDialog.personalInformation')}</h3>
                     {field("name", "Full name", "text", true)}
                     {field("username", "Username", "text", true)}
                     {field("age", "Age", "number", true, { min: 16, max: 100 })}
@@ -1134,10 +1129,10 @@ export function EditPublicProfileDialog({
                           <option value={form.gender}>{form.gender}</option>
                         ) : (
                           <>
-                            <option value="">Select gender</option>
-                            <option value="Female">Female</option>
-                            <option value="Male">Male</option>
-                            <option value="Other">Other</option>
+                            <option value="">{t('editPublicProfileDialog.selectGender')}</option>
+                            <option value="Female">{t('gender.female')}</option>
+                            <option value="Male">{t('gender.male')}</option>
+                            <option value="Other">{t('gender.other')}</option>
                           </>
                         )}
                       </select>
@@ -1147,9 +1142,7 @@ export function EditPublicProfileDialog({
 
                   {category === "farmer" && (
                     <section className="space-y-3 sm:col-span-2">
-                      <h3 className="text-sm font-bold text-primary">
-                        Farming
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('profile.farming')}</h3>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {field("farmSize", "Farm size (acres)", "number", true, {
                           min: 0,
@@ -1164,9 +1157,7 @@ export function EditPublicProfileDialog({
                   )}
                   {category === "student" && (
                     <section className="space-y-3 sm:col-span-2">
-                      <h3 className="text-sm font-bold text-primary">
-                        Education
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('profile.education')}</h3>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div className="space-y-1.5">
                           <Label htmlFor="course-select">
@@ -1184,7 +1175,7 @@ export function EditPublicProfileDialog({
                             required
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Choose course" />
+                              <SelectValue placeholder={t('completeProfileWizard.chooseCourse')} />
                             </SelectTrigger>
                             <SelectContent>
                               {COURSE_OPTIONS.map((c) => (
@@ -1203,9 +1194,7 @@ export function EditPublicProfileDialog({
                   )}
                   {isOrganisationUser && (
                     <section className="space-y-3 sm:col-span-2">
-                      <h3 className="text-sm font-bold text-primary">
-                        Organisation
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('profile.completion.fieldOrganisationName')}</h3>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5">
                           <Label>
@@ -1234,7 +1223,7 @@ export function EditPublicProfileDialog({
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Choose type" />
+                              <SelectValue placeholder={t('completeProfileWizard.chooseType')} />
                             </SelectTrigger>
 
                             <SelectContent>
@@ -1247,9 +1236,7 @@ export function EditPublicProfileDialog({
                                 </SelectItem>
                               ))}
 
-                              <SelectItem value={OTHER_VALUE}>
-                                Other…
-                              </SelectItem>
+                              <SelectItem value={OTHER_VALUE}>{t('completeProfileWizard.other')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FieldError message={errors.organisationType} />
@@ -1273,7 +1260,7 @@ export function EditPublicProfileDialog({
                                     ),
                                   );
                                 }}
-                                placeholder="Specify organisation type"
+                                placeholder={t('completeProfileWizard.specifyOrganisationType')}
                               />
                               <FieldError
                                 message={errors.organisationTypeOther}
@@ -1302,9 +1289,7 @@ export function EditPublicProfileDialog({
 
                   {isOrganisationUser && (
                     <section className="space-y-3 sm:col-span-2">
-                      <h3 className="text-sm font-bold text-primary">
-                        Organisation location
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('editPublicProfileDialog.organisationLocation')}</h3>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5">
                           <Label>
@@ -1330,8 +1315,8 @@ export function EditPublicProfileDialog({
                                   : undefined,
                               );
                             }}
-                            placeholder="Search states…"
-                            helperText="Select all states where your organisation operates. You can pick more than one."
+                            placeholder={t('completeProfileWizard.searchStates')}
+                            helperText={t('completeProfileWizard.selectAllStatesWhere')}
                           />
                           <FieldError message={errors.organizationState} />
                         </div>
@@ -1341,9 +1326,7 @@ export function EditPublicProfileDialog({
 
                   {category === "volunteer" && (
                     <section className="space-y-3 sm:col-span-2">
-                      <h3 className="text-sm font-bold text-primary">
-                        Agriculture focus
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('editPublicProfileDialog.agricultureFocus')}</h3>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <CropSelector
                           crops={form.crops}
@@ -1353,7 +1336,7 @@ export function EditPublicProfileDialog({
                         <div className="space-y-3">
                           {/* Season first */}
                           <div className="space-y-1.5">
-                            <Label>Season</Label>
+                            <Label>{t('profile.season')}</Label>
                             <Select
                               value={form.season}
                               onValueChange={(season) =>
@@ -1364,7 +1347,7 @@ export function EditPublicProfileDialog({
                               }
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Optional" />
+                                <SelectValue placeholder={t('completeProfileWizard.optional')} />
                               </SelectTrigger>
                               <SelectContent>
                                 {SEASONS.map((s) => (
@@ -1389,9 +1372,7 @@ export function EditPublicProfileDialog({
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                         <Languages className="h-3.5 w-3.5" />
                       </div>
-                      <h3 className="text-sm font-bold text-primary">
-                        Preferred language
-                      </h3>
+                      <h3 className="text-sm font-bold text-primary">{t('completeProfileWizard.preferredLanguage')}</h3>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="profile-language">
@@ -1402,7 +1383,7 @@ export function EditPublicProfileDialog({
                         onValueChange={handleLanguageChange}
                       >
                         <SelectTrigger id="profile-language">
-                          <SelectValue placeholder="Choose language" />
+                          <SelectValue placeholder={t('completeProfileWizard.chooseLanguage')} />
                         </SelectTrigger>
                         <SelectContent>
                           {LANGUAGES.map((l) => (
@@ -1458,9 +1439,7 @@ export function EditPublicProfileDialog({
                               setLegalModal("terms");
                             }}
                             className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
-                          >
-                            Terms of Service
-                          </button>{" "}
+                          >{t('profile.termsOfService')}</button>{" "}
                           and{" "}
                           <button
                             type="button"
@@ -1469,9 +1448,7 @@ export function EditPublicProfileDialog({
                               setLegalModal("privacy");
                             }}
                             className="text-emerald-600 underline underline-offset-2 hover:text-emerald-700"
-                          >
-                            Privacy Policy
-                          </button>
+                          >{t('profile.privacyPolicy')}</button>
                         </p>
                       </div>
                     </div>
@@ -1489,16 +1466,14 @@ export function EditPublicProfileDialog({
                       variant="outline"
                       onClick={() => onOpenChange(false)}
                       disabled={saving}
-                    >
-                      Cancel
-                    </Button>
+                    >{t('common.cancel')}</Button>
                   )}
                   <Button
                     type="button"
                     onClick={goToDetailsStep}
                     className="gap-1.5"
                   >
-                    Next
+                    {t('common.next')}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </>
@@ -1510,15 +1485,13 @@ export function EditPublicProfileDialog({
                     variant="outline"
                     onClick={goToLocationStep}
                     disabled={saving}
-                  >
-                    Back
-                  </Button>
+                  >{t('common.back')}</Button>
                   <Button
                     type="button"
                     onClick={goToLanguageStep}
                     className="gap-1.5"
                   >
-                    Next
+                    {t('common.next')}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </>
@@ -1530,9 +1503,7 @@ export function EditPublicProfileDialog({
                     variant="outline"
                     onClick={goBackToDetailsStep}
                     disabled={saving}
-                  >
-                    Back
-                  </Button>
+                  >{t('common.back')}</Button>
                   <Button type="submit" disabled={saving} className="gap-1.5">
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                     Save changes

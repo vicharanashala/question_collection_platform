@@ -16,7 +16,7 @@ export function TesterBanner() {
     >
       <FlaskConical aria-hidden="true" className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
       <p className="text-xs font-semibold leading-snug text-violet-900 sm:text-sm dark:text-violet-200">
-        {t('tester.banner', { defaultValue: 'Your account is a tester account.' })}
+        {t('tester.banner')}
       </p>
     </div>
   )
