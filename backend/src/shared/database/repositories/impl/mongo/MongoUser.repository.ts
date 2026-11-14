@@ -481,271 +481,322 @@ export class MongoUserRepository
   //   };
   // }
 
+  private eligibleUsersFilter(extra: Record<string, unknown> = {}) {
+  return {
+    role: UserRole.USER,
+    verificationStatus: VerificationStatus.VERIFIED,
+    isDeleted: { $ne: true }, // deleted users never appear and never count
+    ...extra,
+  };
+}
+
+// Adds `totalQuestions` = approved + moved_to_final questions, ignoring deleted questions
+private approvedQuestionCountStages(): any[] {
+  return [
+    {
+      $lookup: {
+        from: "questions",
+        let: { uid: { $toString: "$_id" } },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$userId", "$$uid"] },
+              status: { $in: [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL] },
+              isDeleted: { $ne: true },
+            },
+          },
+          { $count: "n" },
+        ],
+        as: "q",
+      },
+    },
+    { $addFields: { totalQuestions: { $ifNull: [{ $arrayElemAt: ["$q.n", 0] }, 0] } } },
+  ];
+}
+
+  // async getLeaderboard(opts: {
+  //   limit: number;
+  //   offset: number;
+  //   state?: string;
+  //   category?: UserCategory;
+  // }): Promise<{
+  //   entries: LeaderboardEntry[];
+  //   total: number;
+  // }> {
+  //   const { limit, offset, state, category } = opts;
+
+  //   const userFilter: Record<string, unknown> = {
+  //     role: UserRole.USER,
+  //     verificationStatus: VerificationStatus.VERIFIED,
+  //     isDeleted: { $ne: true },
+  //   };
+
+  //   if (state) {
+  //     userFilter.state = state;
+  //   }
+
+  //   if (category) {
+  //     userFilter.category = category;
+  //   }
+
+  //   const result = await this._model
+  //     .aggregate([
+  //       // --------------------------------------------------
+  //       // 1. Only eligible users
+  //       // --------------------------------------------------
+  //       {
+  //         $match: userFilter,
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 2. Count approved questions
+  //       // --------------------------------------------------
+  //       {
+  //         $lookup: {
+  //           from: "questions",
+  //           let: {
+  //             userId: {
+  //               $toString: "$_id",
+  //             },
+  //           },
+  //           pipeline: [
+  //             {
+  //               $match: {
+  //                 $expr: {
+  //                   $eq: ["$userId", "$$userId"],
+  //                 },
+  //                 isDeleted: { $ne: true },
+  //               },
+  //             },
+  //             {
+  //               $match: {
+  //                 status: {
+  //                   $in: [
+  //                     QuestionStatus.APPROVED,
+  //                     QuestionStatus.MOVED_TO_FINAL,
+  //                   ],
+  //                 },
+  //                 isDeleted: { $ne: true },
+  //               },
+  //             },
+  //             {
+  //               $group: {
+  //                 _id: null,
+  //                 countOfApproved: {
+  //                   $sum: 1,
+  //                 },
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 _id: 0,
+  //                 countOfApproved: 1,
+  //               },
+  //             },
+  //           ],
+  //           as: "questionStats",
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 3. Ensure questionStats always exists
+  //       // --------------------------------------------------
+  //       {
+  //         $addFields: {
+  //           questionStats: {
+  //             $ifNull: [
+  //               {
+  //                 $arrayElemAt: ["$questionStats", 0],
+  //               },
+  //               {
+  //                 countOfApproved: 0,
+  //               },
+  //             ],
+  //           },
+  //         },
+  //       },
+
+  //       {
+  //         $lookup: {
+  //           from: "wallets",
+  //           let: { userId: { $toString: "$_id" } },
+  //           pipeline: [
+  //             {
+  //               $match: {
+  //                 $expr: { $eq: ["$userId", "$$userId"] },
+  //                 isDeleted: { $ne: true },
+  //               },
+  //             },
+  //             {
+  //               $lookup: {
+  //                 from: "transactions",
+  //                 let: { walletId: { $toString: "$_id" } },
+  //                 pipeline: [
+  //                   {
+  //                     $match: {
+  //                       $expr: { $eq: ["$walletId", "$$walletId"] },
+  //                       type: TransactionType.CREDIT,
+  //                       source: TransactionSource.REWARD,
+  //                       status: TransactionStatus.COMPLETED,
+  //                       isDeleted: { $ne: true },
+  //                     },
+  //                   },
+  //                   { $group: { _id: null, total: { $sum: "$amount" } } },
+  //                 ],
+  //                 as: "earned",
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 _id: 0,
+  //                 earned: {
+  //                   $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
+  //                 },
+  //               },
+  //             },
+  //           ],
+  //           as: "walletStats",
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 5. Ensure walletStats always exists
+  //       // --------------------------------------------------
+  //       {
+  //         $addFields: {
+  //           walletStats: {
+  //             $ifNull: [
+  //               {
+  //                 $arrayElemAt: ["$walletStats", 0],
+  //               },
+  //               {
+  //                 balance: 0,
+  //               },
+  //             ],
+  //           },
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 6. Prepare leaderboard fields
+  //       // --------------------------------------------------
+  //       {
+  //         $project: {
+  //           _id: 1,
+  //           name: 1,
+  //           totalEarned: "$walletStats.balance",
+  //           totalQuestions: "$questionStats.countOfApproved",
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 7. Sort BEFORE pagination
+  //       // --------------------------------------------------
+  //       {
+  //         $sort: {
+  //           totalEarned: -1,
+  //           totalQuestions: -1,
+  //           _id: 1,
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 8. Pagination and total count
+  //       // --------------------------------------------------
+  //       {
+  //         $facet: {
+  //           entries: [
+  //             {
+  //               $skip: offset,
+  //             },
+  //             {
+  //               $limit: limit,
+  //             },
+  //             {
+  //               $project: {
+  //                 _id: 0,
+  //                 id: {
+  //                   $toString: "$_id",
+  //                 },
+  //                 name: 1,
+  //                 totalEarned: 1,
+  //                 totalQuestions: 1,
+  //               },
+  //             },
+  //           ],
+  //           total: [
+  //             {
+  //               $count: "count",
+  //             },
+  //           ],
+  //         },
+  //       },
+  //     ])
+  //     .exec();
+
+  //   const facetResult = result[0] ?? {
+  //     entries: [],
+  //     total: [],
+  //   };
+
+  //   const entries = (facetResult.entries ?? []) as LeaderboardEntry[];
+
+  //   const total = facetResult.total?.[0]?.count ?? 0;
+
+  //   return {
+  //     entries,
+  //     total,
+  //   };
+  // }
+
   async getLeaderboard(opts: {
-    limit: number;
-    offset: number;
-    state?: string;
-    category?: UserCategory;
-  }): Promise<{
-    entries: LeaderboardEntry[];
-    total: number;
-  }> {
-    const { limit, offset, state, category } = opts;
+  limit: number;
+  offset: number;
+  state?: string;
+  category?: UserCategory;
+}): Promise<{ entries: LeaderboardEntry[]; total: number; totalApprovedQuestions:number }> {
+  const { limit, offset, state, category } = opts;
 
-    const userFilter: Record<string, unknown> = {
-      role: UserRole.USER,
-      verificationStatus: VerificationStatus.VERIFIED,
-      isDeleted: { $ne: true },
-    };
+  const userFilter = this.eligibleUsersFilter({
+    ...(state ? { state } : {}),
+    ...(category ? { category } : {}),
+  });
 
-    if (state) {
-      userFilter.state = state;
-    }
-
-    if (category) {
-      userFilter.category = category;
-    }
-
-    const result = await this._model
-      .aggregate([
-        // --------------------------------------------------
-        // 1. Only eligible users
-        // --------------------------------------------------
-        {
-          $match: userFilter,
-        },
-
-        // --------------------------------------------------
-        // 2. Count approved questions
-        // --------------------------------------------------
-        {
-          $lookup: {
-            from: "questions",
-            let: {
-              userId: {
-                $toString: "$_id",
+  const result = await this._model
+    .aggregate([
+      { $match: userFilter },
+      ...this.approvedQuestionCountStages(),
+      // Most approved questions first; _id ascending breaks ties
+      { $sort: { totalQuestions: -1, _id: 1 } },
+      {
+        $facet: {
+          entries: [
+            { $skip: offset },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 0,
+                id: { $toString: "$_id" },
+                name: 1,
+                totalQuestions: 1,
               },
             },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ["$userId", "$$userId"],
-                  },
-                  isDeleted: { $ne: true },
-                },
-              },
-              {
-                $match: {
-                  status: {
-                    $in: [
-                      QuestionStatus.APPROVED,
-                      QuestionStatus.MOVED_TO_FINAL,
-                    ],
-                  },
-                  isDeleted: { $ne: true },
-                },
-              },
-              {
-                $group: {
-                  _id: null,
-                  countOfApproved: {
-                    $sum: 1,
-                  },
-                },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  countOfApproved: 1,
-                },
-              },
-            ],
-            as: "questionStats",
-          },
+          ],
+          total: [{ $count: "count" }],
+          approved: [{ $group: { _id: null, sum: { $sum: "$totalQuestions" } } }],
         },
+      },
+    ])
+    .exec();
 
-        // --------------------------------------------------
-        // 3. Ensure questionStats always exists
-        // --------------------------------------------------
-        {
-          $addFields: {
-            questionStats: {
-              $ifNull: [
-                {
-                  $arrayElemAt: ["$questionStats", 0],
-                },
-                {
-                  countOfApproved: 0,
-                },
-              ],
-            },
-          },
-        },
+  const facet = result[0] ?? { entries: [], total: [], approved: [] };
+  return {
+    entries: (facet.entries ?? []) as LeaderboardEntry[],
+    total: facet.total?.[0]?.count ?? 0,
+    totalApprovedQuestions: facet.approved?.[0]?.sum ?? 0,
+  };
+}
 
-        // --------------------------------------------------
-        // 4. Find user's wallet
-        // --------------------------------------------------
-        // {
-        //   $lookup: {
-        //     from: "wallets",
-        //     let: {
-        //       userId: {
-        //         $toString: "$_id",
-        //       },
-        //     },
-        //     pipeline: [
-        //       {
-        //         $match: {
-        //           $expr: {
-        //             $eq: ["$userId", "$$userId"],
-        //           },
-        //           isDeleted: { $ne: true }
-        //         },
-        //       },
-        //       {
-        //         $project: {
-        //           _id: 0,
-        //           balance: 1,
-        //         },
-        //       },
-        //     ],
-        //     as: "walletStats",
-        //   },
-        // },
-
-        {
-          $lookup: {
-            from: "wallets",
-            let: { userId: { $toString: "$_id" } },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$userId", "$$userId"] },
-                  isDeleted: { $ne: true },
-                },
-              },
-              {
-                $lookup: {
-                  from: "transactions",
-                  let: { walletId: { $toString: "$_id" } },
-                  pipeline: [
-                    {
-                      $match: {
-                        $expr: { $eq: ["$walletId", "$$walletId"] },
-                        type: TransactionType.CREDIT,
-                        source: TransactionSource.REWARD,
-                        status: TransactionStatus.COMPLETED,
-                        isDeleted: { $ne: true },
-                      },
-                    },
-                    { $group: { _id: null, total: { $sum: "$amount" } } },
-                  ],
-                  as: "earned",
-                },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  earned: {
-                    $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
-                  },
-                },
-              },
-            ],
-            as: "walletStats",
-          },
-        },
-
-        // --------------------------------------------------
-        // 5. Ensure walletStats always exists
-        // --------------------------------------------------
-        {
-          $addFields: {
-            walletStats: {
-              $ifNull: [
-                {
-                  $arrayElemAt: ["$walletStats", 0],
-                },
-                {
-                  balance: 0,
-                },
-              ],
-            },
-          },
-        },
-
-        // --------------------------------------------------
-        // 6. Prepare leaderboard fields
-        // --------------------------------------------------
-        {
-          $project: {
-            _id: 1,
-            name: 1,
-            totalEarned: "$walletStats.balance",
-            totalQuestions: "$questionStats.countOfApproved",
-          },
-        },
-
-        // --------------------------------------------------
-        // 7. Sort BEFORE pagination
-        // --------------------------------------------------
-        {
-          $sort: {
-            totalEarned: -1,
-            totalQuestions: -1,
-            _id: 1,
-          },
-        },
-
-        // --------------------------------------------------
-        // 8. Pagination and total count
-        // --------------------------------------------------
-        {
-          $facet: {
-            entries: [
-              {
-                $skip: offset,
-              },
-              {
-                $limit: limit,
-              },
-              {
-                $project: {
-                  _id: 0,
-                  id: {
-                    $toString: "$_id",
-                  },
-                  name: 1,
-                  totalEarned: 1,
-                  totalQuestions: 1,
-                },
-              },
-            ],
-            total: [
-              {
-                $count: "count",
-              },
-            ],
-          },
-        },
-      ])
-      .exec();
-
-    const facetResult = result[0] ?? {
-      entries: [],
-      total: [],
-    };
-
-    const entries = (facetResult.entries ?? []) as LeaderboardEntry[];
-
-    const total = facetResult.total?.[0]?.count ?? 0;
-
-    return {
-      entries,
-      total,
-    };
-  }
 
   async getApprovedQuestionCount(userId: string): Promise<number> {
     const result = await this._questionModel
@@ -989,244 +1040,290 @@ export class MongoUserRepository
   //   return result[0]?.userRank ?? null;
   // }
 
+  // async getLeaderboardRank(opts: {
+  //   userId: string;
+  //   state?: string;
+  //   category?: UserCategory;
+  // }): Promise<number | null> {
+  //   const { userId, state, category } = opts;
+
+  //   const userFilter: Record<string, unknown> = {
+  //     role: UserRole.USER,
+  //     verificationStatus: VerificationStatus.VERIFIED,
+  //     isDeleted: { $ne: true },
+  //   };
+
+  //   if (state) {
+  //     userFilter.state = state;
+  //   }
+
+  //   if (category) {
+  //     userFilter.category = category;
+  //   }
+
+  //   const result = await this._model
+  //     .aggregate([
+  //       // --------------------------------------------------
+  //       // 1. Eligible users
+  //       // --------------------------------------------------
+  //       {
+  //         $match: userFilter,
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 2. Count eligible questions
+  //       //    APPROVED + MOVED_TO_FINAL
+  //       // --------------------------------------------------
+  //       {
+  //         $lookup: {
+  //           from: "questions",
+  //           let: {
+  //             userId: {
+  //               $toString: "$_id",
+  //             },
+  //           },
+  //           pipeline: [
+  //             {
+  //               $match: {
+  //                 $expr: {
+  //                   $and: [
+  //                     {
+  //                       $eq: ["$userId", "$$userId"],
+  //                     },
+  //                     {
+  //                       $in: [
+  //                         "$status",
+  //                         [
+  //                           QuestionStatus.APPROVED,
+  //                           QuestionStatus.MOVED_TO_FINAL,
+  //                         ],
+  //                       ],
+  //                     },
+  //                   ],
+  //                 },
+  //                 isDeleted: { $ne: true },
+  //               },
+  //             },
+  //             {
+  //               $count: "count",
+  //             },
+  //           ],
+  //           as: "questionStats",
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 3. Ensure totalQuestions always exists
+  //       // --------------------------------------------------
+  //       {
+  //         $addFields: {
+  //           totalQuestions: {
+  //             $ifNull: [
+  //               {
+  //                 $arrayElemAt: ["$questionStats.count", 0],
+  //               },
+  //               0,
+  //             ],
+  //           },
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 4. Find user's wallet
+  //       // --------------------------------------------------
+  //       // {
+  //       //   $lookup: {
+  //       //     from: "wallets",
+  //       //     let: {
+  //       //       userId: {
+  //       //         $toString: "$_id",
+  //       //       },
+  //       //     },
+  //       //     pipeline: [
+  //       //       {
+  //       //         $match: {
+  //       //           $expr: {
+  //       //             $eq: ["$userId", "$$userId"],
+  //       //           },
+  //       //           isDeleted: { $ne: true },
+  //       //         },
+  //       //       },
+  //       //       {
+  //       //         $project: {
+  //       //           _id: 0,
+  //       //           balance: 1,
+  //       //         },
+  //       //       },
+  //       //     ],
+  //       //     as: "walletStats",
+  //       //   },
+  //       // },
+
+  //       {
+  //         $lookup: {
+  //           from: "wallets",
+  //           let: { userId: { $toString: "$_id" } },
+  //           pipeline: [
+  //             {
+  //               $match: {
+  //                 $expr: { $eq: ["$userId", "$$userId"] },
+  //                 isDeleted: { $ne: true },
+  //               },
+  //             },
+  //             {
+  //               $lookup: {
+  //                 from: "transactions",
+  //                 let: { walletId: { $toString: "$_id" } },
+  //                 pipeline: [
+  //                   {
+  //                     $match: {
+  //                       $expr: { $eq: ["$walletId", "$$walletId"] },
+  //                       type: TransactionType.CREDIT,
+  //                       source: TransactionSource.REWARD,
+  //                       status: TransactionStatus.COMPLETED,
+  //                       isDeleted: { $ne: true },
+  //                     },
+  //                   },
+  //                   { $group: { _id: null, total: { $sum: "$amount" } } },
+  //                 ],
+  //                 as: "earned",
+  //               },
+  //             },
+  //             {
+  //               $project: {
+  //                 _id: 0,
+  //                 earned: {
+  //                   $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
+  //                 },
+  //               },
+  //             },
+  //           ],
+  //           as: "walletStats",
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 5. Calculate total earned
+  //       // --------------------------------------------------
+  //       {
+  //         $addFields: {
+  //           totalEarned: {
+  //             $ifNull: [
+  //               {
+  //                 $arrayElemAt: ["$walletStats.balance", 0],
+  //               },
+  //               0,
+  //             ],
+  //           },
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 6. Sort EXACTLY like getLeaderboard()
+  //       // --------------------------------------------------
+  //       {
+  //         $sort: {
+  //           totalEarned: -1,
+  //           totalQuestions: -1,
+  //           _id: 1,
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 7. Find current user's position
+  //       // --------------------------------------------------
+  //       {
+  //         $group: {
+  //           _id: null,
+  //           rankedUsers: {
+  //             $push: {
+  //               userId: {
+  //                 $toString: "$_id",
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+
+  //       // --------------------------------------------------
+  //       // 8. Convert index to 1-based rank
+  //       // --------------------------------------------------
+  //       {
+  //         $project: {
+  //           _id: 0,
+  //           userRank: {
+  //             $let: {
+  //               vars: {
+  //                 userIndex: {
+  //                   $indexOfArray: ["$rankedUsers.userId", userId],
+  //                 },
+  //               },
+  //               in: {
+  //                 $cond: [
+  //                   {
+  //                     $eq: ["$$userIndex", -1],
+  //                   },
+  //                   null,
+  //                   {
+  //                     $add: ["$$userIndex", 1],
+  //                   },
+  //                 ],
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     ])
+  //     .exec();
+
+  //   return result[0]?.userRank ?? null;
+  // }
+
+
   async getLeaderboardRank(opts: {
-    userId: string;
-    state?: string;
-    category?: UserCategory;
-  }): Promise<number | null> {
-    const { userId, state, category } = opts;
+  userId: string;
+  state?: string;
+  category?: UserCategory;
+}): Promise<{ rank: number; totalQuestions: number } | null> {
+  const { userId, state, category } = opts;
+  if (!Types.ObjectId.isValid(userId)) return null;
 
-    const userFilter: Record<string, unknown> = {
-      role: UserRole.USER,
-      verificationStatus: VerificationStatus.VERIFIED,
-      isDeleted: { $ne: true },
-    };
+  // Same eligibility rules as getLeaderboard(): deleted users are never ranked
+  const eligible = this.eligibleUsersFilter({
+    ...(state ? { state } : {}),
+    ...(category ? { category } : {}),
+  });
 
-    if (state) {
-      userFilter.state = state;
-    }
+  // 1. Is this user eligible, and how many approved questions do they have?
+  const [me] = await this._model
+    .aggregate([
+      { $match: { ...eligible, _id: new Types.ObjectId(userId) } },
+      ...this.approvedQuestionCountStages(),
+      { $project: { _id: 1, totalQuestions: 1 } },
+    ])
+    .exec();
+  if (!me) return null; // not eligible (or deleted) => no rank
 
-    if (category) {
-      userFilter.category = category;
-    }
-
-    const result = await this._model
-      .aggregate([
-        // --------------------------------------------------
-        // 1. Eligible users
-        // --------------------------------------------------
-        {
-          $match: userFilter,
+  // 2. Count eligible users ranked ahead of them, using the same order as the list:
+  //    more approved questions first, then lower _id
+  const [ahead] = await this._model
+    .aggregate([
+      { $match: eligible },
+      ...this.approvedQuestionCountStages(),
+      {
+        $match: {
+          $or: [
+            { totalQuestions: { $gt: me.totalQuestions } },
+            { totalQuestions: me.totalQuestions, _id: { $lt: me._id } },
+          ],
         },
+      },
+      { $count: "n" },
+    ])
+    .exec();
 
-        // --------------------------------------------------
-        // 2. Count eligible questions
-        //    APPROVED + MOVED_TO_FINAL
-        // --------------------------------------------------
-        {
-          $lookup: {
-            from: "questions",
-            let: {
-              userId: {
-                $toString: "$_id",
-              },
-            },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      {
-                        $eq: ["$userId", "$$userId"],
-                      },
-                      {
-                        $in: [
-                          "$status",
-                          [
-                            QuestionStatus.APPROVED,
-                            QuestionStatus.MOVED_TO_FINAL,
-                          ],
-                        ],
-                      },
-                    ],
-                  },
-                  isDeleted: { $ne: true },
-                },
-              },
-              {
-                $count: "count",
-              },
-            ],
-            as: "questionStats",
-          },
-        },
-
-        // --------------------------------------------------
-        // 3. Ensure totalQuestions always exists
-        // --------------------------------------------------
-        {
-          $addFields: {
-            totalQuestions: {
-              $ifNull: [
-                {
-                  $arrayElemAt: ["$questionStats.count", 0],
-                },
-                0,
-              ],
-            },
-          },
-        },
-
-        // --------------------------------------------------
-        // 4. Find user's wallet
-        // --------------------------------------------------
-        // {
-        //   $lookup: {
-        //     from: "wallets",
-        //     let: {
-        //       userId: {
-        //         $toString: "$_id",
-        //       },
-        //     },
-        //     pipeline: [
-        //       {
-        //         $match: {
-        //           $expr: {
-        //             $eq: ["$userId", "$$userId"],
-        //           },
-        //           isDeleted: { $ne: true },
-        //         },
-        //       },
-        //       {
-        //         $project: {
-        //           _id: 0,
-        //           balance: 1,
-        //         },
-        //       },
-        //     ],
-        //     as: "walletStats",
-        //   },
-        // },
-
-        {
-          $lookup: {
-            from: "wallets",
-            let: { userId: { $toString: "$_id" } },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$userId", "$$userId"] },
-                  isDeleted: { $ne: true },
-                },
-              },
-              {
-                $lookup: {
-                  from: "transactions",
-                  let: { walletId: { $toString: "$_id" } },
-                  pipeline: [
-                    {
-                      $match: {
-                        $expr: { $eq: ["$walletId", "$$walletId"] },
-                        type: TransactionType.CREDIT,
-                        source: TransactionSource.REWARD,
-                        status: TransactionStatus.COMPLETED,
-                        isDeleted: { $ne: true },
-                      },
-                    },
-                    { $group: { _id: null, total: { $sum: "$amount" } } },
-                  ],
-                  as: "earned",
-                },
-              },
-              {
-                $project: {
-                  _id: 0,
-                  earned: {
-                    $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
-                  },
-                },
-              },
-            ],
-            as: "walletStats",
-          },
-        },
-
-        // --------------------------------------------------
-        // 5. Calculate total earned
-        // --------------------------------------------------
-        {
-          $addFields: {
-            totalEarned: {
-              $ifNull: [
-                {
-                  $arrayElemAt: ["$walletStats.balance", 0],
-                },
-                0,
-              ],
-            },
-          },
-        },
-
-        // --------------------------------------------------
-        // 6. Sort EXACTLY like getLeaderboard()
-        // --------------------------------------------------
-        {
-          $sort: {
-            totalEarned: -1,
-            totalQuestions: -1,
-            _id: 1,
-          },
-        },
-
-        // --------------------------------------------------
-        // 7. Find current user's position
-        // --------------------------------------------------
-        {
-          $group: {
-            _id: null,
-            rankedUsers: {
-              $push: {
-                userId: {
-                  $toString: "$_id",
-                },
-              },
-            },
-          },
-        },
-
-        // --------------------------------------------------
-        // 8. Convert index to 1-based rank
-        // --------------------------------------------------
-        {
-          $project: {
-            _id: 0,
-            userRank: {
-              $let: {
-                vars: {
-                  userIndex: {
-                    $indexOfArray: ["$rankedUsers.userId", userId],
-                  },
-                },
-                in: {
-                  $cond: [
-                    {
-                      $eq: ["$$userIndex", -1],
-                    },
-                    null,
-                    {
-                      $add: ["$$userIndex", 1],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-        },
-      ])
-      .exec();
-
-    return result[0]?.userRank ?? null;
-  }
+  return { rank: (ahead?.n ?? 0) + 1, totalQuestions: me.totalQuestions };
+}
 
   async getVerificationStats(userFilter?: Record<string, unknown>) {
     const [result] = await this._model

@@ -19,7 +19,7 @@ export class MongoAgriEntityRepository
     if (userIds.length === 0) return [];
     const rows = await this._model
       .aggregate<{ _id: { userId: string; type: AgriEntityType }; count: number }>([
-        { $match: { userId: { $in: userIds } } },
+        { $match: { userId: { $in: userIds }, isDeleted: { $in: [true, false, null] }  } },
         { $group: { _id: { userId: '$userId', type: '$type' }, count: { $sum: 1 } } },
       ])
       .exec();
