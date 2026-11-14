@@ -54,13 +54,6 @@
           "photosPermission": "AnnaDatha needs photo library access to attach images or videos to your questions."
         }
       ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "AnnaDatha needs photo library access to save and attach images or videos.",
-          "savePhotosPermission": "AnnaDatha needs permission to save captured photos and videos."
-        }
-      ],
       "expo-asset"
     ],
     "extra": {

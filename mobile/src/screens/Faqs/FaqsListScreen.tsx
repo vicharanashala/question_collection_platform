@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   RefreshControl, ActivityIndicator, LayoutAnimation,
-  Platform, UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,10 +14,6 @@ import { Faq } from '../../types';
 import { tokens } from '../../utils/theme';
 import { RootStackParamList } from '../../navigation/types';
 import i18n from '../../i18n';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
