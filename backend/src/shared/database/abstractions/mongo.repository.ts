@@ -12,6 +12,7 @@ import {
   includeFields,
   toMongoFilter,
   translateValue,
+  hideDeleted,
 } from './mongo-utils';
 
 /**
@@ -502,6 +503,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     return result != null;
   }
 
+  // Updates one record by id. This goes to the driver directly, so soft deleted records are excluded here.
   async update(id: string, data: Partial<T>, session?: ClientSession): Promise<T | null> {
     const { Types } = await import('mongoose');
     let filter: Record<string, unknown>;
@@ -510,6 +512,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     } else {
       filter = { _id: id };
     }
+    if (this._model.schema.path('isDeleted')) filter = hideDeleted(filter);
     const conn = this._model.db;
     const result = await conn
       .collection(this._model.collection.name)

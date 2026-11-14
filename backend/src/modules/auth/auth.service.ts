@@ -31,6 +31,7 @@ import { RateLimitCounterService } from "../../shared/database/cache/rate-limit-
 import { AdminService } from "../admin/admin.service";
 import { AnveshanProgressService } from "../admin/anveshan-progress.service";
 import { usernameKey } from "../../shared/database/cache/cache.keys";
+import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { CacheTTL } from "../../config/cache-ttl.constants";
 import { isDevelopment } from "../../config/environment";
 import {
@@ -717,15 +718,15 @@ export class AuthService {
     // session must exist, be unexpired, and match this refresh token
     await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
 
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
+    const user = await this.userRepo.findOne({
+      where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
+    });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
 
-    if (user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException("Session expired. Please login again.");
-    }
-
+    // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
     if (user.isDeleted) {
       throw new ForbiddenException({
         statusCode: 403,
@@ -733,6 +734,10 @@ export class AuthService {
         code: "ACCOUNT_DELETED",
         message: "This user is deleted. Please contact admin to restore.",
       });
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException("Session expired. Please login again.");
     }
 
     // Auto-reinstate: suspension period has expired

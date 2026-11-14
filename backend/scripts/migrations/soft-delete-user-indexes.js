@@ -1,8 +1,8 @@
 /*
  * One-off migration for soft delete.
  * 1. Backfills isDeleted: false on documents created before the field existed.
- * 2. Replaces the old unique mobileNumber index with a partial unique index
- *    that only covers active users.
+ * 2. Replaces the old unique mobileNumber and username indexes with partial
+ *    unique indexes that only cover active users.
  *
  * Usage: MONGODB_URL="mongodb+srv://..." node scripts/migrations/soft-delete-user-indexes.js
  * Run it once before deploying the soft delete release. Safe to run again.
@@ -39,39 +39,45 @@ async function main() {
   }
 
   const users = db.collection('users');
+  await assertNoActiveDuplicates(users, 'mobileNumber');
+  await assertNoActiveDuplicates(users, 'username');
+
+  const indexes = await users.indexes();
+  for (const field of ['mobileNumber', 'username']) {
+    for (const index of indexes) {
+      const isFieldOnly = Object.keys(index.key).length === 1 && index.key[field] === 1;
+      if (isFieldOnly && !index.partialFilterExpression) {
+        await users.dropIndex(index.name);
+        console.log(`users: dropped old index ${index.name}`);
+      }
+    }
+    await users.createIndex(
+      { [field]: 1 },
+      {
+        unique: true,
+        partialFilterExpression: { isDeleted: false, [field]: { $type: 'string' } },
+      },
+    );
+    console.log(`users: partial unique ${field} index is in place`);
+  }
+}
+
+// Stops the migration when two active users share a value that is about to become unique.
+async function assertNoActiveDuplicates(users, field) {
   const duplicates = await users
     .aggregate([
-      { $match: { isDeleted: false, mobileNumber: { $type: 'string' } } },
-      { $group: { _id: '$mobileNumber', count: { $sum: 1 } } },
+      { $match: { isDeleted: false, [field]: { $type: 'string' } } },
+      { $group: { _id: `$${field}`, count: { $sum: 1 } } },
       { $match: { count: { $gt: 1 } } },
     ])
     .toArray();
   if (duplicates.length > 0) {
     throw new Error(
-      `Active users share a mobile number, resolve these first: ${duplicates
+      `Active users share a ${field}, resolve these first: ${duplicates
         .map((d) => d._id)
         .join(', ')}`,
     );
   }
-
-  const indexes = await users.indexes();
-  for (const index of indexes) {
-    const isMobileOnly =
-      Object.keys(index.key).length === 1 && index.key.mobileNumber === 1;
-    if (isMobileOnly && !index.partialFilterExpression) {
-      await users.dropIndex(index.name);
-      console.log(`users: dropped old index ${index.name}`);
-    }
-  }
-
-  await users.createIndex(
-    { mobileNumber: 1 },
-    {
-      unique: true,
-      partialFilterExpression: { isDeleted: false, mobileNumber: { $type: 'string' } },
-    },
-  );
-  console.log('users: partial unique mobileNumber index is in place');
 }
 
 main()

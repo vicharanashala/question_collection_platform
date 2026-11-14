@@ -22,12 +22,10 @@ export class User {
   })
   mobileNumber: string | null;
 
+  // Uniqueness is enforced by the partial index below, so only active users block a username.
   @Prop({
     name: "username",
     type: String,
-    unique: true,
-    sparse: true,
-    index: true,
   })
   username: string | null;
 
@@ -200,6 +198,18 @@ UserSchema.index(
     partialFilterExpression: {
       isDeleted: false,
       mobileNumber: { $type: 'string' },
+    },
+  },
+);
+
+// Only one active user per username. Deleted users keep their username without blocking it.
+UserSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      username: { $type: 'string' },
     },
   },
 );

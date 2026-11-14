@@ -96,7 +96,7 @@ export class MongoUserRepository
 
   async updateOtpHash(mobileNumber: string, hash: string): Promise<void> {
     await this._model
-      .updateOne({ mobileNumber } as Record<string, unknown>, {
+      .updateOne({ mobileNumber, isDeleted: { $ne: true } } as Record<string, unknown>, {
         $set: { otpHash: hash },
       })
       .exec();
@@ -104,7 +104,7 @@ export class MongoUserRepository
 
   async clearOtpHash(mobileNumber: string): Promise<void> {
     await this._model
-      .updateOne({ mobileNumber } as Record<string, unknown>, {
+      .updateOne({ mobileNumber, isDeleted: { $ne: true } } as Record<string, unknown>, {
         $unset: { otpHash: 1 },
       })
       .exec();

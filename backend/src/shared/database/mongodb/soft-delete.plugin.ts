@@ -1,16 +1,32 @@
 import type { Connection, Query, Schema } from 'mongoose';
 import { hideDeleted } from '../abstractions/mongo-utils';
 
-const READ_HOOKS = /^(find|findOne|countDocuments|distinct)$/;
+const READ_HOOKS = ['find', 'findOne', 'countDocuments', 'distinct'] as const;
 
-// Hides soft deleted documents from reads on every schema that has an isDeleted field.
+// Writes are scoped too, so a soft deleted record cannot be changed or hard deleted by accident.
+const WRITE_HOOKS = [
+  'updateOne',
+  'updateMany',
+  'replaceOne',
+  'findOneAndUpdate',
+  'findOneAndReplace',
+  'findOneAndDelete',
+  'deleteOne',
+  'deleteMany',
+] as const;
+
+// Hides soft deleted documents from reads and writes on every schema that has an isDeleted field.
 // A query or aggregation that sets isDeleted explicitly keeps full control.
 export function softDeletePlugin(schema: Schema): void {
   if (!schema.path('isDeleted')) return;
 
-  schema.pre(READ_HOOKS, function (this: Query<unknown, unknown>) {
-    this.setQuery(hideDeleted(this.getFilter() as Record<string, unknown>));
-  });
+  schema.pre(
+    [...READ_HOOKS, ...WRITE_HOOKS],
+    { query: true, document: false },
+    function (this: Query<unknown, unknown>) {
+      this.setQuery(hideDeleted(this.getFilter() as Record<string, unknown>));
+    },
+  );
 
   schema.pre('aggregate', function () {
     const pipeline = this.pipeline();
@@ -19,7 +35,7 @@ export function softDeletePlugin(schema: Schema): void {
         '$match' in stage &&
         typeof stage.$match === 'object' &&
         stage.$match !== null &&
-        'isDeleted' in stage.$match,
+        (stage.$match as Record<string, unknown>).isDeleted !== undefined,
     );
     if (!setsIsDeleted) {
       pipeline.unshift({ $match: { isDeleted: { $ne: true } } });

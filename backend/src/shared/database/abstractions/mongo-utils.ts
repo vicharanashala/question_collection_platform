@@ -208,10 +208,11 @@ function isTypeormIn(val: unknown): val is { __type: 'in'; value: unknown[] } {
 export const INCLUDE_DELETED = { $in: [true, false, null] };
 
 // Hides soft deleted documents unless the filter sets isDeleted explicitly.
+// An undefined isDeleted counts as not set, since Mongoose strips undefined values from filters.
 export function hideDeleted(
   filter: Record<string, unknown>,
 ): Record<string, unknown> {
-  return 'isDeleted' in filter ? filter : { ...filter, isDeleted: { $ne: true } };
+  return filter.isDeleted !== undefined ? filter : { ...filter, isDeleted: { $ne: true } };
 }
 
 /**

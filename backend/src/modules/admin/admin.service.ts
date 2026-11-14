@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { SelectQueryBuilder, ILike, Between, In } from "typeorm";
 import { RedisService } from "../../shared/database/cache/redis.service";
+import { usernameKey } from "../../shared/database/cache/cache.keys";
 import { HotDataService } from "../../shared/database/cache/hot-data.service";
 import { AnalyticsCacheService } from "../../shared/database/cache/analytics-cache.service";
 import {
@@ -82,7 +83,7 @@ import {
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { MongoTransactionService } from "../../shared/database/mongodb/mongo-transaction.service";
-import { Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
@@ -5113,16 +5114,6 @@ async getUserStats(dto: ListUserStatsDto) {
       throw new ForbiddenException("A super admin cannot be deleted");
     }
 
-    const openWithdrawals = await this.withdrawalRepo.findAll({
-      userId,
-      status: { $in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
-    });
-    if (openWithdrawals.length > 0) {
-      throw new BadRequestException(
-        "User has pending or processing withdrawals. Settle them before deleting.",
-      );
-    }
-
     const [wallets, withdrawals] = await Promise.all([
       this.walletRepo.findAll({ userId }),
       this.withdrawalRepo.findAll({ userId }),
@@ -5157,6 +5148,21 @@ async getUserStats(dto: ListUserStatsDto) {
       transactions,
       paymentLogs,
     ] = await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Checked inside the transaction so a withdrawal that touches the wallet at the same
+      // time causes a write conflict, and the retry sees it.
+      const openWithdrawal = await this.withdrawalRepo.findOne(
+        {
+          userId,
+          status: { $in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
+        },
+        session,
+      );
+      if (openWithdrawal) {
+        throw new BadRequestException(
+          "User has pending or processing withdrawals. Settle them before deleting.",
+        );
+      }
+
       // Sequential on purpose: a transaction session must not run operations in parallel.
       const operations: Array<() => Promise<unknown>> = [
       () => this.questionRepo.updateMany({ userId, ...notDeleted }, mark, session),
@@ -5203,6 +5209,9 @@ async getUserStats(dto: ListUserStatsDto) {
       return results;
     });
 
+    // The username is free again, so the cached "taken" entry must go.
+    if (user.username) await this.clearUsernameCache(user.username);
+
     return {
       message: "User deleted successfully.",
       userId,
@@ -5224,69 +5233,111 @@ async getUserStats(dto: ListUserStatsDto) {
     };
   }
 
+  // Restores a soft deleted user and every record that was deleted together with them, in one transaction.
   async restoreUser(userId: string) {
-  if (!Types.ObjectId.isValid(userId)) {
-    throw new NotFoundException("User not found");
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Explicit isDeleted key bypasses the default "hide deleted" filter
+    const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
+    if (!user) throw new NotFoundException("Deleted user not found");
+
+    // Users deleted before deletedAt existed have no stamp. Their cascade left deletedAt
+    // empty, so matching null skips records that were deleted separately with a timestamp.
+    const deletedWithUser = (extra: Record<string, unknown>) => ({
+      ...extra,
+      isDeleted: true,
+      deletedAt: user.deletedAt ?? null,
+    });
+    const unmark = { isDeleted: false, deletedAt: null };
+
+    await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Inside the transaction so a concurrent sign up with the same value is caught
+      // by the unique index and rolls everything back.
+      await this.assertNoActiveUserWith("mobileNumber", user.mobileNumber, session);
+      await this.assertNoActiveUserWith("username", user.username, session);
+
+      const [wallets, withdrawals] = await Promise.all([
+        this.walletRepo.findAll(deletedWithUser({ userId })),
+        this.withdrawalRepo.findAll(deletedWithUser({ userId })),
+      ]);
+      const walletIds = wallets.map((w) => String(w._id));
+      const withdrawalIds = withdrawals.map((w) => String(w._id));
+
+      // Sequential on purpose: a transaction session must not run operations in parallel.
+      const operations: Array<() => Promise<unknown>> = [
+        () => this.questionRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.walletRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.withdrawalRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.paymentDetailRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.notificationRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.finalQuestionRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.agriEntityRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.reportRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.feedbackRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.anveshanAnswerRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () =>
+          walletIds.length
+            ? this.transactionRepo.updateMany(
+                deletedWithUser({ walletId: { $in: walletIds } }),
+                unmark,
+                session,
+              )
+            : Promise.resolve(),
+        () =>
+          withdrawalIds.length
+            ? this.paymentLogRepo.updateMany(
+                deletedWithUser({ withdrawalRequestId: { $in: withdrawalIds } }),
+                unmark,
+                session,
+              )
+            : Promise.resolve(),
+        // update() only touches active records, so the user is restored with an explicit filter.
+        () => this.userRepo.updateMany({ _id: userId, isDeleted: true }, unmark, session),
+      ];
+      for (const run of operations) await run();
+    });
+
+    if (user.username) await this.cacheUsername(user.username, String(user._id));
+
+    return { message: "User restored successfully.", userId };
   }
 
-  // Explicit isDeleted key bypasses the default "hide deleted" filter
-  const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
-  if (!user) throw new NotFoundException("Deleted user not found");
+  // Rejects a restore when an active user already holds the deleted user's mobile number or username.
+  private async assertNoActiveUserWith(
+    field: "mobileNumber" | "username",
+    value: string | null | undefined,
+    session: ClientSession,
+  ): Promise<void> {
+    if (!value) return;
+    const activeUser = await this.userRepo.findOne({ [field]: value }, session);
+    if (!activeUser) return;
+    const label = field === "mobileNumber" ? "mobile number" : "username";
+    throw new BadRequestException(`Another active user already uses this ${label}.`);
+  }
 
-  if (user.mobileNumber) {
-    const activeUser = await this.userRepo.findOne({
-      mobileNumber: user.mobileNumber,
-    });
-    if (activeUser) {
-      throw new BadRequestException(
-        "Another active user already uses this mobile number.",
+  // Marks a username as taken in the availability cache. A cache failure must not undo a committed restore.
+  private async cacheUsername(username: string, userId: string): Promise<void> {
+    try {
+      await this.redisService.set(usernameKey(username), userId);
+    } catch (error) {
+      this.logger.warn(
+        `Could not cache username "${username}": ${(error as Error).message}`,
       );
     }
   }
 
-  const stamp = user.deletedAt; // same value deleteUser put on every related record
-  const deletedWithUser = (extra: Record<string, unknown>) => ({
-    ...extra,
-    isDeleted: true,
-    ...(stamp ? { deletedAt: stamp } : {}),
-  });
-  const unmark = { isDeleted: false, deletedAt: null };
-
-  // Collect indirect ids first (explicit isDeleted again)
-  const [wallets, withdrawals] = await Promise.all([
-    this.walletRepo.findAll({ userId, isDeleted: true }),
-    this.withdrawalRepo.findAll({ userId, isDeleted: true }),
-  ]);
-  const walletIds = wallets.map((w) => String(w._id));
-  const withdrawalIds = withdrawals.map((w) => String(w._id));
-
-  await Promise.all([
-    this.questionRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.walletRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.withdrawalRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.paymentDetailRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.notificationRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.finalQuestionRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.agriEntityRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.reportRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.feedbackRepo.updateMany(deletedWithUser({ userId }), unmark),
-    this.anveshanAnswerRepo.updateMany(deletedWithUser({ userId }), unmark),
-    walletIds.length
-      ? this.transactionRepo.updateMany(deletedWithUser({ walletId: { $in: walletIds } }), unmark)
-      : Promise.resolve(),
-    withdrawalIds.length
-      ? this.paymentLogRepo.updateMany(
-          deletedWithUser({ withdrawalRequestId: { $in: withdrawalIds } }),
-          unmark,
-        )
-      : Promise.resolve(),
-  ]);
-
-  // User LAST, so a failed run above can simply be retried (the stamp is still on the user)
-  await this.userRepo.update(userId, unmark);
-
-  return { message: "User restored successfully.", userId };
-}
+  // Removes a username from the availability cache. A cache failure must not undo a committed delete.
+  private async clearUsernameCache(username: string): Promise<void> {
+    try {
+      await this.redisService.del(usernameKey(username));
+    } catch (error) {
+      this.logger.warn(
+        `Could not clear username cache for "${username}": ${(error as Error).message}`,
+      );
+    }
+  }
 
 async getUserAuditSnapshot(userId: string) {
   if (!Types.ObjectId.isValid(userId)) return null;
