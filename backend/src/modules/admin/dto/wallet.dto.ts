@@ -94,7 +94,31 @@ export class AdjustWalletDto {
   description?: string;
 }
 
-export class ListAllWalletsDto {
+/** Filters that pick which wallets the staff wallet list and the wallet summary cover. */
+export class WalletScopeDto {
+  @IsOptional()
+  @IsString()
+  userId?: string; // filter by specific user
+
+  @IsOptional()
+  @IsString()
+  search?: string; // name or mobile
+
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  /** Staff filter: only tester accounts, or everything except tester accounts. */
+  @IsOptional()
+  @IsIn(TESTER_FILTER_VALUES)
+  tester?: TesterFilter;
+
+  /** Staff Anveshan mode: only Anveshan users or everyone except them. */
+  @AnveshanScope()
+  anveshanScope?: AnveshanScope;
+}
+
+export class ListAllWalletsDto extends WalletScopeDto {
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -109,33 +133,12 @@ export class ListAllWalletsDto {
   limit?: number = 50;
 
   @IsOptional()
-  @IsString()
-  userId?: string; // filter by specific user
-
-  @IsOptional()
-  @IsString()
-  search?: string; // name or mobile
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsOptional()
   @IsIn(['balance', 'createdAt'])
   sortBy?: 'balance' | 'createdAt';
 
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
   sortOrder?: 'ASC' | 'DESC';
-
-  /** Staff filter: only tester accounts, or everything except tester accounts. */
-  @IsOptional()
-  @IsIn(TESTER_FILTER_VALUES)
-  tester?: TesterFilter;
-
-  /** Staff Anveshan mode: only Anveshan users or everyone except them. */
-  @AnveshanScope()
-  anveshanScope?: AnveshanScope;
 }
 
 export class UserWalletSummaryDto {
