@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ChevronDown, HelpCircle, HelpingHand, RefreshCcw, Search, X } from 'lucide-react'
-import { faqApi } from '@/client/client'
+import { useVisibleFaqs } from '@/hooks/api/useFaqs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -85,27 +85,19 @@ export function PublicFaqsPage() {
 
   // Opening the page counts as having seen the new feature.
   useEffect(() => { markFeatureSeen('faq') }, [])
-  const [items, setItems] = useState<Faq[]>([])
-  const [loading, setLoading] = useState(true)
-  const [failed, setFailed] = useState(false)
-  const [reloadKey, setReloadKey] = useState(0)
   const [activeCat, setActiveCat] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
-  // Loads the visible FAQs for the active category and ignores stale responses.
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setFailed(false)
-    setOpenId(null)
-    faqApi
-      .getVisible({ category: activeCat === 'all' ? undefined : activeCat })
-      .then((data) => { if (!cancelled) setItems(data) })
-      .catch(() => { if (!cancelled) setFailed(true) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [activeCat, reloadKey])
+  const {
+    data: items = [],
+    isPending: loading,
+    isError: failed,
+    refetch,
+  } = useVisibleFaqs({ category: activeCat === 'all' ? undefined : activeCat })
+
+  // Collapse any open answer when the category changes, since the list below changes.
+  useEffect(() => { setOpenId(null) }, [activeCat])
 
   const visibleItems = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -207,7 +199,7 @@ export function PublicFaqsPage() {
           <CardContent className="flex flex-col items-center justify-center gap-3 py-12 text-center">
             <HelpCircle className="h-12 w-12 text-muted-foreground/30" aria-hidden="true" />
             <p role="alert" className="text-sm font-medium text-muted-foreground">{t('faq.loadError')}</p>
-            <Button variant="outline" size="sm" onClick={() => setReloadKey((k) => k + 1)}>
+            <Button variant="outline" size="sm" onClick={() => void refetch()}>
               <RefreshCcw className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('faq.retry')}
             </Button>

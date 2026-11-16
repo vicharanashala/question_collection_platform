@@ -9,11 +9,15 @@
  */
 import { NewBadge } from '@/components/ui/new-badge'
 import type { NewFeatureKey } from '@/lib/newFeatures'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/stores/AuthContext'
-import { authApi, questionApi, userApi, walletApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useMyQuestionStats, useMyQuestions } from '@/hooks/api/useQuestions'
+import { useWalletBalance } from '@/hooks/api/useWallet'
+import { useRefreshFromAnveshan } from '@/hooks/api/useUsers'
+import { useRefreshMe } from '@/hooks/api/useProfile'
 import { canAccessPayments } from '@/utils/paymentAccess'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -211,31 +215,23 @@ export function PublicProfilePage() {
   const { user, logout, updateUser } = useAuth()
   const navigate = useNavigate()
 
-  const [walletBalance, setWalletBalance] = useState<number>(0)
   const showPayments = canAccessPayments(user)
-  const [totalApproved, setTotalApproved] = useState<number>(0)
-  const [totalQuestions, setTotalQuestions] = useState<number>(0)
-  const [loadingStats, setLoadingStats] = useState(true)
+
+  // Each panel degrades to zero on failure, as before.
+  const balanceQuery = useWalletBalance(showPayments)
+  const statsQuery = useMyQuestionStats()
+  const myQuestionsQuery = useMyQuestions({ limit: 1 })
+  const walletBalance = balanceQuery.data?.balance ?? 0
+  const totalApproved = (statsQuery.data as { totalApproved?: number } | undefined)?.totalApproved ?? 0
+  const totalQuestions = myQuestionsQuery.data?.total ?? 0
+  const loadingStats =
+    (showPayments && balanceQuery.isPending) || statsQuery.isPending || myQuestionsQuery.isPending
   const [logoutOpen, setLogoutOpen] = useState(false)
-  const [refreshingAnveshan, setRefreshingAnveshan] = useState(false)
+  const refreshAnveshan = useRefreshFromAnveshan()
+  const refreshMe = useRefreshMe()
+  const refreshingAnveshan = refreshAnveshan.isPending || refreshMe.isPending
   const [languageOpen, setLanguageOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
-
-  const fetchStats = useCallback(async () => {
-    setLoadingStats(true)
-    const results = await Promise.allSettled([
-      showPayments ? walletApi.getBalance() : Promise.resolve({ balance: 0 }),
-      questionApi.getMyStats(),
-      questionApi.listMyQuestions({ limit: 1 }),
-    ])
-    const [balanceRes, statsRes, listRes] = results
-    setWalletBalance(balanceRes.status === 'fulfilled' ? balanceRes.value.balance ?? 0 : 0)
-    setTotalApproved(statsRes.status === 'fulfilled' ? statsRes.value.totalApproved ?? 0 : 0)
-    setTotalQuestions(listRes.status === 'fulfilled' ? listRes.value.total ?? 0 : 0)
-    setLoadingStats(false)
-  }, [showPayments])
-
-  useEffect(() => { fetchStats() }, [fetchStats])
 
   if (!user) return null
 
@@ -259,11 +255,10 @@ export function PublicProfilePage() {
   // Re-fetches the Anveshan record and reloads the profile when anything changed.
   const handleRefreshAnveshan = async () => {
     if (refreshingAnveshan) return
-    setRefreshingAnveshan(true)
     try {
-      const { updatedFields } = await userApi.refreshFromAnveshan()
+      const { updatedFields } = await refreshAnveshan.mutateAsync()
       if (updatedFields.length > 0) {
-        const { user: fresh } = await authApi.me()
+        const { user: fresh } = await refreshMe.mutateAsync()
         updateUser({ ...fresh })
         toast.success(t('publicProfilePage.profileUpdatedFromAnveshan'))
       } else {
@@ -271,8 +266,6 @@ export function PublicProfilePage() {
       }
     } catch (e) {
       toast.error(getErrorMessage(e, 'Could not refresh from Anveshan'))
-    } finally {
-      setRefreshingAnveshan(false)
     }
   }
 

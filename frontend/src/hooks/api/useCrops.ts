@@ -1,42 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { authApi } from '@/client/client'
 import type { Crop } from '@/components/ui/crop-picker-modal'
+
+export const cropKeys = {
+  all: ['crops'] as const,
+}
 
 interface CropsResponse {
   crops: Crop[]
 }
 
-// Shared in-flight request so every picker on the page reuses one fetch.
-let cropsRequest: Promise<Crop[]> | null = null
-
-// Fetches the crop catalogue once per session and clears the cache on failure so it can be retried.
-function loadCrops(): Promise<Crop[]> {
-  if (!cropsRequest) {
-    cropsRequest = (authApi.getCrops() as Promise<CropsResponse>)
-      .then((res) => res.crops ?? [])
-      .catch((error: unknown) => {
-        cropsRequest = null
-        throw error
-      })
-  }
-  return cropsRequest
-}
-
-// Returns the crop catalogue for the crop picker, loading it on first use.
+/**
+ * Crop catalogue for the crop picker. The query cache dedupes concurrent
+ * pickers and keeps the list for the session; a failed load is retried on the
+ * next mount.
+ */
 export function useCrops(): Crop[] {
-  const [crops, setCrops] = useState<Crop[]>([])
+  const { data } = useQuery({
+    queryKey: cropKeys.all,
+    queryFn: async () => {
+      const res = (await authApi.getCrops()) as CropsResponse
+      return res.crops ?? []
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
 
-  useEffect(() => {
-    let active = true
-    loadCrops()
-      .then((list) => {
-        if (active) setCrops(list)
-      })
-      .catch((error: unknown) => console.error('Failed to fetch crops:', error))
-    return () => {
-      active = false
-    }
-  }, [])
-
-  return crops
+  return data ?? []
 }

@@ -4,7 +4,7 @@ import { useTranslation, Trans } from 'react-i18next'
 import { useAuth } from '@/stores/AuthContext'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, Clock, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react'
-import { authApi } from '@/client/client'
+import { useRefreshMe } from '@/hooks/api/useProfile'
 import { toast } from 'sonner'
 
 /**
@@ -25,7 +25,8 @@ export function PublicVerificationPendingPage() {
   const { user, updateUser, logout } = useAuth()
   const { t } = useTranslation()
   const [status, setStatus] = useState<string>(user?.verificationStatus ?? 'pending')
-  const [checking, setChecking] = useState(false)
+  const refreshMe = useRefreshMe()
+  const checking = refreshMe.isPending
 
   useEffect(() => {
     if (!user) { navigate('/login', { replace: true }); return }
@@ -41,9 +42,8 @@ export function PublicVerificationPendingPage() {
 
   /** Re-reads the account from /auth/me and enters the app only once it is verified. */
   async function checkNow() {
-    setChecking(true)
     try {
-      const { user: fresh } = await authApi.me()
+      const { user: fresh } = await refreshMe.mutateAsync()
       updateUser(fresh)
       setStatus(fresh.verificationStatus ?? 'pending')
       if (fresh.verificationStatus === 'verified') {
@@ -54,8 +54,6 @@ export function PublicVerificationPendingPage() {
       toast.info(t('verificationPending.statusNote'))
     } catch {
       toast.error(t('verificationPending.toastCheckFailed'))
-    } finally {
-      setChecking(false)
     }
   }
 

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, Download, MapPin, Phone, Sprout, UserCog } from 'lucide-react'
 import { toast } from 'sonner'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAnveshanUserDetail } from '@/hooks/api/useUsers'
 import { Badge } from '@/components/ui/badge'
 import { NewBadge } from '@/components/ui/new-badge'
 import { markFeatureSeen } from '@/lib/newFeatures'
@@ -24,8 +25,6 @@ export function AnveshanUserDetailPage() {
   const { t } = useTranslation()
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
-  const [detail, setDetail] = useState<AnveshanUserDetail | null>(null)
-  const [loading, setLoading] = useState(true)
   const [exportOpen, setExportOpen] = useState(false)
   const [tab, setTab] = useState('questions')
   const [search, setSearch] = useState('')
@@ -34,18 +33,12 @@ export function AnveshanUserDetailPage() {
   // Opening the page counts as having seen the new Anveshan user page.
   useEffect(() => { markFeatureSeen('anveshanUserPage') }, [])
 
+  const { data, isPending: loading, error } = useAnveshanUserDetail(userId)
+  const detail = (data as AnveshanUserDetail | undefined) ?? null
+
   useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    adminApi
-      .getAnveshanUserDetail(userId)
-      .then((res) => { if (!cancelled) setDetail(res) })
-      .catch((err) => {
-        if (!cancelled) toast.error(getErrorMessage(err, 'Failed to load Anveshan user'))
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-  }, [userId])
+    if (error) toast.error(getErrorMessage(error, 'Failed to load Anveshan user'))
+  }, [error])
 
   if (loading) return <UserDetailSkeleton />
   if (!detail) {

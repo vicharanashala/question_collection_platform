@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AlertCircle, Keyboard, MapPin, Mic, MessageSquareText, Phone, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
 import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
-import { feedbackApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAnveshanFeedback } from '@/hooks/api/useFeedbacks'
 import { cn, formatDateTime } from '@/lib/utils'
-import type { AppFeedbackItem, AppFeedbackListResponse, FeedbackRatingSummary } from '@/types'
+import type { AppFeedbackItem, FeedbackRatingSummary } from '@/types'
 import { useTranslation } from 'react-i18next'
 
 const PAGE_SIZE = 20
@@ -36,36 +37,22 @@ function StarRating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' 
 /** Admin page listing the app feedback Anveshan users give after reaching 100%. */
 export function FeedbacksPage() {
   const { t } = useTranslation()
-  const [data, setData] = useState<AppFeedbackListResponse | null>(null)
-  const [loadState, setLoadState] = useState<LoadState>('loading')
-  const [error, setError] = useState('')
   const [page, setPage] = useState(1)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null)
   const [inputFilter, setInputFilter] = useState<InputFilter>('all')
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
 
-  // Loads one page of feedback for the current filters.
-  const load = useCallback(async () => {
-    setLoadState('loading')
-    try {
-      const result = await feedbackApi.listAnveshanFeedback({
-        page,
-        limit: PAGE_SIZE,
-        rating: ratingFilter ?? undefined,
-        inputMethod: inputFilter === 'all' ? undefined : inputFilter,
-        tester: testerFilter || undefined,
-      })
-      setData(result)
-      setLoadState('ready')
-    } catch (err) {
-      setError(getErrorMessage(err, 'Could not load feedback.'))
-      setLoadState('error')
-    }
-  }, [page, ratingFilter, inputFilter, testerFilter])
-
-  useEffect(() => {
-    void load()
-  }, [load])
+  const query = useAnveshanFeedback({
+    page,
+    limit: PAGE_SIZE,
+    rating: ratingFilter ?? undefined,
+    inputMethod: inputFilter === 'all' ? undefined : inputFilter,
+    tester: testerFilter || undefined,
+  })
+  const data = query.data ?? null
+  const loadState: LoadState = query.isPending ? 'loading' : query.isError ? 'error' : 'ready'
+  const error = query.error ? getErrorMessage(query.error, 'Could not load feedback.') : ''
+  const load = () => void query.refetch()
 
   const changeRating = (rating: number | null) => {
     setRatingFilter(rating)

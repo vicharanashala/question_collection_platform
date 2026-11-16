@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
 import { useNavigate } from 'react-router-dom'
-import { reportsApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useReports, useUpdateReportPriority } from '@/hooks/api/useReports'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +12,6 @@ import {
 import { formatDateTime } from '@/lib/utils'
 import { ChevronLeft, ChevronRight, Eye, Flag } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Report } from '@/types'
 import { useTranslation } from 'react-i18next'
 
 const STATUS_OPTIONS = [
@@ -75,60 +75,44 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function ReportsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [items, setItems] = useState<Report[]>([])
-  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [pages, setPages] = useState(1)
-  const [loading, setLoading] = useState(false)
 
   const [statusFilter, setStatusFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
 
-  const [updatingPriorityId, setUpdatingPriorityId] = useState<string | null>(null)
+  const updatePriority = useUpdateReportPriority()
+  // Row-level spinner: the id currently being updated, or null.
+  const updatingPriorityId = updatePriority.isPending ? updatePriority.variables.reportId : null
 
-  const handlePriorityChange = async (reportId: string, priority: string) => {
-    setUpdatingPriorityId(reportId)
-    try {
-      await reportsApi.updatePriority(reportId, priority)
-      setItems((prev) =>
-        prev.map((r) => (r.id === reportId ? { ...r, priority: priority as Report['priority'] } : r)),
-      )
-      toast.success(t('reportDetailPage.priorityUpdated'))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to update priority'))
-    } finally {
-      setUpdatingPriorityId(null)
-    }
+  const handlePriorityChange = (reportId: string, priority: string) => {
+    updatePriority.mutate(
+      { reportId, priority },
+      {
+        onSuccess: () => toast.success(t('reportDetailPage.priorityUpdated')),
+        onError: (e) => toast.error(getErrorMessage(e, 'Failed to update priority')),
+      },
+    )
   }
 
   const limit = 20
 
-  const fetchReports = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await reportsApi.list({
-        status: statusFilter || undefined,
-        category: categoryFilter || undefined,
-        priority: priorityFilter || undefined,
-        tester: testerFilter || undefined,
-        page,
-        limit,
-      })
-      setItems(res.items)
-      setTotal(res.total)
-      setPages(res.pages)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load reports'))
-    } finally {
-      setLoading(false)
-    }
-  }, [page, statusFilter, categoryFilter, priorityFilter, testerFilter])
+  const { data, isFetching: loading, error: listError } = useReports({
+    status: statusFilter || undefined,
+    category: categoryFilter || undefined,
+    priority: priorityFilter || undefined,
+    tester: testerFilter || undefined,
+    page,
+    limit,
+  })
+  const items = data?.items ?? []
+  const total = data?.total ?? 0
+  const pages = data?.pages ?? 1
 
   useEffect(() => {
-    fetchReports()
-  }, [fetchReports])
+    if (listError) toast.error(getErrorMessage(listError, 'Failed to load reports'))
+  }, [listError])
 
   // Reset to page 1 when filters change
   useEffect(() => {

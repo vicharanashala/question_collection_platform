@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { curatorApi, getErrorMessage } from "@/client/client";
+import { useQueryClient } from '@tanstack/react-query';
+import { analyticsKeys, useReviewQueue } from '@/hooks/api/useAnalytics';
 import { useDebouncedValue } from "@/hooks/ui/useDebouncedValue";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -861,15 +863,12 @@ const STATUS_FILTER_OPTIONS = [
 
 export function ReviewsPage() {
   const { t } = useTranslation();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [userTypeFilter, setUserTypeFilter] = useState<UserTypeFilterValue>("");
   const anveshanScope = useAnveshanScope();
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>("");
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null,
@@ -911,32 +910,44 @@ export function ReviewsPage() {
     setDuplicateData(null);
   }, [debouncedSearch, statusFilter, userTypeFilter, testerFilter]);
 
+  const queryClient = useQueryClient();
+
+  const queueQuery = useReviewQueue({
+    page,
+    limit,
+    status: statusFilter || undefined,
+    search: debouncedSearch || undefined,
+    userType: userTypeFilter || undefined,
+    tester: testerFilter || undefined,
+  });
+  const total = queueQuery.data?.total ?? 0;
+  const loading = queueQuery.isFetching;
+  const questions: Question[] = (queueQuery.data?.items ?? []).map((q, i) => ({
+    ...q,
+    _slno: (page - 1) * limit + i + 1,
+  })) as Question[];
+
   useEffect(() => {
-    setLoading(true);
-    curatorApi
-      .getReviewQueue({
-        page,
-        limit,
-        status: statusFilter || undefined,
-        search: debouncedSearch || undefined,
-        userType: userTypeFilter || undefined,
-        tester: testerFilter || undefined,
-      })
-      .then((res) => {
-        const start = (page - 1) * limit;
-        setQuestions(
-          res.items.map((q, i) => ({
-            ...q,
-            _slno: start + i + 1,
-          })) as Question[],
-        );
-        setTotal(res.total);
-      })
-      .catch((e) =>
-        toast.error(getErrorMessage(e, "Failed to load review queue")),
-      )
-      .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, userTypeFilter, testerFilter]);
+    if (queueQuery.error) {
+      toast.error(getErrorMessage(queueQuery.error, "Failed to load review queue"));
+    }
+  }, [queueQuery.error]);
+
+  // A reviewed question leaves the queue straight away, so the curator moves
+  // on without waiting for a refetch.
+  const removeFromQueue = (id: string) => {
+    queryClient.setQueriesData(
+      { queryKey: [...analyticsKeys.all, "reviewQueue"] },
+      (prev: { items: { id: string }[]; total: number } | undefined) =>
+        prev
+          ? {
+              ...prev,
+              items: prev.items.filter((q) => q.id !== id),
+              total: Math.max(0, prev.total - 1),
+            }
+          : prev,
+    );
+  };
 
   /**
    * Call the /check-duplicate endpoint. If a duplicate is found, open the
@@ -980,7 +991,7 @@ export function ReviewsPage() {
       .then(() => {
         toast.success(t('reviewsPage.questionRejectedAsDuplicate'));
         setDuplicateData(null);
-        setQuestions((qs) => qs.filter((q) => q.id !== questionId));
+        removeFromQueue(questionId);
       })
       .catch((e) =>
         toast.error(getErrorMessage(e, "Failed to reject question")),
@@ -1008,7 +1019,7 @@ export function ReviewsPage() {
         } else {
           toast.success(t('reviewsPage.questionPutOnHold'));
         }
-        setQuestions((qs) => qs.filter((q) => q.id !== id));
+        removeFromQueue(id);
         setDetailOpen(false);
         setSelectedQuestion(null);
       })

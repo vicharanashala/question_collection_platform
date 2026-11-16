@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
-import { distributor, getErrorMessage } from '@/client/client'
+import { useEffect } from 'react'
+import { getErrorMessage } from '@/client/client'
+import { useDistributorStats } from '@/hooks/api/useAnalytics'
+import { useIndianStates } from '@/hooks/api/useDistributions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Send, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import type { DistributorStats } from '@/types'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -14,28 +15,24 @@ import { useTranslation } from 'react-i18next'
  */
 export function DistributorDashboardPage() {
   const { t } = useTranslation()
-  const [stats, setStats] = useState<DistributorStats | null>(null)
-  const [indianStates, setIndianStates] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const [s, st] = await Promise.all([
-        distributor.getStats(),
-        distributor.listIndianStates(),
-      ])
-      setStats(s)
-      setIndianStates(st.states)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load stats.'))
-    } finally {
-      setLoading(false)
-    }
+  const statsQuery = useDistributorStats()
+  const statesQuery = useIndianStates()
+  const stats = statsQuery.data ?? null
+  const indianStates = statesQuery.data?.states ?? []
+  const loading = statsQuery.isFetching || statesQuery.isFetching
+  const loadError = statsQuery.error ?? statesQuery.error
+
+  // Manual refresh button: refetch both panels together.
+  const load = () => {
+    void statsQuery.refetch()
+    void statesQuery.refetch()
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load stats.'))
+  }, [loadError])
 
   const totalDistributed = stats?.byState.reduce((sum, b) => sum + b.count, 0) ?? 0
 

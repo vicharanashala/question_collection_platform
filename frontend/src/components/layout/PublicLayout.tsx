@@ -16,7 +16,8 @@ import { PublicHeader } from './PublicHeader'
 import { PublicMobileNav } from './PublicMobileNav'
 import { PublicBottomNav } from './PublicBottomNav'
 import { useAuth } from '@/stores/AuthContext'
-import { questionApi, type AnveshanMilestoneResponse } from '@/client/client'
+import { useQueryClient } from '@tanstack/react-query'
+import { questionKeys, useMyAnveshanMilestone } from '@/hooks/api/useQuestions'
 import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
 import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
 import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
@@ -36,9 +37,8 @@ export function PublicLayout() {
   const { t } = useTranslation()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const { user } = useAuth()
-  const [milestone, setMilestone] = useState<AnveshanMilestoneResponse | null>(null)
+
   // Anveshan users wait for this first check so users who reached 100% never see the regular pages.
-  const [milestoneChecked, setMilestoneChecked] = useState(false)
   // Bumped after each successful submission so progress reloads without a page refresh.
   const [progressVersion, setProgressVersion] = useState(0)
   const [answerTaskDismissed, setAnswerTaskDismissed] = useState(false)
@@ -51,19 +51,28 @@ export function PublicLayout() {
 
   useEffect(() => anveshanProgressEmitter.on(() => setProgressVersion((version) => version + 1)), [])
 
-  // Loads milestone progress on mount, on each page change and after each submission, so banners and the completion lock stay current.
-  // If the check fails the regular app is shown rather than locking the user out.
-  useEffect(() => {
-    if (!user?.isAnveshanUser || !user.id) return
+  // Milestone progress drives the banners and the completion lock. It is
+  // refetched on each page change and after each submission (progressVersion),
+  // so those stay current. A failed check shows the regular app rather than
+  // locking the user out.
+  const queryClient = useQueryClient()
+  const isAnveshanUser = !!user?.isAnveshanUser && !!user.id
+  const milestoneQuery = useMyAnveshanMilestone(isAnveshanUser)
+  const milestone = milestoneQuery.data ?? null
+  const milestoneChecked = milestoneQuery.isFetched
 
-    questionApi.getMyAnveshanMilestone()
-      .then((data) => {
-        setMilestone(data)
-        if (data.completed && !data.feedbackSubmitted && !isFeedbackDeferred(user.id)) setFeedbackOpen(true)
-      })
-      .catch(() => undefined)
-      .finally(() => setMilestoneChecked(true))
-  }, [user?.id, user?.isAnveshanUser, location.pathname, progressVersion])
+  const { refetch: refetchMilestone } = milestoneQuery
+  useEffect(() => {
+    if (isAnveshanUser) void refetchMilestone()
+  }, [location.pathname, progressVersion, isAnveshanUser, refetchMilestone])
+
+  // Ask for feedback once the milestone is complete, unless the user deferred it.
+  useEffect(() => {
+    if (!user?.id || !milestone) return
+    if (milestone.completed && !milestone.feedbackSubmitted && !isFeedbackDeferred(user.id)) {
+      setFeedbackOpen(true)
+    }
+  }, [milestone, user?.id])
 
   const showProgressBanner = !!milestone && !milestone.submissionsCompleted && !progressBannerDismissed && !onAnswersPage
 
@@ -78,7 +87,13 @@ export function PublicLayout() {
         // Closing without sending means "maybe later": ask again next session, not on every page.
         if (!open && user?.id && !milestone?.feedbackSubmitted) deferFeedback(user.id)
       }}
-      onSubmitted={() => setMilestone((prev) => (prev ? { ...prev, feedbackSubmitted: true } : prev))}
+      onSubmitted={() =>
+        // Mark feedback as sent in the cache so the dialog does not reopen.
+        queryClient.setQueryData(
+          questionKeys.anveshanMilestone(),
+          (prev: typeof milestone) => (prev ? { ...prev, feedbackSubmitted: true } : prev),
+        )
+      }
     />
   )
 

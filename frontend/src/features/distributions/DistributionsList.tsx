@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
 import { TesterTag } from '@/components/TesterTag'
-import { distributor, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useDistributions, useIndianStates } from '@/hooks/api/useDistributions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,52 +14,43 @@ import {
   Loader2, Search, RefreshCw, MapPin, Bookmark,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { FinalQuestion } from '@/types'
 import { Pagination } from './Pagination'
 import { useTranslation } from 'react-i18next'
 
 export function DistributionsList() {
   const { t } = useTranslation()
   // const [stats, setStats] = useState<DistributorStats | null>(null)
-  const [indianStates, setIndianStates] = useState<string[]>([])
   const [distributionState, setDistributionState] = useState<string>('')
   const [questionType, setQuestionType] = useState<'' | 'original' | 'distributed'>('')
   const [search, setSearch] = useState('')
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(20)
-  const [items, setItems] = useState<FinalQuestion[]>([])
-  const [total, setTotal] = useState(0)
-  const [pages, setPages] = useState(0)
-  const [loading, setLoading] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [st, list] = await Promise.all([
-        // distributor.getStats(),
-        distributor.listIndianStates(),
-        distributor.listDistributions({
-          page, limit,
-          ...(distributionState ? { distributionState } : {}),
-          ...(questionType ? { questionType } : {}),
-          ...(search ? { search } : {}),
-          ...(testerFilter ? { tester: testerFilter } : {}),
-        }),
-      ])
-      // setStats(s)
-      setIndianStates(st.states)
-      setItems(list.items)
-      setTotal(list.total)
-      setPages(list.pages)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load distributions.'))
-    } finally {
-      setLoading(false)
-    }
-  }, [page, limit, distributionState, questionType, search, testerFilter])
 
-  useEffect(() => { load() }, [load])
+  const statesQuery = useIndianStates()
+  const listQuery = useDistributions({
+    page, limit,
+    ...(distributionState ? { distributionState } : {}),
+    ...(questionType ? { questionType } : {}),
+    ...(search ? { search } : {}),
+    ...(testerFilter ? { tester: testerFilter } : {}),
+  })
+  const indianStates = statesQuery.data?.states ?? []
+  const items = listQuery.data?.items ?? []
+  const total = listQuery.data?.total ?? 0
+  const pages = listQuery.data?.pages ?? 0
+  const loading = listQuery.isFetching || statesQuery.isFetching
+  const loadError = listQuery.error ?? statesQuery.error
+
+  const load = () => {
+    void listQuery.refetch()
+    void statesQuery.refetch()
+  }
+
+  useEffect(() => {
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load distributions.'))
+  }, [loadError])
 
   return (
     <div className="space-y-4">

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/stores/AuthContext";
 import { useLanguage } from "@/hooks/ui/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
-import { authApi, lgdApi, getErrorMessage } from "@/client/client";
+import { lgdApi, getErrorMessage } from "@/client/client";
+import { useUpdateMe } from '@/hooks/api/useProfile';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -213,7 +214,8 @@ function EditProfileDialog({
   const { t } = useTranslation();
   const { setLanguage } = useLanguage();
   const [tab, setTab] = useState("personal");
-  const [saving, setSaving] = useState(false);
+  const updateMe = useUpdateMe();
+  const saving = updateMe.isPending;
 
   // LGD location dropdown options
   const [states, setStates] = useState<LgdState[]>([]);
@@ -406,7 +408,6 @@ function EditProfileDialog({
       toast.error(t('profilePage.nameCannotBeEmpty'));
       return;
     }
-    setSaving(true);
     try {
       const payload: Record<string, any> = { name: form.name.trim() };
       if (form.age) payload.age = parseInt(form.age) || 0;
@@ -448,14 +449,12 @@ function EditProfileDialog({
         payload.languagePreference = "en";
       }
 
-      const { user: updated } = await authApi.updateMe(payload);
+      const { user: updated } = await updateMe.mutateAsync(payload);
       onSaved(updated);
       toast.success(t('profilePage.profileUpdated'));
       onClose();
     } catch (e) {
       toast.error(getErrorMessage(e, "Failed to update profile"));
-    } finally {
-      setSaving(false);
     }
   }
 

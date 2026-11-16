@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, lgdApi, getErrorMessage, type LgdState, type UserStats } from '@/client/client'
+import { adminApi, getErrorMessage, type LgdState } from '@/client/client'
+import { useUserStats, useUsers } from '@/hooks/api/useUsers'
+import { useStates } from '@/hooks/api/useLgd'
 import { useAuth } from '@/stores/AuthContext'
 import { useDebouncedValue } from '@/hooks/ui/useDebouncedValue'
 import { Button } from '@/components/ui/button'
@@ -237,8 +239,6 @@ function SortableHeader({ label, sortKey, activeKey, order, onSort, newBadge }: 
 export function UsersPage() {
   const { t } = useTranslation()
   const { user: currentUser } = useAuth()
-  const [users, setUsers] = useState<UserType[]>([])
-  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -247,14 +247,12 @@ export function UsersPage() {
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [stateFilter, setStateFilter] = useState('')
-  const [states, setStates] = useState<LgdState[]>([])
+
   const [anveshanFilter, setAnveshanFilter] = useState<AnveshanFilter>('')
   const [testerFilter, setTesterFilter] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const [stats, setStats] = useState<UserStats | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
 
@@ -266,12 +264,12 @@ export function UsersPage() {
   //     .finally(() => setLoading(false))
   // }, [page, debouncedSearch, statusFilter, roleFilter, currentUser?.id])
 
+  const { data: statesData, error: statesError } = useStates();
+  const states: LgdState[] = statesData?.states ?? [];
+
   useEffect(() => {
-    lgdApi
-      .getStates()
-      .then(({ states }) => setStates(states))
-      .catch((e) => toast.error(getErrorMessage(e, "Failed to load states")));
-  }, []);
+    if (statesError) toast.error(getErrorMessage(statesError, "Failed to load states"));
+  }, [statesError]);
 
   // Date filters apply once a full, sensible date is typed, so partial years like 0002 do not trigger requests.
   const debouncedFrom = useDebouncedValue(fromDate, 400)
@@ -289,25 +287,16 @@ export function UsersPage() {
   //   return () => { cancelled = true }
   // }, [usableFrom, usableTo, dateRangeInvalid])
 
-  useEffect(() => {
-  if (dateRangeInvalid) return
-  let cancelled = false
-  adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
-    .then((res) => { if (!cancelled) setStats(res) })
-    .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
-  return () => { cancelled = true }
-}, [usableFrom, usableTo, dateRangeInvalid, refreshKey])
+  // Both lists stay disabled while the typed date range is contradictory.
+  const statsQuery = useUserStats({ fromDate: usableFrom, toDate: usableTo }, !dateRangeInvalid)
+  const stats = statsQuery.data ?? null
 
-  useEffect(() => {
-  if (dateRangeInvalid) return
-  let cancelled = false
-  setLoading(true)
-  adminApi.getUsers({
+  const usersQuery = useUsers({
     page, limit,
     search: debouncedSearch || undefined,
     status: statusFilter || undefined,
     role: roleFilter || undefined,
-    category: categoryFilter || undefined,   // ← add this
+    category: categoryFilter || undefined,
     state: stateFilter || undefined,
     anveshan: anveshanFilter || undefined,
     tester: testerFilter || undefined,
@@ -316,12 +305,18 @@ export function UsersPage() {
     excludeId: currentUser?.id,
     sortBy,
     sortOrder,
-  })
-    .then((res) => { if (!cancelled) { setUsers(res.items); setTotal(res.total) } })
-    .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load users')) })
-    .finally(() => { if (!cancelled) setLoading(false) })
-  return () => { cancelled = true }
-}, [page, debouncedSearch, statusFilter, roleFilter, categoryFilter, stateFilter, anveshanFilter, testerFilter, usableFrom, usableTo, dateRangeInvalid, sortBy, sortOrder, currentUser?.id, refreshKey])
+  }, !dateRangeInvalid)
+  const users: UserType[] = usersQuery.data?.items ?? []
+  const total = usersQuery.data?.total ?? 0
+  const loading = usersQuery.isFetching
+
+  useEffect(() => {
+    if (statsQuery.error) toast.error(getErrorMessage(statsQuery.error, 'Failed to load user counts'))
+  }, [statsQuery.error])
+
+  useEffect(() => {
+    if (usersQuery.error) toast.error(getErrorMessage(usersQuery.error, 'Failed to load users'))
+  }, [usersQuery.error])
 
   // Sorts by a column, flipping the direction when it is already the active one.
   const handleSort = (key: UserSortKey) => {
@@ -355,31 +350,11 @@ export function UsersPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
 
+  // The create mutation already invalidates the user caches; this resets
+  // paging so the new account is visible on the first page.
   function handleUserCreated() {
     toast.success(t('usersPage.userCreatedSuccessfully'));
     setPage(1);
-    setRefreshKey((k) => k + 1)
-    adminApi
-      .getUsers({
-        page: 1,
-        limit,
-        search: debouncedSearch || undefined,
-        status: statusFilter || undefined,
-        role: roleFilter || undefined,
-        excludeId: currentUser?.id,
-      })
-      .then((res) => {
-        setUsers(res.items);
-        setTotal(res.total);
-      })
-      .catch((error) =>
-        toast.error(
-          getErrorMessage(
-            error,
-            "User created, but the list could not be refreshed",
-          ),
-        ),
-      );
   }
 
   return (

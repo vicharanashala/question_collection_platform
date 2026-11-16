@@ -5,6 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/stores/AuthContext'
 import type { AuthUser } from '@/types'
 import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/client/client'
+import {
+  useAttachQuestionAudio,
+  useMyQuestionStats,
+  usePreviewQuestion,
+  useSubmitQuestion,
+} from '@/hooks/api/useQuestions'
 import { storageApi } from '@/client/storage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -233,10 +239,21 @@ export function PublicAskPage() {
   const [season, setSeason] = useState<string>('')
   const [cropType, setCropType] = useState('')
   const [cropPickerOpen, setCropPickerOpen] = useState(false)
+  // ─── Stats (daily limit counter) ──────────────────────────────────────────
+  // Shared with the home screen through the query cache. A failed read falls
+  // back to the default allowance so the form stays usable.
+  const statsQuery = useMyQuestionStats()
+  const stats: StatsState | null = statsQuery.data
+    ? {
+        remainingToday: (statsQuery.data as { remainingToday?: number | null }).remainingToday ?? null,
+        dailyLimit: (statsQuery.data as { dailyLimit?: number | null }).dailyLimit ?? null,
+      }
+    : statsQuery.isError
+      ? { remainingToday: 20, dailyLimit: 20 }
+      : null
   const crops = useCrops()
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [stats, setStats] = useState<StatsState | null>(null)
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
   const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
   const [micExpanded, setMicExpanded] = useState(true)
@@ -244,6 +261,12 @@ export function PublicAskPage() {
   const [locationModalOpen, setLocationModalOpen] = useState(false)
   const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
   const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
+
+  // Submitting invalidates the question caches, so the daily counter and the
+  // submissions list pick the new question up on their own.
+  const previewQuestion = usePreviewQuestion()
+  const submitQuestion = useSubmitQuestion()
+  const attachAudio = useAttachQuestionAudio()
 
   // Preview saves a rejected duplicate before any audio is uploaded, so the recordings are
   // uploaded afterwards and attached to that record. Never blocks the duplicate screen.
@@ -254,7 +277,7 @@ export function PublicAskPage() {
       const uploads = await Promise.all(
         recordings.map(data => storageApi.uploadAudio(data.blob, data.filename))
       )
-      await questionApi.attachAudio(questionId, uploads.map(u => u.url))
+      await attachAudio.mutateAsync({ questionId, audioUrls: uploads.map(u => u.url) })
     } catch (err) {
       console.warn('[PublicAskPage] could not attach audio to duplicate question:', err)
     }
@@ -366,15 +389,6 @@ useEffect(() => {
   // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
 
-  // ─── Stats (daily limit counter) ──────────────────────────────────────────
-useEffect(() => {
-  questionApi.getMyStats()
-    .then((s) => setStats({
-      remainingToday: (s as any).remainingToday ?? null,
-      dailyLimit: (s as any).dailyLimit ?? null,
-    }))
-    .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
-}, [])
 
   function toggleDomain(d: string) {
     setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
@@ -408,7 +422,7 @@ useEffect(() => {
 
     setPreviewLoading(true)
     try {
-      const res = await questionApi.preview({
+      const res = await previewQuestion.mutateAsync({
         questionText: questionText.trim(),
         mediaType: 'none',
         mediaUrls: [],
@@ -421,12 +435,7 @@ useEffect(() => {
           similarityScore: res.duplicate.similarityScore,
           matchedUserName: res.duplicate.matchedUserName,
         })
-        questionApi.getMyStats()
-  .then((s) => setStats({
-    remainingToday: (s as any).remainingToday ?? null,
-    dailyLimit: (s as any).dailyLimit ?? null,
-  }))
-  .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
+        void statsQuery.refetch()
         return
       }
       setPreviewMeta({
@@ -471,7 +480,7 @@ useEffect(() => {
 //       // duplicate, the question is saved as REJECTED server-side (counts
 //       // against the daily limit) and we show the duplicate screen instead
 //       // of advancing to the success state.
-//       const previewRes = await questionApi.preview({
+//       const previewRes = await previewQuestion.mutateAsync({
 //         questionText: questionText.trim(),
 //         mediaType: 'none',
 //         mediaUrls: [],
@@ -576,7 +585,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
   console.log("inside perform submit...")
   setSubmitting(true)
   try {
-    const previewRes = await questionApi.preview({
+    const previewRes = await previewQuestion.mutateAsync({
       questionText: questionText.trim(),
       mediaType: 'none',
       mediaUrls: [],
@@ -589,12 +598,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
         similarityScore: previewRes.duplicate.similarityScore,
         matchedUserName: previewRes.duplicate.matchedUserName,
       })
-      questionApi.getMyStats()
-        .then((s) => setStats({
-          remainingToday: (s as any).remainingToday ?? null,
-          dailyLimit: (s as any).dailyLimit ?? null,
-        }))
-        .catch(() => undefined)
+      void statsQuery.refetch()
       return
     }
 
@@ -610,7 +614,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
       }
     }
 
-    const res = await questionApi.submitQuestion({
+    const res = await submitQuestion.mutateAsync({
       questionText: questionText.trim(),
       domains,
       season,
@@ -639,12 +643,7 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
     cacheQuestionForDuplicateDetection(questionText.trim(), newId)
     setSubmitted(true)
     setSubmissionLocation(null) // reset — the next submission asks fresh, per requirement
-    questionApi.getMyStats()
-      .then((s) => setStats({
-        remainingToday: (s as any).remainingToday ?? null,
-        dailyLimit: (s as any).dailyLimit ?? null,
-      }))
-      .catch(() => undefined)
+    void statsQuery.refetch()
   } catch (err) {
     const rejected = parseQuestionRejected(err)
     if (rejected) {

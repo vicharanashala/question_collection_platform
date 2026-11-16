@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, MotionConfig } from 'framer-motion'
 import { CheckCircle2, MessageCircleQuestion, Sprout, Leaf, Bug, Microscope, type LucideIcon } from 'lucide-react'
@@ -7,7 +7,7 @@ import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import type { AgriEntityType } from '@/types'
 import { useAuth } from '@/stores/AuthContext'
-import { questionApi } from '@/client/client'
+import { useMyAnveshanMilestone } from '@/hooks/api/useQuestions'
 import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
 import type { AnveshanMilestoneData } from '@/features/public/AnveshMileStone'
 
@@ -84,17 +84,12 @@ export function SubmissionTypeTabs({ value, onChange, showQuestion = true }: Sub
   const { t } = useTranslation()
   const { user } = useAuth()
   
-  const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null)
+  const milestoneQuery = useMyAnveshanMilestone(!!user?.isAnveshanUser)
+  const milestone = (milestoneQuery.data as AnveshanMilestoneData | undefined) ?? null
 
-  const loadMilestone = useCallback(() => {
-    if (!user?.isAnveshanUser) return
-    questionApi.getMyAnveshanMilestone().then(setMilestone).catch(() => undefined)
-  }, [user?.isAnveshanUser])
-
-  useEffect(() => {
-    loadMilestone()
-    return anveshanProgressEmitter.on(loadMilestone)
-  }, [loadMilestone])
+  // Re-read progress after each submission.
+  const { refetch: refetchMilestone } = milestoneQuery
+  useEffect(() => anveshanProgressEmitter.on(() => void refetchMilestone()), [refetchMilestone])
 
   const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
 

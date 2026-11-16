@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getErrorMessage, questionApi } from '@/client/client'
+import { useQueryClient } from '@tanstack/react-query'
+import { questionKeys, useMyAnveshanAnswerQuestions } from '@/hooks/api/useQuestions'
 import { AnswerQuestionList } from '@/components/anveshan-answers/AnswerQuestionList'
 import { SubmissionCriteriaGate } from '@/components/anveshan-answers/SubmissionCriteriaGate'
 import { AnsweringGuideDialog } from '@/components/anveshan-answers/AnsweringGuideDialog'
@@ -54,9 +56,7 @@ function pickDefaultQuestion(data: AnveshanAnswerQuestionsResponse): string | nu
 export function AnveshanAnswersPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [data, setData] = useState<AnveshanAnswerQuestionsResponse | null>(null)
-  const [loadState, setLoadState] = useState<LoadState>('loading')
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const queryClient = useQueryClient()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,6 +65,33 @@ export function AnveshanAnswersPage() {
   const isDesktop = useMediaQuery(ANVESHAN_ANSWERS_DESKTOP_QUERY)
   const { user } = useAuth()
   const userId = user?.id
+
+  // Questions load only on desktop-sized screens; phones see the desktop-only
+  // notice instead.
+  const query = useMyAnveshanAnswerQuestions(isDesktop)
+  const data = (query.data as AnveshanAnswerQuestionsResponse | undefined) ?? null
+  const loadState: LoadState = query.isPending ? 'loading' : query.isError ? 'error' : 'ready'
+  const isRefreshing = query.isRefetching
+
+  // Writes straight to the cache so a submitted answer appears without a refetch.
+  const setData = (
+    updater: (prev: AnveshanAnswerQuestionsResponse | undefined) => AnveshanAnswerQuestionsResponse | undefined,
+  ) => queryClient.setQueryData(questionKeys.anveshanAnswerQuestions(), updater as never)
+
+  const load = async (mode: 'initial' | 'refresh') => {
+    const result = await query.refetch()
+    if (mode === 'refresh' && result.error) {
+      toast.error(getErrorMessage(result.error, t('anveshanAnswers.errors.loadFailed')))
+    }
+  }
+
+  // Keeps the current selection while it is still in the list.
+  useEffect(() => {
+    if (!data) return
+    setSelectedId((current) =>
+      current && data.items.some((q) => q.id === current) ? current : pickDefaultQuestion(data),
+    )
+  }, [data])
 
   // Shows the guide automatically on a user's first visit once answering is unlocked.
   useEffect(() => {
@@ -77,30 +104,6 @@ export function AnveshanAnswersPage() {
     if (!open && userId) markGuideSeen(userId)
   }
 
-  // Fetches the eligible questions; keeps the current selection when it is still in the list.
-  const load = useCallback(async (mode: 'initial' | 'refresh') => {
-    if (mode === 'initial') setLoadState('loading')
-    else setIsRefreshing(true)
-    try {
-      const result = await questionApi.getMyAnveshanAnswerQuestions()
-      setData(result)
-      setSelectedId((current) =>
-        current && result.items.some((q) => q.id === current) ? current : pickDefaultQuestion(result),
-      )
-      setLoadState('ready')
-    } catch (err) {
-      if (mode === 'initial') setLoadState('error')
-      else toast.error(getErrorMessage(err, t('anveshanAnswers.errors.loadFailed')))
-    } finally {
-      setIsRefreshing(false)
-    }
-  }, [t])
-
-  // Questions load only on desktop-sized screens; phones see the desktop-only notice instead.
-  useEffect(() => {
-    if (!isDesktop) return
-    void load('initial')
-  }, [load, isDesktop])
 
 
   // Submits the answer, updates the list in place and moves on to the next unanswered question.
@@ -120,7 +123,7 @@ export function AnveshanAnswersPage() {
       })
       const items = data.items.map((q) => (q.id === result.question.id ? result.question : q))
       const nextData = { ...data, items, answeredCount: result.answeredCount, completed: result.completed }
-      setData(nextData)
+      setData(() => nextData)
       setSelectedId(pickDefaultQuestion(nextData))
       const completesMilestone = result.completed && !data.completed
       if (data.scoringEnabled) {

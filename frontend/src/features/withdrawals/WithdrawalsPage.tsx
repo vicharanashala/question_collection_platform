@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminApi, lgdApi, getErrorMessage, type LgdState } from '@/client/client'
+import { adminApi, getErrorMessage, type LgdState } from '@/client/client'
+import { useInfiniteWithdrawals, useProcessWithdrawal } from '@/hooks/api/useWithdrawals'
+import { useStates } from '@/hooks/api/useLgd'
 import { useAuth } from '@/stores/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -105,12 +107,8 @@ export function WithdrawalsPage() {
   const navigate = useNavigate()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
-  const [items, setItems] = useState<Withdrawal[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const processWithdrawal = useProcessWithdrawal()
   const [walletUserId, setWalletUserId] = useState<string | null>(null)
   const [walletOpen, setWalletOpen] = useState(false)
   const [detailTarget, setDetailTarget] = useState<Withdrawal | null>(null)
@@ -125,52 +123,44 @@ export function WithdrawalsPage() {
 
   // Filters
   const [filterOpen, setFilterOpen] = useState(false)
-  const [states, setStates] = useState<LgdState[]>([])
+  const { data: statesData, error: statesError } = useStates()
+  const states: LgdState[] = statesData?.states ?? []
 
   useEffect(() => {
-    lgdApi.getStates()
-      .then(({ states }) => setStates(states))
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states')))
-  }, [])
+    if (statesError) toast.error(getErrorMessage(statesError, 'Failed to load states'))
+  }, [statesError])
   const [activeFilters, setActiveFilters] = useState({
     search: '', status: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', tester: '',
   })
   const [draftFilters, setDraftFilters] = useState({ ...activeFilters })
 
   const limit = 20
+
+  // buildParams also sets page; the infinite query supplies the real page number.
+  const listParams = buildParams(1, activeFilters)
+  const listQuery = useInfiniteWithdrawals(listParams)
+  const listPages = listQuery.data?.pages ?? []
+  // Pending-first sort is applied client-side per page when _default is active.
+  const items: Withdrawal[] = listPages.flatMap((p) =>
+    activeFilters.sortBy === '_default' ? [...p.items].sort(pendingFirst) : p.items,
+  )
+  const total = listPages.length > 0 ? listPages[listPages.length - 1].total : 0
+  const page = Math.max(listPages.length, 1)
   const totalPages = Math.ceil(total / limit)
+  const loading = listQuery.isFetching
+  const refreshing = listQuery.isRefetching
 
-  const fetch = useCallback(async (pageNum = 1, refresh = false, filters = activeFilters) => {
-    try {
-      const params = buildParams(pageNum, filters)
-      const res = await adminApi.listWithdrawals(params)
-
-      // Apply pending-first sort client-side when _default is active
-      const sortedItems = filters.sortBy === '_default'
-        ? [...res.items].sort(pendingFirst)
-        : res.items
-
-      setItems(refresh ? sortedItems : (prev) => [...prev, ...sortedItems])
-      setTotal(res.total)
-      setPage(pageNum)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load withdrawals'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [activeFilters])
-
-  useEffect(() => { fetch(1, true, activeFilters) }, [])
+  useEffect(() => {
+    if (listQuery.error) toast.error(getErrorMessage(listQuery.error, 'Failed to load withdrawals'))
+  }, [listQuery.error])
 
   async function onRefresh() {
-    setRefreshing(true)
-    await fetch(1, true, activeFilters)
+    await listQuery.refetch()
   }
 
   async function loadMore() {
-    if (page >= totalPages || loading) return
-    await fetch(page + 1, false, activeFilters)
+    if (!listQuery.hasNextPage || listQuery.isFetchingNextPage) return
+    await listQuery.fetchNextPage()
   }
 
   function openFilters() {
@@ -181,10 +171,6 @@ export function WithdrawalsPage() {
   function applyFilters() {
     const toApply = { ...draftFilters }
     setActiveFilters(toApply)
-    setPage(1)
-    setItems([])
-    setLoading(true)
-    fetch(1, true, toApply)
     setFilterOpen(false)
   }
 
@@ -192,10 +178,6 @@ export function WithdrawalsPage() {
     const empty = { search: '', state: '', sortBy: '_default', fromDate: '', toDate: '', filterStatus: '', status: '', tester: '' }
     setDraftFilters(empty)
     setActiveFilters(empty)
-    setPage(1)
-    setItems([])
-    setLoading(true)
-    fetch(1, true, empty)
     setFilterOpen(false)
   }
 
@@ -253,16 +235,15 @@ export function WithdrawalsPage() {
   setProcessingId(id)
 
   try {
-    await adminApi.processWithdrawal(id, {
-      action,
-      rejectionReason: reason,
+    await processWithdrawal.mutateAsync({
+      id,
+      body: { action, rejectionReason: reason },
     })
 
     toast.success(
       `Withdrawal ${action === 'approve' ? 'approved' : 'rejected'}`,
     )
 
-    setItems((prev) => prev.filter((w) => w.id !== id))
   } catch (e) {
     toast.error(getErrorMessage(e, `Failed to ${action}`))
   } finally {
@@ -327,8 +308,6 @@ export function WithdrawalsPage() {
                 onClick={() => {
                   const next = { ...activeFilters, [k]: k === 'sortBy' ? '_default' : '' }
                   setActiveFilters(next)
-                  setPage(1); setItems([]); setLoading(true)
-                  fetch(1, true, next)
                 }}
                 className="ml-1 hover:text-destructive"
               >
@@ -451,7 +430,7 @@ export function WithdrawalsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { setPage(1); setItems([]); setLoading(true); fetch(1, true, activeFilters) }}
+                onClick={() => void listQuery.refetch()}
                 disabled={page === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -581,8 +560,8 @@ export function WithdrawalsPage() {
           withdrawal={detailTarget}
           open={detailOpen}
           onClose={() => { setDetailOpen(false); setDetailTarget(null) }}
-          onActioned={(id) => {
-            setItems((prev) => prev.filter((w) => w.id !== id))
+          onActioned={() => {
+            // The mutation invalidates the list; just close the modal.
             setDetailOpen(false)
             setDetailTarget(null)
           }}

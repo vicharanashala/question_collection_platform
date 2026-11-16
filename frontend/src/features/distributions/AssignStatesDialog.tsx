@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { distributor, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAssignStates, useIndianStates } from '@/hooks/api/useDistributions'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -28,16 +29,18 @@ export function AssignStatesDialog({
 }) {
   const { t } = useTranslation()
   const [states, setStates] = useState<string[]>([])
-  const [indianStates, setIndianStates] = useState<string[]>([])
   const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<AssignResult | null>(null)
 
+  const { data: statesData, error: statesError } = useIndianStates()
+  const indianStates = statesData?.states ?? []
+
+  const assignStates = useAssignStates()
+  const submitting = assignStates.isPending
+
   useEffect(() => {
-    distributor.listIndianStates()
-      .then((r) => setIndianStates(r.states))
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load states.')))
-  }, [])
+    if (statesError) toast.error(getErrorMessage(statesError, 'Failed to load states.'))
+  }, [statesError])
 
   const toggleState = (s: string) => {
     setStates((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s])
@@ -46,9 +49,11 @@ export function AssignStatesDialog({
   const clearAll = () => setStates([])
 
   const submit = async () => {
-    setSubmitting(true)
     try {
-      const r = await distributor.assignStates(question.id, { states, notes: notes || undefined })
+      const r = await assignStates.mutateAsync({
+        questionId: question.id,
+        payload: { states, notes: notes || undefined },
+      })
       setResult(r)
       // The backend returns a local summary (`success`, `message`, `count`,
       // `questionIds`) plus an optional `reviewerResponse` that carries the
@@ -59,8 +64,6 @@ export function AssignStatesDialog({
       setTimeout(onDone, 1500)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to assign states.'))
-    } finally {
-      setSubmitting(false)
     }
   }
 

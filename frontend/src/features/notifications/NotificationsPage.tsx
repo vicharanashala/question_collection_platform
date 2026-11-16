@@ -1,6 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { notificationApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import {
+  useInfiniteNotifications,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+} from '@/hooks/api/useNotifications'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -40,13 +45,30 @@ function groupByDate(items: Notification[]): Record<string, Notification[]> {
 export function NotificationsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [items, setItems] = useState<Notification[]>([])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [marking, setMarking] = useState<string | null>(null)
   const limit = 20
+
+  const {
+    data,
+    isPending: loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteNotifications(limit)
+  const pages = data?.pages ?? []
+  const lastPage = pages[pages.length - 1]
+  const items = pages.flatMap((p) => p.notifications)
+  const total = lastPage?.total ?? 0
+  const unreadCount = lastPage?.unread ?? 0
+
+  const markRead = useMarkNotificationRead()
+  const markAllRead = useMarkAllNotificationsRead()
+  // Which row shows a spinner: a single id, or 'all' for the bulk action.
+  const marking = markAllRead.isPending ? 'all' : markRead.isPending ? markRead.variables : null
+
+  useEffect(() => {
+    if (error) toast.error(getErrorMessage(error, 'Failed to load notifications'))
+  }, [error])
 
   function handleNotificationClick(notif: Notification) {
     if (!notif.isRead) {
@@ -60,45 +82,17 @@ export function NotificationsPage() {
     }
   }
 
-  const fetch_ = useCallback((pg: number, refresh = false) => {
-    setLoading(!refresh)
-    notificationApi.getNotifications({ page: pg, limit })
-      .then((res) => {
-        setItems((prev) => refresh ? res.notifications : [...prev, ...res.notifications])
-        setTotal(res.total)
-        setUnreadCount(res.unread)
-      })
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load notifications')))
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => { fetch_(1, true) }, [fetch_])
-
-  async function handleMarkRead(id: string) {
-    setMarking(id)
-    try {
-      await notificationApi.markRead(id)
-      setItems((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n))
-      setUnreadCount((c) => Math.max(0, c - 1))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to mark as read'))
-    } finally {
-      setMarking(null)
-    }
+  function handleMarkRead(id: string) {
+    markRead.mutate(id, {
+      onError: (e) => toast.error(getErrorMessage(e, 'Failed to mark as read')),
+    })
   }
 
-  async function handleMarkAllRead() {
-    setMarking('all')
-    try {
-      await notificationApi.markAllRead()
-      setItems((prev) => prev.map((n) => ({ ...n, isRead: true })))
-      setUnreadCount(0)
-      toast.success(t('notificationsPage.allNotificationsMarkedAs'))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to mark all as read'))
-    } finally {
-      setMarking(null)
-    }
+  function handleMarkAllRead() {
+    markAllRead.mutate(undefined, {
+      onSuccess: () => toast.success(t('notificationsPage.allNotificationsMarkedAs')),
+      onError: (e) => toast.error(getErrorMessage(e, 'Failed to mark all as read')),
+    })
   }
 
   const groups = groupByDate(items)
@@ -212,15 +206,15 @@ export function NotificationsPage() {
           ))}
 
           {/* Load more */}
-          {items.length < total && (
+          {hasNextPage && (
             <div className="flex justify-center pt-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => { const next = page + 1; setPage(next); fetch_(next) }}
-                disabled={loading}
+                onClick={() => void fetchNextPage()}
+                disabled={isFetchingNextPage}
               >
-                {loading ? t('common.loading') : `Load more (${total - items.length} remaining)`}
+                {isFetchingNextPage ? t('common.loading') : `Load more (${total - items.length} remaining)`}
               </Button>
             </div>
           )}

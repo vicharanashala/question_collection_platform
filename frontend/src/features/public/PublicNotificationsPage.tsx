@@ -5,10 +5,15 @@
  * list with unread indicator, "Mark all read", and tap-to-navigate to the
  * related question/withdrawal/report.
  */
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { notificationApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import {
+  useInfiniteNotifications,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+} from '@/hooks/api/useNotifications'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -96,58 +101,44 @@ export function PublicNotificationsPage(): ReactNode {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unread, setUnread] = useState(0)
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const {
+    data,
+    isPending: loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage: loadingMore,
+  } = useInfiniteNotifications(PAGE_SIZE)
+  const pages = data?.pages ?? []
+  const lastPage = pages[pages.length - 1]
+  const notifications = pages.flatMap((p) => p.notifications)
+  const unread = lastPage?.unread ?? 0
 
-  const fetchPage = useCallback(async (p: number, append: boolean) => {
-    try {
-      const res = await notificationApi.getNotifications({ page: p, limit: PAGE_SIZE })
-      setNotifications((prev) => (append ? [...prev, ...res.notifications] : res.notifications))
-      setUnread(res.unread)
-      setTotal(res.total)
-      setPage(p)
-    } catch (e) {
-      toast.error(getErrorMessage(e, t('notifications.loadError')))
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [t])
+  const markRead = useMarkNotificationRead()
+  const markAllRead = useMarkAllNotificationsRead()
 
   useEffect(() => {
-    fetchPage(1, false)
-  }, [fetchPage])
+    if (error) toast.error(getErrorMessage(error, t('notifications.loadError')))
+  }, [error, t])
 
-  async function handleMarkAllRead() {
-    try {
-      await notificationApi.markAllRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-      setUnread(0)
-    } catch (e) {
-      toast.error(getErrorMessage(e, t('notifications.markAllReadError')))
-    }
+  function handleMarkAllRead() {
+    markAllRead.mutate(undefined, {
+      onError: (e) => toast.error(getErrorMessage(e, t('notifications.markAllReadError'))),
+    })
   }
 
-  async function handleOpen(item: Notification) {
-    if (!item.isRead) {
-      setNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)))
-      setUnread((u) => Math.max(0, u - 1))
-      notificationApi.markRead(item.id).catch(() => {})
-    }
+  function handleOpen(item: Notification) {
+    // Marking read is best-effort; navigation should not wait on it.
+    if (!item.isRead) markRead.mutate(item.id)
     const target = targetFor(item)
     if (target) navigate(target)
   }
 
   function handleLoadMore() {
-    setLoadingMore(true)
-    fetchPage(page + 1, true)
+    void fetchNextPage()
   }
 
-  const hasMore = notifications.length < total
+  const hasMore = hasNextPage
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-4">

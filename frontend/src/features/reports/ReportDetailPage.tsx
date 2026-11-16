@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { reportsApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import {
+  useAddReportReply,
+  useReport,
+  useUpdateReportPriority,
+  useUpdateReportStatus,
+} from '@/hooks/api/useReports'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -104,71 +110,60 @@ export default function ReportDetailPage() {
   const { t } = useTranslation()
   const { reportId } = useParams<{ reportId: string }>()
   const navigate = useNavigate()
-  const [report, setReport] = useState<Report | null>(null)
-  const [loading, setLoading] = useState(true)
   const [replyText, setReplyText] = useState('')
-  const [sending, setSending] = useState(false)
-  const [updatingStatus, setUpdatingStatus] = useState(false)
-  const [updatingPriority, setUpdatingPriority] = useState(false)
-  const [markingClosed, setMarkingClosed] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
+  // Tracks which status write is in flight so the right control shows a spinner.
+  const [closingReport, setClosingReport] = useState(false)
 
-  const fetchReport = useCallback(async () => {
-    if (!reportId) return
-    setLoading(true)
-    try {
-      const data = await reportsApi.get(reportId)
-      setReport(data as Report)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load report'))
-    } finally {
-      setLoading(false)
-    }
-  }, [reportId])
+  const { data, isPending: loading, error: loadError } = useReport(reportId ?? null)
+  const report = (data as Report | undefined) ?? null
 
-  useEffect(() => { fetchReport() }, [fetchReport])
+  const addReply = useAddReportReply()
+  const updateStatus = useUpdateReportStatus()
+  const updatePriority = useUpdateReportPriority()
+  const sending = addReply.isPending
+  const updatingStatus = updateStatus.isPending && !closingReport
+  const updatingPriority = updatePriority.isPending
+  const markingClosed = updateStatus.isPending && closingReport
 
-  const handleSendReply = async () => {
+  useEffect(() => {
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load report'))
+  }, [loadError])
+
+  const handleSendReply = () => {
     if (!replyText.trim() || !reportId) return
-    setSending(true)
-    try {
-      await reportsApi.addReply(reportId, replyText.trim())
-      setReplyText('')
-      toast.success(t('reportDetailPage.replySent'))
-      await fetchReport()
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to send reply'))
-    } finally {
-      setSending(false)
-    }
+    addReply.mutate(
+      { reportId, message: replyText.trim() },
+      {
+        onSuccess: () => {
+          setReplyText('')
+          toast.success(t('reportDetailPage.replySent'))
+        },
+        onError: (e) => toast.error(getErrorMessage(e, 'Failed to send reply')),
+      },
+    )
   }
 
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = (status: string) => {
     if (!reportId) return
-    setUpdatingStatus(true)
-    try {
-      await reportsApi.updateStatus(reportId, status)
-      toast.success(t('reportDetailPage.statusUpdated'))
-      await fetchReport()
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to update status'))
-    } finally {
-      setUpdatingStatus(false)
-    }
+    updateStatus.mutate(
+      { reportId, status },
+      {
+        onSuccess: () => toast.success(t('reportDetailPage.statusUpdated')),
+        onError: (e) => toast.error(getErrorMessage(e, 'Failed to update status')),
+      },
+    )
   }
 
-  const handlePriorityChange = async (priority: string) => {
+  const handlePriorityChange = (priority: string) => {
     if (!reportId) return
-    setUpdatingPriority(true)
-    try {
-      await reportsApi.updatePriority(reportId, priority)
-      toast.success(t('reportDetailPage.priorityUpdated'))
-      await fetchReport()
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to update priority'))
-    } finally {
-      setUpdatingPriority(false)
-    }
+    updatePriority.mutate(
+      { reportId, priority },
+      {
+        onSuccess: () => toast.success(t('reportDetailPage.priorityUpdated')),
+        onError: (e) => toast.error(getErrorMessage(e, 'Failed to update priority')),
+      },
+    )
   }
 
   const handleMarkClosed = () => {
@@ -176,19 +171,18 @@ export default function ReportDetailPage() {
     setShowCloseModal(true)
   }
 
-  const confirmMarkClosed = async () => {
+  const confirmMarkClosed = () => {
     if (!reportId) return
     setShowCloseModal(false)
-    setMarkingClosed(true)
-    try {
-      await reportsApi.updateStatus(reportId, 'closed')
-      toast.success(t('reportDetailPage.reportMarkedAsClosed'))
-      await fetchReport()
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to close report'))
-    } finally {
-      setMarkingClosed(false)
-    }
+    setClosingReport(true)
+    updateStatus.mutate(
+      { reportId, status: 'closed' },
+      {
+        onSuccess: () => toast.success(t('reportDetailPage.reportMarkedAsClosed')),
+        onError: (e) => toast.error(getErrorMessage(e, 'Failed to close report')),
+        onSettled: () => setClosingReport(false),
+      },
+    )
   }
 
   if (loading) {

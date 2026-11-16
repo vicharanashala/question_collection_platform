@@ -15,10 +15,11 @@
  * create the payment detail, then surface a clear notice that the user
  * must complete verification in the mobile app.
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { walletApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAddPaymentDetail, useDeletePaymentDetail, usePaymentDetails } from '@/hooks/api/useWallet'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -88,7 +89,8 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
   const [accountHolderName, setAccountHolderName] = useState('')
   const [bankName, setBankName] = useState('')
   const [formError, setFormError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const addPaymentDetail = useAddPaymentDetail()
+  const submitting = addPaymentDetail.isPending
 
   function reset() {
     setUpiId('')
@@ -131,7 +133,6 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
 
   async function handleSubmit() {
     if (!validate()) return
-    setSubmitting(true)
     try {
       const data = payoutMethod === 'upi'
         ? { payoutMethod, upiId: upiId.trim() }
@@ -143,14 +144,12 @@ function AddPaymentForm({ onSuccess, onCancel }: AddPaymentFormProps) {
             accountHolderName: accountHolderName.trim(),
             bankName: bankName.trim() || undefined,
           }
-      const res = await walletApi.addPaymentDetail(data)
+      const res = await addPaymentDetail.mutateAsync(data)
       toast.success(res.message ?? t('paymentMethods.toastAdded'))
       reset()
       onSuccess()
     } catch (e) {
       setFormError(getErrorMessage(e, t('paymentMethods.toastAddError')))
-    } finally {
-      setSubmitting(false)
     }
   }
 
@@ -366,37 +365,29 @@ function SavedItem({ detail, onDelete }: SavedItemProps) {
 export function PublicPaymentMethodsPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [details, setDetails] = useState<PaymentDetail[]>([])
-  const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<'list' | 'add'>('list')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
 
-  const fetchDetails = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await walletApi.getPaymentDetails()
-      setDetails(Array.isArray(res) ? (res as PaymentDetail[]) : [])
-    } catch (err) {
-      toast.error(getErrorMessage(err, t('paymentMethods.toastLoadError')))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const detailsQuery = usePaymentDetails()
+  const details: PaymentDetail[] = Array.isArray(detailsQuery.data)
+    ? (detailsQuery.data as PaymentDetail[])
+    : []
+  const loading = detailsQuery.isPending
+  const deletePaymentDetail = useDeletePaymentDetail()
+  const deleting = deletePaymentDetail.isPending
+  const fetchDetails = () => void detailsQuery.refetch()
 
-  useEffect(() => { fetchDetails() }, [fetchDetails])
+  useEffect(() => {
+    if (detailsQuery.error) toast.error(getErrorMessage(detailsQuery.error, t('paymentMethods.toastLoadError')))
+  }, [detailsQuery.error, t])
 
   async function onDelete(id: string) {
-    setDeleting(true)
     try {
-      await walletApi.deletePaymentDetail(id)
+      await deletePaymentDetail.mutateAsync(id)
       toast.success(t('paymentMethods.toastRemoved'))
       setConfirmDelete(null)
-      await fetchDetails()
     } catch (err) {
       toast.error(getErrorMessage(err, t('paymentMethods.toastRemoveError')))
-    } finally {
-      setDeleting(false)
     }
   }
 

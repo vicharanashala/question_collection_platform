@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authApi, getErrorMessage } from "@/client/client";
+import { useUpdateMe } from '@/hooks/api/useProfile';
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from "@/constants/legal";
 import { categoryLabel } from "@/constants/public";
 import type { AuthUser } from "@/types";
@@ -244,7 +245,8 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
   const [activeTab, setActiveTab] = useState<LegalTab>("terms");
   const [readProgress, setReadProgress] = useState<Record<LegalTab, number>>({ terms: 0, privacy: 0 });
   const [accepted, setAccepted] = useState<Record<LegalTab, boolean>>({ terms: false, privacy: false });
-  const [submitting, setSubmitting] = useState(false);
+  const updateMe = useUpdateMe();
+  const submitting = updateMe.isPending;
   const [error, setError] = useState<string | null>(null);
 
   const details = buildDetails(user, t);
@@ -265,15 +267,12 @@ export function AnveshanWelcomeModal({ open, user, onConsentGiven }: AnveshanWel
   // Saves consent and hands the refreshed user back to the parent.
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    setSubmitting(true);
     setError(null);
     try {
-      const updatedUser = await authApi.updateMe({ consentGiven: true });
+      const updatedUser = await updateMe.mutateAsync({ consentGiven: true });
       onConsentGiven(updatedUser);
     } catch (e) {
       setError(getErrorMessage(e, "consent update"));
-    } finally {
-      setSubmitting(false);
     }
   };
 

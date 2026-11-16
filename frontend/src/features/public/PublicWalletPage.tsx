@@ -9,10 +9,16 @@
  *  • Transaction detail dialog
  *  • Empty state
  */
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { walletApi, getErrorMessage } from '@/client/client'
+import {
+  useInfiniteWalletTransactions,
+  useWalletBalance,
+  useWalletConfig,
+  useWithdraw,
+} from '@/hooks/api/useWallet'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
@@ -205,13 +211,25 @@ function StatCard({ icon, label, value, tone }: StatCardProps) {
 
 export function PublicWalletPage() {
   const { t } = useTranslation()
-  const [balance, setBalance] = useState<number | null>(null)
-  const [minWithdrawal, setMinWithdrawal] = useState<number>(50)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const limit = 30
+
+  // Each panel degrades independently, as before.
+  const balanceQuery = useWalletBalance()
+  const configQuery = useWalletConfig()
+  const txQuery = useInfiniteWalletTransactions(limit)
+
+  const balance = balanceQuery.data ? Number(balanceQuery.data.balance ?? 0) : null
+  const minWithdrawal = Number(configQuery.data?.minWithdrawalAmount ?? 50)
+  const txPages = txQuery.data?.pages ?? []
+  const transactions: Transaction[] = txPages.flatMap((p) => p.transactions ?? [])
+  const total = txPages.length > 0 ? (txPages[txPages.length - 1].total ?? 0) : 0
+  const loading = balanceQuery.isPending || txQuery.isPending
+  const refreshing = balanceQuery.isRefetching || txQuery.isRefetching
+
+  // Refetches balance and the first page of history.
+  async function fetchData() {
+    await Promise.all([balanceQuery.refetch(), txQuery.refetch()])
+  }
 
   // Filters
   const [filterType, setFilterType] = useState<TxType>('all')
@@ -221,44 +239,8 @@ export function PublicWalletPage() {
 
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [balRes, cfgRes, txRes] = await Promise.allSettled([
-        walletApi.getBalance(),
-        walletApi.getWalletConfig(),
-        walletApi.getTransactions({ page: 1, limit }),
-      ])
-      if (balRes.status === 'fulfilled') setBalance(Number(balRes.value.balance ?? 0))
-      if (cfgRes.status === 'fulfilled') setMinWithdrawal(Number(cfgRes.value.minWithdrawalAmount ?? 50))
-      if (txRes.status === 'fulfilled') {
-        setTransactions(txRes.value.transactions ?? [])
-        setTotal(txRes.value.total ?? 0)
-      }
-    } catch (err) {
-      toast.error(getErrorMessage(err, 'Failed to load wallet data.'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [])
-
-  useEffect(() => { fetchData() }, [fetchData])
-
   async function onRefresh() {
-    setRefreshing(true)
-    try {
-      const [balRes, txRes] = await Promise.allSettled([
-        walletApi.getBalance(),
-        walletApi.getTransactions({ page: 1, limit }),
-      ])
-      if (balRes.status === 'fulfilled') setBalance(Number(balRes.value.balance ?? 0))
-      if (txRes.status === 'fulfilled') {
-        setTransactions(txRes.value.transactions ?? [])
-        setTotal(txRes.value.total ?? 0)
-      }
-    } finally {
-      setRefreshing(false)
-    }
+    await fetchData()
   }
 
   // ── Filtered list ──────────────────────────────────────────────────────
@@ -303,7 +285,8 @@ export function PublicWalletPage() {
   // ── Withdraw modal — mirrors mobile's WalletScreen confirm-withdraw sheet ──
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [withdrawing, setWithdrawing] = useState(false)
+  const withdraw = useWithdraw()
+  const withdrawing = withdraw.isPending
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([])
   const [selectedPaymentDetailId, setSelectedPaymentDetailId] = useState<string | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
@@ -357,17 +340,13 @@ export function PublicWalletPage() {
       setPayoutError(t('wallet.paymentMethodNotVerified'))
       return
     }
-    setWithdrawing(true)
     try {
-      await walletApi.withdraw({ amount: parsedAmount, paymentDetailId: selected.id })
+      await withdraw.mutateAsync({ amount: parsedAmount, paymentDetailId: selected.id })
       toast.success(t('wallet.success'))
       setWithdrawOpen(false)
       resetWithdrawForm()
-      fetchData()
     } catch (err) {
       setPayoutError(getErrorMessage(err, t('wallet.failed')))
-    } finally {
-      setWithdrawing(false)
     }
   }
 
@@ -665,15 +644,8 @@ export function PublicWalletPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    const nextPage = Math.floor(transactions.length / limit) + 1
-                    try {
-                      const res = await walletApi.getTransactions({ page: nextPage, limit })
-                      setTransactions((prev) => [...prev, ...(res.transactions ?? [])])
-                    } catch (err) {
-                      toast.error(getErrorMessage(err, 'Failed to load more.'))
-                    }
-                  }}
+                  onClick={() => void txQuery.fetchNextPage()}
+                  disabled={txQuery.isFetchingNextPage}
                 >
                   Load more ({total - transactions.length} remaining)
                 </Button>

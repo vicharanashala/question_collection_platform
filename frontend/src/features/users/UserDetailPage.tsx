@@ -1,7 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { TesterTag } from "@/components/TesterTag";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { adminApi, getErrorMessage, cache } from "@/client/client";
+import { getErrorMessage, cache } from "@/client/client";
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  useDeleteUser,
+  useRestoreUser,
+  useRevokeUserSession,
+  useSuspendUser,
+  useUnsuspendUser,
+  useUserDetail,
+  useUserSession,
+  useVerifyUser,
+  userKeys,
+} from '@/hooks/api/useUsers';
 import { useAuth } from "@/stores/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -407,11 +419,15 @@ export function UserDetailPage() {
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === "super_admin";
 
-  const [user, setUser] = useState<UserType | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([]);
-  const [crops, setCrops] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const detailQuery = useUserDetail(userId);
+  const detailData = detailQuery.data as
+    | { user?: unknown; questions?: unknown; paymentDetails?: PaymentDetail[] }
+    | undefined;
+  const user = (detailData?.user as UserType | undefined) ?? null;
+  const questions = (detailData?.questions as Question[] | undefined) ?? [];
+  const paymentDetails: PaymentDetail[] = detailData?.paymentDetails ?? [];
+  const crops: string[] = ((detailData?.user as { crops?: string[] } | undefined)?.crops) ?? [];
+  const loading = detailQuery.isPending;
   const [actionLoading, setActionLoading] = useState(false);
 
   const [accountCollapsed, setAccountCollapsed] = useState(true);
@@ -421,7 +437,17 @@ export function UserDetailPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  const [session, setSession] = useState<UserSession | null>(null);
+  const queryClient = useQueryClient();
+  const verifyUser = useVerifyUser();
+  const deleteUser = useDeleteUser();
+  const restoreUser = useRestoreUser();
+  const suspendUser = useSuspendUser();
+  const unsuspendUser = useUnsuspendUser();
+  const revokeSession = useRevokeUserSession();
+
+  const sessionQuery = useUserSession(userId && isSuperAdmin ? userId : null);
+  // A failed lookup simply means no badge or button.
+  const session = (sessionQuery.data as UserSession | undefined) ?? null;
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
 
   const isDeleted = !!user?.isDeleted;
@@ -476,30 +502,19 @@ export function UserDetailPage() {
     [filteredQuestions, qPage, activePageSize],
   );
 
-  async function loadSession() {
-    if (!userId || !isSuperAdmin) return;
-    try {
-      setSession(await adminApi.getUserSession(userId));
-    } catch {
-      setSession(null); // no badge or button if the lookup fails
-    }
-  }
-
-  useEffect(() => {
-    loadSession();
-  }, [userId, isSuperAdmin]);
-
   async function handleRevokeSession() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.revokeUserSession(userId);
+      const res = await revokeSession.mutateAsync(userId);
       toast.success(
         res.revoked ? "User logged out" : "User had no active session",
       );
       setRevokeModalOpen(false);
-      setSession((s) =>
-        s ? { ...s, isActive: false, lastActivityAt: null } : s,
+      queryClient.setQueryData(
+        userKeys.session(userId),
+        (s: UserSession | undefined) =>
+          s ? { ...s, isActive: false, lastActivityAt: null } : s,
       );
     } catch (e) {
       toast.error(getErrorMessage(e, "Failed to log out user"));
@@ -508,35 +523,17 @@ export function UserDetailPage() {
     }
   }
 
-  // Centralized user refetch — bust the user detail cache so fresh data always loads
+  // Centralized user refetch — the API client keeps its own response cache, so
+  // bust that before asking the query to refetch.
   async function refreshUser() {
     cache.invalidate(`/admin/users/${userId}`);
-    try {
-      const r = await adminApi.getUserDetail(userId);
-      setUser(r.user as UserType);
-      setQuestions(r.questions as Question[]);
-      setPaymentDetails((r as any).paymentDetails ?? []);
-      setCrops((r.user as any)?.crops ?? []);
-    } catch {
-      setTimeout(async () => {
-        try {
-          const r = await adminApi.getUserDetail(userId);
-          setUser(r.user as UserType);
-          setQuestions(r.questions as Question[]);
-        } catch {
-          /* give up */
-        }
-      }, 500);
-    }
+    await detailQuery.refetch();
   }
 
+  const detailError = detailQuery.error;
   useEffect(() => {
-    if (!userId) return;
-    setLoading(true);
-    refreshUser()
-      .catch((e) => toast.error(getErrorMessage(e, "Failed to load user")))
-      .finally(() => setLoading(false));
-  }, [userId]);
+    if (detailError) toast.error(getErrorMessage(detailError, "Failed to load user"));
+  }, [detailError]);
 
   // Anveshan users have their own review page; ?classic=1 opens this account page instead.
   useEffect(() => {
@@ -558,11 +555,10 @@ export function UserDetailPage() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminApi.verifyUser(userId);
+      await verifyUser.mutateAsync(userId);
       toast.success(t('userDetailPage.userVerified'));
       setVerifyModalOpen(false);
-      const r = await adminApi.getUserDetail(userId);
-      setUser(r.user as UserType);
+      await refreshUser();
     } catch (e) {
       toast.error(getErrorMessage(e, "Failed to verify user"));
     } finally {
@@ -590,7 +586,7 @@ export function UserDetailPage() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.deleteUser(userId);
+      const res = await deleteUser.mutateAsync(userId);
       toast.success(res.message ?? "User deleted");
       setDeleteModalOpen(false);
       await refreshUser(); // reload so isDeleted becomes true
@@ -605,7 +601,7 @@ export function UserDetailPage() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.restoreUser(userId);
+      const res = await restoreUser.mutateAsync(userId);
       toast.success(res.message ?? "User restored");
       setRestoreModalOpen(false);
       await refreshUser();
@@ -659,10 +655,13 @@ export function UserDetailPage() {
     }
     setActionLoading(true);
     try {
-      await adminApi.suspendUser(userId, {
-        action: suspendAction,
-        reason: suspendReason,
-        suspendedUntil: suspendUntil || undefined,
+      await suspendUser.mutateAsync({
+        userId,
+        body: {
+          action: suspendAction,
+          reason: suspendReason,
+          suspendedUntil: suspendUntil || undefined,
+        },
       });
       toast.success(suspendAction === "ban" ? "User banned" : "User suspended");
       setSuspendModalOpen(false);
@@ -685,7 +684,7 @@ export function UserDetailPage() {
     if (!userId) return;
     setActionLoading(true);
     try {
-      await adminApi.unsuspendUser(userId);
+      await unsuspendUser.mutateAsync(userId);
       toast.success(isBanned ? "User unbanned" : "Suspension lifted");
       setConfirmOpen(false);
       await refreshUser();

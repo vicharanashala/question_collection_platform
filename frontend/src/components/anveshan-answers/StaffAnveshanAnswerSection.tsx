@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, Loader2, MessageSquareReply } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getErrorMessage, questionApi } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAnveshanAnswer } from '@/hooks/api/useQuestions'
 import { formatDate } from '@/lib/utils'
 import type { AnveshanAnswer } from '@/types'
 import { SourceList } from './SourceUrlManager'
@@ -16,26 +16,12 @@ interface StaffAnveshanAnswerSectionProps {
 // Shows staff the answer (with sources) an Anveshan user submitted for their own question.
 export function StaffAnveshanAnswerSection({ questionId }: StaffAnveshanAnswerSectionProps) {
   const { t } = useTranslation()
-  const [answer, setAnswer] = useState<AnveshanAnswer | null>(null)
-  const [loadState, setLoadState] = useState<LoadState>('loading')
-  const [error, setError] = useState('')
-
-  // Fetches the answer for the open question; a missing answer is a normal empty state, not an error.
-  const load = useCallback(async () => {
-    setLoadState('loading')
-    try {
-      const result = await questionApi.getAnveshanAnswer(questionId)
-      setAnswer(result.answer)
-      setLoadState('ready')
-    } catch (err) {
-      setError(getErrorMessage(err, 'Could not load the submitted answer.'))
-      setLoadState('error')
-    }
-  }, [questionId])
-
-  useEffect(() => {
-    void load()
-  }, [load])
+  // A missing answer is a normal empty state, not an error.
+  const query = useAnveshanAnswer(questionId)
+  const answer = (query.data?.answer as AnveshanAnswer | undefined) ?? null
+  const loadState: LoadState = query.isPending ? 'loading' : query.isError ? 'error' : 'ready'
+  const error = query.error ? getErrorMessage(query.error, 'Could not load the submitted answer.') : ''
+  const load = () => void query.refetch()
 
   return (
     <section aria-labelledby="anveshan-answer-heading" className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 sm:p-4">

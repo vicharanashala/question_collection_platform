@@ -1,8 +1,10 @@
 import { NewBadge } from "@/components/ui/new-badge";
 import { markFeatureSeen } from '@/lib/newFeatures'
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { faqApi, getErrorMessage } from "@/client/client";
+import { useQueryClient } from '@tanstack/react-query';
+import { faqKeys, useAllFaqs, useFaqStats } from '@/hooks/api/useFaqs';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -604,9 +606,7 @@ export function FaqsPage() {
   // Opening the page counts as having seen the new nav entry.
   useEffect(() => { markFeatureSeen('faqAdmin') }, []);
 
-  // List state
-  const [result, setResult] = useState<PaginatedResponse<Faq> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Filters & sort
   const [activeCat, setActiveCat] = useState("all");
@@ -625,51 +625,52 @@ export function FaqsPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  // Stats
-  const [stats, setStats] = useState<Stats>({
-    total: 0,
-    visible: 0,
-    hidden: 0,
-  });
+  const categoryParam = activeCat === "all" ? undefined : activeCat;
+  const listParams = {
+    category: categoryParam,
+    search: search || undefined,
+    page,
+    limit,
+    sortBy,
+    userSort,
+    sortOrder,
+  };
 
-  const fetchStats = useCallback((cat?: string) => {
-    faqApi
-      .getStats(cat)
-      .then(setStats)
-      .catch(() => {
-        /* non-critical */
-      });
-  }, []);
+  const listQuery = useAllFaqs(listParams);
+  const result: PaginatedResponse<Faq> | null = listQuery.data ?? null;
+  const loading = listQuery.isPending;
 
-  const fetchList = useCallback(
-    (cat?: string) => {
-      setLoading(true);
-      faqApi
-        .getAll({
-          category: cat,
-          search: search || undefined,
-          page,
-          limit,
-          sortBy,
-          userSort,
-          sortOrder,
-        })
-        .then(setResult)
-        .catch((e) => toast.error(getErrorMessage(e, "Failed to load FAQs")))
-        .finally(() => setLoading(false));
-    },
-    [activeCat, search, page, limit, sortBy, sortOrder, userSort],
-  );
+  const statsQuery = useFaqStats(categoryParam);
+  const stats: Stats = statsQuery.data ?? { total: 0, visible: 0, hidden: 0 };
 
-  // Re-fetch when filters/page change
+  // The list and the counts are edited optimistically in several places below.
+  // These write straight to the query cache, so a failed write can roll back by
+  // setting the previous value and a refetch still wins afterwards.
+  const setResult = (
+    updater:
+      | PaginatedResponse<Faq>
+      | null
+      | ((prev: PaginatedResponse<Faq> | undefined) => PaginatedResponse<Faq> | undefined),
+  ) => queryClient.setQueryData(faqKeys.list(listParams), updater as never);
+
+  const setStats = (updater: Stats | ((prev: Stats) => Stats)) =>
+    queryClient.setQueryData(faqKeys.stats(categoryParam), (prev: Stats | undefined) =>
+      typeof updater === "function"
+        ? (updater as (p: Stats) => Stats)(prev ?? { total: 0, visible: 0, hidden: 0 })
+        : updater,
+    );
+
+  // Admin edits change what the public FAQ screens show, so drop those cached
+  // lists; the admin list keeps its optimistic state and refetches on its own.
+  const invalidatePublicFaqs = () =>
+    queryClient.invalidateQueries({ queryKey: [...faqKeys.all, "visible"] });
+
+  const fetchList = async (_cat?: string) => { await listQuery.refetch(); };
+  const fetchStats = async (_cat?: string) => { await statsQuery.refetch(); };
+
   useEffect(() => {
-    fetchList(activeCat === "all" ? undefined : activeCat);
-  }, [fetchList]);
-
-  // Re-fetch stats when category changes
-  useEffect(() => {
-    fetchStats(activeCat === "all" ? undefined : activeCat);
-  }, [activeCat, fetchStats]);
+    if (listQuery.error) toast.error(getErrorMessage(listQuery.error, "Failed to load FAQs"));
+  }, [listQuery.error]);
 
   // Reset to page 1 when category/search/sort changes
   function handleCategoryChange(cat: string) {
@@ -709,6 +710,7 @@ export function FaqsPage() {
     setResult({ ...result, items: next });
     try {
       await faqApi.reorder(next.map((i) => i.id));
+      void invalidatePublicFaqs();
     } catch (e) {
       setResult(previous);
       toast.error(getErrorMessage(e, "Failed to save the new order"));
@@ -738,12 +740,14 @@ export function FaqsPage() {
             }
           : prev,
       );
+      void invalidatePublicFaqs();
       toast.success(t('faqAdmin.success.updated'));
     } else {
       await faqApi.create(data);
       // Refresh full list and stats
       await fetchList(activeCat === "all" ? undefined : activeCat);
       await fetchStats(activeCat === "all" ? undefined : activeCat);
+      void invalidatePublicFaqs();
       toast.success(t('faqAdmin.success.created'));
       return;
     }
@@ -770,6 +774,7 @@ export function FaqsPage() {
     }));
     try {
       await faqApi.toggleVisibility(faq.id, next);
+      void invalidatePublicFaqs();
       toast.success(next ? "FAQ is now visible" : "FAQ is now hidden");
     } catch (e) {
       setResult((prev) =>
@@ -793,6 +798,7 @@ export function FaqsPage() {
 
   async function handleDelete(faq: Faq) {
     await faqApi.remove(faq.id);
+    void invalidatePublicFaqs();
     setResult((prev) =>
       prev
         ? {

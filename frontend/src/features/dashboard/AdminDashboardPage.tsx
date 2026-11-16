@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, analyticsApi, getErrorMessage } from '@/client/client'
+import { analyticsApi, getErrorMessage } from '@/client/client'
+import { useAdminStats, useDashboardAnalytics } from '@/hooks/api/useAnalytics'
 import { useAuth } from '@/stores/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -200,41 +201,26 @@ const QUESTION_VOLUME_SERIES = [
 export function AdminDashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const [stats, setStats] = useState<AdminStats | null>(null)
-  const [analytics, setAnalytics] = useState<AnalyticsDashboard | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [analyticsLoading, setAnalyticsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
   const [tab, setTab] = useState<'questions' | 'users' | 'rewards'>('questions')
 
   const rangeDays = timeRangeDays(timeRange)
 
-  useEffect(() => {
-    adminApi
-      .getStats()
-      .then(setStats)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load stats')))
-      .finally(() => setLoading(false))
-  }, [])
+  const statsQuery = useAdminStats()
+  const stats = (statsQuery.data as AdminStats | undefined) ?? null
+  const loading = statsQuery.isPending
+
+  const analyticsQuery = useDashboardAnalytics({ days: rangeDays })
+  const analytics = (analyticsQuery.data as AnalyticsDashboard | undefined) ?? null
+  const analyticsLoading = analyticsQuery.isFetching
 
   useEffect(() => {
-    let cancelled = false
-    setAnalyticsLoading(true)
-    analyticsApi
-      .getDashboard({ days: rangeDays })
-      .then((a) => {
-        if (!cancelled) setAnalytics(a)
-      })
-      .catch((e) => {
-        if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load analytics'))
-      })
-      .finally(() => {
-        if (!cancelled) setAnalyticsLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [rangeDays])
+    if (statsQuery.error) toast.error(getErrorMessage(statsQuery.error, 'Failed to load stats'))
+  }, [statsQuery.error])
+
+  useEffect(() => {
+    if (analyticsQuery.error) toast.error(getErrorMessage(analyticsQuery.error, 'Failed to load analytics'))
+  }, [analyticsQuery.error])
   const d = stats?.dashboard
 
   const days = rangeDays

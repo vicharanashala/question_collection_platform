@@ -3,8 +3,9 @@
  * Shows user info, balance, earned/withdrawn totals, and full transaction +
  * withdrawal history tabs. Super admins can also manually adjust balance.
  */
-import { useState, useEffect, useCallback } from 'react'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { useState, useEffect } from 'react'
+import { getErrorMessage } from '@/client/client'
+import { useInfiniteUserTransactions, useUserDetail, useUserWallet } from '@/hooks/api/useUsers'
 // import { useAuth } from '@/stores/AuthContext'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -216,122 +217,61 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
   // const isSuperAdmin = currentUser?.role === 'super_admin'
 
   const [txTab, setTxTab] = useState<'transactions' | 'withdrawals'>('transactions')
-  const [txPage, setTxPage] = useState(1)
-  const [wdPage, setWdPage] = useState(1)
-  const [loadingTx, setLoadingTx] = useState(false)
-  const [loadingWd, setLoadingWd] = useState(false)
-  const [loadingWallet, setLoadingWallet] = useState(false)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [withdrawals, setWithdrawals] = useState<Transaction[]>([])
-  const [wdTotal, setWdTotal] = useState(0)
-  const [txSummary, setTxSummary] = useState<TxSummary>({ totalTransactions: 0, totalCredits: 0, totalDebits: 0, withdrawalTransactions: 0 })
-
-  // Wallet summary (fetched from first tx response — contains balance info)
-  const [balance, setBalance] = useState(0)
-  const [totalEarned, setTotalEarned] = useState(0)
-  const [totalWithdrawn, setTotalWithdrawn] = useState(0)
-  const [walletUser, setWalletUser] = useState<{
-    name: string
-    mobileNumber: string
-    state: string
-    category: string
-    role: string
-    verificationStatus: string
-    createdAt: string
-  } | null>(null)
 
   const limit = 15
 
-  const fetchWalletUser = useCallback(async () => {
-    try {
-      const res = await adminApi.getUserDetail(userId)
-      const u = res.user
-      setWalletUser({
-        name: u.name ?? '—',
-        mobileNumber: u.mobileNumber ?? '—',
-        state: u.state ?? '',
-        category: u.category ?? '',
-        role: u.role ?? '',
-        verificationStatus: u.verificationStatus ?? '',
-        createdAt: u.createdAt ?? '',
-      })
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load user details'))
-    }
-  }, [userId])
+  // All four reads are scoped to the open modal; closing disables them and
+  // reopening revalidates, so no manual reset is needed.
+  const activeUserId = open ? userId : null
+  const userQuery = useUserDetail(activeUserId)
+  const walletQuery = useUserWallet(activeUserId)
+  const txQuery = useInfiniteUserTransactions(activeUserId, { limit })
+  const wdQuery = useInfiniteUserTransactions(activeUserId, { limit, source: 'withdrawal' })
 
-  const fetchBalance = useCallback(async () => {
-    try {
-      const wallet = await adminApi.getUserWallet(userId)
-      setBalance(Number(wallet.balance))
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load wallet balance'))
-    }
-  }, [userId])
+  const txPages = txQuery.data?.pages ?? []
+  const wdPages = wdQuery.data?.pages ?? []
+  const transactions: Transaction[] = txPages.flatMap((p) => p.items)
+  const withdrawals: Transaction[] = wdPages.flatMap((p) => p.items)
+  const txPage = Math.max(txPages.length, 1)
+  const wdPage = Math.max(wdPages.length, 1)
+  const wdTotal = wdPages.length > 0 ? wdPages[wdPages.length - 1].total : 0
+  const loadingTx = txQuery.isFetching
+  const loadingWd = wdQuery.isFetching
+  const loadingWallet = userQuery.isPending || walletQuery.isPending || wdQuery.isPending
 
-  const fetchTransactions = useCallback(async (page = 1) => {
-    setLoadingTx(true)
-    try {
-      const res = await adminApi.getUserTransactions(userId, { page, limit })
-      setTxSummary(res.summary)
-      if (page === 1) {
-        setTransactions(res.items)
-      } else {
-        setTransactions((prev) => [...prev, ...res.items])
+  // Summary covers every transaction of the wallet, not just the loaded pages.
+  const txSummary: TxSummary = txPages[0]?.summary ?? {
+    totalTransactions: 0, totalCredits: 0, totalDebits: 0, withdrawalTransactions: 0,
+  }
+  const totalEarned = txSummary.totalCredits
+  const totalWithdrawn = txSummary.totalDebits
+  const balance = Number(walletQuery.data?.balance ?? 0)
+
+  const detailUser = userQuery.data?.user
+  const walletUser = detailUser
+    ? {
+        name: detailUser.name ?? '—',
+        mobileNumber: detailUser.mobileNumber ?? '—',
+        state: detailUser.state ?? '',
+        category: detailUser.category ?? '',
+        role: detailUser.role ?? '',
+        verificationStatus: detailUser.verificationStatus ?? '',
+        createdAt: detailUser.createdAt ?? '',
       }
-      setTxPage(page)
+    : null
 
-      // Summary covers every transaction of the wallet, not just this page.
-      setTotalEarned(res.summary.totalCredits)
-      setTotalWithdrawn(res.summary.totalDebits)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load transactions'))
-    } finally {
-      setLoadingTx(false)
-    }
-  }, [userId])
-
-  const fetchWithdrawals = useCallback(async (page = 1) => {
-    setLoadingWd(true)
-    try {
-      const res = await adminApi.getUserTransactions(userId, { page, limit, source: 'withdrawal' })
-      if (page === 1) {
-        setWithdrawals(res.items)
-      } else {
-        setWithdrawals((prev) => [...prev, ...res.items])
-      }
-      setWdTotal(res.total)
-      setWdPage(page)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load withdrawals'))
-    } finally {
-      setLoadingWd(false)
-    }
-  }, [userId])
-
+  const loadError = userQuery.error ?? walletQuery.error ?? txQuery.error ?? wdQuery.error
   useEffect(() => {
-    if (open) {
-      setTxTab('transactions')
-      setTxPage(1)
-      setWdPage(1)
-      setTransactions([])
-      setWithdrawals([])
-      setWdTotal(0)
-      setBalance(0)
-      setTotalEarned(0)
-      setTotalWithdrawn(0)
-      setWalletUser(null)
-      setLoadingWallet(true)
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load wallet details'))
+  }, [loadError])
 
-      // Fetch user details + wallet summary in parallel
-      fetchWalletUser()
-      fetchTransactions(1)
-      Promise.all([fetchWithdrawals(1), fetchBalance()]).finally(() => setLoadingWallet(false))
-    }
-  }, [open, userId, fetchWalletUser, fetchTransactions, fetchWithdrawals, fetchBalance])
+  // Always land on the transactions tab when the modal opens.
+  useEffect(() => {
+    if (open) setTxTab('transactions')
+  }, [open])
 
   const displayBalance = balance
-  const isLoading = loadingTx && transactions.length === 0
+  const isLoading = txQuery.isPending
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -512,7 +452,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   total={txSummary.totalTransactions}
                   emptyText={t('wallet.noTransactions')}
                   EmptyIcon={ArrowRightLeft}
-                  onLoadMore={() => fetchTransactions(txPage + 1)}
+                  onLoadMore={() => void txQuery.fetchNextPage()}
                 />
               </TabsContent>
 
@@ -527,7 +467,7 @@ export function WalletDetailModal({ userId, open, onClose }: WalletDetailModalPr
                   total={wdTotal}
                   emptyText={t('walletDetailModal.noWithdrawalsYet')}
                   EmptyIcon={Banknote}
-                  onLoadMore={() => fetchWithdrawals(wdPage + 1)}
+                  onLoadMore={() => void wdQuery.fetchNextPage()}
                 />
               </TabsContent>
             </Tabs>

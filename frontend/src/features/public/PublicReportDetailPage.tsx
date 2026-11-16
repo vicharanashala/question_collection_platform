@@ -10,16 +10,17 @@
  *   3. Description card
  *   4. Reply thread (admin replies only — read-only) — or a "no replies yet" hint
  */
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { reportsApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useMyReport } from '@/hooks/api/useReports'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Flag, Loader2, MessageSquareText, AlertCircle } from 'lucide-react'
 import { cn, formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { Report, ReportCategory } from '@/types'
+import type { ReportCategory } from '@/types'
 
 // ─── Category labels (mirrors PublicReportsPage) ────────────────────────────
 
@@ -57,25 +58,12 @@ export function PublicReportDetailPage(): ReactNode {
   const { reportId } = useParams<{ reportId: string }>()
   const { t } = useTranslation()
 
-  const [report, setReport] = useState<Report | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetch = useCallback(async () => {
-    if (!reportId) return
-    setLoading(true)
-    try {
-      const data = await reportsApi.getMy(reportId)
-      setReport(data)
-    } catch (e) {
-      toast.error(getErrorMessage(e, t('report.loadError')))
-    } finally {
-      setLoading(false)
-    }
-  }, [reportId, t])
+  const { data, isPending: loading, error } = useMyReport(reportId ?? null)
+  const report = data ?? null
 
   useEffect(() => {
-    fetch()
-  }, [fetch])
+    if (error) toast.error(getErrorMessage(error, t('report.loadError')))
+  }, [error, t])
 
   if (loading) {
     return (

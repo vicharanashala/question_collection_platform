@@ -3,7 +3,15 @@
  * Super admin can approve/reject from here.
  */
 import { useState, useEffect } from 'react'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  useMarkWithdrawalFailed,
+  useProcessWithdrawal,
+  useRetryFailedWithdrawal,
+  useWithdrawalWithTransactions,
+  withdrawalKeys,
+} from '@/hooks/api/useWithdrawals'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -101,14 +109,36 @@ export function WithdrawalDetailModal({
   withdrawal: initial, open, onClose, onActioned, readOnly = false,
 }: WithdrawalDetailModalProps) {
   const { t } = useTranslation()
-  const [withdrawal, setWithdrawal] = useState<Withdrawal>(initial)
-  const [loading, setLoading] = useState(false)
-  const [processing, setProcessing] = useState(false)
-  const [transactions, setTransactions] = useState<Array<{
-    id: string; type: string; amount: number; status: string;
-    rejectionReason: string | null; description: string; source: string; createdAt: string;
-  }>>([])
-  const [paymentLogs, setPaymentLogs] = useState<PaymentLogEntry[]>([])
+  const queryClient = useQueryClient()
+
+  // The row the user clicked is shown immediately; the full record (with
+  // transactions and payment logs) replaces it once loaded.
+  const detailQuery = useWithdrawalWithTransactions(open ? initial.id : null)
+  const detail = detailQuery.data as (Withdrawal & {
+    transactions?: {
+      id: string; type: string; amount: number; status: string;
+      rejectionReason: string | null; description: string; source: string; createdAt: string;
+    }[]
+    paymentLogs?: PaymentLogEntry[]
+  }) | undefined
+  const withdrawal: Withdrawal = detail ?? initial
+  const transactions = detail?.transactions ?? []
+  const paymentLogs: PaymentLogEntry[] = detail?.paymentLogs ?? []
+  const loading = detailQuery.isPending
+
+  const processWithdrawal = useProcessWithdrawal()
+  const markFailed = useMarkWithdrawalFailed()
+  const retryWithdrawal = useRetryFailedWithdrawal()
+  const processing = processWithdrawal.isPending || markFailed.isPending || retryWithdrawal.isPending
+
+  // Reflects a payout result that leaves the modal open, until the refetch lands.
+  function patchStatus(status: Withdrawal['status']) {
+    queryClient.setQueryData(
+      withdrawalKeys.detail(initial.id),
+      (prev: typeof detail) => (prev ? { ...prev, status } : prev),
+    )
+  }
+
   const [reasonDialog, setReasonDialog] = useState<{
     open: boolean
     mode: 'approve' | 'reject' | 'fail'
@@ -124,23 +154,14 @@ export function WithdrawalDetailModal({
   const [auditPage, setAuditPage] = useState(1)
   const AUDIT_PAGE_SIZE = 10
 
+  // Reset the modal's own UI state each time it opens; the record itself is
+  // handled by the query above.
   useEffect(() => {
     if (!open) return
-    setWithdrawal(initial)
-    setLoading(true)
-    setProcessing(false)
     setReasonDialog(null)
-    setTransactions([])
-    // Reset audit state
     setAuditCollapsed(true)
     setAuditEntries([])
     setAuditLoading(false)
-
-    adminApi.getWithdrawalWithTransactions(initial.id).then((data) => {
-      setWithdrawal(data as any)
-      setTransactions((data as any).transactions ?? [])
-      setPaymentLogs((data as any).paymentLogs ?? [])
-    }).catch(() => {}).finally(() => setLoading(false))
   }, [open, initial.id])
 
   async function loadAuditHistory() {
@@ -150,16 +171,18 @@ export function WithdrawalDetailModal({
 
   async function handleAction(mode: 'approve' | 'reject' | 'fail', reason?: string) {
     if (processing) return
-    setProcessing(true)
     try {
       if (mode === 'fail') {
-        await adminApi.markWithdrawalFailed(withdrawal.id, reason ?? '')
+        await markFailed.mutateAsync({ id: withdrawal.id, reason: reason ?? '' })
         toast.success(t('withdrawalDetailModal.transactionMarkedAsFailed'))
         onActioned?.(withdrawal.id)
         onClose()
         return
       }
-      const res = await adminApi.processWithdrawal(withdrawal.id, { action: mode, rejectionReason: reason })
+      const res = await processWithdrawal.mutateAsync({
+        id: withdrawal.id,
+        body: { action: mode, rejectionReason: reason },
+      })
       if (mode === 'reject') {
         toast.success(t('withdrawalDetailModal.withdrawalRejected'))
         onActioned?.(withdrawal.id)
@@ -171,7 +194,7 @@ export function WithdrawalDetailModal({
           `Payout dispatch failed${res.errorMessage ? ': ' + res.errorMessage : ''} (${res.errorCode ?? 'unknown'})`,
           { duration: 6000 },
         )
-        setWithdrawal((prev) => ({ ...prev, status: 'processing' }))
+        patchStatus('processing')
         onActioned?.(withdrawal.id)
       } else {
         toast.success(t('withdrawalDetailModal.withdrawalApprovedAndCompleted'))
@@ -180,8 +203,6 @@ export function WithdrawalDetailModal({
       }
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to process withdrawal'))
-    } finally {
-      setProcessing(false)
     }
   }
 
@@ -635,20 +656,17 @@ export function WithdrawalDetailModal({
                   className="bg-primary hover:bg-primary/90 text-white"
                   onClick={async () => {
                     if (processing) return
-                    setProcessing(true)
                     try {
-                      const res = await adminApi.retryFailedWithdrawal(w.id)
+                      const res = await retryWithdrawal.mutateAsync(w.id)
                       if (res.paymentFailed) {
                         toast.error(`Retry failed${res.errorMessage ? ': ' + res.errorMessage : ''}`, { duration: 6000 })
-                        setWithdrawal((prev) => ({ ...prev, status: res.status as any }))
+                        patchStatus(res.status as Withdrawal['status'])
                       } else {
                         toast.success(t('withdrawalDetailModal.paymentSucceededWithdrawalCompleted'))
                       }
                       onActioned?.(w.id)
                     } catch (e) {
                       toast.error(getErrorMessage(e, 'Retry failed'))
-                    } finally {
-                      setProcessing(false)
                     }
                   }}
                   disabled={processing}

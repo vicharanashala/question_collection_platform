@@ -15,7 +15,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
-import { curatorApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useCuratorStats } from '@/hooks/api/useAnalytics'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,6 @@ import {
   Minus, ArrowRight, AlertTriangle, MessageSquare,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import type { CuratorStats } from '@/types'
 
 // ─── StatCard ─────────────────────────────────────────────────────────────
 
@@ -90,40 +90,26 @@ const TIME_RANGES: { value: string; labelKey: 'range30d' | 'range7d' | 'range90d
 export function CuratorDashboardPage() {
 const { t } = useTranslation()
 const [timeRange, setTimeRange] = useState('30d')
-const [stats, setStats] = useState<CuratorStats | null>(null)
-const [loading, setLoading] = useState(true)        // first load only
-const [refreshing, setRefreshing] = useState(false) // when the range changes
 
-useEffect(() => {
-  const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
-
-  // Midnight of the first day, so the cache key stays stable within a day.
+const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
+// Midnight of the first day, so the query key stays stable within a day.
+const fromDate = (() => {
   const from = new Date()
   from.setHours(0, 0, 0, 0)
   from.setDate(from.getDate() - (days - 1))
+  return from.toISOString()
+})()
 
-  let cancelled = false // ignore stale responses if the user clicks quickly
-  setRefreshing(true)
+// No toDate — the backend defaults to now.
+const statsQuery = useCuratorStats({ fromDate })
+const stats = statsQuery.data ?? null
+const loading = statsQuery.isPending      // first load only
+const refreshing = statsQuery.isFetching  // also true when the range changes
+const statsError = statsQuery.error
 
-  curatorApi
-    .getCuratorStats({ fromDate: from.toISOString() }) // no toDate, the backend defaults to now
-    .then((data) => {
-      if (!cancelled) setStats(data)
-    })
-    .catch((e) => {
-      if (!cancelled) toast.error(getErrorMessage(e, t('curatorDashboard.loadError')))
-    })
-    .finally(() => {
-      if (!cancelled) {
-        setLoading(false)
-        setRefreshing(false)
-      }
-    })
-
-  return () => {
-    cancelled = true
-  }
-}, [timeRange, t])
+useEffect(() => {
+  if (statsError) toast.error(getErrorMessage(statsError, t('curatorDashboard.loadError')))
+}, [statsError, t])
 
 function formatDuration(mins: number) {
   if (mins < 60) return `${mins}m`

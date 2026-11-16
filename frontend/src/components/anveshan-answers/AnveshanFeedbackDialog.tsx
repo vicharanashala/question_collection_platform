@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { MicButton } from '@/components/MicButton'
-import { feedbackApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useSubmitAnveshanFeedback } from '@/hooks/api/useFeedbacks'
 import { MAX_FEEDBACK_COMMENT_LENGTH } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import { FieldError } from './FieldError'
@@ -37,7 +38,8 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
   const [comment, setComment] = useState('')
   const [usedVoice, setUsedVoice] = useState(false)
   const [ratingError, setRatingError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const submitFeedback = useSubmitAnveshanFeedback()
+  const submitting = submitFeedback.isPending
   const [done, setDone] = useState(false)
 
   const shownRating = hovered || rating
@@ -74,9 +76,8 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
       return
     }
     if (submitting) return
-    setSubmitting(true)
     try {
-      await feedbackApi.submitAnveshanFeedback({
+      await submitFeedback.mutateAsync({
         rating,
         ...(comment.trim() ? { comment: comment.trim() } : {}),
         inputMethod: usedVoice ? 'voice' : 'text',
@@ -91,8 +92,6 @@ export function AnveshanFeedbackDialog({ open, onOpenChange, onSubmitted }: Anve
       } else {
         toast.error(getErrorMessage(err, t('anveshanFeedback.submitFailed')))
       }
-    } finally {
-      setSubmitting(false)
     }
   }
 

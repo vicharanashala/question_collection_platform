@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAdminConfig, useUpdateAdminConfig } from '@/hooks/api/useAdminConfig'
 import { useAuth } from '@/stores/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { SettingsSkeleton } from '@/components/ui/skeleton'
@@ -57,31 +58,23 @@ export function SettingsPage() {
   const { user: currentUser } = useAuth()
   const isSuperAdmin = currentUser?.role === 'super_admin'
 
-  const [configs, setConfigs] = useState<ConfigItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [editKey, setEditKey] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
-  const [saving, setSaving] = useState(false)
+  // Set while a switch row is saving, so only that row shows a spinner.
   const [togglingKey, setTogglingKey] = useState<string | null>(null)
 
-  async function loadConfigs() {
-    try {
-      const res = await adminApi.getConfig()
-      setConfigs(res.items ?? [])
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load configuration'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
+  const { data, isPending: loading, isFetching: refreshing, error: loadError, refetch } = useAdminConfig()
+  const configs: ConfigItem[] = data?.items ?? []
 
-  useEffect(() => { void loadConfigs() }, [])
+  const updateConfig = useUpdateAdminConfig()
+  const saving = updateConfig.isPending && togglingKey === null
+
+  useEffect(() => {
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load configuration'))
+  }, [loadError])
 
   async function onRefresh() {
-    setRefreshing(true)
-    await loadConfigs()
+    await refetch()
   }
 
   function openEdit(cfg: ConfigItem) {
@@ -96,18 +89,12 @@ export function SettingsPage() {
       toast.error(t('settingsPage.invalidValueEnterNon'))
       return
     }
-    setSaving(true)
     try {
-      await adminApi.updateConfig({ key: editKey, value: val })
-      setConfigs((prev) =>
-        prev.map((c) => (c.key === editKey ? { ...c, value: val } : c)),
-      )
+      await updateConfig.mutateAsync({ key: editKey, value: val })
       toast.success(t('settingsPage.configurationUpdated'))
       setEditKey(null)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Update failed'))
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -115,10 +102,7 @@ export function SettingsPage() {
     const val = checked ? 1 : 0
     setTogglingKey(cfg.key)
     try {
-      await adminApi.updateConfig({ key: cfg.key, value: val })
-      setConfigs((prev) =>
-        prev.map((c) => (c.key === cfg.key ? { ...c, value: val } : c)),
-      )
+      await updateConfig.mutateAsync({ key: cfg.key, value: val })
       toast.success(t('settingsPage.configurationUpdated'))
     } catch (e) {
       toast.error(getErrorMessage(e, 'Update failed'))

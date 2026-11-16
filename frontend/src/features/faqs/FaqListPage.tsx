@@ -1,7 +1,8 @@
 import { markFeatureSeen } from '@/lib/newFeatures'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { faqApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useVisibleFaqs } from '@/hooks/api/useFaqs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDebouncedValue } from '@/hooks/ui/useDebouncedValue'
@@ -74,36 +75,24 @@ export function FaqListPage() {
 
   // Opening the page counts as having seen the new feature.
   useEffect(() => { markFeatureSeen('faq') }, [])
-  const [items, setItems] = useState<Faq[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeCat, setActiveCat] = useState<string>('all')
   const [search, setSearch] = useState('')
-  const [error, setError] = useState(false)
   const debouncedSearch = useDebouncedValue(search.trim(), 400)
-  const [reloadKey, setReloadKey] = useState(0)
 
-  // Loads FAQs for the active filters and ignores responses from outdated requests.
-  const loadFaqs = useCallback((signal: { cancelled: boolean }) => {
-    setLoading(true)
-    setError(false)
-    faqApi.getVisible({
-      category: activeCat === 'all' ? undefined : activeCat,
-      search: debouncedSearch || undefined,
-    })
-      .then((data) => { if (!signal.cancelled) setItems(data) })
-      .catch((e) => {
-        if (signal.cancelled) return
-        setError(true)
-        toast.error(getErrorMessage(e, 'Failed to load FAQs'))
-      })
-      .finally(() => { if (!signal.cancelled) setLoading(false) })
-  }, [activeCat, debouncedSearch])
+  const {
+    data: items = [],
+    isPending: loading,
+    isError: error,
+    error: loadError,
+    refetch,
+  } = useVisibleFaqs({
+    category: activeCat === 'all' ? undefined : activeCat,
+    search: debouncedSearch || undefined,
+  })
 
   useEffect(() => {
-    const signal = { cancelled: false }
-    loadFaqs(signal)
-    return () => { signal.cancelled = true }
-  }, [loadFaqs, reloadKey])
+    if (loadError) toast.error(getErrorMessage(loadError, 'Failed to load FAQs'))
+  }, [loadError])
 
   const hasFilters = activeCat !== 'all' || debouncedSearch !== ''
 
@@ -185,7 +174,7 @@ export function FaqListPage() {
               variant="outline"
               size="sm"
               className="mt-3 gap-2"
-              onClick={() => setReloadKey((k) => k + 1)}
+              onClick={() => void refetch()}
             >
               <RefreshCw className="h-3.5 w-3.5" />
               {t('faq.retry')}

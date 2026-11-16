@@ -5,13 +5,12 @@
  * row, and a ranked list of the rest of the participants.
  */
 import {
-  useCallback,
   useEffect,
-  useState,
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { leaderboardApi, getErrorMessage } from "@/client/client";
+import { getErrorMessage } from "@/client/client";
+import { useInfiniteLeaderboard } from '@/hooks/api/useLeaderboard';
 import { Card, CardContent } from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 import { HelpCircle, Info, Trophy, Medal, Star, Loader2, Users } from "lucide-react";
@@ -274,192 +273,43 @@ function ListRow({ entry }: { entry: LeaderboardEntry }) {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 
-// export function PublicLeaderboardPage(): ReactNode {
-//   const [response, setResponse] = useState<LeaderboardResponse | null>(null)
-//   const [loading, setLoading] = useState(true)
-
-//   const fetchLeaderboard = useCallback(async () => {
-//     try {
-//       const res = await leaderboardApi.getLeaderboard({ limit: FETCH_LIMIT, offset: 10 });
-//       setResponse(res)
-//     } catch (e) {
-//       toast.error(getErrorMessage(e, 'Failed to load leaderboard'))
-//     } finally {
-//       setLoading(false)
-//     }
-//   }, [])
-
-//   useEffect(() => {
-//     fetchLeaderboard()
-//   }, [fetchLeaderboard])
-
-//   const sortedEntries = useMemo(() => {
-//     if (!response) return []
-//     return [...response.entries].sort((a, b) => {
-//       if (b.totalEarned !== a.totalEarned) return b.totalEarned - a.totalEarned
-//       return b.totalQuestions - a.totalQuestions
-//     })
-//   }, [response])
-
-//   const top3 = sortedEntries.slice(0, 3)
-//   const rest = sortedEntries.slice(3)
-
-//   const totalEarningsAll = sortedEntries.reduce((sum, e) => sum + (e.totalEarned ?? 0), 0)
-//   const totalQuestionsAll = sortedEntries.reduce((sum, e) => sum + (e.totalQuestions ?? 0), 0)
-
-//   return (
-//     <div className="mx-auto max-w-2xl space-y-5 pb-4">
-//       <Card className="overflow-hidden border-emerald-200/60 dark:border-emerald-900/50">
-//         <CardContent className="p-4">
-//           <h1 className="text-lg sm:text-lg sm:text-xl font-extrabold tracking-tight text-foreground">Leaderboard</h1>
-//           <p className="mt-0.5 text-xs sm:text-xs sm:text-sm text-text-secondary">
-//             {response ? `${response.total} participants` : 'Loading…'}
-//           </p>
-//         </CardContent>
-//       </Card>
-
-//       {loading ? (
-//         <Card>
-//           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-text-tertiary">
-//             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-//             <p className="mt-3 text-xs sm:text-xs sm:text-sm font-medium">Loading leaderboard…</p>
-//           </CardContent>
-//         </Card>
-//       ) : sortedEntries.length === 0 ? (
-//         <Card>
-//           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
-//             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-surface-variant dark:bg-surface-variant">
-//               <Trophy className="h-12 w-12 text-text-tertiary" strokeWidth={1.75} />
-//             </div>
-//             <h2 className="mt-5 text-lg sm:text-lg sm:text-xl font-extrabold text-foreground">No rankings yet</h2>
-//             <p className="mt-2 max-w-sm text-xs sm:text-xs sm:text-sm text-text-secondary">
-//               Submit and get questions approved to appear on the leaderboard.
-//             </p>
-//           </CardContent>
-//         </Card>
-//       ) : (
-//         <>
-//           <div className="flex gap-2.5">
-//             <StatCard
-//               icon={Banknote}
-//               iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
-//               value={formatINR(totalEarningsAll)}
-//               label="Total rewards"
-//             />
-//             <StatCard
-//               icon={HelpCircle}
-//               iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-//               value={totalQuestionsAll > 0 ? totalQuestionsAll : '—'}
-//               label="Approved Qs"
-//             />
-//             <StatCard
-//               icon={Trophy}
-//               iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-//               value={response?.userRank ? `#${response.userRank}` : '—'}
-//               label="Your rank"
-//             />
-//           </div>
-
-//           <Podium top3={top3} />
-
-//           {rest.length > 0 && (
-//             <div>
-//               <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wider text-text-tertiary">All participants</p>
-//               <div className="space-y-2">
-//                 {rest.map((entry) => (
-//                   <ListRow key={entry.userId} entry={entry} />
-//                 ))}
-//               </div>
-//             </div>
-//           )}
-//         </>
-//       )}
-
-//       <p className="pt-2 text-center text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">AnnaDatha &mdash; To Strengthen Indian Farmers</p>
-//     </div>
-//   )
-// }
-
 export function PublicLeaderboardPage(): ReactNode {
   const { t } = useTranslation();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [userRank, setUserRank] = useState<number | null>(null);
-  const [total, setTotal] = useState(0);
-
-  const [offset, setOffset] = useState(0);
-
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-
-  const [totalApproved, setTotalApproved] = useState(0)
 
   const FETCH_LIMIT = 10;
 
-  const hasMore = entries.length < total;
+  const query = useInfiniteLeaderboard(FETCH_LIMIT);
+  const pages = query.data?.pages ?? [];
+  const lastPage = pages[pages.length - 1];
 
-  // ─────────────────────────────────────────────────────────────
-  // Fetch leaderboard page
-  // ─────────────────────────────────────────────────────────────
-
-  const fetchLeaderboard = useCallback(
-    async (currentOffset: number, isInitial = false) => {
-      try {
-        if (isInitial) {
-          setLoading(true);
-        } else {
-          setLoadingMore(true);
-        }
-
-        const res = await leaderboardApi.getLeaderboard({
-          limit: FETCH_LIMIT,
-          offset: currentOffset,
-        });
-
-        // Initial request → replace
-        // Subsequent requests → append
-        // setEntries((prev) =>
-        //   currentOffset === 0 ? res.entries : [...prev, ...res.entries],
-        // );
-
-        setEntries((prev) => {
-          if (currentOffset === 0) return res.entries;
-          const seen = new Set(prev.map((e) => e.userId));
-          return [...prev, ...res.entries.filter((e) => !seen.has(e.userId))];
-        });
-
-        setTotal(res.total);
-        setUserRank(res.userRank);
-        setTotalApproved(res.totalApprovedQuestions ?? 0)
-
-        // Move offset forward by the number actually returned
-        setOffset(currentOffset + res.entries.length);
-      } catch (e) {
-        toast.error(getErrorMessage(e, t("leaderboard.loadError")));
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
+  // The same user can appear in two pages if ranks shift between requests.
+  const entries: LeaderboardEntry[] = (() => {
+    const seen = new Set<string>();
+    const out: LeaderboardEntry[] = [];
+    for (const page of pages) {
+      for (const entry of page.entries) {
+        if (seen.has(entry.userId)) continue;
+        seen.add(entry.userId);
+        out.push(entry);
       }
-    },
-    [t],
-  );
+    }
+    return out;
+  })();
 
-  // ─────────────────────────────────────────────────────────────
-  // Initial load
-  // ─────────────────────────────────────────────────────────────
+  const userRank = lastPage?.userRank ?? null;
+  const total = lastPage?.total ?? 0;
+  const totalApproved = lastPage?.totalApprovedQuestions ?? 0;
+  const loading = query.isPending;
+  const loadingMore = query.isFetchingNextPage;
+  const hasMore = !!query.hasNextPage;
 
   useEffect(() => {
-    fetchLeaderboard(0, true);
-  }, [fetchLeaderboard]);
-
-  // ─────────────────────────────────────────────────────────────
-  // Load next page
-  // ─────────────────────────────────────────────────────────────
+    if (query.error) toast.error(getErrorMessage(query.error, t("leaderboard.loadError")));
+  }, [query.error, t]);
 
   const handleLoadMore = () => {
     if (loadingMore || !hasMore) return;
-
-    fetchLeaderboard(offset);
+    void query.fetchNextPage();
   };
 
   // Entries arrive already ranked by the server on approved question count, so no client-side sort.

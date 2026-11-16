@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { agriEntityApi, getErrorMessage, type UserFilterOption } from '@/client/client'
+import { getErrorMessage, type UserFilterOption } from '@/client/client'
+import { useAgriEntityUsers } from '@/hooks/api/useAgriEntities'
 import { useAnveshanScope } from '@/stores/anveshanMode'
 import { useTesterScope } from '@/stores/testerMode'
 import { useDebouncedValue } from '@/hooks/ui/useDebouncedValue'
@@ -35,27 +36,24 @@ export function UserFilter({ value, onApply, tester, disabled }: UserFilterProps
   const testerScope = useTesterScope()
   // The header tester scope overrides the table's own tester filter on requests.
   const effectiveTester = testerScope !== 'all' ? testerScope : tester
-  const [users, setUsers] = useState<UserFilterOption[]>([])
   const [known, setKnown] = useState<Record<string, UserFilterOption>>({})
   const [draft, setDraft] = useState<string[]>(value)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
 
-  // Loads the users allowed by the header scopes that match the search, and remembers them for selected labels.
+  // Users allowed by the header scopes that match the search.
+  const { data, error } = useAgriEntityUsers({ tester: effectiveTester, search: debouncedSearch })
+  const users: UserFilterOption[] = data ?? []
+
+  // Remember every user seen so selected labels survive a narrower search.
   useEffect(() => {
-    let cancelled = false
-    agriEntityApi
-      .listUsers({ tester: effectiveTester, search: debouncedSearch })
-      .then((list) => {
-        if (cancelled) return
-        setUsers(list)
-        setKnown((prev) => ({ ...prev, ...Object.fromEntries(list.map((u) => [u.id, u])) }))
-      })
-      .catch((err) => toast.error(getErrorMessage(err, 'Could not load users')))
-    return () => {
-      cancelled = true
-    }
-  }, [effectiveTester, anveshanScope, debouncedSearch])
+    if (!users.length) return
+    setKnown((prev) => ({ ...prev, ...Object.fromEntries(users.map((u) => [u.id, u])) }))
+  }, [users])
+
+  useEffect(() => {
+    if (error) toast.error(getErrorMessage(error, 'Could not load users'))
+  }, [error])
 
   // Selected users stay in the list even when the current search does not return them.
   const items = [

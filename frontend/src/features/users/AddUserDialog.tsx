@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useCreateUser } from '@/hooks/api/useUsers'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -50,7 +51,8 @@ export function AddUserDialog({
   const [form, setForm] = useState<AddUserForm>(INITIAL_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState('')
-  const [creating, setCreating] = useState(false)
+  const createUser = useCreateUser()
+  const creating = createUser.isPending
   const isEndUser = form.role === 'user'
 
   useEffect(() => {
@@ -84,10 +86,9 @@ export function AddUserDialog({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!validate()) return
-    setCreating(true)
     setFormError('')
     try {
-      await adminApi.createUser({
+      await createUser.mutateAsync({
         name: form.name.trim(),
         isUserCreatedBySuperAdmin: true,
         profileCreatedByAdminCompleted: false,
@@ -99,8 +100,6 @@ export function AddUserDialog({
       onOpenChange(false)
     } catch (err) {
       setFormError(getErrorMessage(err, 'Failed to create user'))
-    } finally {
-      setCreating(false)
     }
   }
 

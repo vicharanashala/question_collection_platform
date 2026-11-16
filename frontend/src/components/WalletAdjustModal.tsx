@@ -9,7 +9,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useAdjustWallet } from '@/hooks/api/useAdminWallets'
 import { formatINRFull } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
@@ -26,14 +27,14 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
   const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
-  const [adjusting, setAdjusting] = useState(false)
+  const adjustWallet = useAdjustWallet()
+  const adjusting = adjustWallet.isPending
   const [error, setError] = useState('')
 
   function reset() {
     setAmount('')
     setReason('')
     setError('')
-    setAdjusting(false)
   }
 
   function handleClose() {
@@ -52,16 +53,14 @@ export function WalletAdjustModal({ open, userId, userName, currentBalance, onCl
       setError(t('walletAdjustModal.enterNonZeroAmount'))
       return
     }
-    setAdjusting(true)
     setError('')
     try {
-      const res = await adminApi.adjustWallet(userId, { amount: num, reason: reason.trim() })
+      const res = await adjustWallet.mutateAsync({ userId, body: { amount: num, reason: reason.trim() } })
       toast.success(t('walletAdjustModal.walletAdjustedSuccessfully'))
       reset()
       onClose(res.newBalance)
     } catch (e) {
       toast.error(getErrorMessage(e, 'Failed to adjust wallet'))
-      setAdjusting(false)
     }
   }
 

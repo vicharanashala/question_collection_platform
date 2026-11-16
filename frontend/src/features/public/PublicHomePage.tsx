@@ -1,13 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  adminApi,
-  agriEntityApi,
-  questionApi,
-  walletApi,
-  getErrorMessage,
-} from "@/client/client";
+import { useMyQuestionStats } from '@/hooks/api/useQuestions';
+import { useWalletBalance } from '@/hooks/api/useWallet';
+import { useMyAgriEntityCounts } from '@/hooks/api/useAgriEntities';
+import { useAdminConfig } from '@/hooks/api/useAdminConfig';
 import { useAuth } from "@/stores/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -256,15 +253,28 @@ export function PublicHomePage() {
   const location = useLocation();
   const { user, updateUser } = useAuth();
   const { t } = useTranslation();
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [balance, setBalance] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [dailyLimit, setDailyLimit] = useState<number>(20);
-  const [agriCounts, setAgriCounts] = useState<Record<AgriEntityType, number> | null>(null);
-  const [agriCountsLoading, setAgriCountsLoading] = useState(false);
   const isAnveshanUser = !!user?.isAnveshanUser;
   const showPayments = canAccessPayments(user);
-  const [editWindowSec, setEditWindowSec] = useState<number>(0);
+
+  const statsQuery = useMyQuestionStats();
+  const stats = (statsQuery.data as Stats | undefined) ?? null;
+  const dailyLimit = stats?.dailyLimit ?? 20;
+
+  const balanceQuery = useWalletBalance(showPayments);
+  const balance = balanceQuery.data?.balance ?? 0;
+
+  const loading = statsQuery.isPending || (showPayments && balanceQuery.isPending);
+
+  // Crop, weed, pest and disease submission counts, for Anveshan users only.
+  const agriCountsQuery = useMyAgriEntityCounts(isAnveshanUser);
+  const agriCounts = (agriCountsQuery.data as Record<AgriEntityType, number> | undefined) ?? null;
+  const agriCountsLoading = isAnveshanUser && agriCountsQuery.isPending;
+
+  // Staff accounts need the edit window from platform config.
+  const isStaff = !!user && ["admin", "super_admin", "finance"].includes(user.role);
+  const configQuery = useAdminConfig(isStaff);
+  const editWindowSec =
+    (configQuery.data?.items ?? []).find((c) => c.key === "question_edit_window_seconds")?.value ?? 0;
   const showAnveshanModal = !!user?.isAnveshanUser && user?.consentGiven === false;
   const locationState = location.state as { mobileNumber?: string } | null;
   const postOtpMobile = locationState?.mobileNumber
@@ -276,63 +286,7 @@ export function PublicHomePage() {
     user?.profileCreatedByAdminCompleted !== true;
 
   const [editWindow, setEditWindow] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    Promise.allSettled([
-      questionApi.getMyStats(),
-      showPayments ? walletApi.getBalance() : Promise.resolve({ balance: 0 }),
-    ])
-      .then(([s, w]) => {
-        if (!alive) return;
-        if (s.status === "fulfilled") {
-          const v = s.value as Stats;
-          setStats(v);
-          setDailyLimit(v.dailyLimit ?? 20);
-        }
-        if (w.status === "fulfilled") setBalance(w.value.balance ?? 0);
-      })
-      .catch((e) => console.warn(getErrorMessage(e, "home load")))
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
 
-    if (user && ["admin", "super_admin", "finance"].includes(user.role)) {
-      adminApi
-        .getConfig()
-        .then((res) => {
-          if (!alive) return;
-          const found = (res.items ?? []).find(
-            (c: any) => c.key === "question_edit_window_seconds",
-          );
-          setEditWindowSec(found?.value ?? 0);
-        })
-        .catch((e) => console.warn(getErrorMessage(e, "admin config")));
-    }
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  // Loads crop, weed, pest and disease submission counts for Anveshan users.
-  useEffect(() => {
-    if (!isAnveshanUser) return;
-    let alive = true;
-    setAgriCountsLoading(true);
-    agriEntityApi
-      .getMyCounts()
-      .then((counts) => {
-        if (alive) setAgriCounts(counts);
-      })
-      .catch((e) => console.warn(getErrorMessage(e, "agri counts")))
-      .finally(() => {
-        if (alive) setAgriCountsLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [isAnveshanUser]);
 
   const greeting = (() => {
     const h = new Date().getHours();

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Clock, Download, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/client/client'
+import { useAgriEntities, useMyAgriEntities } from '@/hooks/api/useAgriEntities'
 import { UserFilter } from '@/components/UserFilter'
 import { isSuperAdmin } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
@@ -44,9 +45,6 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   // Anveshan users do not see review status on their own submissions.
   const hideStatus = scope === 'mine' && !!user?.isAnveshanUser
   const TypeIcon = SUBMISSION_TAB_ICONS[type]
-  const [items, setItems] = useState<AgriEntitySubmission[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState<'' | AgriEntityStatus>('')
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
   const [page, setPage] = useState(1)
@@ -63,34 +61,26 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
     { key: 'rejected', label: t('submissions.rejected') },
   ]
 
+  // Staff see every submission; a public user only sees their own.
+  const listParams = {
+    type,
+    status: status || undefined,
+    page,
+    limit: PAGE_SIZE,
+    ...(scope === 'all' && testerFilter ? { tester: testerFilter } : {}),
+    ...(scope === 'all' ? { sortOrder } : {}),
+    ...(canFilterUsers && userIds.length ? { userIds } : {}),
+  }
+  const allQuery = useAgriEntities(listParams, scope === 'all')
+  const mineQuery = useMyAgriEntities(listParams, scope !== 'all')
+  const query = scope === 'all' ? allQuery : mineQuery
+  const items: AgriEntitySubmission[] = query.data?.items ?? []
+  const total = query.data?.total ?? 0
+  const loading = query.isPending
+
   useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    const list = scope === 'all' ? agriEntityApi.listAll : agriEntityApi.listMine
-    list({
-      type,
-      status: status || undefined,
-      page,
-      limit: PAGE_SIZE,
-      ...(scope === 'all' && testerFilter ? { tester: testerFilter } : {}),
-      ...(scope === 'all' ? { sortOrder } : {}),
-      ...(canFilterUsers && userIds.length ? { userIds } : {}),
-    })
-      .then((res) => {
-        if (cancelled) return
-        setItems(res.items ?? [])
-        setTotal(res.total ?? 0)
-      })
-      .catch((err) => {
-        if (!cancelled) toast.error(getErrorMessage(err, t('submissions.loadError')))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [type, status, testerFilter, page, scope, sortOrder, userIds, canFilterUsers, t])
+    if (query.error) toast.error(getErrorMessage(query.error, t('submissions.loadError')))
+  }, [query.error, t])
 
   // Applies or clears the selected users and returns to the first page.
   const applyUsers = (ids: string[]) => {

@@ -12,7 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { agriEntityApi, getErrorMessage } from "@/client/client";
+import { getErrorMessage } from "@/client/client";
+import { useSubmitAgriEntity } from '@/hooks/api/useAgriEntities';
 import { storageApi } from "@/client/storage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -175,7 +176,8 @@ export function AgriEntitySubmitForm({
   const [values, setValues] = useState<FormValues>(EMPTY_VALUES);
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [showErrors, setShowErrors] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const submitEntity = useSubmitAgriEntity();
+  const submitting = submitEntity.isPending;
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
@@ -439,10 +441,9 @@ export function AgriEntitySubmitForm({
 
   async function performSubmit(locationOverride?: SubmissionLocation) {
     const location = locationOverride ?? submissionLocation;
-    setSubmitting(true);
     try {
       const imageUrls = await uploadImages();
-      await agriEntityApi.submit({
+      await submitEntity.mutateAsync({
         type,
         localName: values.localName.trim(),
         englishName: values.englishName.trim(),
@@ -467,8 +468,6 @@ export function AgriEntitySubmitForm({
           ),
         ),
       );
-    } finally {
-      setSubmitting(false);
     }
   }
 

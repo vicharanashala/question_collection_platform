@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { adminApi, getErrorMessage } from '@/client/client'
+import { useAdminWalletsSummary, useInfiniteAdminWallets } from '@/hooks/api/useAdminWallets'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -114,14 +115,7 @@ function StatValue({ value, className }: { value: number | undefined; className:
 
 export function WalletsPage() {
   const { t } = useTranslation()
-  const [wallets, setWallets] = useState<WalletSummary[]>([])
-  const [total, setTotal] = useState(0)
-  const [totals, setTotals] = useState<WalletTotals | null>(null)
-  const latestTotalsRequest = useRef(0)
   const testerFromHeader = useTesterScope() !== 'all'
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [detailWallet, setDetailWallet] = useState<WalletSummary | null>(null)
@@ -142,65 +136,53 @@ export function WalletsPage() {
       // Clear state so a refresh doesn't re-open
       window.history.replaceState({}, '')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Totals cover every wallet matching the filters, so they are fetched once per filter change, not per page.
-  const fetchTotals = useCallback(async (search: string, tester: TesterFilterValue) => {
-    const requestId = ++latestTotalsRequest.current
-    setTotals(null)
-    try {
-      const res = await adminApi.getWalletsSummary({ search: search || undefined, tester: tester || undefined })
-      if (requestId === latestTotalsRequest.current) setTotals(res)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load wallet totals'))
-    }
-  }, [])
+  // Totals cover every wallet matching the filters, so they are a separate
+  // query keyed on the filters rather than on the page.
+  const totalsQuery = useAdminWalletsSummary({
+    search: searchQuery || undefined,
+    tester: testerFilter || undefined,
+  })
+  const totals: WalletTotals | null = totalsQuery.data ?? null
 
-  const fetchWallets = useCallback(async (pageNum = 1, search = searchQuery, tester = testerFilter) => {
-    setLoading(true)
-    if (pageNum === 1) void fetchTotals(search, tester)
-    try {
-      const params: Record<string, string | number> = { page: pageNum, limit }
-      if (search) params.search = search
-      if (tester) params.tester = tester
-      const res = await adminApi.getWallets(params)
-      setWallets(pageNum === 1 ? res.items : (prev) => [...prev, ...res.items])
-      setTotal(res.total)
-      setPage(pageNum)
-
-      // Auto-open the wallet modal if a user was passed in from notifications
-      if (pendingOpenUserId) {
-        const target = res.items.find((w: WalletSummary) => w.userId === pendingOpenUserId)
-        if (target) {
-          setDetailWallet(target)
-          setDetailOpen(true)
-          setPendingOpenUserId(null)
-        }
-      }
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load wallets'))
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [searchQuery, testerFilter, fetchTotals])
+  const walletsQuery = useInfiniteAdminWallets({
+    limit,
+    ...(searchQuery ? { search: searchQuery } : {}),
+    ...(testerFilter ? { tester: testerFilter } : {}),
+  })
+  const wallets: WalletSummary[] = (walletsQuery.data?.pages ?? []).flatMap((p) => p.items)
+  const walletPages = walletsQuery.data?.pages ?? []
+  const total = walletPages.length > 0 ? walletPages[walletPages.length - 1].total : 0
+  const loading = walletsQuery.isFetching
+  const refreshing = walletsQuery.isRefetching || totalsQuery.isRefetching
 
   useEffect(() => {
-    fetchWallets(1, searchQuery)
-  }, [])
+    if (totalsQuery.error) toast.error(getErrorMessage(totalsQuery.error, 'Failed to load wallet totals'))
+  }, [totalsQuery.error])
+
+  useEffect(() => {
+    if (walletsQuery.error) toast.error(getErrorMessage(walletsQuery.error, 'Failed to load wallets'))
+  }, [walletsQuery.error])
+
+  // Auto-open the wallet modal when a user was passed in from a notification.
+  useEffect(() => {
+    if (!pendingOpenUserId) return
+    const target = wallets.find((w) => w.userId === pendingOpenUserId)
+    if (target) {
+      setDetailWallet(target)
+      setDetailOpen(true)
+      setPendingOpenUserId(null)
+    }
+  }, [pendingOpenUserId, wallets])
 
   async function onRefresh() {
-    setRefreshing(true)
-    await fetchWallets(1, searchQuery)
+    await Promise.all([walletsQuery.refetch(), totalsQuery.refetch()])
   }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setSearchQuery(searchInput)
-    setPage(1)
-    setWallets([])
-    fetchWallets(1, searchInput)
   }
 
   function openDetail(wallet: WalletSummary) {
@@ -211,32 +193,24 @@ export function WalletsPage() {
   function closeDetail() {
     setDetailOpen(false)
     // Refresh to pick up any balance changes
-    fetchWallets(1, searchQuery)
+    void walletsQuery.refetch()
+    void totalsQuery.refetch()
     setDetailWallet(null)
   }
 
   function clearSearch() {
     setSearchInput('')
     setSearchQuery('')
-    setPage(1)
-    setWallets([])
-    fetchWallets(1, '')
   }
 
   function changeTesterFilter(value: TesterFilterValue) {
     setTesterFilter(value)
-    setPage(1)
-    setWallets([])
-    fetchWallets(1, searchQuery, value)
   }
 
   function clearPageFilters() {
     setSearchInput('')
     setSearchQuery('')
     setTesterFilter('')
-    setPage(1)
-    setWallets([])
-    fetchWallets(1, '', '')
   }
 
   function removeFilter(key: FilterChipKey) {
@@ -448,8 +422,8 @@ export function WalletsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fetchWallets(page + 1, searchQuery)}
-              disabled={loading}
+              onClick={() => void walletsQuery.fetchNextPage()}
+              disabled={walletsQuery.isFetchingNextPage}
             >
               {loading ? t('leaderboard.loading') : `Load More (${total - wallets.length} remaining)`}
             </Button>

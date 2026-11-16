@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { questionApi, getErrorMessage } from "@/client/client";
+import { useQuestionsList } from '@/hooks/api/useQuestions';
 import { useDebouncedValue } from "@/hooks/ui/useDebouncedValue";
 import {
   Select,
@@ -66,7 +67,6 @@ const ANSWER_FILTER_OPTIONS: { value: AnswerFilter; label: string }[] = [
 
 export function QuestionsPage() {
   const { t } = useTranslation();
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -79,14 +79,30 @@ export function QuestionsPage() {
   const anveshanScope = useAnveshanScope();
   const [userIds, setUserIds] = useState<string[]>([]);
   const userIdsParam = isSuperAdmin(user) && userIds.length ? userIds.join(",") : undefined;
-  const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"table" | "card">("table");
   const limit = 10;
   const cardLimit = 9;
   const debouncedSearch = useDebouncedValue(search, 400);
 
   const [detailQuestion, setDetailQuestion] = useState<Question | null>(null);
-  const [apiTotal, setApiTotal] = useState(0);
+
+  const listQuery = useQuestionsList({
+    page,
+    limit: view === "card" ? cardLimit : limit,
+    search: debouncedSearch || undefined,
+    status: statusFilter || undefined,
+    answerStatus: answerFilter || undefined,
+    userType: userTypeFilter || undefined,
+    tester: testerFilter || undefined,
+    userIds: userIdsParam,
+  });
+  const questions = (listQuery.data?.items as Question[] | undefined) ?? [];
+  const apiTotal = listQuery.data?.total ?? 0;
+  const loading = listQuery.isFetching;
+
+  useEffect(() => {
+    if (listQuery.error) toast.error(getErrorMessage(listQuery.error, "Failed to load questions"));
+  }, [listQuery.error]);
 
   // Client-side sort — newest first
   const sortedQuestions = useMemo(() => {
@@ -101,28 +117,6 @@ export function QuestionsPage() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, userIds]);
-
-  useEffect(() => {
-    setLoading(true);
-    const activeLimit = view === "card" ? cardLimit : limit;
-    questionApi
-      .getQuestions({
-        page,
-        limit: activeLimit,
-        search: debouncedSearch || undefined,
-        status: statusFilter || undefined,
-        answerStatus: answerFilter || undefined,
-        userType: userTypeFilter || undefined,
-        tester: testerFilter || undefined,
-        userIds: userIdsParam,
-      })
-      .then((res) => {
-        setQuestions(res.items as Question[]);
-        setApiTotal(res.total);
-      })
-      .catch((e) => toast.error(getErrorMessage(e, "Failed to load questions")))
-      .finally(() => setLoading(false));
-  }, [page, debouncedSearch, statusFilter, answerFilter, userTypeFilter, testerFilter, userIds, view]);
 
   const totalPages = Math.max(
     1,

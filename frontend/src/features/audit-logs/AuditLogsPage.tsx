@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { auditApi, getErrorMessage } from "@/client/client";
+import { useEffect, useState } from "react";
+import { getErrorMessage } from "@/client/client";
+import { useAuditLogs } from '@/hooks/api/useAuditLogs';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -319,11 +320,6 @@ export function AuditLogsPage() {
     (option) => isSuperAdmin || option.value !== "super_admin",
   );
 
-  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("list");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<AuditLogQuery>({
@@ -333,27 +329,26 @@ export function AuditLogsPage() {
     sortOrder: "DESC",
   });
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response: AuditLogsResponse = await auditApi.getAuditLogs(filters);
-      setLogs(response.data);
-      setTotal(response.total);
-      setPage(response.page);
-      setTotalPages(response.totalPages);
-      setExpandedIds(new Set());
-    } catch (error) {
-      toast.error(
-        t('auditLogsPage.failedToLoadAudit', { value1: getErrorMessage(error, "Unknown error") }),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+  const logsQuery = useAuditLogs(filters);
+  const response = logsQuery.data as AuditLogsResponse | undefined;
+  const logs = response?.data ?? [];
+  const total = response?.total ?? 0;
+  const page = response?.page ?? 1;
+  const totalPages = response?.totalPages ?? 1;
+  const loading = logsQuery.isFetching;
+
+  // Collapse any expanded rows whenever a new result set arrives.
+  useEffect(() => {
+    setExpandedIds(new Set());
+  }, [response]);
 
   useEffect(() => {
-    void fetchLogs();
-  }, [fetchLogs]);
+    if (logsQuery.error) {
+      toast.error(
+        t('auditLogsPage.failedToLoadAudit', { value1: getErrorMessage(logsQuery.error, "Unknown error") }),
+      );
+    }
+  }, [logsQuery.error, t]);
   function updateFilters(update: Partial<AuditLogQuery>) {
     setFilters((current) => ({ ...current, ...update, page: 1 }));
   }

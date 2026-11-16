@@ -10,6 +10,7 @@ import {
   type LgdSubDistrict,
   type LgdVillage,
 } from "@/client/client";
+import { useUpdateMe } from '@/hooks/api/useProfile';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -315,7 +316,8 @@ export function EditPublicProfileDialog({
 
   const [form, setForm] = useState<EditableProfile>(initialForm);
   const originalUsername = initialForm.username;
-  const [saving, setSaving] = useState(false);
+  const updateMe = useUpdateMe();
+  const saving = updateMe.isPending;
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
   const crops = useCrops();
   const [states, setStates] = useState<LgdState[]>([]);
@@ -866,8 +868,6 @@ export function EditPublicProfileDialog({
     const numberOfFarmers = form.numberOfFarmers.trim()
       ? Number(form.numberOfFarmers)
       : null;
-
-    setSaving(true);
     try {
       const payload: Parameters<typeof authApi.updateMe>[0] = {
         name: form.name.trim(),
@@ -914,15 +914,13 @@ export function EditPublicProfileDialog({
 
       if (category === "fpo" || category === "ngo")
         payload.numberOfFarmers = numberOfFarmers;
-      const result = await authApi.updateMe(payload);
+      const result = await updateMe.mutateAsync(payload);
       onSaved(result.user);
       onOpenChange(false);
       toast.success(t('editPublicProfileDialog.profileCompletedSuccessfully'));
       navigate("/home", { replace: true });
     } catch {
       toast.error(t('editPublicProfileDialog.unableToUpdateYour'));
-    } finally {
-      setSaving(false);
     }
   }
 

@@ -8,7 +8,7 @@ import { getInitials } from '@/lib/utils'
 import { BrandLogo } from '@/components/BrandLogo'
 import { useLanguage } from '@/hooks/ui/useLanguage'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import { notificationApi } from '@/client/client'
+import { useNotifications } from '@/hooks/api/useNotifications'
 import { SignOutDialog } from '@/components/SignOutDialog'
 import { ANVESHAN_TAGLINE } from '@/constants/public'
 
@@ -27,7 +27,6 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
   useLanguage()
-  const [unreadCount, setUnreadCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const titles: Record<string, string> = {
@@ -56,14 +55,13 @@ export function PublicHeader({ onOpenMobileNav }: PublicHeaderProps = {}) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Refresh the unread badge on mount and whenever the user navigates away
-  // from the notifications page (covers "just read some notifications").
-  useEffect(() => {
-    if (isAnveshanUser || pathname === '/home/notifications') return
-    notificationApi.getNotifications({ page: 1, limit: 1 })
-      .then((res) => setUnreadCount(res.unread))
-      .catch(() => {})
-  }, [pathname, isAnveshanUser])
+  // Unread badge. Disabled for Anveshan users and while the notifications
+  // page itself is open; re-enabling on navigation refetches the count.
+  const { data: unreadData } = useNotifications(
+    { page: 1, limit: 1 },
+    !isAnveshanUser && pathname !== '/home/notifications',
+  )
+  const unreadCount = unreadData?.unread ?? 0
 
   function handleLogout() {
     setProfileOpen(false)

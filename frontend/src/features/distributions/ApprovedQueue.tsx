@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
-import { distributor, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useApprovedQuestions } from '@/hooks/api/useDistributions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,27 +22,22 @@ export function ApprovedQueue() {
   const [limit, setLimit] = useState(20)
   const [search, setSearch] = useState('')
   const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
-  const [items, setItems] = useState<Question[]>([])
-  const [total, setTotal] = useState(0)
-  const [pages, setPages] = useState(0)
-  const [loading, setLoading] = useState(false)
   const [assignFor, setAssignFor] = useState<Question | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const list = await distributor.listApprovedQuestions({ page, limit, search, tester: testerFilter || undefined })
-      setItems(list.items)
-      setTotal(list.total)
-      setPages(list.pages)
-    } catch (e) {
-      toast.error(getErrorMessage(e, 'Failed to load approved questions.'))
-    } finally {
-      setLoading(false)
-    }
-  }, [page, limit, search, testerFilter])
+  const { data, isFetching: loading, error, refetch } = useApprovedQuestions({
+    page,
+    limit,
+    search,
+    tester: testerFilter || undefined,
+  })
+  const items = data?.items ?? []
+  const total = data?.total ?? 0
+  const pages = data?.pages ?? 0
+  const load = () => void refetch()
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    if (error) toast.error(getErrorMessage(error, 'Failed to load approved questions.'))
+  }, [error])
 
   return (
     <div className="space-y-4">

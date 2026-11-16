@@ -10,7 +10,8 @@
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { adminApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useFinancialSummary } from '@/hooks/api/useAdminWallets'
 // import { useAuth } from '@/stores/AuthContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -74,18 +75,6 @@ function StatCard({ label, value, change, sub, icon: Icon, variant }: StatCardPr
   )
 }
 
-// ─── Types for finance summary ─────────────────────────────────────────────────
-
-interface FinSummary {
-  totalPaidOut: number
-  pendingWithdrawals: { count: number; amount: number }
-  completedWithdrawals: { count: number; amount: number }
-  failedWithdrawals: { count: number }
-  totalWalletBalance: number
-  today: { payoutCount: number; payoutAmount: number }
-  dailyPayoutTrend: Array<{ date: string; count: number; amount: number }>
-}
-
 // ─── Time ranges ───────────────────────────────────────────────────────────────
 
 const TIME_RANGES: { value: string; label: string; days: number }[] = [
@@ -100,17 +89,13 @@ export function FinanceDashboardPage() {
   const { t } = useTranslation()
   // const { user } = useAuth()
   const [timeRange, setTimeRange] = useState('30d')
-  const [finSummary, setFinSummary] = useState<FinSummary | null>(null)
-  const [finLoading, setFinLoading] = useState(true)
-
   const days = TIME_RANGES.find((r) => r.value === timeRange)?.days ?? 30
 
+  const { data: finSummary, isPending: finLoading, error: finError } = useFinancialSummary({ days })
+
   useEffect(() => {
-    adminApi.getFinancialSummary({ days })
-      .then(setFinSummary)
-      .catch((e) => toast.error(getErrorMessage(e, 'Failed to load financial summary')))
-      .finally(() => setFinLoading(false))
-  }, [days])
+    if (finError) toast.error(getErrorMessage(finError, 'Failed to load financial summary'))
+  }, [finError])
 
   if (finLoading) return <DashboardSkeleton />
 
