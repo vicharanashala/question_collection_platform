@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { LanguageProvider } from '@/hooks/ui/useLanguage'
 import { AuthProvider } from '@/stores/AuthContext'
@@ -10,9 +11,18 @@ import { Toaster } from '@/components/ui/sonner'
 import '@/i18n'
 import './index.css'
 
+// One client for the whole app. Conservative defaults: no refetch on window
+// focus (matches the app's existing fetch behavior) and a short stale window.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 },
+  },
+})
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
           {/* LanguageProvider sits inside AuthProvider so it can read the
@@ -29,6 +39,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </LanguageProvider>
         </AuthProvider>
       </ThemeProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/stores/AuthContext'
-import { questionApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useMyQuestions } from '@/hooks/api/useQuestions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Clock, Flag, Image as ImageIcon, MapPin, MessageCircleQuestion, MessageSquarePlus, Sprout } from 'lucide-react'
@@ -16,7 +17,6 @@ import { useRelativeTime } from '@/components/submissions/useRelativeTime'
 import { SubmissionTypeTabs, parseSubmissionTab, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
 import { AgriEntitySubmissionsList } from '@/components/agri-entity/AgriEntitySubmissionsList'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
-import type { Question } from '@/types'
 
 const STATUS_TABS: { key: '' | 'pending' | 'approved' | 'rejected' | 'held' | 'moved_to_final'; labelKey: string }[] = [
   { key: '', labelKey: 'submissions.allStatus' },
@@ -123,31 +123,23 @@ function QuestionSubmissions() {
   // Anveshan users do not see review status (pending, approved, …), so the filter and badges are hidden.
   const hideStatus = !!user?.isAnveshanUser
   const formatDate = useRelativeTime()
-  const [items, setItems] = useState<Question[]>([])
-  const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState<typeof STATUS_TABS[number]['key']>('')
   const [page, setPage] = useState(1)
   const limit = 20
-  const [total, setTotal] = useState(0)
   // Selected question for the read-only detail dialog — null when closed.
   // Kept as `id` (not the full object) so the modal owns its own fetch / cache
   // and we never have to keep two copies of the question in sync.
   const [openQuestionId, setOpenQuestionId] = useState<string | null>(null)
 
-  async function load() {
-    setLoading(true)
-    try {
-      const res = await questionApi.listMyQuestions({ status: status || undefined, page, limit })
-      setItems(res.items ?? [])
-      setTotal(res.total ?? 0)
-    } catch (err) {
-      toast.error(getErrorMessage(err, t('submissions.loadError')))
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Server state lives in TanStack Query; the previous page stays visible
+  // while the next one loads.
+  const { data, isPending: loading, error } = useMyQuestions({ status: status || undefined, page, limit })
+  const items = data?.items ?? []
+  const total = data?.total ?? 0
 
-  useEffect(() => { load() }, [status, page])
+  useEffect(() => {
+    if (error) toast.error(getErrorMessage(error, t('submissions.loadError')))
+  }, [error, t])
 
   return (
     <>

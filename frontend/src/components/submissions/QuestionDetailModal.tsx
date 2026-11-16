@@ -5,10 +5,11 @@
  * while filtering out admin-only fields (reviewer ID/name, per-status reviewer
  * controls, `TranslatableText`) so the user sees a clean, self-focused summary.
  */
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/stores/AuthContext'
-import { questionApi, getErrorMessage } from '@/client/client'
+import { getErrorMessage } from '@/client/client'
+import { useQuestion } from '@/hooks/api/useQuestions'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -70,46 +71,18 @@ export function QuestionDetailModal({
   // Anveshan users do not see review status, so the pill and reviewer feedback are hidden for them.
   const hideStatus = !!user?.isAnveshanUser
 
-  const [question, setQuestion] = useState<Question | null>(null)
-  const [loading, setLoading] = useState(false)
-  // Distinguish "we couldn't find this question" (404 from API) from "still
-  // loading" / "not yet fetched". This matters because we don't want the
-  // not-found card to flash before the first fetch completes.
-  const [notFound, setNotFound] = useState(false)
+  // Server state via TanStack Query — disabled while the dialog is closed, and
+  // cached per id so reopening the same question is instant.
+  const { data, isPending, error } = useQuestion(open ? questionId : null)
+  const question = data ?? null
+  const loading = open && !!questionId && isPending
+  // Only the backend confirming the question is missing (404) counts as
+  // not-found; other failures surface as a toast and can be retried.
+  const notFound = (error as { status?: number } | null)?.status === 404
 
-  const fetch = useCallback(async (id: string) => {
-    setLoading(true)
-    setNotFound(false)
-    try {
-      const data = await questionApi.getQuestion(id)
-      setQuestion(data)
-    } catch (e) {
-      const msg = getErrorMessage(e, t('submissions.loadError'))
-      toast.error(msg)
-      // Only flip to not-found when the backend confirms the question is
-      // missing (404). Other failures leave `question` untouched so the user
-      // can retry without losing context.
-      const status = (e as { status?: number })?.status
-      if (status === 404) {
-        setNotFound(true)
-        setQuestion(null)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [t])
-
-  // Re-fetch whenever the parent hands us a new id. Reset state when the
-  // dialog closes so the next open starts fresh.
   useEffect(() => {
-    if (!open) {
-      setQuestion(null)
-      setNotFound(false)
-      setLoading(false)
-      return
-    }
-    if (questionId) void fetch(questionId)
-  }, [open, questionId, fetch])
+    if (error) toast.error(getErrorMessage(error, t('submissions.loadError')))
+  }, [error, t])
 
   // ── Body switch ─────────────────────────────────────────────────
   let body: ReactNode
