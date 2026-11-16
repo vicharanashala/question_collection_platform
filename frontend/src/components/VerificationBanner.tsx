@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { ShieldAlert } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/stores/AuthContext'
 
 /** Statuses that mean an admin has not approved the account yet. */
 const UNVERIFIED_STATUSES = ['pending', 'manual_review'] as const

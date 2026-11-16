@@ -3,7 +3,7 @@
  * Super admin can approve/reject from here.
  */
 import { useState, useEffect } from 'react'
-import { adminApi, getErrorMessage } from '@/api/client'
+import { adminApi, getErrorMessage } from '@/client/client'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'

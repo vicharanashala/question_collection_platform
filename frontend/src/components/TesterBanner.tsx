@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { FlaskConical } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/stores/AuthContext'
 
 // Persistent notice for internal test accounts. Renders nothing for everyone else.
 export function TesterBanner() {

@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { ModeScope } from '@/lib/modeStore'
+import type { ModeScope } from '@/stores/modeStore'
 
 interface ModeSelectProps {
   ariaLabel: string

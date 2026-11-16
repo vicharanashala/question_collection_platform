@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { adminApi, getErrorMessage } from '@/api/client'
+import { adminApi, getErrorMessage } from '@/client/client'
 import { formatINRFull } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'

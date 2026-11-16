@@ -4,8 +4,8 @@
  * withdrawal history tabs. Super admins can also manually adjust balance.
  */
 import { useState, useEffect, useCallback } from 'react'
-import { adminApi, getErrorMessage } from '@/api/client'
-// import { useAuth } from '@/context/AuthContext'
+import { adminApi, getErrorMessage } from '@/client/client'
+// import { useAuth } from '@/stores/AuthContext'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'

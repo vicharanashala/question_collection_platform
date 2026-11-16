@@ -12,8 +12,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { agriEntityApi, getErrorMessage } from "@/api/client";
-import { storageApi } from "@/api/storage";
+import { agriEntityApi, getErrorMessage } from "@/client/client";
+import { storageApi } from "@/client/storage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,11 +28,11 @@ import {
   MAX_AGRI_ENTITY_SOURCE_LENGTH,
 } from "@/constants/public";
 import type { AgriEntityAlternateName, AgriEntityType } from "@/types";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/stores/AuthContext";
 import {
   LocationCaptureModal,
   type SubmissionLocation,
-} from "@/pages/public/LocationCapture";
+} from "@/features/public/LocationCapture";
 import {
   prepareImage,
   ImageProcessingError,

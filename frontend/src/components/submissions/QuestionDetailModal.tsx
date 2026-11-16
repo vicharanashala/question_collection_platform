@@ -7,8 +7,8 @@
  */
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/context/AuthContext'
-import { questionApi, getErrorMessage } from '@/api/client'
+import { useAuth } from '@/stores/AuthContext'
+import { questionApi, getErrorMessage } from '@/client/client'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,

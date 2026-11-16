@@ -1,0 +1,248 @@
+import { useState, useEffect } from 'react'
+import { adminApi, getErrorMessage } from '@/client/client'
+import { useAuth } from '@/stores/AuthContext'
+import { Card, CardContent } from '@/components/ui/card'
+import { SettingsSkeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { toast } from 'sonner'
+import { Settings2, RefreshCw, Lock } from 'lucide-react'
+import type { ConfigItem } from '@/types'
+import { useTranslation } from 'react-i18next'
+
+const CONFIG_META: Record<string, { label: string; suffix: string; description?: string }> = {
+  max_users_per_state:            { label: 'Max Users per State',       suffix: '' },
+  min_withdrawal_amount:          { label: 'Min Withdrawal Amount',     suffix: ' \u20b9' },
+  question_edit_window_seconds:   { label: 'Edit Window',                suffix: 's' },
+  daily_question_limit:           { label: 'Daily Question Limit',       suffix: '/day' },
+  max_question_chars:             { label: 'Max Question Characters',   suffix: '' },
+  // The backend description still reads "(0 = off, 1 = on)", which no longer
+  // applies now that this is rendered as a switch \u2014 override it here.
+  payment_withdrawal_enabled: {
+    label: 'Payment Withdrawals',
+    suffix: '',
+    description: 'Enable wallet withdrawals',
+  },
+  payment_verification_enabled: {
+    label: 'Payment Method Verification',
+    suffix: '',
+    description: 'Enable adding and verifying payment methods (UPI/bank account)',
+  },
+}
+
+const HIDDEN_CONFIG_KEYS = new Set([
+  'video_max_duration_seconds',
+  'video_max_size_mb',
+  'ai_confidence_threshold',
+  'question_edit_window_seconds',
+  'max_audio_size_mb',
+  'duplicate_similarity_threshold',
+  'max_image_size_mb',
+])
+
+// Config keys that are conceptually on/off flags (stored as 0/1) — rendered
+// as a switch instead of a numeric value + Edit dialog.
+const BOOLEAN_CONFIG_KEYS = new Set([
+  'payment_withdrawal_enabled',
+  'payment_verification_enabled',
+])
+
+export function SettingsPage() {
+  const { t } = useTranslation()
+  const { user: currentUser } = useAuth()
+  const isSuperAdmin = currentUser?.role === 'super_admin'
+
+  const [configs, setConfigs] = useState<ConfigItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [editKey, setEditKey] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [togglingKey, setTogglingKey] = useState<string | null>(null)
+
+  async function loadConfigs() {
+    try {
+      const res = await adminApi.getConfig()
+      setConfigs(res.items ?? [])
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Failed to load configuration'))
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => { void loadConfigs() }, [])
+
+  async function onRefresh() {
+    setRefreshing(true)
+    await loadConfigs()
+  }
+
+  function openEdit(cfg: ConfigItem) {
+    setEditKey(cfg.key)
+    setEditValue(String(cfg.value))
+  }
+
+  async function handleSave() {
+    if (!editKey) return
+    const val = parseFloat(editValue)
+    if (isNaN(val) || val < 0) {
+      toast.error(t('settingsPage.invalidValueEnterNon'))
+      return
+    }
+    setSaving(true)
+    try {
+      await adminApi.updateConfig({ key: editKey, value: val })
+      setConfigs((prev) =>
+        prev.map((c) => (c.key === editKey ? { ...c, value: val } : c)),
+      )
+      toast.success(t('settingsPage.configurationUpdated'))
+      setEditKey(null)
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Update failed'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function toggleBoolean(cfg: ConfigItem, checked: boolean) {
+    const val = checked ? 1 : 0
+    setTogglingKey(cfg.key)
+    try {
+      await adminApi.updateConfig({ key: cfg.key, value: val })
+      setConfigs((prev) =>
+        prev.map((c) => (c.key === cfg.key ? { ...c, value: val } : c)),
+      )
+      toast.success(t('settingsPage.configurationUpdated'))
+    } catch (e) {
+      toast.error(getErrorMessage(e, 'Update failed'))
+    } finally {
+      setTogglingKey(null)
+    }
+  }
+
+  if (loading) {
+    return <SettingsSkeleton />
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-text flex items-center gap-2">
+            <Settings2 className="h-6 w-6" />
+            {t('settingsPage.systemSettings')}
+          </h2>
+          <p className="text-xs sm:text-xs sm:text-sm text-text-tertiary mt-1">{t('settingsPage.platformConfigurationValuesChanges')}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-1.5 ${refreshing ? 'animate-spin' : ''}`} />
+          {t('common.refresh')}
+        </Button>
+      </div>
+
+      {!isSuperAdmin && (
+        <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-xs sm:text-xs sm:text-sm text-warning">
+          <Lock className="h-4 w-4 shrink-0" />
+          Only <strong>{t('settingsPage.superAdmin')}</strong> can modify these settings.
+        </div>
+      )}
+
+      {/* Config cards */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {configs
+          .filter((cfg) => !HIDDEN_CONFIG_KEYS.has(cfg.key))
+          .map((cfg) => {
+            const meta = CONFIG_META[cfg.key]
+            const isBoolean = BOOLEAN_CONFIG_KEYS.has(cfg.key)
+            return (
+              <Card key={cfg.key} className="shadow-xs">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-xs sm:text-sm text-text-secondary truncate">
+                        {meta?.label ?? cfg.key}
+                      </p>
+                      {!isBoolean && (
+                        <p className="mt-1 text-xl sm:text-2xl font-extrabold text-text tabular-nums">
+                          {meta?.suffix === ' ₹' ? '₹' : ''}
+                          {cfg.value}
+                          {(meta?.suffix && meta?.suffix !== ' ₹') ? meta.suffix : ''}
+                        </p>
+                      )}
+                      {(meta?.description || cfg.description) && (
+                        <p className="mt-1 text-[11px] sm:text-[11px] sm:text-xs text-text-tertiary">
+                          {(meta?.description ?? cfg.description)?.replace('(0 = off, 1 = on)', '').trim()}
+                        </p>
+                      )}
+                    </div>
+                    {isBoolean ? (
+                      <Switch
+                        checked={!!cfg.value}
+                        onCheckedChange={(checked) => toggleBoolean(cfg, checked)}
+                        disabled={!isSuperAdmin || togglingKey === cfg.key}
+                        className="shrink-0 mt-1"
+                      />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(cfg)}
+                        disabled={!isSuperAdmin}
+                        className="shrink-0 text-text-tertiary hover:text-text"
+                      >{t('common.edit')}</Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+      </div>
+
+      {configs.length === 0 && !loading && (
+        <p className="text-center text-xs sm:text-xs sm:text-sm text-text-secondary py-12">{t('settingsPage.noConfigurationItemsFound')}</p>
+      )}
+
+      {/* Edit dialog */}
+      <Dialog open={!!editKey} onOpenChange={(o) => !o && setEditKey(null)}>
+        <DialogContent className='p-4'>
+          <DialogHeader>
+            <DialogTitle>
+              Edit {editKey ? (CONFIG_META[editKey]?.label ?? editKey) : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cfg-value">{t('settingsPage.newValue')}</Label>
+            <Input
+              id="cfg-value"
+              type="number"
+              min={0}
+              step="any"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+            />
+          </div>
+          <DialogFooter className='mt-4 gap-1'>
+            <Button variant="outline" onClick={() => setEditKey(null)}>{t('common.cancel')}</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? t('profilePage.saving') : t('editProfile.saveChanges')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

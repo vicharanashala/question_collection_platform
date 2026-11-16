@@ -1,0 +1,2058 @@
+/**
+ * API Client with:
+ * - Request deduplication (in-flight deduplication per URL)
+ * - Memory cache with TTL
+ * - Automatic token refresh (interceptor)
+ * - Request queue (paused when offline, replayed on reconnect)
+ * - Exponential backoff retry
+ * - Error normalization
+ */
+import { API_BASE_URL } from '@/config/env';
+import type {
+  AuthUser,
+  AdminStats,
+  User,
+  Question,
+  Faq,
+  ConfigItem,
+  Withdrawal,
+  WalletSummary,
+  WalletTotals,
+  Transaction,
+  PaymentDetail,
+  Notification,
+  PaginatedResponse,
+  AnalyticsDashboard,
+  UserAnalytics,
+  QuestionAnalytics,
+  RewardAnalytics,
+  ExportParams,
+  AuditLogsResponse,
+  Report,
+  FinalQuestion,
+  DistributorStats,
+  AuditLogQuery,
+  SubmitAgriEntityPayload,
+  SubmitAgriEntityResponse,
+  AgriEntitySubmission,
+  AgriEntityStatus,
+  AgriEntityType,
+  AnveshanAnswer,
+  AnveshanAnswerQuestionsResponse,
+  AnveshanAnswerScore,
+  AppFeedbackListResponse,
+  AnveshanMilestoneCounts,
+  SubmitAnveshanAnswerPayload,
+  SubmitAnveshanAnswerResponse,
+  CuratorStats,
+  FaqAudience,
+} from "@/types";
+import {
+  accountLockedEmitter,
+  endSession,
+  parseAccountLocked,
+} from "@/events/accountLockedEvents";
+import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
+
+import { getAnveshanScope } from "@/stores/anveshanMode";
+import { getTesterScope } from "@/stores/testerMode";
+const NO_SESSION_END = ["/auth/send-otp", "/auth/verify-otp", "/auth/refresh"];
+// Passes a successful submission result through and tells progress screens to reload.
+function notifyProgressChanged<T>(data: T): T {
+  anveshanProgressEmitter.emit();
+  return data;
+}
+
+const BASE = API_BASE_URL;
+
+/** When a milestone goal was started (first submission) and completed (the submission that met it), as ISO strings. */
+export interface AnveshanStepTimeline {
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface AnveshanMilestoneResponse {
+  requirements: AnveshanMilestoneCounts;
+  progress: AnveshanMilestoneCounts;
+  /** Question and crop/weed/pest/disease goals are met, so answering is unlocked. */
+  submissionsCompleted: boolean;
+  /** Every goal, including answers, is met. */
+  completed: boolean;
+  /** The user has already shared app feedback after reaching 100%. */
+  feedbackSubmitted?: boolean;
+  /** Start and completion time of each goal. */
+  timeline?: Record<keyof AnveshanMilestoneCounts, AnveshanStepTimeline>;
+}
+
+// ─── Token helpers ─────────────────────────────────────────────────────────
+
+export function getAccessToken(): string | null {
+  return localStorage.getItem("access_token");
+}
+
+function getRefreshToken(): string | null {
+  return localStorage.getItem("refresh_token");
+}
+
+function setTokens(access: string, refresh: string) {
+  localStorage.setItem("access_token", access);
+  localStorage.setItem("refresh_token", refresh);
+}
+
+export function getRegistrationToken(): string | null {
+  return (
+    sessionStorage.getItem("registration_token") ??
+    localStorage.getItem("registration_token")
+  );
+}
+
+export function setRegistrationToken(token: string): void {
+  try {
+    sessionStorage.setItem("registration_token", token);
+    localStorage.setItem("registration_token", token);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearRegistrationToken(): void {
+  try {
+    sessionStorage.removeItem("registration_token");
+    localStorage.removeItem("registration_token");
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// ─── In-flight request deduplication ──────────────────────────────────────
+
+const inflightRequests = new Map<string, Promise<unknown>>();
+
+function deduplicate<T>(key: string, promise: Promise<T>): Promise<T> {
+  const existing = inflightRequests.get(key);
+  if (existing) return existing as Promise<T>;
+  inflightRequests.set(key, promise);
+  promise.finally(() => inflightRequests.delete(key));
+  return promise;
+}
+
+// ─── Memory cache with TTL ─────────────────────────────────────────────────
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+
+const memoryCache = new Map<string, CacheEntry<unknown>>();
+
+function getCache<T>(key: string, _maxAgeMs: number): T | null {
+  const entry = memoryCache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache<T>(key: string, data: T, ttlMs: number) {
+  memoryCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+function invalidateCache(pattern?: string) {
+  if (!pattern) {
+    memoryCache.clear();
+    return;
+  }
+  for (const k of memoryCache.keys()) {
+    if (k.includes(pattern)) memoryCache.delete(k);
+  }
+}
+
+// ─── Retry with exponential backoff ───────────────────────────────────────
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const status = (err as { status?: number })?.status;
+      const is5xx = status === undefined || status >= 500;
+      if (!is5xx || attempt === retries) throw err;
+      await new Promise((res) => setTimeout(res, 2 ** attempt * 300));
+    }
+  }
+  throw lastError;
+}
+
+// ─── Core request ──────────────────────────────────────────────────────────
+
+// Slow mobile networks and backend cold starts often need more than 10 s for ordinary requests.
+const DEFAULT_TIMEOUT_MS = 20_000;
+// OTP requests can include a Cloud Run cold start plus BRPS token and SMS calls.
+const OTP_REQUEST_TIMEOUT_MS = 30_000;
+// Question preview and submit wait on LLM classification, which is slower for non-English text.
+const AI_REQUEST_TIMEOUT_MS = 60_000;
+
+// Converts a fetch timeout into a readable, non-retryable error instead of the raw abort message.
+function toTimeoutError(err: unknown): unknown {
+  if (err instanceof DOMException && err.name === "TimeoutError") {
+    return Object.assign(
+      new Error(
+        "The server is taking longer than usual to respond. Please try again.",
+      ),
+      { status: 408 },
+    );
+  }
+  return err;
+}
+
+// Staff list endpoints that accept the Anveshan mode flag.
+const ANVESHAN_SCOPED_PATHS = new Set([
+  "/admin/users",
+  "/admin/users/stats",
+  "/admin/withdrawals",
+  "/admin/wallets",
+  "/admin/wallets/summary",
+  "/admin/questions/queue",
+  "/questions",
+  "/agri-entities/all",
+  "/agri-entities/filter-users",
+  "/reports",
+  "/distributor/questions",
+  "/distributor/distributions",
+  "/feedbacks/anveshan",
+  "/admin/stats",
+  "/analytics/dashboard",
+  "/analytics/users",
+  "/analytics/questions",
+  "/analytics/rewards",
+]);
+
+// Adds the staff mode scopes to supported list requests: anveshanScope and tester, when they are not "all".
+function withAnveshanScope(path: string, method?: string): string {
+  const anveshan = getAnveshanScope();
+  const tester = getTesterScope();
+  if ((anveshan === "all" && tester === "all") || (method && method !== "GET"))
+    return path;
+  const [pathname, query = ""] = path.split("?");
+  if (!ANVESHAN_SCOPED_PATHS.has(pathname)) return path;
+  const params = new URLSearchParams(query);
+  // Feedback is already Anveshan-only, so it takes just the tester scope.
+  if (anveshan !== "all" && pathname !== "/feedbacks/anveshan")
+    params.set("anveshanScope", anveshan);
+  if (tester !== "all") params.set("tester", tester);
+  return `${pathname}?${params.toString()}`;
+}
+
+export async function request<T>(
+  rawPath: string,
+  options: RequestInit = {},
+  useCache = true,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+): Promise<T> {
+  const path = withAnveshanScope(rawPath, options.method);
+  const token = getAccessToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  if (options.headers) {
+    const h = options.headers as Record<string, string>;
+    Object.assign(headers, h);
+    delete (options as Record<string, unknown>).headers;
+  }
+
+  const doFetch = () => {
+    const url = `${BASE}${path}`;
+    // A fresh timeout signal per attempt so retries are not born already aborted.
+    return withRetry(() =>
+      fetch(url, {
+        ...options,
+        headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+        .catch((err: unknown) => {
+          throw toTimeoutError(err);
+        })
+        .then(async (res) => {
+          if (
+            res.status === 401 &&
+            !NO_SESSION_END.some((p) => path.startsWith(p))
+          ) {
+            const refresh = getRefreshToken();
+            if (refresh) {
+              try {
+                const refreshRes = await fetch(`${BASE}/auth/refresh`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ refreshToken: refresh }),
+                });
+                const refreshed = await refreshRes.json();
+                // The session was revoked or expired: log the user out. Other
+                // failures (such as a 503) must not wipe the login.
+                if (!refreshed.accessToken && refreshRes.status === 401) {
+                  endSession();
+                }
+                if (refreshed.accessToken) {
+                  setTokens(
+                    refreshed.accessToken,
+                    refreshed.refreshToken ?? refresh,
+                  );
+                  const retryRes = await fetch(`${BASE}${path}`, {
+                    ...options,
+                    headers: {
+                      ...headers,
+                      Authorization: `Bearer ${refreshed.accessToken}`,
+                    },
+                  });
+                  // Check 423 on retry response before general handleResponse so the
+                  // lock event fires even when handleResponse throws.
+                  if (retryRes.status === 423) {
+                    const data = await retryRes.json().catch(() => ({}));
+                    const locked = parseAccountLocked(data);
+                    if (locked) accountLockedEmitter.emit(locked);
+                  }
+                  return handleResponse(retryRes);
+                }
+              } catch {
+                /* refresh failed */
+              }
+            }
+          }
+          return handleResponse(res);
+        }),
+    );
+  };
+
+  if (useCache && options.method === undefined) {
+    const cached = getCache<T>(path, 30_000);
+    if (cached) return cached;
+    const result = deduplicate(path, doFetch() as Promise<T>);
+    const data = await result;
+    setCache(path, data, 30_000);
+    return data;
+  }
+
+  return doFetch() as Promise<T>;
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const msg = (data as { message?: string })?.message;
+
+    // 423 Locked — user was suspended/banned. Emit event so the auth layer can
+    // auto-logout and show the locked modal.
+    if (res.status === 423) {
+      const locked = parseAccountLocked(data);
+      if (locked) accountLockedEmitter.emit(locked);
+    }
+
+    const err: Error & { status: number; data: unknown } = Object.assign(
+      new Error(msg ?? `Request failed with ${res.status}`),
+      {
+        status: res.status,
+        data,
+      },
+    );
+    throw err;
+  }
+  return res.json() as Promise<T>;
+}
+
+// ─── Auth API ──────────────────────────────────────────────────────────────
+// NOTE: Backend response shapes
+//   requestOtp    → { message: string }
+//   verifyOtp     → { tokens: { accessToken, refreshToken, expiresIn }, user: PublicUser }
+//                  OR { requiresRegistration: true, tempToken: string, role: UserRole }
+//   refreshTokens → { accessToken, refreshToken, expiresIn }
+//   me            → { user: PublicUser }
+
+export const userApi = {
+  // Re-fetches the user's Anveshan record and updates changed profile fields.
+  refreshFromAnveshan: () =>
+    request<{ updatedFields: string[] }>(
+      "/users/me/anveshan/refresh",
+      { method: "POST" },
+      false,
+    ),
+};
+
+export const authApi = {
+  requestOtp: (mobileNumber: string, isWeb = false) => {
+    return request<{ message: string }>(
+      "/auth/request-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          mobileNumber,
+          ...(isWeb ? { client: "web" } : {}),
+        }),
+      },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    );
+  },
+
+  verifyOtp: (mobileNumber: string, otp: string) =>
+    request<{
+      anveshanPhaseInfo: {
+        isAnveshanUser: true;
+        currentPhase: string;
+        requiredPhase: string;
+        eligible: boolean;
+        questionProgressPercent?: number;
+      };
+      tokens?: { accessToken: string; refreshToken: string; expiresIn: number };
+      user?: AuthUser;
+      requiresRegistration?: boolean;
+      tempToken?: string;
+      role?: string;
+    }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ mobileNumber, otp }),
+      },
+      false,
+    ),
+
+  refreshTokens: (refreshToken: string) =>
+    request<{ accessToken: string; refreshToken: string; expiresIn: number }>(
+      "/auth/refresh",
+      {
+        method: "POST",
+        body: JSON.stringify({ refreshToken }),
+      },
+      false,
+    ),
+
+  me: () =>
+    // Never cache me() — it is the authoritative source of current user state including locks
+    request<{ user: AuthUser }>("/auth/me", {}, false),
+
+  updateMe: (body: {
+    name?: string;
+    username?: string;
+    age?: number | null;
+    gender?: string | null;
+    state?: string | null;
+    district?: string | null;
+    block?: string | null;
+    village?: string | null;
+    kvk?: string | null;
+    farmSize?: string | null;
+    cropType?: string | null;
+    courseName?: string | null;
+    collegeName?: string | null;
+    universityName?: string | null;
+    organisationType?: string | null;
+    organizationName?: string | null;
+    organizationRole?: string | null;
+    numberOfFarmers?: number | null;
+    organizationState?: string[] | null;
+    organizationDistrict?: string | null;
+    organizationBlock?: string | null;
+    organizationVillage?: string | null;
+    season?: string | null;
+    languagePreference?: string | null;
+    consentGiven?: boolean;
+    crops?: string[] | null;
+    profileCreatedByAdminCompleted?: boolean;
+  }) =>
+    request<{ user: AuthUser }>(
+      "/auth/me",
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+      false,
+    ),
+
+  /**
+   * Complete new-user registration. Called AFTER `verifyOtp` returned
+   * `{ requiresRegistration: true, tempToken, role }`. The endpoint is
+   * public — the backend identifies the user by `mobileNumber` (no JWT
+   * required for this call).
+   *
+   * On success returns `{ tokens, user }` — the wizard should immediately
+   * `login()` so the public user is authenticated.
+   */
+  register: (body: {
+    mobileNumber: string;
+    name: string;
+    username: string;
+    category: string;
+    state: string;
+    district: string;
+    block?: string;
+    village?: string;
+    kvk?: string;
+    age?: number;
+    gender?: string;
+    farmSize?: string;
+    cropType?: string;
+    courseName?: string;
+    collegeName?: string;
+    universityName?: string;
+    organisationType?: string;
+    organizationName?: string;
+    organizationRole?: string;
+    numberOfFarmers?: number;
+    organizationState?: string;
+    organizationDistrict?: string;
+    organizationBlock?: string;
+    organizationVillage?: string;
+    season?: string;
+    volunteerCropType?: string;
+    languagePreference: string;
+    consentGiven: boolean;
+  }, tempToken?: string) => {
+    const regToken = tempToken || getRegistrationToken();
+    return request<{
+      tokens: { accessToken: string; refreshToken: string; expiresIn: number };
+      user: AuthUser;
+    }>(
+      "/auth/register",
+      {
+        method: "POST",
+        headers: regToken ? { Authorization: `Bearer ${regToken}` } : {},
+        body: JSON.stringify(body),
+      },
+      false,
+    );
+  },
+
+  /** Check whether a username is available. */
+  checkUsername: (username: string) =>
+    request<{
+      username: string;
+      available: boolean;
+      suggestions: string[];
+    }>(
+      `/auth/check-username?username=${encodeURIComponent(username)}`,
+      {},
+      false,
+    ),
+
+  getCrops: () => request("/auth/get-crops", {}, false),
+
+  /** Suggest N available usernames based on a base string. */
+  suggestUsernames: (base: string, limit = 5) =>
+    request<{ suggestions: string[] }>(
+      `/auth/suggest-usernames?base=${encodeURIComponent(base)}&limit=${limit}`,
+      {},
+      false,
+    ),
+};
+
+// ─── LGD / Location API ───────────────────────────────────────────────────
+
+export interface LgdState {
+  code: string;
+  name: string;
+}
+export interface LgdDistrict {
+  code: string;
+  name: string;
+  stateCode: string;
+}
+export interface LgdSubDistrict {
+  code: string;
+  name: string;
+  districtCode: string;
+}
+export interface LgdVillage {
+  code: string;
+  name: string;
+  blockCode: string;
+}
+export interface LgdKvk {
+  code: string;
+  name: string;
+  address: string;
+  districtCode: string;
+  stateCode: string;
+}
+
+// The server may retry a slow upstream for up to 25 s, so location lookups get a longer timeout.
+const LGD_TIMEOUT_MS = 30_000;
+const lgdResponses = new Map<string, Promise<unknown>>();
+
+// Location lists rarely change: each list is fetched once per session and concurrent callers share
+// the request. Failed or empty responses are dropped so the next attempt asks the server again.
+function cachedLgdRequest<T>(
+  path: string,
+  isEmpty: (data: T) => boolean,
+): Promise<T> {
+  const existing = lgdResponses.get(path) as Promise<T> | undefined;
+  if (existing) return existing;
+
+  const pending = request<T>(path, {}, false, LGD_TIMEOUT_MS).then(
+    (data) => {
+      if (isEmpty(data)) lgdResponses.delete(path);
+      return data;
+    },
+    (err: unknown) => {
+      lgdResponses.delete(path);
+      throw err;
+    },
+  );
+  lgdResponses.set(path, pending);
+  return pending;
+}
+
+export const lgdApi = {
+  getStates: () =>
+    cachedLgdRequest<{ states: LgdState[] }>(
+      "/lgd/states",
+      (d) => !d.states?.length,
+    ),
+
+  getDistricts: (stateCode: string) =>
+    cachedLgdRequest<{ districts: LgdDistrict[] }>(
+      `/lgd/districts?stateCode=${encodeURIComponent(stateCode)}`,
+      (d) => !d.districts?.length,
+    ),
+
+  getSubDistricts: (districtCode: string) =>
+    cachedLgdRequest<{ subdistricts: LgdSubDistrict[] }>(
+      `/lgd/subdistricts?districtCode=${encodeURIComponent(districtCode)}`,
+      (d) => !d.subdistricts?.length,
+    ),
+
+  getVillages: (blockCode: string) =>
+    cachedLgdRequest<{ villages: LgdVillage[] }>(
+      `/lgd/villages?blockCode=${encodeURIComponent(blockCode)}`,
+      (d) => !d.villages?.length,
+    ),
+
+  getKvks: (districtCode: string) =>
+    request<{ kvks: LgdKvk[] }>(
+      `/lgd/kvks?districtCode=${districtCode}`,
+      {},
+      false,
+    ),
+};
+
+// ─── Admin API ─────────────────────────────────────────────────────────────
+
+export interface UserStats {
+  total: number;
+  testers: number;
+  anveshan: number;
+  nonAnveshan: number;
+}
+
+export const adminApi = {
+  getStats: () => request<AdminStats>("/admin/stats", {}, true),
+
+  getUsers: (params = {} as Record<string, string | number | undefined>) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<
+      PaginatedResponse<
+        User & {
+          isActive: boolean;
+          lastActivityAt: string | null;
+          session?: {
+            browser: string | null;
+            os: string | null;
+            device: string | null;
+          };
+        }
+      >
+    >(`/admin/users${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  getUserStats: (params = {} as { fromDate?: string; toDate?: string }) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<UserStats>(`/admin/users/stats${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  getUserDetail: (userId: string | undefined) =>
+    request<{
+      user: User;
+      questions: Question[];
+      paymentDetails: import("@/types").PaymentDetail[];
+    }>(`/admin/users/${userId}`, {}, false),
+
+  getAnveshanUserDetail: (userId: string | undefined) =>
+    request<import("@/types").AnveshanUserDetail>(
+      `/admin/users/${userId}/anveshan`,
+      {},
+      false,
+    ),
+
+  verifyUser: (userId: string) =>
+    request<{ message: string }>(
+      `/admin/users/${userId}/verify`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  suspendUser: (
+    userId: string,
+    body: {
+      action: "suspend" | "ban";
+      reason: string;
+      suspendedUntil?: string;
+    },
+  ) =>
+    request<{ message: string }>(
+      `/admin/users/${userId}/suspend`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  unsuspendUser: (userId: string) =>
+    request<{ message: string }>(
+      `/admin/users/${userId}/unsuspend`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  deleteUser: (userId: string) =>
+    request<{
+      message: string;
+      userId?: string;
+      deleted?: Record<string, number | null>;
+    }>(`/admin/delete-user/${userId}`, { method: "POST" }, false).finally(() =>
+      invalidateCache("/api/admin"),
+    ),
+
+  restoreUser: (userId: string) =>
+    request<{ message: string; userId?: string }>(
+      `/admin/restore-user/${userId}`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  getUserSession: (userId: string) =>
+    request<import("@/types").UserSession>(
+      `/admin/users/${userId}/session`,
+      { method: "GET" },
+      false, // never cache: the button must reflect the live session
+    ),
+
+  revokeUserSession: (userId: string) =>
+    request<{ revoked: boolean; message: string }>(
+      `/admin/users/${userId}/revoke-session`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  createUser: (body: {
+    name: string;
+    isUserCreatedBySuperAdmin?: boolean;
+    profileCreatedByAdminCompleted?: boolean;
+    mobileNumber: string;
+    role: string;
+    category?: string;
+  }) =>
+    request<{ message: string; user: User }>(
+      "/admin/users",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  getConfig: () => request<{ items: ConfigItem[] }>("/admin/config"),
+
+  updateConfig: (body: { key: string; value: number }) =>
+    request<{ message: string }>(
+      "/admin/config",
+      { method: "PATCH", body: JSON.stringify(body) },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  getWithdrawalWithTransactions: (id: string) =>
+    request<{
+      id: string;
+      amount: number;
+      payoutMethod: string;
+      status: string;
+      orderId: string | null;
+      createdAt: string;
+      processedAt: string | null;
+      rejectionReason: string | null;
+      failureReason: string | null;
+      user: { id: string; name: string; mobileNumber: string } | null;
+      transactions: {
+        id: string;
+        type: string;
+        amount: number;
+        status: string;
+        rejectionReason: string | null;
+        description: string;
+        source: string;
+        createdAt: string;
+      }[];
+      paymentLogs: {
+        id: string;
+        orderId: string;
+        pinelabsTransactionId: string | null;
+        razorpayPayoutId: string | null;
+        status: string;
+        errorCode: string | null;
+        errorMessage: string | null;
+        rawResponse: Record<string, unknown> | null;
+        attemptedAt: string;
+      }[];
+    }>(`/admin/withdrawals/${id}`, {}, false),
+
+  listWithdrawals: (
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Withdrawal>>(
+      `/admin/withdrawals${qs ? `?${qs}` : ""}`,
+      {},
+      false, // bypass cache — withdrawal state changes frequently and must reflect immediately
+    );
+  },
+
+  processWithdrawal: (
+    id: string,
+    body: { action: "approve" | "reject"; rejectionReason?: string },
+  ) =>
+    request<{
+      success: boolean;
+      action: string;
+      withdrawalId: string;
+      status: string;
+      paymentFailed?: boolean;
+      errorCode?: string;
+      errorMessage?: string;
+    }>(
+      `/admin/withdrawals/${id}/process`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  markWithdrawalFailed: (id: string, reason: string) =>
+    request<{ success: boolean; withdrawalId: string; status: string }>(
+      `/admin/withdrawals/${id}/fail`,
+      { method: "POST", body: JSON.stringify({ reason }) },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  retryWithdrawal: (id: string) =>
+    request<{ success: boolean; withdrawalId: string; status: string }>(
+      `/admin/withdrawals/${id}/retry`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  retryFailedWithdrawal: (id: string) =>
+    request<{
+      success: boolean;
+      withdrawalId: string;
+      status: string;
+      paymentFailed?: boolean;
+      errorCode?: string | null;
+      errorMessage?: string | null;
+    }>(
+      `/admin/withdrawals/${id}/retry-refund`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  updateWithdrawalFailureReason: (id: string, reason: string) =>
+    request<{ success: boolean; withdrawalId: string }>(
+      `/admin/withdrawals/${id}/failure-reason`,
+      { method: "PATCH", body: JSON.stringify({ reason }) },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  // ─── Wallet management ──────────────────────────────────────────────────────
+  getWallets: (params: Record<string, string | number | undefined> = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<WalletSummary>>(
+      `/admin/wallets${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getWalletsSummary: (params: Record<string, string | undefined> = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<WalletTotals>(
+      `/admin/wallets/summary${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getUserWallet: (userId: string) =>
+    request<{
+      id: string;
+      balance: number;
+      totalEarned: number;
+      totalWithdrawn: number;
+    }>(`/admin/wallets/user/${userId}`),
+
+  getUserTransactions: (
+    userId: string,
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<{
+      items: Transaction[];
+      total: number;
+      summary: {
+        totalTransactions: number;
+        totalCredits: number;
+        totalDebits: number;
+        withdrawalTransactions: number;
+      };
+    }>(`/admin/wallets/user/${userId}/transactions${qs ? `?${qs}` : ""}`);
+  },
+
+  getUserWithdrawals: (
+    userId: string,
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Withdrawal>>(
+      `/admin/wallets/user/${userId}/withdrawals${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  adjustWallet: (
+    userId: string,
+    body: { amount: number; reason: string; description?: string },
+  ) =>
+    request<{ message: string; newBalance: number }>(
+      `/admin/wallets/adjust`,
+      {
+        method: "POST",
+        body: JSON.stringify({ userId, ...body }),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  getFinancialSummary: (
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<{
+      totalPaidOut: number;
+      pendingWithdrawals: { count: number; amount: number };
+      completedWithdrawals: { count: number; amount: number };
+      failedWithdrawals: { count: number };
+      totalWalletBalance: number;
+      today: { payoutCount: number; payoutAmount: number };
+      dailyPayoutTrend: { date: string; count: number; amount: number }[];
+    }>(`/admin/analytics/financial-summary${qs ? `?${qs}` : ""}`);
+  },
+};
+
+// ─── Analytics API (Task 11) ───────────────────────────────────────────────────
+
+function buildQS(p: Record<string, string | number | undefined>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(p)) {
+    if (v !== undefined) sp.set(k, String(v));
+  }
+  return sp.toString();
+}
+
+export const analyticsApi = {
+  getDashboard: (params: Record<string, string | number | undefined> = {}) => {
+    const qs = buildQS(params);
+    return request<AnalyticsDashboard>(
+      `/analytics/dashboard${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getUserAnalytics: (
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const qs = buildQS(params);
+    return request<UserAnalytics>(`/analytics/users${qs ? `?${qs}` : ""}`);
+  },
+
+  getQuestionAnalytics: (
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const qs = buildQS(params);
+    return request<QuestionAnalytics>(
+      `/analytics/questions${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getRewardAnalytics: (
+    params: Record<string, string | number | undefined> = {},
+  ) => {
+    const qs = buildQS(params);
+    return request<RewardAnalytics>(`/analytics/rewards${qs ? `?${qs}` : ""}`);
+  },
+
+  /** Fetch a file blob with auth and trigger browser download */
+  _download: async (path: string, filename: string) => {
+    const token = getAccessToken();
+    const res = await fetch(`${BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  downloadCSV: (
+    params: ExportParams,
+    filename = `export_${Date.now()}.csv`,
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return analyticsApi._download(`/export/csv${qs ? `?${qs}` : ""}`, filename);
+  },
+
+  downloadExcel: (
+    params: ExportParams,
+    filename = `export_${Date.now()}.xlsx`,
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return analyticsApi._download(
+      `/export/excel${qs ? `?${qs}` : ""}`,
+      filename,
+    );
+  },
+};
+
+// ─── Questions API ─────────────────────────────────────────────────────────
+
+export const questionApi = {
+  getQuestions: (
+    params = {} as Record<string, string | number | undefined>,
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Question>>(
+      `/questions${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getQuestion: (id: string) => request<Question>(`/questions/${id}`),
+
+  /** Staff only: the answer an Anveshan user submitted for this question, or null. */
+  getAnveshanAnswer: (id: string) =>
+    request<{ answer: AnveshanAnswer | null }>(
+      `/questions/${encodeURIComponent(id)}/anveshan-answer`,
+      {},
+      false,
+    ),
+
+  approveQuestion: (id: string) =>
+    request<{ message: string }>(
+      `/questions/${id}/approve`,
+      { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/questions")),
+
+  rejectQuestion: (id: string, reason?: string) =>
+    request<{ message: string }>(
+      `/questions/${id}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/questions")),
+
+  /**
+   * Analyses raw question text and returns server-derived suggestions
+   * (domain(s), season, crop type, agro-climatic zone, location) used to
+   * pre-fill the details step before final submission. Mirrors mobile's
+   * `questionApi.preview` / `POST /questions/preview`. If the backend's
+   * duplicate check matches an existing question, it saves this one as
+   * REJECTED (counts against the daily limit) and returns `duplicate` —
+   * the caller should not proceed to the details step in that case.
+   */
+  preview: (body: {
+    questionText: string;
+    mediaType?: "none" | "image" | "video" | "audio";
+    mediaUrls?: string[];
+    audioUrls?: string[];
+  }) =>
+    request<{
+      state: string;
+      district: string;
+      block: string | null;
+      domains: string[];
+      cropType: string;
+      season: string;
+      agroClimaticZone: string;
+      remainingToday: number;
+      dailyLimit: number;
+      duplicate?: {
+        isDuplicate: boolean;
+        matchedQuestionId: string | null;
+        matchedQuestion: string | null;
+        matchedAnswer: string | null;
+        similarityScore: number | null;
+        matchedUserName: string | null;
+        questionId?: string;
+      };
+    }>(
+      "/questions/preview",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+      AI_REQUEST_TIMEOUT_MS,
+    ).finally(() => invalidateCache("/api/questions")),
+
+  /** Attaches uploaded recordings to a question that preview saved as a rejected duplicate. */
+  attachAudio: (questionId: string, audioUrls: string[]) =>
+    request<{ id: string; audioUrls: string[] }>(
+      `/questions/${questionId}/audio`,
+      {
+        method: "POST",
+        body: JSON.stringify({ audioUrls }),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/questions")),
+
+  /**
+   * Public-user submit. The backend derives `state`/`district`/etc. from the
+   * authenticated user's profile, but on the web we send them explicitly so
+   * the wizard does not have to call `/auth/me` first.
+   */
+  submitQuestion: (body: {
+    questionText: string;
+    domains: string[];
+    season: string;
+    cropType: string;
+    state: string;
+    district: string;
+    block?: string;
+    agroClimaticZone?: string;
+    mediaType?: "none" | "image" | "video" | "audio";
+    mediaUrls?: string[];
+    audioUrls?: string[];
+    submissionLocation?: {
+      latitude: number;
+      longitude: number;
+      state: string;
+      district: string;
+      block: string;
+      village: string;
+    };
+  }) =>
+    request<{
+      id: string;
+      status: string;
+      message: string;
+      duplicate?: {
+        isDuplicate: boolean;
+        matchedQuestion: string | null;
+        matchedAnswer: string | null;
+        similarityScore: number | null;
+        matchedUserName: string | null;
+      };
+    }>(
+      "/questions",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+      AI_REQUEST_TIMEOUT_MS,
+    )
+      .then(notifyProgressChanged)
+      .finally(() => invalidateCache("/api/questions")),
+
+  /** Daily / total submission stats for the current (public) user. */
+  // getMyStats: () =>
+  //   request<{
+  //     dailyCount: number;
+  //     remainingToday: number;
+  //     totalApproved: number;
+  //     dailyLimit: number;
+  //     [k: string]: unknown;
+  //   }>("/questions/stats/me", {}, false),
+
+  getMyStats: () =>
+    request<{
+      dailyCount: number;
+      remainingToday: number | null;
+      totalApproved: number;
+      dailyLimit: number | null;
+      unlimited?: boolean;
+      [k: string]: unknown;
+    }>("/questions/stats/me", {}, false),
+
+  /**
+   * List the current (public) user's own questions.
+   *
+   * NOTE: we deliberately do NOT pass a `userId` query param here. The backend
+   * already scopes `GET /questions` to `req.user.id` (taken from the JWT) for
+   * non-admin callers, and the `ListQuestionsDto` has no `userId` field. With
+   * the global ValidationPipe's `forbidNonWhitelisted: true`, sending
+   * `userId=me` here would cause a 400 ("property userId should not exist").
+   */
+  listMyQuestions: (
+    params: { page?: number; limit?: number; status?: string } = {},
+  ) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+      ) as Record<string, string>,
+    ).toString();
+    return request<PaginatedResponse<Question>>(
+      `/questions${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  getMyAnveshanMilestone: () =>
+    request<AnveshanMilestoneResponse>(
+      "/questions/anveshan-milestone/me",
+      {},
+      false,
+    ),
+
+  /** The Anveshan user's own questions they can answer, with each answer if already given. */
+  getMyAnveshanAnswerQuestions: () =>
+    request<AnveshanAnswerQuestionsResponse>(
+      "/questions/anveshan-answers/me",
+      {},
+      false,
+    ),
+
+  /** Submit the Anveshan user's answer, with sources, for one of their own questions. */
+  submitAnveshanAnswer: (
+    questionId: string,
+    body: SubmitAnveshanAnswerPayload,
+  ) =>
+    request<SubmitAnveshanAnswerResponse>(
+      `/questions/anveshan-answers/${encodeURIComponent(questionId)}`,
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ).then(notifyProgressChanged),
+
+  /** System score for the caller's advisory on a question; poll while status is processing. */
+  getAnveshanAnswerScore: (questionId: string) =>
+    request<AnveshanAnswerScore>(
+      `/questions/anveshan-answers/${encodeURIComponent(questionId)}/score`,
+      {},
+      false,
+    ),
+};
+
+// ─── Wallet API (public-user dashboard) ────────────────────────────────────
+
+export const walletApi = {
+  /** Wallet balance for the authenticated user. */
+  getBalance: () =>
+    request<{
+      balance: number;
+      pending: number;
+      totalEarned: number;
+      currency: string;
+    }>("/wallets/me", {}, false),
+
+  /** Current reward tier (1/5/10 rupees per approved question). */
+  getRewardTier: (approvedCount?: number) => {
+    const qs = approvedCount != null ? `?approvedCount=${approvedCount}` : "";
+    return request<{ tier: number; reward: number; nextTierAt: number | null }>(
+      `/wallets/me/tier${qs}`,
+      {},
+      false,
+    );
+  },
+
+  /** Recent wallet transactions for the authenticated user. */
+  // getTransactions: (params: { page?: number; limit?: number } = {}) => {
+  //   const qs = new URLSearchParams(
+  //     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
+  //   ).toString()
+  //   return request<{ transactions: Transaction[]; total: number }>(
+  //     `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
+  //     {},
+  //     false,
+  //   )
+  // },
+
+  getTransactions: (params: { page?: number; limit?: number } = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined)
+        .map(([key, value]) => [key, String(value)]),
+    ).toString();
+
+    return request<{ transactions: Transaction[]; total: number }>(
+      `/wallets/me/transactions${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Wallet configuration (min withdrawal amount, razorpay key id, …). */
+  getWalletConfig: () =>
+    request<{ minWithdrawalAmount: number; razorpayKeyId: string }>(
+      "/wallets/me/config",
+      {},
+      false,
+    ),
+
+  /** Payout methods (UPI / bank) saved by the authenticated user. */
+  getPaymentDetails: () =>
+    request<PaymentDetail[]>("/wallets/payment-details", {}, false),
+
+  /** Request a withdrawal of `amount` to a previously verified payment method. */
+  withdraw: (data: { amount: number; paymentDetailId: string }) =>
+    request<{ id: string; status: string; amount: number }>(
+      "/wallets/withdraw",
+      { method: "POST", body: JSON.stringify(data) },
+      false,
+    ).finally(() => invalidateCache("/api/wallets")),
+
+  /** Add a new payout method (UPI or bank). Initiates ₹1 micro-transaction
+   *  verification on the backend; the native Razorpay SDK is required to
+   *  complete verification, which is not available in the web app. */
+  addPaymentDetail: (data: {
+    payoutMethod: "upi" | "bank_transfer";
+    upiId?: string;
+    accountNumber?: string;
+    confirmAccountNumber?: string;
+    ifsc?: string;
+    accountHolderName?: string;
+    bankName?: string;
+  }) =>
+    request<{
+      id: string;
+      status: "pending" | "in_progress" | "verified" | "failed";
+      message: string;
+    }>(
+      "/wallets/payment-details",
+      { method: "POST", body: JSON.stringify(data) },
+      false,
+    ),
+
+  /** Delete a saved payout method (only allowed for non-verified details). */
+  deletePaymentDetail: (id: string) =>
+    request<{ success: true }>(
+      `/wallets/payment-details/${id}`,
+      { method: "DELETE" },
+      false,
+    ),
+};
+
+// ─── Notifications API ─────────────────────────────────────────────────────
+
+export const notificationApi = {
+  // getNotifications: (params: { page?: number; limit?: number } = {}) => {
+  //   const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
+  //   const qs = new URLSearchParams(p).toString()
+  //   return request<{ notifications: Notification[]; unread: number; total: number }>(
+  //     `/users/me/notifications${qs ? `?${qs}` : ''}`,
+  //   )
+  // },
+
+  getNotifications: (params: { page?: number; limit?: number } = {}) => {
+    const p = Object.fromEntries(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined)
+        .map(([key, value]) => [key, String(value)]),
+    ) as Record<string, string>;
+
+    const qs = new URLSearchParams(p).toString();
+
+    return request<{
+      notifications: Notification[];
+      unread: number;
+      total: number;
+    }>(`/users/me/notifications${qs ? `?${qs}` : ""}`);
+  },
+
+  markRead: (id: string) =>
+    request<void>(
+      `/users/me/notifications/${id}/read`,
+      { method: "PATCH" },
+      false,
+    ).finally(() => invalidateCache("/api/users/me/notifications")),
+
+  markAllRead: () =>
+    request<void>(
+      `/users/me/notifications/read-all`,
+      { method: "PATCH" },
+      false,
+    ).finally(() => invalidateCache("/api/users/me/notifications")),
+};
+
+// ─── Leaderboard API ────────────────────────────────────────────────────────
+
+export const leaderboardApi = {
+  getLeaderboard: (params: { limit?: number; offset?: number } = {}) => {
+    const sp = new URLSearchParams();
+    if (params.limit !== undefined) sp.set("limit", String(params.limit));
+    if (params.offset !== undefined) sp.set("offset", String(params.offset));
+    const qs = sp.toString();
+    return request<import("@/types").LeaderboardResponse>(
+      `/users/me/leaderboard${qs ? `?${qs}` : ""}`,
+    );
+  },
+};
+
+// ─── Curator API ───────────────────────────────────────────────────────────
+
+export const curatorApi = {
+  // getCuratorStats: () =>
+  //   request<import("@/types").CuratorStats>("/curator/stats"),
+
+  getCuratorStats: (params?: {
+    fromDate?: string;
+    toDate?: string;
+    state?: string;
+    cropType?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    Object.entries(params ?? {}).forEach(([k, v]) => {
+      if (v) qs.set(k, v);
+    });
+    const suffix = qs.toString() ? `?${qs}` : "";
+    return request<CuratorStats>(`/curator/stats${suffix}`);
+  },
+
+  getMyStats: (userId: string) =>
+    request<import("@/types").CuratorReviewerStats>(
+      `/curator/my-stats?userId=${encodeURIComponent(userId)}`,
+    ),
+
+  getReviewQueue: (
+    params = {} as Record<string, string | string[] | number | undefined>,
+  ) => {
+    // Backend expects status as an array: ?status[]=pending&status[]=held
+    const sp = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined) continue;
+      const key = k;
+      if (Array.isArray(v)) {
+        v.forEach((val) => {
+          if (val !== undefined) sp.append(key, val);
+        });
+      } else {
+        sp.set(key, String(v));
+      }
+    }
+    const qs = sp.toString();
+    return request<PaginatedResponse<Question>>(
+      `/admin/questions/queue${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  getQuestion: (id: string) => request<Question>(`/admin/questions/${id}`),
+
+  checkDuplicate: (id: string) =>
+    request<{
+      isDuplicate: boolean;
+      matchedQuestion?: string;
+      matchedAnswer?: string | null;
+      similarityScore?: number | null;
+      matchedUserName?: string | null;
+    }>(`/admin/questions/${id}/check-duplicate`, { method: "POST" }),
+
+  reviewQuestion: (
+    id: string,
+    body: {
+      action: "approve" | "reject" | "hold";
+      reason?: string;
+      heldReason?: string;
+    },
+  ) =>
+    request<{
+      message?: string;
+      success: boolean;
+      action: string;
+      rewardCredited?: number;
+      newBalance?: number;
+      rejectionReason?: string;
+      heldReason?: string;
+    }>(
+      `/admin/questions/${id}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+};
+
+// ─── Cache control ─────────────────────────────────────────────────────────
+
+export const cache = { invalidate: invalidateCache };
+
+// ─── Audit API (Task 19) ────────────────────────────────────────────────────────
+
+function buildAuditQS(p: AuditLogQuery): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(p)) {
+    if (v === undefined) continue;
+    if (Array.isArray(v)) {
+      v.forEach((val) => sp.append(k, val));
+    } else {
+      sp.set(k, String(v));
+    }
+  }
+  return sp.toString();
+}
+
+export const auditApi = {
+  getAuditLogs: (params: AuditLogQuery = {}) => {
+    const qs = buildAuditQS(params);
+    return request<AuditLogsResponse>(
+      `/audit-logs${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+};
+
+// ─── Reports API ────────────────────────────────────────────────────────────────
+
+export const reportsApi = {
+  /** Submit a new report (any authenticated user) */
+  create: (body: {
+    title: string;
+    description: string;
+    category: string;
+    relatedEntityId?: string;
+    relatedEntityType?: string;
+  }) =>
+    request<{ id: string; message: string }>(
+      "/reports",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ),
+
+  /** List all reports (admin/curator/finance) — with optional filters */
+  list: (
+    params: {
+      status?: string;
+      category?: string;
+      priority?: string;
+      tester?: string;
+      page?: number;
+      limit?: number;
+    } = {},
+  ) => {
+    const p = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined),
+    ) as Record<string, string>;
+    const qs = new URLSearchParams(p).toString();
+    return request<{
+      items: Report[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/reports${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  /** Get a single report with replies */
+  get: (reportId: string) => request<Report>(`/reports/${reportId}`, {}, false),
+
+  /** Update report status */
+  updateStatus: (reportId: string, status: string) =>
+    request<{ id: string; status: string; message: string }>(
+      `/reports/${reportId}/status`,
+      { method: "PATCH", body: JSON.stringify({ status }) },
+      false,
+    ),
+
+  /** Update report priority */
+  updatePriority: (reportId: string, priority: string) =>
+    request<{ id: string; priority: string; message: string }>(
+      `/reports/${reportId}/priority`,
+      { method: "PATCH", body: JSON.stringify({ priority }) },
+      false,
+    ),
+
+  /** Add a reply to a report */
+  addReply: (reportId: string, message: string) =>
+    request<{ id: string; message: string }>(
+      `/reports/${reportId}/replies`,
+      { method: "POST", body: JSON.stringify({ message }) },
+      false,
+    ),
+
+  /** List the current (authenticated) user's own reports — backed by GET /reports/my */
+  listMy: (params: { page?: number; limit?: number } = {}) => {
+    const p: Record<string, string> = {};
+    if (params.page !== undefined) p.page = String(params.page);
+    if (params.limit !== undefined) p.limit = String(params.limit);
+    const qs = new URLSearchParams(p).toString();
+    return request<{
+      items: Report[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/reports/my${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  /** Get a single report belonging to the current user — backed by GET /reports/my/:id */
+  getMy: (reportId: string) =>
+    request<Report>(`/reports/my/${reportId}`, {}, false),
+};
+
+// ─── Crop / Weed / Pest / Disease API ─────────────────────────────────────────
+
+export const feedbackApi = {
+  /** Admin only: Anveshan feedback, newest first, with an overall ratings summary. */
+  listAnveshanFeedback: (
+    params: {
+      page?: number;
+      limit?: number;
+      rating?: number;
+      inputMethod?: "text" | "voice";
+      tester?: "only" | "exclude";
+    } = {},
+  ) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return request<AppFeedbackListResponse>(
+      `/feedbacks/anveshan${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Anveshan users rate the app (1 to 5 stars) and optionally comment, once they reach 100%. */
+  submitAnveshanFeedback: (body: {
+    rating: number;
+    comment?: string;
+    inputMethod: "text" | "voice";
+  }) =>
+    request<{ id: string; message: string }>(
+      "/feedbacks/anveshan",
+      { method: "POST", body: JSON.stringify(body) },
+      false,
+    ),
+};
+
+/** Filters and ordering for the staff entity list and export. */
+export interface StaffAgriEntityQuery {
+  type?: AgriEntityType;
+  status?: AgriEntityStatus;
+  page?: number;
+  limit?: number;
+  tester?: "only" | "exclude";
+  /** Super Admin only: restrict to these Anveshan users. */
+  userIds?: string[];
+  sortOrder?: "asc" | "desc";
+}
+
+export interface UserFilterOption {
+  id: string;
+  name: string;
+  mobileNumber: string;
+}
+
+// Builds the entity list query string, sending the selected user ids as one comma separated value.
+function entityListQuery(params: StaffAgriEntityQuery): string {
+  const entries = Object.entries(params)
+    .filter(([, v]) => v !== undefined && !(Array.isArray(v) && v.length === 0))
+    .map(([k, v]) => [k, Array.isArray(v) ? v.join(",") : String(v)]);
+  return new URLSearchParams(entries).toString();
+}
+
+export const agriEntityApi = {
+  /** Submit a crop, weed, pest or disease record. Images must be uploaded first via storageApi. */
+  submit: (body: SubmitAgriEntityPayload) =>
+    request<SubmitAgriEntityResponse>(
+      "/agri-entities",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ).then(notifyProgressChanged),
+
+  /** The signed-in user's submission count for each type. */
+  getMyCounts: () =>
+    request<Record<AgriEntityType, number>>(
+      "/agri-entities/counts/me",
+      {},
+      false,
+    ),
+
+  /** The signed-in user's own submissions, newest first. */
+  listMine: (
+    params: {
+      type?: AgriEntityType;
+      status?: AgriEntityStatus;
+      page?: number;
+      limit?: number;
+    } = {},
+  ) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined),
+      ) as Record<string, string>,
+    ).toString();
+    return request<PaginatedResponse<AgriEntitySubmission>>(
+      `/agri-entities${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Staff only (curator, admin, super admin): every user's submissions, with the submitter attached. */
+  listAll: (params: StaffAgriEntityQuery = {}) => {
+    const qs = entityListQuery(params);
+    return request<PaginatedResponse<AgriEntitySubmission>>(
+      `/agri-entities/all${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Super Admin only: users for the entity and question user filter, narrowed by the tester scope and a name or phone search. */
+  listUsers: (
+    params: { tester?: "only" | "exclude"; search?: string } = {},
+  ) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => !!v) as [string, string][],
+    ).toString();
+    return request<UserFilterOption[]>(
+      `/agri-entities/filter-users${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Super Admin only: downloads the Anveshan users' entities as Excel, honouring the list filters. */
+  exportAnveshan: (params: StaffAgriEntityQuery = {}) => {
+    const qs = entityListQuery({
+      ...params,
+      page: undefined,
+      limit: undefined,
+    });
+    return analyticsApi._download(
+      `/agri-entities/export${qs ? `?${qs}` : ""}`,
+      `anveshan_entities_${Date.now()}.xlsx`,
+    );
+  },
+};
+
+// ─── FAQ API ──────────────────────────────────────────────────────────────────
+
+export const faqApi = {
+  /** User-facing: visible FAQs only, optionally filtered */
+  getVisible: (filters?: { category?: string; search?: string }) => {
+    const params = new URLSearchParams();
+
+    if (filters?.category) {
+      params.set("category", filters.category);
+    }
+
+    if (filters?.search) {
+      params.set("search", filters.search);
+    }
+
+    const qs = params.toString();
+
+    // Logged in users get FAQs matching their Anveshan status.
+    const path = getAccessToken() ? "/faqs/me" : "/faqs";
+    return request<Faq[]>(`${path}${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  /** Admin: paginated FAQ list */
+  getAll: (filters?: {
+    category?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: "displayOrder" | "createdAt" | "updatedAt" | "question";
+    userSort?: "anveshan" | "user" | "all";
+    sortOrder?: "ASC" | "DESC";
+  }) => {
+    const p: Record<string, string> = {};
+    if (filters?.category) p.category = filters.category;
+    if (filters?.search) p.search = filters.search;
+    if (filters?.page) p.page = String(filters.page);
+    if (filters?.limit) p.limit = String(filters.limit);
+    if (filters?.sortBy) p.sortBy = filters.sortBy;
+    if (filters?.userSort) p.userSort = filters.userSort;
+    if (filters?.sortOrder) p.sortOrder = filters.sortOrder;
+    const qs = new URLSearchParams(p).toString();
+    return request<PaginatedResponse<Faq>>(
+      `/admin/faqs${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Admin: FAQ stats */
+  getStats: (category?: string) => {
+    const params: Record<string, string> = {};
+    if (category) params.category = category;
+    const qs = new URLSearchParams(params).toString();
+    return request<{ total: number; visible: number; hidden: number }>(
+      `/admin/faqs/stats${qs ? `?${qs}` : ""}`,
+      {},
+      false,
+    );
+  },
+
+  /** Admin: saves a new order for the given FAQ ids. */
+  reorder: (ids: string[]) =>
+    request<{ success: boolean }>(
+      "/admin/faqs/reorder",
+      { method: "PATCH", body: JSON.stringify({ ids }) },
+      false,
+    ),
+
+  create: (body: {
+    question: string;
+    answer: string;
+    category?: string;
+    isVisible?: boolean;
+    audience?: FaqAudience;
+  }) =>
+    request<Faq>(
+      "/admin/faqs",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      false,
+    ),
+
+  update: (
+    id: string,
+    body: {
+      question?: string;
+      answer?: string;
+      category?: string;
+      isVisible?: boolean;
+      audience?: FaqAudience;
+    },
+  ) =>
+    request<Faq>(
+      `/admin/faqs/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+      false,
+    ),
+
+  toggleVisibility: (id: string, isVisible: boolean) =>
+    request<Faq>(
+      `/admin/faqs/${id}/visibility`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ isVisible }),
+      },
+      false,
+    ),
+
+  remove: (id: string) =>
+    request<void>(`/admin/faqs/${id}`, { method: "DELETE" }, false),
+};
+
+// ─── Distributor ──────────────────────────────────────────────────────────
+
+export interface ListApprovedQuestionsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+  tester?: "only" | "exclude";
+}
+
+export interface AssignStatesPayload {
+  states: string[];
+  notes?: string;
+}
+
+export interface ListDistributionsParams {
+  page?: number;
+  limit?: number;
+  /** Filter by the TARGET Indian state (was `state`, renamed to disambiguate
+   * from the asker's home state that is now embedded on each row). */
+  distributionState?: string;
+  /** 'original' = reference rows only; 'distributed' = state-specific rows only. */
+  questionType?: "original" | "distributed";
+  search?: string;
+  tester?: "only" | "exclude";
+}
+
+export const distributor = {
+  /** Reference data: list of all 32 Indian states / UTs. */
+  listIndianStates: () =>
+    request<{ states: string[] }>(`/distributor/indian-states`, {}, false),
+
+  /** Dashboard stats: how many final-questions exist per state. */
+  getStats: () => request<DistributorStats>(`/distributor/stats`, {}, false),
+
+  /** Approved-questions queue. */
+  listApprovedQuestions: (params: ListApprovedQuestionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== "")
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: Question[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/questions${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  getApprovedQuestion: (id: string) =>
+    request<Question>(`/distributor/questions/${id}`, {}, false),
+
+  /** Assign 0..N Indian states to an approved question. Pass `states: []` to move a non-state-specific question to `moved_to_final` without distributing to any state. */
+  assignStates: (questionId: string, payload: AssignStatesPayload) =>
+    request<{
+      /**
+       * What THIS service did locally — populated by the backend, stable shape.
+       */
+      success: boolean;
+      message: string;
+      count: number;
+      /** IDs of the `final_question` rows WE inserted (our local Mongo IDs). */
+      questionIds: string[];
+      /**
+       * Raw JSON body returned by the reviewer ingestion API. Typed as
+       * `unknown` because the reviewer team owns that schema and we don't
+       * validate it. Narrow before reading specific fields. Omitted when
+       * no rows were inserted.
+       */
+      reviewerResponse?: unknown;
+    }>(
+      `/distributor/questions/${questionId}/assign-states`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      false,
+    ),
+
+  /** Browse the final_questions (distributions). */
+  listDistributions: (params: ListDistributionsParams = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== null && v !== "")
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{
+      items: FinalQuestion[];
+      total: number;
+      page: number;
+      limit: number;
+      pages: number;
+    }>(`/distributor/distributions${qs ? `?${qs}` : ""}`, {}, false);
+  },
+
+  getDistributionsForQuestion: (questionId: string) =>
+    request<{
+      questionId: string;
+      states: string[];
+      entries: FinalQuestion[];
+    }>(`/distributor/distributions/by-question/${questionId}`, {}, false),
+};
+
+// ─── Error helper ──────────────────────────────────────────────────────────
+
+export type QuestionRejectionCategory = "ABUSIVE" | "NOT_AGRICULTURE" | "OTHER";
+
+export interface QuestionRejectionInfo {
+  category: QuestionRejectionCategory;
+  /** Raw English reason from the content check — for logs, not for display. */
+  reason: string | null;
+}
+
+/**
+ * Parses the 422 body the backend returns when the content check blocks a
+ * question as abusive or non-agricultural. Returns null for any other error.
+ */
+export function parseQuestionRejected(
+  e: unknown,
+): QuestionRejectionInfo | null {
+  if (typeof e !== "object" || e === null) return null;
+  const err = e as {
+    status?: number;
+    data?: { error?: string; category?: string; reason?: string };
+  };
+  if (err.status !== 422 || err.data?.error !== "QUESTION_REJECTED")
+    return null;
+  const category: QuestionRejectionCategory =
+    err.data.category === "ABUSIVE" || err.data.category === "NOT_AGRICULTURE"
+      ? err.data.category
+      : "OTHER";
+  return {
+    category,
+    reason: typeof err.data.reason === "string" ? err.data.reason : null,
+  };
+}
+
+export function getErrorMessage(e: unknown, fallback: string): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "object" && e !== null && "data" in e) {
+    return (e as { data: { message?: string } }).data?.message ?? fallback;
+  }
+  return fallback;
+}

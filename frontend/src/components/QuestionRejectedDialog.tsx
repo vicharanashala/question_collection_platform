@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Leaf, ShieldAlert, Pencil } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { QuestionRejectionCategory } from '@/api/client'
+import type { QuestionRejectionCategory } from '@/client/client'
 
 interface QuestionRejectedDialogProps {
   /** The rejection category, or null when nothing was rejected */

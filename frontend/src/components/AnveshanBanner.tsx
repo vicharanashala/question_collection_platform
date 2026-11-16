@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ArrowRight, MonitorSmartphone, PenLine, Target, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { MilestoneKey } from "@/pages/public/AnveshMileStone";
+import type { MilestoneKey } from "@/features/public/AnveshMileStone";
 
 interface AnveshanAnswerTaskBannerProps {
   visible: boolean;

@@ -2,8 +2,8 @@ import { NewBadge } from '@/components/ui/new-badge'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/context/AuthContext'
-import { useLanguage } from '@/hooks/useLanguage'
+import { useAuth } from '@/stores/AuthContext'
+import { useLanguage } from '@/hooks/ui/useLanguage'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,

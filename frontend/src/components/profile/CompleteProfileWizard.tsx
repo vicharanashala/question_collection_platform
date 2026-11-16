@@ -17,14 +17,14 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { authApi, lgdApi, getErrorMessage, clearRegistrationToken } from "@/api/client";
+import { authApi, lgdApi, getErrorMessage, clearRegistrationToken } from "@/client/client";
 import type {
   LgdDistrict,
   LgdKvk,
   LgdSubDistrict,
   LgdVillage,
-} from "@/api/client";
-import { useAuth } from "@/context/AuthContext";
+} from "@/client/client";
+import { useAuth } from "@/stores/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,7 +76,7 @@ import {
 import type { UserCategory } from "@/types";
 import { LogOut } from "lucide-react";
 import { SignOutDialog } from "@/components/SignOutDialog";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/ui/useLanguage";
 import type { SupportedLanguageCode } from "@/i18n";
 import {
   clearProfileDraft,

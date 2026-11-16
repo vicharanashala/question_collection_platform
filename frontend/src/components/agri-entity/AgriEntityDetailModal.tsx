@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/stores/AuthContext'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { TesterTag } from '@/components/TesterTag'
 import { BookOpen, Calendar, ImageIcon, Maximize2, Tags, User as UserIcon } from 'lucide-react'

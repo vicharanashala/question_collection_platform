@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { speechApi } from "@/api/speech";
+import { speechApi } from "@/client/speech";
 import { cn } from "@/lib/utils";
 import {
   Select,

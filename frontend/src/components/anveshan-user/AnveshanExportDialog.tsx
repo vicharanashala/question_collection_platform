@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { downloadWorkbook, exportDateTime, workbookSheet, type ExportColumn, type WorkbookSheet } from '@/lib/exportData'
 import type { AnveshanUserDetail, AnveshanUserQuestion, AgriEntitySubmission } from '@/types'
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage } from '@/client/client'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 

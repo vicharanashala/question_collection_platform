@@ -9,13 +9,13 @@ import {
   type LgdState,
   type LgdSubDistrict,
   type LgdVillage,
-} from "@/api/client";
+} from "@/client/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CropPickerModal } from "@/components/ui/crop-picker-modal";
-import { useCrops } from "@/hooks/useCrops";
+import { useCrops } from "@/hooks/api/useCrops";
 import type { AuthUser } from "@/types";
 import { SignOutDialog } from "../SignOutDialog";
 import { useNavigate } from "react-router-dom";

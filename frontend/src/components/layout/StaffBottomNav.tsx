@@ -6,7 +6,7 @@ import {
   ScrollText,
   Menu,
 } from 'lucide-react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/stores/AuthContext'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 

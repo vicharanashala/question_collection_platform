@@ -3,6 +3,7 @@
  * Mirrors mobile/src/utils/constants.ts so the web signup wizard and
  * ask-question form share vocabulary with the mobile app.
  */
+import { APP_ENV, ANVESHAN_URL, ANVESHAN_URL_STAGING } from '@/config/env'
 import type { AgriEntityType, UserCategory } from '@/types'
 
 export const LANGUAGES: { code: string; label: string; labelEnglish: string }[] = [
@@ -407,14 +408,14 @@ export const MAX_ANVESHAN_ANSWER_SOURCES = 10
 const DEFAULT_ANVESHAN_URL = 'https://anveshan.annam.ai/'
 
 // The Take photo option is hidden in production builds (VITE_APP_ENV=production) and on in staging and local builds.
-export const TAKE_PHOTO_ENABLED = import.meta.env.VITE_APP_ENV !== 'production'
+export const TAKE_PHOTO_ENABLED = APP_ENV !== 'production'
 
 // External Anveshan platform where users confirm their milestone completion.
 // Production builds use VITE_ANVESHAN_URL; staging and local builds use VITE_ANVESHAN_URL_STAGING.
 export const ANVESHAN_PLATFORM_URL =
-  (import.meta.env.VITE_APP_ENV === 'production'
-    ? import.meta.env.VITE_ANVESHAN_URL
-    : import.meta.env.VITE_ANVESHAN_URL_STAGING) || DEFAULT_ANVESHAN_URL
+  (APP_ENV === 'production'
+    ? ANVESHAN_URL
+    : ANVESHAN_URL_STAGING) || DEFAULT_ANVESHAN_URL
 
 // The Anveshan answer page needs the two-column desktop layout (Tailwind `lg` breakpoint and up).
 export const ANVESHAN_ANSWERS_DESKTOP_QUERY = '(min-width: 1024px)'

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle, CheckCircle2, Gauge, Loader2, MinusCircle, RotateCcw, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useAnveshanAnswerScore } from '@/hooks/useAnveshanAnswerScore'
+import { useAnveshanAnswerScore } from '@/hooks/api/useAnveshanAnswerScore'
 import type { AnveshanAnswerScore, AnveshanAnswerScoreCheck } from '@/types'
 
 interface AnswerScoreCardProps {

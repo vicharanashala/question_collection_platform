@@ -10,13 +10,13 @@ import {
   AnveshanMilestoneModal,
   getAnveshanMilestonePercent,
   getAnveshanRemainingSubmissions,
-} from '@/pages/public/AnveshMileStone'
+} from '@/features/public/AnveshMileStone'
 import { PublicSidebar } from './PublicSidebar'
 import { PublicHeader } from './PublicHeader'
 import { PublicMobileNav } from './PublicMobileNav'
 import { PublicBottomNav } from './PublicBottomNav'
-import { useAuth } from '@/context/AuthContext'
-import { questionApi, type AnveshanMilestoneResponse } from '@/api/client'
+import { useAuth } from '@/stores/AuthContext'
+import { questionApi, type AnveshanMilestoneResponse } from '@/client/client'
 import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
 import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
 import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'

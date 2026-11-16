@@ -1,0 +1,1125 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '@/stores/AuthContext'
+import type { AuthUser } from '@/types'
+import { questionApi, getErrorMessage, parseQuestionRejected, type QuestionRejectionCategory } from '@/client/client'
+import { storageApi } from '@/client/storage'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
+import { Loader2, Send, ArrowLeft, ArrowRight, CheckCircle2, MapPin, Lock, Info, Mic, Flag } from 'lucide-react'
+import { toast } from 'sonner'
+import { DOMAINS, SEASONS, MAX_QUESTION_CHARS, AGRI_ENTITY_TYPES } from '@/constants/public'
+import { AgriEntitySubmitForm } from '@/components/agri-entity/AgriEntitySubmitForm'
+import { SubmissionTabPanel, SubmissionTypeTabs, parseSubmissionTab, useTabDirection, type SubmissionTab } from '@/components/agri-entity/SubmissionTypeTabs'
+import { MicButton, DEFAULT_MAX_RECORDING_MS, SILENCE_TIMEOUT_MS } from '@/components/MicButton'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { CropPickerModal } from '@/components/ui/crop-picker-modal'
+import { useCrops } from '@/hooks/api/useCrops'
+import { useDebouncedValue } from '@/hooks/ui/useDebouncedValue'
+import {
+  runOnDeviceValidation,
+  cacheQuestionForDuplicateDetection,
+  type AIValidationResult,
+} from '@/utils/onDeviceAI'
+import { QuestionRejectedDialog } from '@/components/QuestionRejectedDialog'
+import { DuplicateFoundDialog, type DuplicateInfo } from '@/components/DuplicateFoundDialog'
+import { QuestionSubmittedDialog } from '@/components/QuestionSubmittedDialog'
+import {
+  getQuestionDraft,
+  saveQuestionDraft,
+  clearQuestionDraft,
+} from '@/utils/questionDraft'
+import { LocationCaptureModal, type SubmissionLocation } from './LocationCapture'
+import { AnveshanMilestoneData, AnveshanMilestoneModal, getAnveshanMilestonePercent } from './AnveshMileStone'
+import { Award } from "lucide-react";
+import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
+
+// Server-derived fields from `questionApi.preview` — location/zone are locked
+// to the user's profile (not user-editable), domain/season/crop seed the
+// details-step form but remain adjustable before final submit.
+interface PreviewMeta {
+  state: string
+  district: string
+  block: string | null
+  agroClimaticZone: string
+  remainingToday: number | null
+  dailyLimit: number | null
+}
+
+// ─── Crop Type picker modal ────────────────────────────────────────────────────
+// Mirrors the mobile `Select` component's bottom-sheet behaviour for the
+// `cropType` field on `QuestionPreviewScreen`: search-driven, alphabetised,
+// single-select with an "Other (enter manually)" fallback so users whose crop
+// isn't in the list can still submit. Module-scope so its identity is stable
+// across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
+
+
+interface AskHeaderProps {
+  step?: 1 | 2
+  title: string
+  subtitle: string
+  onBack: () => void
+  onReport?: () => void
+  remainingToday?: number | null
+  dailyLimit?: number | null
+  atLimit: boolean
+  user?: AuthUser | null
+  setMilestoneModalOpen?: (open: boolean) => void
+  milestonePercent?: number | null
+}
+
+interface MilestoneProgressButtonProps {
+  percent: number
+  onClick: () => void
+}
+
+// "My Progress" pill whose border fills clockwise with the overall milestone percentage.
+function MilestoneProgressButton({ percent, onClick }: MilestoneProgressButtonProps) {
+  const { t } = useTranslation()
+  const clamped = Math.min(100, Math.max(0, percent))
+  const fillColor = clamped >= 100 ? 'rgb(16 185 129)' : 'hsl(var(--primary))'
+
+  return (
+    <span
+      className="inline-flex rounded-full p-[2px] transition-[background] duration-500"
+      style={{ background: `conic-gradient(${fillColor} ${clamped}%, hsl(var(--border-subtle)) ${clamped}% 100%)` }}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onClick}
+        aria-label={t('anveshan.myProgressWithPercent', { percent: clamped })}
+        className="gap-1.5 rounded-full bg-background hover:bg-surface-variant"
+      >
+        <Award className="h-4 w-4" aria-hidden="true" />
+        {/* Label is hidden on phones to keep the header compact; the aria-label still names the button. */}
+        <span className="hidden sm:inline">{t('anveshan.myProgress')}</span>
+        <span className="tabular-nums text-text-secondary">{clamped}%</span>
+      </Button>
+    </span>
+  )
+}
+
+/**
+ * Shared header for both steps of the ask flow: back action, daily-limit chip,
+ * page title and a two-step progress indicator.
+ */
+function AskHeader({ step, title, subtitle, onBack, onReport, remainingToday, dailyLimit, atLimit, user, setMilestoneModalOpen, milestonePercent }: AskHeaderProps) {
+  const { t } = useTranslation()
+  const steps = [
+    { n: 1 as const, label: t('question.yourQuestion') },
+    { n: 2 as const, label: t('additionalDetails') },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <Button type="button" variant="ghost" size="sm" onClick={onBack} className="-ml-2 gap-1.5">
+          <ArrowLeft className="h-4 w-4" />{t('common.back')}
+        </Button>
+
+        <div className="flex items-center gap-2">
+          {onReport && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onReport}
+              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
+              aria-label={t('report.title')}
+            >
+              <Flag className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline-block">{t('report.title')}</span>
+            </Button>
+          )}
+          {/* Anveshan users have no daily limit, so the "N of M left today" chip is hidden for them. */}
+          {!user?.isAnveshanUser && remainingToday != null && dailyLimit != null && (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
+                atLimit
+                  ? 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300'
+                  : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${atLimit ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+              {atLimit
+                ? t('question.dailyLimitIndicator')
+                : t('question.dailyLeftToday', { remaining: remainingToday, total: dailyLimit })}
+            </span>
+          )}
+
+ {user?.isAnveshanUser && setMilestoneModalOpen && (
+  <MilestoneProgressButton percent={milestonePercent ?? 0} onClick={() => setMilestoneModalOpen(true)} />
+)}
+        </div>
+      </div>
+
+      <div>
+        <h1 className="text-lg font-bold text-foreground sm:text-xl">{title}</h1>
+        <p className="mt-0.5 text-xs text-text-secondary sm:text-sm">{subtitle}</p>
+      </div>
+
+      {/* Progress — current step is marked by weight and an aria-current, not
+          colour alone, and completed steps carry a check icon. Hidden on small
+          screens to save vertical space. */}
+      {step && <ol className="hidden items-center gap-3 sm:flex" aria-label={t('common.steps')}>
+        {steps.map(({ n, label }) => {
+          const done = n < step
+          const current = n === step
+          return (
+            <li key={n} className="flex flex-1 items-center gap-2" aria-current={current ? 'step' : undefined}>
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${
+                  done || current
+                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                    : 'border-border-subtle bg-surface text-text-tertiary'
+                }`}
+              >
+                {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : n}
+              </span>
+              <span className={`truncate text-xs sm:text-sm ${current ? 'font-semibold text-foreground' : 'text-text-tertiary'}`}>
+                {label}
+              </span>
+              {n === 1 && <span className={`h-px flex-1 ${done ? 'bg-emerald-500/50' : 'bg-border-subtle'}`} aria-hidden="true" />}
+            </li>
+          )
+        })}
+      </ol>}
+    </div>
+  )
+}
+
+interface StatsState {
+  remainingToday: number | null
+  dailyLimit: number | null
+}
+
+export function PublicAskPage() {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const showAgriTabs = user?.isAnveshanUser || ['admin', 'curator', 'super_admin'].includes(user?.role ?? '')
+  const requestedTab = parseSubmissionTab(searchParams.get('tab'))
+  const activeTab = showAgriTabs ? requestedTab : 'question'
+  const tabDirection = useTabDirection(activeTab)
+
+  // Keeps the selected tab in the URL so it survives refresh and can be linked to.
+  function handleTabChange(tab: SubmissionTab) {
+    setSearchParams(tab === 'question' ? {} : { tab }, { replace: true })
+  }
+  // ─── Two-step flow ─────────────────────────────────────────────────────────
+  // Mirrors mobile's QuestionScreen → QuestionPreviewScreen split: the user
+  // first writes their question text, then `questionApi.preview` classifies
+  // it server-side (Gemma LLM) and returns suggested domain(s)/season/crop
+  // plus profile-derived location, which seed the details step below instead
+  // of the user picking everything from empty dropdowns.
+
+  
+
+
+  const [step, setStep] = useState<'ask' | 'details'>('ask')
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewMeta, setPreviewMeta] = useState<PreviewMeta | null>(null)
+
+  const [questionText, setQuestionText] = useState(getQuestionDraft)
+  const [domains, setDomains] = useState<string[]>([])
+  const [season, setSeason] = useState<string>('')
+  const [cropType, setCropType] = useState('')
+  const [cropPickerOpen, setCropPickerOpen] = useState(false)
+  const crops = useCrops()
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [stats, setStats] = useState<StatsState | null>(null)
+  const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null)
+  const [rejection, setRejection] = useState<QuestionRejectionCategory | null>(null)
+  const [micExpanded, setMicExpanded] = useState(true)
+  const [voiceInfoOpen, setVoiceInfoOpen] = useState(false)
+  const [locationModalOpen, setLocationModalOpen] = useState(false)
+  const [submissionLocation, setSubmissionLocation] = useState<SubmissionLocation | null>(null)
+  const [audioData, setAudioData] = useState<{ blob: Blob; filename: string }[]>([])
+
+  // Preview saves a rejected duplicate before any audio is uploaded, so the recordings are
+  // uploaded afterwards and attached to that record. Never blocks the duplicate screen.
+  async function attachAudioToDuplicate(questionId: string | undefined) {
+    if (!questionId || audioData.length === 0) return
+    const recordings = audioData
+    try {
+      const uploads = await Promise.all(
+        recordings.map(data => storageApi.uploadAudio(data.blob, data.filename))
+      )
+      await questionApi.attachAudio(questionId, uploads.map(u => u.url))
+    } catch (err) {
+      console.warn('[PublicAskPage] could not attach audio to duplicate question:', err)
+    }
+  }
+
+  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+const [milestone, setMilestone] = useState<AnveshanMilestoneData | null>(null);
+const [milestoneJustCompleted, setMilestoneJustCompleted] = useState(false);
+
+const fetchMilestone = useCallback(() => {
+  if (!user?.isAnveshanUser) return;
+  questionApi.getMyAnveshanMilestone() // add this method to your api/client.ts
+    .then((data: AnveshanMilestoneData) => {
+      setMilestone((prev) => {
+        if (!prev?.completed && data.completed) {
+          setMilestoneJustCompleted(true);
+        }
+        return data;
+      });
+    })
+    .catch(() => undefined);
+}, [user?.isAnveshanUser]);
+
+useEffect(() => {
+  fetchMilestone();
+}, [fetchMilestone]);
+
+// Reloads the progress button after each successful question or crop/weed/pest/disease submission.
+useEffect(() => anveshanProgressEmitter.on(fetchMilestone), [fetchMilestone]);
+
+useEffect(() => {
+  if (milestoneJustCompleted) {
+    toast.success(
+      t("anveshan.milestoneCompleteToast"),
+      { duration: 6000 },
+    );
+    setMilestoneJustCompleted(false);
+  }
+}, [milestoneJustCompleted, t]);
+
+  // Refreshes progress each time the modal opens, so new submissions from any tab are reflected.
+  const openMilestoneModal = useCallback((open: boolean) => {
+    if (open) fetchMilestone()
+    setMilestoneModalOpen(open)
+  }, [fetchMilestone])
+
+  // Progress button props shared by every header on this page (question steps and crop/weed/pest/disease tabs).
+  const milestoneHeaderProps = {
+    user,
+    setMilestoneModalOpen: openMilestoneModal,
+    milestonePercent: milestone ? getAnveshanMilestonePercent(milestone) : null,
+  }
+
+  const milestoneModal = (
+    <AnveshanMilestoneModal open={milestoneModalOpen} onOpenChange={setMilestoneModalOpen} data={milestone} />
+  )
+
+  const atLimit = stats != null && stats.remainingToday != null && stats.remainingToday <= 0
+
+useEffect(() => {
+  saveQuestionDraft(questionText)
+}, [questionText])
+
+useEffect(() => {
+  if (!user?.isAnveshanUser && activeTab !== 'question') {
+    setSearchParams({}, { replace: true })
+  }
+}, [user?.isAnveshanUser, activeTab, setSearchParams])
+
+
+
+  // Lock body scroll on the details step to prevent pull-to-scroll ghosting
+  useEffect(() => {
+    if (step === 'details') {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [step])
+
+  // ─── On-device AI validation pipeline ─────────────────────────────────────
+  // Debounced run of `runOnDeviceValidation` against the live question text.
+  // Mirrors the mobile `QuestionScreen` behaviour: warn the user when their
+  // text looks off-topic or duplicates a recent submission, block submit on
+  // spam verdict.
+  const debouncedQuestion = useDebouncedValue(questionText, 600)
+  const [aiValidation, setAiValidation] = useState<AIValidationResult | null>(null)
+  // Sequence counter prevents out-of-order results from clobbering the latest.
+  const validationSeqRef = useRef(0)
+
+  useEffect(() => {
+    const text = debouncedQuestion.trim()
+    if (text.length === 0) {
+      setAiValidation(null)
+      return
+    }
+    // Always run the pipeline, even for short input — `isLikelySpam` now
+    // emits `onDeviceAI.spam.tooShort` for `< 3 words`, producing the
+    // "Please describe your agriculture question in more detail." banner
+    // that mobile shows. Mirrors `mobile/src/screens/Question/QuestionScreen.tsx`.
+    const seq = ++validationSeqRef.current
+    runOnDeviceValidation(text).then((r) => {
+      if (seq !== validationSeqRef.current) return // stale response
+      setAiValidation(r)
+    })
+  }, [debouncedQuestion])
+
+  // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
+  const blockedByAi = aiValidation?.verdict === 'fail'
+
+  // ─── Stats (daily limit counter) ──────────────────────────────────────────
+useEffect(() => {
+  questionApi.getMyStats()
+    .then((s) => setStats({
+      remainingToday: (s as any).remainingToday ?? null,
+      dailyLimit: (s as any).dailyLimit ?? null,
+    }))
+    .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
+}, [])
+
+  function toggleDomain(d: string) {
+    setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
+  }
+
+  function resetAll() {
+    setStep('ask')
+    setQuestionText('')
+    setAudioData([])
+    setDomains([])
+    setSeason('')
+    setCropType('')
+    setPreviewMeta(null)
+    setRejection(null)
+  }
+
+  // ─── Step 1 → Step 2: classify the question text server-side ─────────────
+  // Mirrors mobile `QuestionScreen.handlePreview`: the raw text is sent to
+  // `/questions/preview`, which runs an LLM classifier + profile lookup and
+  // returns suggested domain(s)/season/crop/location. If the backend's
+  // duplicate check matches an existing question it's saved as REJECTED
+  // immediately and we show the duplicate screen instead of advancing.
+  async function handleContinue(e: React.FormEvent) {
+    e.preventDefault()
+    if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+    if (questionText.length > MAX_QUESTION_CHARS) { toast.error(t('question.textTooLong', { max: MAX_QUESTION_CHARS })); return }
+    if (atLimit) { toast.error(t('question.errors.dailyLimitReached')); return }
+    if (!user?.state || !user?.district) { toast.error(t('question.errors.locationMissing')); return }
+    // Hard block: AI flagged as spam. Don't waste a server round-trip.
+    if (blockedByAi) { toast.error(t('question.errors.rewriteSpam')); return }
+
+    setPreviewLoading(true)
+    try {
+      const res = await questionApi.preview({
+        questionText: questionText.trim(),
+        mediaType: 'none',
+        mediaUrls: [],
+      })
+      if (res.duplicate?.isDuplicate) {
+        void attachAudioToDuplicate(res.duplicate.questionId)
+        setDuplicate({
+          matchedQuestion: res.duplicate.matchedQuestion ?? '',
+          matchedAnswer: res.duplicate.matchedAnswer,
+          similarityScore: res.duplicate.similarityScore,
+          matchedUserName: res.duplicate.matchedUserName,
+        })
+        questionApi.getMyStats()
+  .then((s) => setStats({
+    remainingToday: (s as any).remainingToday ?? null,
+    dailyLimit: (s as any).dailyLimit ?? null,
+  }))
+  .catch(() => { setStats({ remainingToday: 20, dailyLimit: 20 }) })
+        return
+      }
+      setPreviewMeta({
+  state: res.state ?? user.state,
+  district: res.district ?? user.district,
+  block: res.block ?? user.block ?? null,
+  agroClimaticZone: res.agroClimaticZone ?? '',
+  remainingToday: res.remainingToday ?? stats?.remainingToday ?? null,
+  dailyLimit: res.dailyLimit ?? stats?.dailyLimit ?? null,
+})
+      setDomains(res.domains ?? [])
+      setSeason(res.season || '')
+      setCropType(res.cropType ?? '')
+      setStep('details')
+    } catch (err) {
+      const rejected = parseQuestionRejected(err)
+      if (rejected) {
+        setRejection(rejected.category)
+        return
+      }
+      toast.error(getErrorMessage(err, t('question.submitFailed')))
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  // ─── Step 2: final submit ──────────────────────────────────────────────────
+//   async function handleFinalSubmit(e: React.FormEvent) {
+//     e.preventDefault()
+//     if (!previewMeta) return
+//     if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+//     if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+//     if (!season) { toast.error(t('question.errors.pickSeason')); return }
+//     if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+
+//     setSubmitting(true)
+//     try {
+//       // ─── Duplicate pre-check (mirrors the step-1 Continue button) ─────────
+//       // Run `questionApi.preview` *before* actually submitting so the user sees
+//       // the duplicate warning screen without us hitting `/questions` first.
+//       // Behaviour is symmetric with `handleContinue`: if the backend flags a
+//       // duplicate, the question is saved as REJECTED server-side (counts
+//       // against the daily limit) and we show the duplicate screen instead
+//       // of advancing to the success state.
+//       const previewRes = await questionApi.preview({
+//         questionText: questionText.trim(),
+//         mediaType: 'none',
+//         mediaUrls: [],
+//       })
+//       if (previewRes.duplicate?.isDuplicate) {
+//         setDuplicate({
+//           matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: previewRes.duplicate.matchedAnswer,
+//           similarityScore: previewRes.duplicate.similarityScore,
+//           matchedUserName: previewRes.duplicate.matchedUserName,
+//         })
+//         // Refresh stats — the duplicate rejection consumed one of today's slots.
+//       questionApi.getMyStats()
+//     .then((s) => setStats({
+//       remainingToday: (s as any).remainingToday ?? null,
+//       dailyLimit: (s as any).dailyLimit ?? null,
+//     }))
+//     .catch(() => undefined)
+//   return
+      
+//       }
+
+//       // ─── No duplicate → proceed with the actual submission ─────────────────
+//       const res = await questionApi.submitQuestion({
+//         questionText: questionText.trim(),
+//         domains,
+//         season,
+//         cropType: cropType.trim(),
+//         state: previewMeta.state,
+//         district: previewMeta.district,
+//         block: previewMeta.block ?? undefined,
+//         agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+//         mediaType: 'none',
+//       })
+//       if (res.duplicate?.isDuplicate) {
+//         // Defensive: if the user edited the question text on step 2 (very
+//         // unusual) and it now matches something the preview pass didn't see
+//         // (e.g. a race against a freshly-approved question), surface the
+//         // warning screen the same way.
+//         setDuplicate({
+//           matchedQuestion: res.duplicate.matchedQuestion ?? '',
+//           matchedAnswer: res.duplicate.matchedAnswer,
+//           similarityScore: res.duplicate.similarityScore,
+//           matchedUserName: res.duplicate.matchedUserName,
+//         })
+//         return
+//       }
+//       toast.success(res.message || 'Question submitted!')
+//       clearQuestionDraft()
+//       // Cache the submitted question so future drafts are checked against it
+//       // for near-duplicates (Levenshtein similarity ≥ 0.82). The submit
+//       // endpoint returns either `{ id: string, status, message }` (current
+//       // shape) or `{ id, question: { id }, ... }` (newer variants) — handle
+//       // both without throwing.
+//       const newId: string | undefined =
+//         (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+//       cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+//       setSubmitted(true)
+//       setSubmitted(true)
+// questionApi.getMyStats()
+//   .then((s) => setStats({
+//     remainingToday: (s as any).remainingToday ?? null,
+//     dailyLimit: (s as any).dailyLimit ?? null,
+//   }))
+//   .catch(() => undefined)
+//     } catch (err) {
+//       const rejected = parseQuestionRejected(err)
+//       if (rejected) {
+//         setRejection(rejected.category)
+//         return
+//       }
+//       toast.error(getErrorMessage(err, t('question.submitFailed')))
+//     } finally {
+//       setSubmitting(false)
+//     }
+//   }
+
+async function handleFinalSubmit(e: React.FormEvent) {
+  console.log("Inside final submit...")
+  e.preventDefault()
+  if (!previewMeta) { toast.error(t('publicAskPage.somethigWenWrong')); return}
+  if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
+  if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
+  if (!season) { toast.error(t('question.errors.pickSeason')); return }
+  if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
+
+  // Anveshan users must supply their current location on every submission.
+  // If we don't have it yet, open the capture modal and stop here — it will
+  // call performSubmit() itself once the user confirms.
+  if (user?.isAnveshanUser && !submissionLocation) {
+    console.log("inside this..")
+    setLocationModalOpen(true)
+    return
+  }
+
+  await performSubmit()
+}
+
+async function performSubmit(locationOverride?: SubmissionLocation) {
+  if (!previewMeta) return
+  const location = locationOverride ?? submissionLocation
+  console.log("inside perform submit...")
+  setSubmitting(true)
+  try {
+    const previewRes = await questionApi.preview({
+      questionText: questionText.trim(),
+      mediaType: 'none',
+      mediaUrls: [],
+    })
+    if (previewRes.duplicate?.isDuplicate) {
+      void attachAudioToDuplicate(previewRes.duplicate.questionId)
+      setDuplicate({
+        matchedQuestion: previewRes.duplicate.matchedQuestion ?? '',
+        matchedAnswer: previewRes.duplicate.matchedAnswer,
+        similarityScore: previewRes.duplicate.similarityScore,
+        matchedUserName: previewRes.duplicate.matchedUserName,
+      })
+      questionApi.getMyStats()
+        .then((s) => setStats({
+          remainingToday: (s as any).remainingToday ?? null,
+          dailyLimit: (s as any).dailyLimit ?? null,
+        }))
+        .catch(() => undefined)
+      return
+    }
+
+    let finalAudioUrls: string[] | undefined
+    if (audioData.length > 0) {
+      try {
+        const uploads = await Promise.all(
+          audioData.map(data => storageApi.uploadAudio(data.blob, data.filename))
+        )
+        finalAudioUrls = uploads.map(u => u.url)
+      } catch (uploadErr) {
+        console.warn('[PublicAskPage] audio archival failed:', uploadErr)
+      }
+    }
+
+    const res = await questionApi.submitQuestion({
+      questionText: questionText.trim(),
+      domains,
+      season,
+      cropType: cropType.trim(),
+      state: previewMeta.state,
+      district: previewMeta.district,
+      block: previewMeta.block ?? undefined,
+      agroClimaticZone: previewMeta.agroClimaticZone || undefined,
+      mediaType: 'none',
+      audioUrls: finalAudioUrls,
+      submissionLocation: location ?? undefined,
+    })
+    if (res.duplicate?.isDuplicate) {
+      setDuplicate({
+        matchedQuestion: res.duplicate.matchedQuestion ?? '',
+        matchedAnswer: res.duplicate.matchedAnswer,
+        similarityScore: res.duplicate.similarityScore,
+        matchedUserName: res.duplicate.matchedUserName,
+      })
+      return
+    }
+    toast.success(res.message || 'Question submitted!')
+    clearQuestionDraft()
+    const newId: string | undefined =
+      (res as any)?.id ?? (res as any)?.question?.id ?? undefined
+    cacheQuestionForDuplicateDetection(questionText.trim(), newId)
+    setSubmitted(true)
+    setSubmissionLocation(null) // reset — the next submission asks fresh, per requirement
+    questionApi.getMyStats()
+      .then((s) => setStats({
+        remainingToday: (s as any).remainingToday ?? null,
+        dailyLimit: (s as any).dailyLimit ?? null,
+      }))
+      .catch(() => undefined)
+  } catch (err) {
+    const rejected = parseQuestionRejected(err)
+    if (rejected) {
+      setRejection(rejected.category)
+      return
+    }
+    toast.error(getErrorMessage(err, t('question.submitFailed')))
+  } finally {
+    setSubmitting(false)
+  }
+}
+
+
+  // Outcome dialogs render alongside every step so the user's form stays
+  // visible behind them instead of being replaced by a full-page state.
+  const dialogs = (
+    <>
+      <QuestionRejectedDialog
+        category={rejection}
+        questionText={questionText}
+        onOpenChange={(open) => { if (!open) setRejection(null) }}
+      />
+      <DuplicateFoundDialog
+        duplicate={duplicate}
+        onOpenChange={(open) => { if (!open) setDuplicate(null) }}
+        onTryAnother={() => { setDuplicate(null); resetAll() }}
+        onBackHome={() => { setDuplicate(null); navigate('/home') }}
+      />
+      <QuestionSubmittedDialog
+        open={submitted}
+        onOpenChange={(open) => { if (!open) { setSubmitted(false); resetAll() } }}
+        onAskAnother={() => { setSubmitted(false); resetAll() }}
+        onViewSubmissions={() => { setSubmitted(false); navigate('/home/questions') }}
+        remainingToday={stats?.remainingToday}
+        dailyLimit={stats?.dailyLimit}
+      />
+    </>
+  )
+
+  // ─── Step 2 — details form, seeded from the preview response ─────────────
+  if (step === 'details' && previewMeta) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <AskHeader
+          step={2}
+          title={t('question.submitQuestion')}
+          subtitle={t('question.askSubtitle')}
+          onBack={() => setStep('ask')}
+          onReport={() => navigate('/home/reports')}
+          remainingToday={previewMeta.remainingToday ?? undefined}
+          dailyLimit={previewMeta.dailyLimit ?? null}
+          atLimit={false}
+          {...milestoneHeaderProps}
+        />
+
+        {/* Warning banner */}
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <span>{t('question.notEditableAfterSubmission')}</span>
+        </div>
+
+        {/* Question preview card — prominent display of what the user typed */}
+        <Card className="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-surface dark:from-emerald-950/20 dark:border-emerald-900/30">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15">
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">Q</span>
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">{t('question.yourQuestion')}</span>
+            </div>
+            <p className="text-base leading-relaxed text-foreground pl-6 sm:pl-8">{questionText}</p>
+            <div className="mt-3 pl-6 sm:pl-8 flex items-center gap-1.5 text-[11px] text-text-tertiary">
+              <Lock className="h-3 w-3" />
+              {t('question.locationLockedNote')}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5 lg:p-6">
+            <form onSubmit={handleFinalSubmit} className="space-y-6">
+              <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
+                {/* Left column — read-only location + zone */}
+                <div className="space-y-4 lg:col-span-2">
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="h-4 w-4 text-emerald-600" />
+                      <span className="text-sm font-semibold text-foreground">{t('question.location')}</span>
+                    </div>
+                    <div className="rounded-xl border border-border-subtle bg-surface-variant/50 p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-tertiary">{t('question.state')}</span>
+                        <span className="text-sm font-medium text-foreground">{previewMeta.state}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-text-tertiary">{t('question.district')}</span>
+                        <span className="text-sm font-medium text-foreground">{previewMeta.district}</span>
+                      </div>
+                      {previewMeta.block && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-text-tertiary">{t('question.blockOptional')}</span>
+                          <span className="text-sm font-medium text-foreground">{previewMeta.block}</span>
+                        </div>
+                      )}
+                      <div className="border-t border-border-subtle pt-2 flex items-center gap-1.5 text-[11px] text-text-tertiary">
+                        <Lock className="h-3 w-3" />
+                        {t('question.locationLockedNote')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {previewMeta.agroClimaticZone && (
+                    <div>
+                      <span className="text-xs text-text-tertiary mb-1.5 block">{t('question.agroClimaticZone')}</span>
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        {previewMeta.agroClimaticZone}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right column — editable fields */}
+                <div className="flex flex-col gap-5 lg:col-span-3">
+                  {/* Domain pills */}
+                  <div className="space-y-2.5">
+                    <div>
+                      <Label className="text-sm">{t('question.domainSelect')} <span className="text-rose-600">*</span></Label>
+                      <p className="text-[11px] text-text-tertiary mt-0.5">{t('question.selectOneOrMore')}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {DOMAINS.map((d) => {
+                        const selected = domains.includes(d.value)
+                        return (
+                          <button
+                            key={d.value}
+                            type="button"
+                            onClick={() => toggleDomain(d.value)}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all ${selected
+                                ? 'border-emerald-500 bg-emerald-500/15 text-emerald-700 shadow-sm dark:text-emerald-300'
+                                : 'border-border-subtle bg-surface text-text-secondary hover:border-emerald-300 hover:text-emerald-700'
+                              }`}
+                          >
+                            {selected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                            {d.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Season + Crop row */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">{t('question.season')} <span className="text-rose-600">*</span></Label>
+                      <Select value={season} onValueChange={setSeason}>
+                        <SelectTrigger className="h-10"><SelectValue placeholder={t('question.pickSeason')} /></SelectTrigger>
+                        <SelectContent>
+                          {SEASONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="crop" className="text-sm">{t('question.cropType')} <span className="text-rose-600">*</span></Label>
+                      <button
+                        id="crop"
+                        type="button"
+                        aria-describedby={cropType ? 'crop-check-notice' : undefined}
+                        onClick={() => setCropPickerOpen(true)}
+                        className="flex h-10 w-full items-center justify-between rounded-md border border-border-subtle bg-surface-variant px-3 text-sm shadow-sm transition-colors hover:border-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
+                      >
+                        <span className={cropType ? 'text-foreground' : 'text-text-tertiary'}>
+                          {cropType || t('question.pickCrop')}
+                        </span>
+                        <svg className="h-4 w-4 text-text-tertiary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* The crop is auto-detected from the question text, so ask the user to verify it. */}
+                  {cropType && (
+                    <div
+                      id="crop-check-notice"
+                      role="note"
+                      className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+                    >
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+                      <p className="min-w-0 flex-1">
+                        {t('question.cropAutoSelectedNotice', {
+                          crop: cropType,
+                        })}{' '}
+                        <button
+                          type="button"
+                          onClick={() => setCropPickerOpen(true)}
+                          className="font-semibold underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus rounded-sm"
+                        >
+                          {t('question.changeCrop')}
+                        </button>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Question textarea */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="q-details" className="text-sm">{t('question.yourQuestion')} <span className="text-rose-600">*</span></Label>
+                    <Textarea
+                      id="q-details"
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
+                      rows={4}
+                      maxLength={MAX_QUESTION_CHARS}
+                      className="resize-none text-sm leading-relaxed"
+                      placeholder={t('question.questionExample')}
+                    />
+                    <div className="flex justify-end">
+                      <span className={`text-[11px] ${questionText.length > MAX_QUESTION_CHARS - 50 ? 'text-amber-600 font-semibold' : 'text-text-tertiary'}`}>
+                        {questionText.length}/{MAX_QUESTION_CHARS}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit row */}
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-border-subtle">
+                <Button type="button" variant="outline" size="sm" onClick={() => setStep('ask')}>
+                  {t('common.back')}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting || !questionText.trim() || !domains.length || !season || !cropType.trim()}
+                  className="gap-2"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {t('question.submitQuestion')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        <CropPickerModal
+          open={cropPickerOpen}
+          onOpenChange={setCropPickerOpen}
+          selected={cropType ? [cropType] : []}
+          onSelectionChange={(crops) => setCropType(crops[0] ?? '')}
+          mode="single"
+          title={t('question.cropType')}
+          crops={crops}
+        />
+        {dialogs}
+              <LocationCaptureModal
+  open={locationModalOpen}
+  onOpenChange={(open) => {
+    setLocationModalOpen(open)
+    // If the user cancels without confirming, the form stays on this step
+    // untouched — nothing has been submitted, so no cleanup is needed.
+  }}
+  onConfirm={(loc) => {
+    setSubmissionLocation(loc)
+    setLocationModalOpen(false)
+    performSubmit(loc) // pass directly — avoids waiting on the next render's state
+  }}
+/>
+        {milestoneModal}
+      </div>
+    )
+  }
+
+  // ─── Crop / Weed / Pest / Disease tabs ─────────────────────────────────────
+if (activeTab !== 'question') {
+    if (!user?.isAnveshanUser) {
+      // Guarded above via useEffect, but render nothing while the redirect settles
+      return null
+    }
+    const typeLabel = t(`agriEntity.tabs.${activeTab}`, AGRI_ENTITY_TYPES.find((type) => type.value === activeTab)?.label ?? '')
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <AskHeader
+          title={t('agriEntity.title', { type: typeLabel })}
+          subtitle={t('agriEntity.subtitle')}
+          onBack={() => navigate(-1)}
+          onReport={() => navigate('/home/reports')}
+          atLimit={false}
+          {...milestoneHeaderProps}
+        />
+        {user?.isAnveshanUser && (
+  <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+)}
+        <SubmissionTabPanel tab={activeTab} direction={tabDirection}>
+          <AgriEntitySubmitForm key={activeTab} type={activeTab} typeLabel={typeLabel} />
+        </SubmissionTabPanel>
+        {milestoneModal}
+      </div>
+    )
+  }
+
+  // ─── Step 1 — free-text question entry ─────────────────────────────────────
+  return (
+    
+    <div className="mx-auto max-w-4xl space-y-4">
+      <AskHeader
+        step={1}
+        title={t('question.askQuestion')}
+        subtitle={t('question.expertWillRespond')}
+        onBack={() => navigate(-1)}
+        onReport={() => navigate('/home/reports')}
+        remainingToday={stats?.remainingToday}
+        dailyLimit={stats?.dailyLimit}
+        atLimit={atLimit}
+        {...milestoneHeaderProps}
+      />
+       {user?.isAnveshanUser && (
+        <SubmissionTypeTabs value={activeTab} onChange={handleTabChange} />
+      )}
+      <SubmissionTabPanel tab="question" direction={tabDirection}>
+      <Card>
+        <CardContent className="p-5 lg:p-6">
+          <form onSubmit={handleContinue} className="space-y-4">
+            {atLimit && (
+              <div
+                role="status"
+                className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-xs text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300 sm:text-sm"
+              >
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                <span>{t('question.errors.dailyLimitReached')}</span>
+              </div>
+            )}
+
+            {/* Question (primary field) + Voice input (secondary field) sit
+                side by side on desktop instead of one long stacked column, so
+                the wide viewport isn't mostly empty. Domain/Season/Crop are no
+                longer picked here — `questionApi.preview` suggests them on the
+                next step, same as mobile's QuestionScreen → QuestionPreviewScreen. */}
+            <div className="grid gap-5 lg:grid-cols-5 lg:gap-6">
+              <div className="flex flex-col gap-2 lg:col-span-3">
+                <div>
+                  <Label htmlFor="q">{t('question.yourQuestion')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
+                  <p id="q-hint" className="mt-0.5 text-[11px] text-text-tertiary sm:text-xs">{t('question.tipDetailed')}</p>
+                </div>
+                <Textarea
+                  id="q"
+                  aria-describedby="q-hint q-count"
+                  required
+                  placeholder={t('question.questionExample')}
+                  value={questionText}
+                  onChange={(e) => {
+                    setQuestionText(e.target.value)
+                    if (e.target.value.trim()) setMicExpanded(false)
+                  }}
+                  rows={8}
+                  maxLength={MAX_QUESTION_CHARS}
+                  className="resize-none text-sm leading-relaxed lg:flex-1"
+                />
+                <div className="flex justify-end">
+                  <span
+                    id="q-count"
+                    className={`text-[11px] tabular-nums sm:text-xs ${questionText.length > MAX_QUESTION_CHARS - 50 ? 'font-semibold text-amber-600' : 'text-text-tertiary'}`}
+                  >
+                    {questionText.length}/{MAX_QUESTION_CHARS}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 lg:col-span-2">
+                <div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium leading-none text-text sm:text-sm">{t('question.addVoice')}</span>
+                    {/* Controlled so the tooltip also opens on tap for touch devices. */}
+                    <Tooltip open={voiceInfoOpen} onOpenChange={setVoiceInfoOpen}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={() => setVoiceInfoOpen((open) => !open)}
+                          className="flex h-6 w-6 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-variant hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
+                          aria-label={t('question.voiceLimitInfoAria')}
+                        >
+                          <Info className="h-3.5 w-3.5" aria-hidden />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        {t('question.voiceLimitInfo', {
+                          minutes: DEFAULT_MAX_RECORDING_MS / 60_000,
+                          silenceMinutes: SILENCE_TIMEOUT_MS / 60_000,
+                        })}
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-text-tertiary sm:text-xs">{t('question.tapMicHint')}</p>
+                </div>
+                {/* ── Voice input — mirrors the mobile `SttMicButton` dock.
+                     Disabled when the daily limit is reached or the AI flagged
+                     the text as spam, so the user can't circumvent validation
+                     by typing fresh text after submitting a flagged one. */}
+                <AnimatePresence initial={false}>
+                  {micExpanded ? (
+                    <motion.div
+                      key="mic-expanded"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-border-subtle bg-surface-variant/40 px-4 py-5">
+                        <MicButton
+                          onTranscribed={(text, blob, filename) => {
+                            // Keep the recording so it is archived with the question on submit.
+                            if (blob) setAudioData((prev) => [...prev, { blob, filename: filename ?? 'recording.webm' }])
+                            setQuestionText((prev) => {
+                              const base = prev.trim()
+                              return base ? `${base} ${text}` : text
+                            })
+                            requestAnimationFrame(() => {
+                              document.getElementById('q')?.focus()
+                            })
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="mic-collapsed"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden flex justify-center py-1"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setMicExpanded(true)}
+                        className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-variant/40 px-3 py-1.5 text-xs text-text-tertiary hover:border-emerald-300 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                      >
+                        <Mic className="h-3.5 w-3.5" />
+                        <span>{t('question.addVoice')}</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => navigate(-1)} className="justify-center">{t('common.cancel')}</Button>
+              {/*
+                Mirror mobile `QuestionScreen`'s Continue button: when the AI
+                flags the text as spam or "too short" (verdict === 'fail'),
+                show "Not Relevant" instead of "Continue". Stays disabled so
+                the user can't bypass the validation.
+              */}
+              <Button
+                type="submit"
+                disabled={previewLoading || submitting || atLimit || blockedByAi || !questionText.trim()}
+                className="justify-center gap-2"
+              >
+                {previewLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+                {blockedByAi ? t('question.notRelevant') : t('common.continue')}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      </SubmissionTabPanel>
+      {dialogs}
+      {milestoneModal}
+    </div>
+  )
+}

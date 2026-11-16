@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AlertCircle, Loader2, MessageSquareReply } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getErrorMessage, questionApi } from '@/api/client'
+import { getErrorMessage, questionApi } from '@/client/client'
 import { formatDate } from '@/lib/utils'
 import type { AnveshanAnswer } from '@/types'
 import { SourceList } from './SourceUrlManager'

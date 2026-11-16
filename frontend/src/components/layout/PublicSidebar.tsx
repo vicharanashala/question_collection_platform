@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/stores/AuthContext";
 
 import {
   Home,
@@ -26,7 +26,7 @@ import { SignOutDialog } from "@/components/SignOutDialog";
 
 import { ANVESHAN_TAGLINE } from "@/constants/public";
 
-import { useQuestionDraft } from "@/hooks/useQuestionDraft";
+import { useQuestionDraft } from "@/hooks/ui/useQuestionDraft";
 import { canAccessPayments, PAYMENT_ROUTES } from "@/utils/paymentAccess";
 
 const navItems = [

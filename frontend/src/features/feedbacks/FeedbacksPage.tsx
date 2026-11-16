@@ -1,0 +1,307 @@
+import { useCallback, useEffect, useState } from 'react'
+import { AlertCircle, Keyboard, MapPin, Mic, MessageSquareText, Phone, Star } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TesterFilter, type TesterFilterValue } from '@/components/TesterFilter'
+import { TesterTag } from '@/components/TesterTag'
+import { SubmissionsPagination } from '@/components/submissions/SubmissionsPagination'
+import { feedbackApi, getErrorMessage } from '@/client/client'
+import { cn, formatDateTime } from '@/lib/utils'
+import type { AppFeedbackItem, AppFeedbackListResponse, FeedbackRatingSummary } from '@/types'
+import { useTranslation } from 'react-i18next'
+
+const PAGE_SIZE = 20
+const STAR_VALUES = [5, 4, 3, 2, 1] as const
+type InputFilter = 'all' | 'text' | 'voice'
+type LoadState = 'loading' | 'ready' | 'error'
+
+// Row of five stars with the given number filled; the text alternative carries the value.
+function StarRating({ value, size = 'sm' }: { value: number; size?: 'sm' | 'lg' }) {
+  const { t } = useTranslation()
+  const iconClass = size === 'lg' ? 'h-5 w-5' : 'h-4 w-4'
+  return (
+    <span className="inline-flex items-center gap-0.5" role="img" aria-label={t('feedbacksPage.outOfStars', { value })}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          aria-hidden="true"
+          className={cn(iconClass, star <= Math.round(value) ? 'fill-amber-400 text-amber-400' : 'fill-transparent text-border')}
+        />
+      ))}
+    </span>
+  )
+}
+
+/** Admin page listing the app feedback Anveshan users give after reaching 100%. */
+export function FeedbacksPage() {
+  const { t } = useTranslation()
+  const [data, setData] = useState<AppFeedbackListResponse | null>(null)
+  const [loadState, setLoadState] = useState<LoadState>('loading')
+  const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null)
+  const [inputFilter, setInputFilter] = useState<InputFilter>('all')
+  const [testerFilter, setTesterFilter] = useState<TesterFilterValue>('')
+
+  // Loads one page of feedback for the current filters.
+  const load = useCallback(async () => {
+    setLoadState('loading')
+    try {
+      const result = await feedbackApi.listAnveshanFeedback({
+        page,
+        limit: PAGE_SIZE,
+        rating: ratingFilter ?? undefined,
+        inputMethod: inputFilter === 'all' ? undefined : inputFilter,
+        tester: testerFilter || undefined,
+      })
+      setData(result)
+      setLoadState('ready')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Could not load feedback.'))
+      setLoadState('error')
+    }
+  }, [page, ratingFilter, inputFilter, testerFilter])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
+  const changeRating = (rating: number | null) => {
+    setRatingFilter(rating)
+    setPage(1)
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-5">
+      <div>
+        <h2 className="text-lg font-bold text-foreground sm:text-xl">{t('feedbacksPage.appFeedback')}</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{t('feedbacksPage.ratingsAndCommentsAnveshan')}</p>
+      </div>
+
+      {data && <FeedbackSummary summary={data.summary} activeRating={ratingFilter} onSelectRating={changeRating} />}
+
+      {/* Filters */}
+      <Card>
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+          <Select value={ratingFilter ? String(ratingFilter) : 'all'} onValueChange={(v) => changeRating(v === 'all' ? null : Number(v))}>
+            <SelectTrigger className="w-full sm:w-44" aria-label={t('feedbacksPage.filterByRating')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('feedbacksPage.allRatings')}</SelectItem>
+              {STAR_VALUES.map((value) => (
+                <SelectItem key={value} value={String(value)}>
+                  {value} {value === 1 ? t('feedbacksPage.star') : t('feedbacksPage.stars')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={inputFilter}
+            onValueChange={(v) => {
+              setInputFilter(v as InputFilter)
+              setPage(1)
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-44" aria-label={t('feedbacksPage.filterByHowThe')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('feedbacksPage.spokenAndTyped')}</SelectItem>
+              <SelectItem value="voice">{t('feedbacksPage.spokenMicrophone')}</SelectItem>
+              <SelectItem value="text">{t('feedbacksPage.typed')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="w-full sm:w-44">
+            <TesterFilter
+              value={testerFilter}
+              onChange={(value) => {
+                setTesterFilter(value)
+                setPage(1)
+              }}
+            />
+          </div>
+          {data && (
+            <p className="text-xs text-muted-foreground sm:ml-auto" aria-live="polite">
+              {data.total} {data.total === 1 ? t('feedbacksPage.response') : t('feedbacksPage.responses')}
+            </p>
+          )}
+        </div>
+      </Card>
+
+      {loadState === 'loading' && <FeedbackListSkeleton />}
+
+      {loadState === 'error' && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center" role="alert">
+            <AlertCircle className="h-6 w-6 text-destructive" aria-hidden="true" />
+            <p className="text-sm text-foreground">{error}</p>
+            <Button variant="outline" onClick={() => void load()}>{t('faq.retry')}</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {loadState === 'ready' && data && data.items.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
+            <MessageSquareText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">{t('feedbacksPage.noFeedbackFound')}</p>
+            <p className="text-xs text-muted-foreground">
+              {ratingFilter || inputFilter !== 'all'
+                ? t('feedbacksPage.tryClearingTheFilters')
+                : t('feedbacksPage.feedbackAppearsHereOnce')}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {loadState === 'ready' && data && data.items.length > 0 && (
+        <>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {data.items.map((item) => (
+              <FeedbackCard key={item.id} item={item} />
+            ))}
+          </ul>
+          <SubmissionsPagination page={page} limit={PAGE_SIZE} total={data.total} onPageChange={setPage} />
+        </>
+      )}
+    </div>
+  )
+}
+
+interface FeedbackSummaryProps {
+  summary: FeedbackRatingSummary
+  activeRating: number | null
+  onSelectRating: (rating: number | null) => void
+}
+
+// Average rating, total count and a clickable star breakdown that filters the list.
+function FeedbackSummary({ summary, activeRating, onSelectRating }: FeedbackSummaryProps) {
+  const { t } = useTranslation()
+  const max = Math.max(1, ...STAR_VALUES.map((value) => summary.distribution[value]))
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <Card>
+        <CardContent className="flex h-full flex-col items-center justify-center gap-1.5 p-5 text-center">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('feedbacksPage.averageRating')}</p>
+          <p className="text-4xl font-extrabold tabular-nums text-foreground">
+            {summary.averageRating != null ? summary.averageRating.toFixed(1) : '—'}
+          </p>
+          <StarRating value={summary.averageRating ?? 0} size="lg" />
+          <p className="text-xs text-muted-foreground">
+            from {summary.total} {summary.total === 1 ? t('feedbacksPage.response') : t('feedbacksPage.responses')}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-1.5 p-5">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('feedbacksPage.ratingBreakdown')}</p>
+          {STAR_VALUES.map((value) => {
+            const count = summary.distribution[value]
+            const active = activeRating === value
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => onSelectRating(active ? null : value)}
+                aria-pressed={active}
+                aria-label={`${value} stars: ${count} responses. ${active ? 'Clear filter' : 'Show only these'}`}
+                className={cn(
+                  'grid w-full grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 rounded-md px-2 py-1 text-left text-xs transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+                  active ? 'bg-amber-500/15' : 'hover:bg-muted',
+                )}
+              >
+                <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                  {value} <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
+                </span>
+                <span className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                  <span className="block h-full rounded-full bg-amber-400" style={{ width: `${(count / max) * 100}%` }} />
+                </span>
+                <span className="text-right tabular-nums text-muted-foreground">{count}</span>
+              </button>
+            )
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// One feedback: who sent it, the stars, how the comment was given and the comment itself.
+function FeedbackCard({ item }: { item: AppFeedbackItem }) {
+  const { t } = useTranslation()
+  const location = [item.user?.district, item.user?.state].filter(Boolean).join(', ')
+  return (
+    <li>
+      <Card className="h-full">
+        <CardContent className="flex h-full flex-col gap-3 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <span className="truncate">{item.user?.name || 'Unknown user'}</span>
+                {item.user?.isTester && <TesterTag />}
+              </p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                {item.user?.mobileNumber && (
+                  <span className="inline-flex items-center gap-1">
+                    <Phone className="h-3 w-3" aria-hidden="true" /> {item.user.mobileNumber}
+                  </span>
+                )}
+                {location && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3 w-3" aria-hidden="true" /> {location}
+                  </span>
+                )}
+              </div>
+            </div>
+            <StarRating value={item.rating} />
+          </div>
+
+          {item.comment ? (
+            <p className="flex-1 whitespace-pre-wrap break-words rounded-md bg-muted/50 p-3 text-sm text-foreground">{item.comment}</p>
+          ) : (
+            <p className="flex-1 text-sm italic text-muted-foreground">{t('feedbacksPage.noCommentRatingOnly')}</p>
+          )}
+
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              {item.inputMethod === 'voice' ? (
+                <>
+                  <Mic className="h-3.5 w-3.5" aria-hidden="true" /> Spoken
+                </>
+              ) : (
+                <>
+                  <Keyboard className="h-3.5 w-3.5" aria-hidden="true" /> Typed
+                </>
+              )}
+            </span>
+            <span>{formatDateTime(item.createdAt)}</span>
+          </div>
+        </CardContent>
+      </Card>
+    </li>
+  )
+}
+
+function FeedbackListSkeleton() {
+  const { t } = useTranslation()
+  return (
+    <ul className="grid gap-3 md:grid-cols-2" aria-busy="true" aria-label={t('feedbacksPage.loadingFeedback')}>
+      {Array.from({ length: 4 }, (_, i) => (
+        <li key={i}>
+          <Card>
+            <CardContent className="space-y-3 p-4">
+              <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+              <div className="h-16 animate-pulse rounded bg-muted" />
+              <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
+            </CardContent>
+          </Card>
+        </li>
+      ))}
+    </ul>
+  )
+}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage } from '@/client/client'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,

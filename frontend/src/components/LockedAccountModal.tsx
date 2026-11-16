@@ -4,7 +4,7 @@ import {
   accountLockedEmitter,
   type AccountLockedInfo,
 } from "@/events/accountLockedEvents";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/stores/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Ban, PauseCircle } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
-const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL as string | undefined;
+import { SUPPORT_EMAIL } from '@/config/env';
 
 function formatDate(iso: string | null): string | null {
   if (!iso) return null;

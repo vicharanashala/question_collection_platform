@@ -28,7 +28,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { authApi, getErrorMessage } from "@/api/client";
+import { authApi, getErrorMessage } from "@/client/client";
 import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from "@/constants/legal";
 import { categoryLabel } from "@/constants/public";
 import type { AuthUser } from "@/types";

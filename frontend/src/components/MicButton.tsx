@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Loader2, Mic, MicOff, Square, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { speechApi, toSarvamLang } from '@/api/speech'
+import { speechApi, toSarvamLang } from '@/client/speech'
 
 import { cn } from '@/lib/utils'
 

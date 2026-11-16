@@ -20,9 +20,9 @@ import { Card } from "@/components/ui/card";
 import { BrandLogo } from "@/components/BrandLogo";
 import { SignOutDialog } from "@/components/SignOutDialog";
 import { JOURNEY, JourneyStep } from "@/components/AnveshanJourney";
-import { StepTimeline } from "@/pages/public/AnveshMileStone";
+import { StepTimeline } from "@/features/public/AnveshMileStone";
 import { ANVESHAN_PLATFORM_URL } from "@/constants/public";
-import type { AnveshanMilestoneResponse } from "@/api/client";
+import type { AnveshanMilestoneResponse } from "@/client/client";
 
 type GoalKey = keyof AnveshanMilestoneResponse["requirements"];
 

@@ -6,10 +6,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AGRI_ENTITY_TYPES } from '@/constants/public'
 import { cn } from '@/lib/utils'
 import type { AgriEntityType } from '@/types'
-import { useAuth } from '@/context/AuthContext'
-import { questionApi } from '@/api/client'
+import { useAuth } from '@/stores/AuthContext'
+import { questionApi } from '@/client/client'
 import { anveshanProgressEmitter } from '@/events/anveshanProgressEvents'
-import type { AnveshanMilestoneData } from '@/pages/public/AnveshMileStone'
+import type { AnveshanMilestoneData } from '@/features/public/AnveshMileStone'
 
 export type SubmissionTab = 'question' | AgriEntityType
 
