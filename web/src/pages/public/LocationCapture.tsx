@@ -428,7 +428,7 @@ export function LocationCaptureModal({
         {/* ── Cascading LGD selects ── */}
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>State <span className="text-rose-600" aria-hidden="true">*</span></Label>
+            <Label>{t('auth.state')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualState ? MANUAL_VALUE : stateCode}
               onValueChange={(value) => {
@@ -494,7 +494,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>District <span className="text-rose-600" aria-hidden="true">*</span></Label>
+            <Label>{t('auth.district')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualDistrict ? MANUAL_VALUE : districtCode}
               onValueChange={(value) => {
@@ -557,7 +557,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Block <span className="text-rose-600" aria-hidden="true">*</span></Label>
+            <Label>{t('block')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualBlock ? MANUAL_VALUE : blockCode}
               onValueChange={(value) => {
@@ -613,7 +613,7 @@ export function LocationCaptureModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Village <span className="text-rose-600" aria-hidden="true">*</span></Label>
+            <Label>{t('village')} <span className="text-rose-600" aria-hidden="true">*</span></Label>
             <Select
               value={manualVillage ? MANUAL_VALUE : villageCode}
               onValueChange={(value) => {
