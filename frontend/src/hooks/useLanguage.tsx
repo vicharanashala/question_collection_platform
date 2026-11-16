@@ -4,7 +4,7 @@
  * Exposes `{ language, setLanguage, isRTL }` to any component inside
  * <LanguageProvider>. Persistence (`localStorage` key `appLanguage`) and
  * `<html dir/lang>` sync are delegated to the existing i18n config
- * (`web/src/i18n/index.ts`) so there is exactly one source of truth for the
+ * (`frontend/src/i18n/index.ts`) so there is exactly one source of truth for the
  * active language.
  *
  * Role-based locale lock: only the `user` role may change language. Every

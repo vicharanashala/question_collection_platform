@@ -1,5 +1,5 @@
 /**
- * Adds the `curatorDashboard` translation block to web/src/i18n/resources.ts.
+ * Adds the `curatorDashboard` translation block to frontend/src/i18n/resources.ts.
  *
  * Hindi gets real translations. The other 22 locales fall back to English
  * baseline values (i18next's `fallbackLng:'en'` would produce the same UX
@@ -113,14 +113,14 @@ function getTranslations(lang) {
 }
 
 
-// ─── Patch web/src/i18n/resources.ts ───────────────────────────────────
+// ─── Patch frontend/src/i18n/resources.ts ───────────────────────────────────
 //
 // Strategy: for each locale, find the bounds of `"<lang>": { ... }` by
 // brace-counting, then find `"common": { ... }` inside it, then either add
 // to an existing `"curatorDashboard": { ... }` block or create a new one
 // at the end of `common`. This handles whichever state the file is in.
 
-const webFilePath = path.join(ROOT, 'web', 'src', 'i18n', 'resources.ts')
+const webFilePath = path.join(ROOT, 'frontend', 'src', 'i18n', 'resources.ts')
 let webSrc = fs.readFileSync(webFilePath, 'utf8')
 let webKeysAdded = 0
 let webKeysUpdated = 0

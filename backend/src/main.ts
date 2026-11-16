@@ -95,7 +95,7 @@ async function bootstrap() {
 
   // ─── Optional: serve the built Vite frontend (React admin dashboard) ─────────
   // The backend can host the web dashboard itself so a single port serves both
-  // the API and the UI. If `web/dist/index.html` is missing (e.g. you only built
+  // the API and the UI. If `frontend/dist/index.html` is missing (e.g. you only built
   // the backend, or you're running the Vite dev server separately on :5173),
   // we log a warning and continue — the API still works, only the UI is
   // unreachable on this port.
@@ -109,8 +109,8 @@ async function bootstrap() {
   // built `index.html`.
   const webDistCandidates = [
     process.env.WEB_DIST_PATH,
-    join(__dirname, '..', '..', 'web', 'dist'),
-    join(__dirname, '..', '..', '..', 'web', 'dist'),
+    join(__dirname, '..', '..', 'frontend', 'dist'),
+    join(__dirname, '..', '..', '..', 'frontend', 'dist'),
   ].filter((p): p is string => Boolean(p));
 
   const webDistPath = webDistCandidates.find((p) =>

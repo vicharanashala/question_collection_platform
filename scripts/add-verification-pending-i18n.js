@@ -1,6 +1,6 @@
 /**
  * Adds new translation keys to the `verificationPending` block in
- * web/src/i18n/resources.ts.
+ * frontend/src/i18n/resources.ts.
  *
  * English values are used as a baseline for all locales. Hindi gets proper
  * translations. Other locales fall back to English (i18next's fallbackLng:'en'
@@ -59,9 +59,9 @@ function getTranslations(lang) {
   return EN
 }
 
-// ─── Patch web/src/i18n/resources.ts ───────────────────────────────────
+// ─── Patch frontend/src/i18n/resources.ts ───────────────────────────────────
 
-const webFilePath = path.join(ROOT, 'web', 'src', 'i18n', 'resources.ts')
+const webFilePath = path.join(ROOT, 'frontend', 'src', 'i18n', 'resources.ts')
 let webSrc = fs.readFileSync(webFilePath, 'utf8')
 let webKeysAdded = 0
 

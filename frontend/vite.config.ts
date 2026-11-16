@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
     ],
 
     // ─── Static assets ─────────────────────────────────────────────────────────
-    // Served as-is at "/" (e.g. web/assets/Crops/1.svg → /Crops/1.svg).
+    // Served as-is at "/" (e.g. frontend/assets/Crops/1.svg → /Crops/1.svg).
     publicDir: 'assets',
 
     // ─── Aliases ───────────────────────────────────────────────────────────────

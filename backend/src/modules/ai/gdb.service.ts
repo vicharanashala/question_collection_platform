@@ -441,7 +441,7 @@ return {
    *
    * Mirrors the frontend helper `toSarvamLang` in
    *   mobile/src/api/speech.ts
-   *   web/src/api/speech.ts
+   *   frontend/src/api/speech.ts
    * so the backend never has to assume callers have normalized the code.
    */
   private toSarvamLang(code: string): string {

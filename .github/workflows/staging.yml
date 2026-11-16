@@ -38,14 +38,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'pnpm'
-          cache-dependency-path: web/pnpm-lock.yaml
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: web
+        working-directory: frontend
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        working-directory: web
+        working-directory: frontend
         run: pnpm build
         env:
           VITE_APP_ENV: staging
@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-dist
-          path: web/dist
+          path: frontend/dist
           retention-days: 1
 
   build:
@@ -73,7 +73,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: web-dist
-          path: backend/web/dist
+          path: backend/frontend/dist
 
       - name: Generate image tags
         id: generate-tags
@@ -181,6 +181,6 @@ jobs:
             TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=annadatha-cloudrun
             PROXY=${{ secrets.PROXY }}
-            WEB_DIST_PATH=/app/web/dist
+            WEB_DIST_PATH=/app/frontend/dist
           env_vars_update_strategy: merge
           flags: --allow-unauthenticated

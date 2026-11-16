@@ -19,7 +19,7 @@ interface BrandLogoProps {
  *
  * Use anywhere a brand mark is needed (sidebar, mobile drawer, auth pages,
  * favicon, OG cards, etc). For the browser-tab favicon, link to the static
- * `/logo.png` served from `web/public/`.
+ * `/logo.png` served from `frontend/public/`.
  */
 export function BrandLogo({ className, alt = 'AnnaDatha' }: BrandLogoProps) {
   return (

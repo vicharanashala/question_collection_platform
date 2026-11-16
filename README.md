@@ -54,7 +54,7 @@ question_collection_platform/
 │       ├── config/              # TypeORM configuration and environment setup
 │       ├── workers/             # Background job processors
 │       └── utils/scripts/       # One-off migration and seed scripts
-├── web/                         # Admin and curator dashboard
+├── frontend/                    # Admin and curator dashboard
 │   └── src/
 │       ├── api/                 # API client
 │       ├── components/          # Shadcn/Radix UI components and Recharts visualizations
@@ -113,7 +113,7 @@ PostgreSQL (via TypeORM) stores all structured relational data: user accounts, r
 Duplicate detection operates at two independent layers:
 
 1. **Backend — Jaccard similarity** (curator approve flow): When a curator clicks Approve, the backend tokenizes the question text (lowercase, strip punctuation, drop tokens shorter than 2 characters, sort), computes Jaccard similarity against the last 90 days of approved questions, and auto-holds the submission if the score is ≥ 0.85. Candidates are drawn from the most recent 200 approved questions, ordered descending.
-2. **Web — On-device similarity** (submission time): The in-browser pipeline in `web/src/utils/onDeviceAI.ts` compares the submitted question against previously submitted questions before it is sent.
+2. **Web — On-device similarity** (submission time): The in-browser pipeline in `frontend/src/utils/onDeviceAI.ts` compares the submitted question against previously submitted questions before it is sent.
 
 ### 4.3 AI Decision Authority
 
@@ -121,7 +121,7 @@ All AI-generated classifications — question relevance, spam scoring, duplicate
 
 ### 4.4 Internationalization
 
-The web application uses i18next with locale resources bundled in `web/src/i18n/resources.ts`. All user-facing strings are externalized; locale switching does not require a rebuild.
+The web application uses i18next with locale resources bundled in `frontend/src/i18n/resources.ts`. All user-facing strings are externalized; locale switching does not require a rebuild.
 
 ---
 

@@ -1636,7 +1636,7 @@ async getUserStats(dto: ListUserStatsDto) {
   }
 
   /**
-   * Full stats payload matching web/src/types/AdminStats.
+   * Full stats payload matching frontend/src/types/AdminStats.
    * GET /admin/stats
    */
   // async getStats(_query: AnalyticsQueryDto) {

@@ -53,7 +53,7 @@ COPY --from=build /app/public ./public
 
 # Web frontend SPA build — served by NestJS at /, /login, /admin, etc.
 # WEB_DIST_PATH is passed as a Cloud Run env var so main.ts finds it at runtime.
-COPY web/dist ./web/dist
+COPY frontend/dist ./frontend/dist
 
 COPY scripts/start.sh ./scripts/start.sh
 

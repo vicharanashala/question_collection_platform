@@ -18,7 +18,7 @@ services:
 
   web:
     build:
-      context: ./web
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: question_platform_web
     restart: unless-stopped

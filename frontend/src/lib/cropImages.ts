@@ -1,5 +1,5 @@
 // Crop image lookup: maps crop name -> bundled SVG asset filename.
-// Image files live in web/assets/Crops/<name>.svg (served at /Crops/<name>.svg
+// Image files live in frontend/assets/Crops/<name>.svg (served at /Crops/<name>.svg
 // via vite's publicDir) and are named after the crop, matching the mobile app's
 // convention. `/` is not a valid filename character, so a crop name containing
 // one (e.g. "Bajra/Pearl millet") maps to a file with the slash replaced by a

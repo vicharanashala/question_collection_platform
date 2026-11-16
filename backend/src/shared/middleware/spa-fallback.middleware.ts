@@ -6,8 +6,8 @@
  * non-API, non-static-asset GET request.
  *
  * Use case:
- *   - `<backend-host>/`            → serves `web/dist/index.html`
- *   - `<backend-host>/questions`   → serves `web/dist/index.html` (React Router route)
+ *   - `<backend-host>/`            → serves `frontend/dist/index.html`
+ *   - `<backend-host>/questions`   → serves `frontend/dist/index.html` (React Router route)
  *   - `<backend-host>/assets/x.js` → handled by `useStaticAssets`, NOT this middleware
  *   - `<backend-host>/api/v1/...`  → skipped; controller handles
  *   - `<backend-host>/uploads/...` → skipped; handled by the uploads static asset middleware

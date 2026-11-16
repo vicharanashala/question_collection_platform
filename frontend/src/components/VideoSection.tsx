@@ -6,7 +6,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 /**
  * YouTube embed URL (e.g. https://www.youtube.com/embed/VIDEO_ID?rel=0&modestbranding=1)
- * Set VITE_PUBLIC_FAQ_VIDEO_URL in web/.env
+ * Set VITE_PUBLIC_FAQ_VIDEO_URL in frontend/.env
  * Set VITE_PUBLIC_FAQ_VIDEO_DISABLED=true to disable the video section while keeping it visible.
  */
 const VIDEO_URL = (import.meta as any).env?.VITE_PUBLIC_FAQ_VIDEO_URL as string | undefined

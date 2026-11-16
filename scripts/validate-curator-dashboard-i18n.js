@@ -1,4 +1,4 @@
-// Validates that web/src/i18n/resources.ts contains the curatorDashboard
+// Validates that frontend/src/i18n/resources.ts contains the curatorDashboard
 // block for every locale, and that all required keys are present.
 const fs = require('fs')
 const path = require('path')
@@ -18,7 +18,7 @@ const REQUIRED_KEYS = [
   'noVolumeData', 'loadError',
 ]
 
-const src = fs.readFileSync(path.resolve(__dirname, '..', 'web', 'src', 'i18n', 'resources.ts'), 'utf8')
+const src = fs.readFileSync(path.resolve(__dirname, '..', 'frontend', 'src', 'i18n', 'resources.ts'), 'utf8')
 const m = src.match(/^const resources = (\{[\s\S]*?\n\})\s*\n?export default resources;?/m)
 if (!m) { console.error('Could not extract resources object'); process.exit(1) }
 

@@ -9,7 +9,7 @@
  * Why a separate script rather than a Jest test?
  *  - Jest already covers the middleware's pure logic.
  *  - This script proves the full Express pipeline (useStaticAssets + spaFallback
- *    + middleware ordering) works against the *actual* web/dist bundle.
+ *    + middleware ordering) works against the *actual* frontend/dist bundle.
  *  - Useful for debugging new deployments without bringing up the whole
  *    NestJS app (MongoDB, Redis, AI VM, etc.).
  *
@@ -21,18 +21,18 @@ const express = require('express');
 const serveStatic = require('serve-static');
 const { spaFallback } = require('./dist/shared/middleware/spa-fallback.middleware');
 
-const WEB_DIST = path.resolve(__dirname, '../web/dist');
+const WEB_DIST = path.resolve(__dirname, '../frontend/dist');
 const PORT = 4321;
 
 const distExists = require('fs').existsSync(path.join(WEB_DIST, 'index.html'));
 if (!distExists) {
-  console.error(`✗ web/dist not found at ${WEB_DIST}. Run: pnpm --filter web build`);
+  console.error(`✗ frontend/dist not found at ${WEB_DIST}. Run: pnpm --filter web build`);
   process.exit(1);
 }
 
 const app = express();
 
-// 1) Static assets from web/dist (Vite output). The `maxAge`/`setHeaders`
+// 1) Static assets from frontend/dist (Vite output). The `maxAge`/`setHeaders`
 //    combo here MUST mirror `backend/src/main.ts` exactly so this test
 //    proves the real production pipeline, not a synthetic one.
 app.use(serveStatic(WEB_DIST, {
@@ -60,7 +60,7 @@ app.get('/api/v1/health', (_req, res) => res.json({ status: 'ok' }));
 
 const server = app.listen(PORT, async () => {
   console.log(`Smoke test server listening on http://localhost:${PORT}`);
-  console.log(`Serving web/dist from ${WEB_DIST}\n`);
+  console.log(`Serving frontend/dist from ${WEB_DIST}\n`);
 
   const results = [];
   const record = (label, ok, details) => {
@@ -110,7 +110,7 @@ const server = app.listen(PORT, async () => {
       if (!immutable) results.push({ label: '1y max-age on hashed asset', ok: false });
     }));
   } else {
-    results.push({ label: 'no hashed asset found in web/dist/assets', ok: false });
+    results.push({ label: 'no hashed asset found in frontend/dist/assets', ok: false });
   }
 
   // A hashed CSS asset — proves the `assets/*` rule is prefix-based, not
@@ -123,7 +123,7 @@ const server = app.listen(PORT, async () => {
   }
 
   // --- Excluded paths -----------------------------------------------------
-  // `id="root"` is the React mount point in our `web/index.html`. If it
+  // `id="root"` is the React mount point in our `frontend/index.html`. If it
   // appears in the response body, the SPA fallback hijacked a request that
   // should have been served by a controller or returned as a plain 404.
   const SPA_MARKER = 'id="root"';

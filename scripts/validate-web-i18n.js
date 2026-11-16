@@ -1,9 +1,9 @@
-// Validates that web/src/i18n/resources.ts is parseable as TS and that
+// Validates that frontend/src/i18n/resources.ts is parseable as TS and that
 // the const resources = {...} declaration is a valid JS expression.
 const fs = require('fs')
 const path = require('path')
 
-const src = fs.readFileSync(path.resolve(__dirname, '..', 'web', 'src', 'i18n', 'resources.ts'), 'utf8')
+const src = fs.readFileSync(path.resolve(__dirname, '..', 'frontend', 'src', 'i18n', 'resources.ts'), 'utf8')
 
 // Try to extract `const resources = {...}` (or `const resources = {...} as const`).
 const m = src.match(/^const resources = (\{[\s\S]*?\n\})\s*\n?export default resources;?/m)
