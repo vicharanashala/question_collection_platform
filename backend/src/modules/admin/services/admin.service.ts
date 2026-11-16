@@ -79,6 +79,7 @@ import {
   IAppFeedbackRepository,
   IAnveshanAnswerRepository,
   AdminWalletScope,
+  QUESTION_RESPONSE_SELECT,
 } from "../../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
 import { MongoTransactionService } from "../../../shared/database/mongodb/mongo-transaction.service";
@@ -1036,17 +1037,22 @@ async getUserStats(dto: ListUserStatsDto) {
       throw new NotFoundException("Question not found");
     }
 
-    const question = await this.questionRepo.findById(questionId);
+    // Project to the response contract; keeps the embedding vector and other
+    // internals out of the review payload.
+    const question = await this.questionRepo.findById(questionId, [
+      ...QUESTION_RESPONSE_SELECT,
+      'isDeleted',
+    ]);
     if (!question || question.isDeleted) {
       throw new NotFoundException("Question not found");
     }
 
     const [user, reviewer] = await Promise.all([
       Types.ObjectId.isValid(String(question.userId))
-        ? this.userRepo.findById(String(question.userId))
+        ? this.userRepo.findById(String(question.userId), ['id', 'name', 'mobileNumber', 'state'])
         : null,
       question.reviewerId && Types.ObjectId.isValid(String(question.reviewerId))
-        ? this.userRepo.findById(String(question.reviewerId))
+        ? this.userRepo.findById(String(question.reviewerId), ['id', 'name'])
         : null,
     ]);
 

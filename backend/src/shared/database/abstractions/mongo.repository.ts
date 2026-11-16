@@ -415,6 +415,19 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
 
   // ─── Standard CRUD ───────────────────────────────────────────────────────
 
+  // Builds a Mongo projection from a field list; `id` maps to `_id`.
+  // A `-` prefix excludes a field (e.g. ['-embedding']). Mongo does not allow
+  // mixing inclusion and exclusion in one projection, so use one style per call.
+  protected toProjection(select?: string[]): Record<string, 0 | 1> | undefined {
+    if (!select?.length) return undefined;
+    const projection: Record<string, 0 | 1> = {};
+    for (const field of select) {
+      if (field.startsWith('-')) projection[field.slice(1)] = 0;
+      else projection[field === 'id' ? '_id' : field] = 1;
+    }
+    return projection;
+  }
+
   async findAll(
     filter: EntityFilter<T>,
     options?: FindAllOptions<T>,
@@ -431,7 +444,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     if (sort) opts.sort = sort;
 
     const docs = await this._model
-      .find(mongoFilter_, undefined, opts)
+      .find(mongoFilter_, this.toProjection(options?.select), opts)
       .exec();
     return docs.map((d) => this.docToEntity(d));
   }
@@ -468,21 +481,25 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
     return fixed;
   }
 
-  async findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null> {
+  async findOne(filter: EntityFilter<T>, session?: ClientSession, select?: string[]): Promise<T | null> {
     const translated = this.translateIdField(filter);
-    const doc = await this._model.findOne(toMongoFilter(translated)).session(session ?? null).exec();
+    const doc = await this._model
+      .findOne(toMongoFilter(translated), this.toProjection(select))
+      .session(session ?? null)
+      .exec();
     return doc ? this.docToEntity(doc) : null;
   }
 
-  async findById(id: string): Promise<T | null> {
+  async findById(id: string, select?: string[]): Promise<T | null> {
     const { Types } = await import('mongoose');
+    const projection = this.toProjection(select);
     // Use findById only for ObjectIds; for UUID strings use findOne on _id
     if (Types.ObjectId.isValid(id) && id.length === 24) {
-      const doc = await this._model.findById(id).exec();
+      const doc = await this._model.findById(id, projection).exec();
       return doc ? this.docToEntity(doc) : null;
     }
     // UUID or other string — query by _id field
-    const doc = await this._model.findOne({ _id: id } as Record<string, unknown>).exec();
+    const doc = await this._model.findOne({ _id: id } as Record<string, unknown>, projection).exec();
     return doc ? this.docToEntity(doc) : null;
   }
 
@@ -559,7 +576,7 @@ export class MongoRepository<T extends object> implements BaseRepository<T> {
 
     const [docs, total] = await Promise.all([
       this._model
-        .find(mongoFilter_, undefined, {
+        .find(mongoFilter_, this.toProjection(options?.select), {
           skip,
           limit: actualLimit,
           sort: options?.pagination?.sort,

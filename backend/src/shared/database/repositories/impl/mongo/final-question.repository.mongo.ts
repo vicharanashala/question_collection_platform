@@ -22,12 +22,12 @@ export class MongoFinalQuestionRepository
    * an `ObjectId` so the query actually matches. If the input is not a
    * valid ObjectId, return [] (no docs can match).
    */
-  async findByReferenceQuestionId(referenceQuestionId: string): Promise<FinalQuestion[]> {
+  async findByReferenceQuestionId(referenceQuestionId: string, select?: string[]): Promise<FinalQuestion[]> {
     const oid = toObjectIdOrNull(referenceQuestionId);
     if (!oid) return [];
     const filter: Record<string, unknown> = { referenceQuestionId: oid };
     return this._model
-      .find(filter as Record<string, unknown>, undefined, { sort: { createdAt: -1 } })
+      .find(filter as Record<string, unknown>, this.toProjection(select), { sort: { createdAt: -1 } })
       .exec() as Promise<FinalQuestion[]>;
   }
 

@@ -15,7 +15,7 @@ export { ITransactionRepository } from './transaction.repository.interface';
 export { IWithdrawalRequestRepository } from './withdrawal-request.repository.interface';
 export { IUserPaymentDetailRepository } from './user-payment-detail.repository.interface';
 export { IPaymentLogRepository } from './payment-log.repository.interface';
-export { IQuestionRepository } from './question.repository.interface';
+export { IQuestionRepository, QUESTION_RESPONSE_SELECT } from './question.repository.interface';
 export { IAuditLogRepository } from './audit-log.repository.interface';
 export { IAdminConfigRepository } from './admin-config.repository.interface';
 export { INotificationRepository } from './notification.repository.interface';

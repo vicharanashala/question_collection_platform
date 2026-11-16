@@ -29,6 +29,7 @@ import {
   IAuditLogRepository,
   INotificationRepository,
   IUserRepository,
+  QUESTION_RESPONSE_SELECT,
 } from '../../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
 import { Types } from 'mongoose';
@@ -734,7 +735,9 @@ export class QuestionService {
   // ─── Get single ─────────────────────────────────────────────────────────────
 
   async findOne(id: string, userId?: string): Promise<Question> {
-    const question = await this.questionRepo.findOne({ where: { id } });
+    // Project to the frontend response contract; keeps the embedding vector
+    // and other internals out of the response and the question cache.
+    const question = await this.questionRepo.findOne({ where: { id } }, undefined, QUESTION_RESPONSE_SELECT);
     if (!question) throw new NotFoundException('Question not found');
     // Non-owners can only see approved questions (or own questions)
     if (userId && question.userId !== userId && question.status !== QuestionStatus.APPROVED) {
@@ -795,6 +798,16 @@ export class QuestionService {
 
   // ─── Admin: approve / reject ────────────────────────────────────────────────
 
+  // Picks only the frontend question contract fields from an entity.
+  private toQuestionResponse(question: Question): Question {
+    const source = question as unknown as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+    for (const field of QUESTION_RESPONSE_SELECT) {
+      if (field in source) out[field] = source[field];
+    }
+    return out as unknown as Question;
+  }
+
   async approve(questionId: string, reviewerId: string, reason?: string): Promise<Question> {
     const question = await this.questionRepo.findOne({ where: { id: questionId } });
     if (!question) throw new NotFoundException('Question not found');
@@ -816,7 +829,7 @@ export class QuestionService {
     //   newValue: { status: saved.status },
     // });
 
-    return saved;
+    return this.toQuestionResponse(saved);
   }
 
   async reject(questionId: string, reviewerId: string, reason: string): Promise<Question> {
@@ -840,7 +853,7 @@ export class QuestionService {
     //   newValue: { status: saved.status, rejectionReason: reason },
     // });
 
-    return saved;
+    return this.toQuestionResponse(saved);
   }
 
   // ─── Get daily count ────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ import {
   IQuestionRepository,
   IAuditLogRepository,
   IUserRepository,
+  QUESTION_RESPONSE_SELECT,
 } from '../../../shared/database/repositories';
 import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
 import { INDIAN_STATES } from '../../../shared/constants/indian-states.constant';
@@ -139,6 +140,7 @@ export class DistributorService {
 
     const result = await this.questionRepo.findAndCount(filter, {
       pagination: { page, limit, sort: { [sortBy]: sortOrder } },
+      select: QUESTION_RESPONSE_SELECT,
     });
 
     return {
@@ -153,7 +155,8 @@ export class DistributorService {
   }
 
   async getApprovedQuestion(questionId: string) {
-    const question = await this.questionRepo.findById(questionId);
+    // Project to the frontend contract; keeps the embedding vector out of the response.
+    const question = await this.questionRepo.findById(questionId, QUESTION_RESPONSE_SELECT);
     if (!question) throw new NotFoundException('Question not found.');
 
     const status = (question as unknown as { status: QuestionStatus }).status;
@@ -535,6 +538,8 @@ export class DistributorService {
 
     const result = await this.finalQuestionRepo.findAndCount(filter, {
       pagination: { page, limit, sort: { createdAt: -1 } },
+      // Exclude the heavy snapshot internals from the listing payload.
+      select: ['-embedding', '-deviceInfo'],
     });
 
     // Enrich each row with its distributor's display name so the UI doesn't
@@ -586,7 +591,7 @@ export class DistributorService {
   }
 
   async getDistributionsForQuestion(questionId: string) {
-    const rows = await this.finalQuestionRepo.findByReferenceQuestionId(questionId);
+    const rows = await this.finalQuestionRepo.findByReferenceQuestionId(questionId, ['-embedding', '-deviceInfo']);
 
     // The reference doc is part of the same query result now (it's stored with
     // distributionState: null + isReference: true). Separate it out so existing

@@ -10,6 +10,8 @@ export interface PaginationOptions {
 
 export interface FindAllOptions<T> {
   pagination?: PaginationOptions;
+  /** Field names to include in the result (projection). `id` maps to `_id`. */
+  select?: string[];
   [key: string]: unknown;
 }
 
@@ -155,12 +157,12 @@ export abstract class BaseRepository<T extends object> {
    * Returns a single document matching `filter`, or null.
    * Pass `session` to read within an active Mongo transaction.
    */
-  abstract findOne(filter: EntityFilter<T>, session?: ClientSession): Promise<T | null>;
+  abstract findOne(filter: EntityFilter<T>, session?: ClientSession, select?: string[]): Promise<T | null>;
 
   /**
    * Returns a document by its string id (uuid / ObjectId), or null.
    */
-  abstract findById(id: string): Promise<T | null>;
+  abstract findById(id: string, select?: string[]): Promise<T | null>;
 
   /**
    * Creates and returns a new document.

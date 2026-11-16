@@ -6,6 +6,40 @@ import { ListQuestionsDto } from '@/modules/question/dto';
 import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
 import { Question } from '../mongodb/schemas/question.schema';
 
+/**
+ * Fields returned to the frontend for a single question. Matches the frontend
+ * `Question` contract; excludes heavy/internal fields such as `embedding`,
+ * `deviceInfo`, `duplicateOfId` and soft-delete flags.
+ */
+export const QUESTION_RESPONSE_SELECT: string[] = [
+  'id',
+  'userId',
+  'questionText',
+  'status',
+  'domains',
+  'season',
+  'cropType',
+  'state',
+  'district',
+  'block',
+  'language',
+  'mediaType',
+  'mediaUrls',
+  'audioUrls',
+  'duplicateFlag',
+  'submissionLocation',
+  'isAnveshan',
+  'isAnswerSubmitted',
+  'submittedAt',
+  'reviewedAt',
+  'reviewerId',
+  'rejectionReason',
+  'approvalReason',
+  'heldReason',
+  'createdAt',
+  'updatedAt',
+];
+
 export interface QuestionFilter {
   id?: string;
   userId?: string;

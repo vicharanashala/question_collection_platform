@@ -18,7 +18,7 @@ export interface FinalQuestionFilter {
 
 export interface IFinalQuestionRepository extends BaseRepository<FinalQuestion> {
   /** All distribution rows for a given source question (one per assigned state). */
-  findByReferenceQuestionId(referenceQuestionId: string): Promise<FinalQuestion[]>;
+  findByReferenceQuestionId(referenceQuestionId: string, select?: string[]): Promise<FinalQuestion[]>;
 
   /** All distribution rows targeting a given Indian state. */
   findByDistributionState(distributionState: string): Promise<FinalQuestion[]>;

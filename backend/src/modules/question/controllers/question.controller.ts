@@ -188,7 +188,7 @@ async approve(
 
   await this.safeAudit({
     ...base,
-    context: { questionId: data?._id.toString(), userId: data?.userId, reason },
+    context: { questionId: (data as unknown as { id?: string } | undefined)?.id, userId: data?.userId, reason },
     changes: { before: { status: 'pending' }, after: { status: 'approved' } },
     outcome: { status: OutcomeStatus.SUCCESS },
   });
