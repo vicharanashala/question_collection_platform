@@ -1,0 +1,24 @@
+import { MongoRepository } from "@/shared/database/abstractions/mongo.repository";
+import { Candidate } from "@/shared/database/mongodb/schemas/anveshan.schema";
+import { Injectable } from "@nestjs/common";
+import { IAnveshanCandidateRepository } from "../../anvesh-candidate.repository.interface";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { ANVESHAN_CONNECTION } from "@/shared/database/mongodb/mongo.module";
+
+@Injectable()
+export class MongoAnveshCandidateRepository extends MongoRepository<Candidate> implements IAnveshanCandidateRepository{
+    constructor(@InjectModel('Candidate', ANVESHAN_CONNECTION) protected readonly _model: Model<Candidate>){
+        super(_model)
+    }
+
+    // Finds the latest candidate by phone, ignoring soft deleted records.
+    // A phone can have multiple documents (summary and module), so the newest one wins.
+    async findByPhone(phone: string): Promise<Candidate | null> {
+        const user =  await this._model
+        .findOne({ phone, is_deleted: { $ne: true } } as Record<string, unknown>)
+        .sort({ created_at: -1 })
+        .exec()
+        return user
+    }
+}

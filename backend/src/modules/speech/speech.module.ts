@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { SpeechController } from './speech.controller';
-import { SarvamService } from './sarvam.service';
+import { SpeechController } from './controllers/speech.controller';
+import { SarvamService } from './services/sarvam.service';
 
 @Module({
   controllers: [SpeechController],

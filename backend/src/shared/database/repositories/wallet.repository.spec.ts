@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { MongoWalletRepository, walletScopeStages } from './impl/mongo/MongoWallet.repository';
+import { MongoWalletRepository, walletScopeStages } from './impl/mongo/wallet.repository.mongo';
 
 const ownerMatchOf = (stages: ReturnType<typeof walletScopeStages>) =>
   (stages[stages.length - 1] as { $match: Record<string, unknown> }).$match;

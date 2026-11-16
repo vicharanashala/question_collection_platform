@@ -128,9 +128,3 @@ deletedAt: Date | null;
 }
 
 export const QuestionSchema = SchemaFactory.createForClass(Question);
-
-// Text index for full-text search on question text
-QuestionSchema.index({ questionText: 'text' });
-// Compound indexes for common query patterns
-QuestionSchema.index({ userId: 1, submittedAt: -1 });
-QuestionSchema.index({ status: 1, submittedAt: -1 });

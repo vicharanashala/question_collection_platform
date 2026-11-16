@@ -1,9 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PinelabsService } from './pinelabs.service';
-import { RazorpayPayoutService } from './razorpay-payout.service';
-import { PaymentWebhookController } from './payment-webhook.controller';
-import { RazorpayWebhookController } from './razorpay-webhook.controller';
+import { PinelabsService } from './services/pinelabs.service';
+import { RazorpayPayoutService } from './services/razorpay-payout.service';
+import { PaymentWebhookController } from './controllers/payment-webhook.controller';
+import { RazorpayWebhookController } from './controllers/razorpay-webhook.controller';
 import { WalletsModule } from '../wallets/wallets.module';
 import { DbModule } from '../../shared/database/db.module';
 

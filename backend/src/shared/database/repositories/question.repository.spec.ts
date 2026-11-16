@@ -1,5 +1,5 @@
 import { QuestionStatus } from '../../classes/enums';
-import { MongoQuestionRepository } from './impl/mongo/MongoQuestion.repository';
+import { MongoQuestionRepository } from './impl/mongo/question.repository.mongo';
 
 // ─── MongoQuestionRepository ─────────────────────────────────────────────────
 

@@ -42,8 +42,3 @@ export class AuditLog {
 }
  
 export const AuditLogSchema = SchemaFactory.createForClass(AuditLog);
- 
-// Indexes for filtered audit queries
-AuditLogSchema.index({ createdAt: -1 });
-AuditLogSchema.index({ 'actor.actorType': 1, createdAt: -1 });
-AuditLogSchema.index({ 'actor.id': 1, createdAt: -1 });

@@ -48,7 +48,3 @@ export class Session {
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
-
-// Cleanup: Mongo deletes the doc once expiresAt passes.
-// To keep expired/revoked sessions around for audit, use expireAfterSeconds: 60 * 60 * 24 * 7 (7 days)
-SessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

@@ -9,25 +9,25 @@ import { Provider } from '@nestjs/common';
 
 // ─── Repository Interfaces ─────────────────────────────────────────────────
 
-export { IUserRepository } from './IUser.repository';
-export { IWalletRepository, AdminWalletScope, AdminWalletRow, AdminWalletTotals } from './IWallet.repository';
-export { ITransactionRepository } from './ITransaction.repository';
-export { IWithdrawalRequestRepository } from './IWithdrawalRequest.repository';
-export { IUserPaymentDetailRepository } from './IUserPaymentDetail.repository';
-export { IPaymentLogRepository } from './IPaymentLog.repository';
-export { IQuestionRepository } from './IQuestion.repository';
-export { IAuditLogRepository } from './IAuditLog.repository';
-export { IAdminConfigRepository } from './IAdminConfig.repository';
-export { INotificationRepository } from './INotification.repository';
-export { IReportRepository } from './IReport.repository';
-export { IReportReplyRepository } from './IReportReply.repository';
-export { IFaqRepository } from './IFaq.repository';
-export { IFinalQuestionRepository } from './IFinalQuestion.repository';
-export { IAnveshanCandidateRepository } from './IAnveshCandidate.repository'
-export { IAgriEntityRepository, UserAgriEntityTypeCount } from './IAgriEntity.repository';
-export { IAnveshanAnswerRepository } from './IAnveshanAnswer.repository';
-export { IAppFeedbackRepository, FeedbackRatingSummary } from './IAppFeedback.repository';
-export { ISessionRepository } from './ISeession.repository'
+export { IUserRepository } from './user.repository.interface';
+export { IWalletRepository, AdminWalletScope, AdminWalletRow, AdminWalletTotals } from './wallet.repository.interface';
+export { ITransactionRepository } from './transaction.repository.interface';
+export { IWithdrawalRequestRepository } from './withdrawal-request.repository.interface';
+export { IUserPaymentDetailRepository } from './user-payment-detail.repository.interface';
+export { IPaymentLogRepository } from './payment-log.repository.interface';
+export { IQuestionRepository } from './question.repository.interface';
+export { IAuditLogRepository } from './audit-log.repository.interface';
+export { IAdminConfigRepository } from './admin-config.repository.interface';
+export { INotificationRepository } from './notification.repository.interface';
+export { IReportRepository } from './report.repository.interface';
+export { IReportReplyRepository } from './report-reply.repository.interface';
+export { IFaqRepository } from './faq.repository.interface';
+export { IFinalQuestionRepository } from './final-question.repository.interface';
+export { IAnveshanCandidateRepository } from './anvesh-candidate.repository.interface'
+export { IAgriEntityRepository, UserAgriEntityTypeCount } from './agri-entity.repository.interface';
+export { IAnveshanAnswerRepository } from './anveshan-answer.repository.interface';
+export { IAppFeedbackRepository, FeedbackRatingSummary } from './app-feedback.repository.interface';
+export { ISessionRepository } from './session.repository.interface'
 
 // ─── Repository Tokens ────────────────────────────────────────────────────
 
@@ -55,25 +55,25 @@ export const REPOSITORY_TOKENS = {
 
 // ─── Concrete implementations (MongoDB only) ──────────────────────────────
 
-import { MongoUserRepository } from './impl/mongo/MongoUser.repository';
-import { MongoWalletRepository } from './impl/mongo/MongoWallet.repository';
-import { MongoTransactionRepository } from './impl/mongo/MongoTransaction.repository';
-import { MongoWithdrawalRequestRepository } from './impl/mongo/MongoWithdrawalRequest.repository';
-import { MongoUserPaymentDetailRepository } from './impl/mongo/MongoUserPaymentDetail.repository';
-import { MongoPaymentLogRepository } from './impl/mongo/MongoPaymentLog.repository';
-import { MongoQuestionRepository } from './impl/mongo/MongoQuestion.repository';
-import { MongoAuditLogRepository } from './impl/mongo/MongoAuditLog.repository';
-import { MongoAdminConfigRepository } from './impl/mongo/MongoAdminConfig.repository';
-import { MongoNotificationRepository } from './impl/mongo/MongoNotification.repository';
-import { MongoReportRepository } from './impl/mongo/MongoReport.repository';
-import { MongoReportReplyRepository } from './impl/mongo/MongoReportReply.repository';
-import { MongoFaqRepository } from './impl/mongo/MongoFaq.repository';
-import { MongoFinalQuestionRepository } from './impl/mongo/MongoFinalQuestion.repository';
-import { MongoAnveshCandidateRepository } from './impl/mongo/MongoAnveshCandidate.repository';
-import { MongoAgriEntityRepository } from './impl/mongo/MongoAgriEntity.repository';
-import { MongoAnveshanAnswerRepository } from './impl/mongo/MongoAnveshanAnswer.repository';
-import { MongoAppFeedbackRepository } from './impl/mongo/MongoAppFeedback.repository';
-import { MongoSessionRepository } from './impl/mongo/MongoSession.repository';
+import { MongoUserRepository } from './impl/mongo/user.repository.mongo';
+import { MongoWalletRepository } from './impl/mongo/wallet.repository.mongo';
+import { MongoTransactionRepository } from './impl/mongo/transaction.repository.mongo';
+import { MongoWithdrawalRequestRepository } from './impl/mongo/withdrawal-request.repository.mongo';
+import { MongoUserPaymentDetailRepository } from './impl/mongo/user-payment-detail.repository.mongo';
+import { MongoPaymentLogRepository } from './impl/mongo/payment-log.repository.mongo';
+import { MongoQuestionRepository } from './impl/mongo/question.repository.mongo';
+import { MongoAuditLogRepository } from './impl/mongo/audit-log.repository.mongo';
+import { MongoAdminConfigRepository } from './impl/mongo/admin-config.repository.mongo';
+import { MongoNotificationRepository } from './impl/mongo/notification.repository.mongo';
+import { MongoReportRepository } from './impl/mongo/report.repository.mongo';
+import { MongoReportReplyRepository } from './impl/mongo/report-reply.repository.mongo';
+import { MongoFaqRepository } from './impl/mongo/faq.repository.mongo';
+import { MongoFinalQuestionRepository } from './impl/mongo/final-question.repository.mongo';
+import { MongoAnveshCandidateRepository } from './impl/mongo/anvesh-candidate.repository.mongo';
+import { MongoAgriEntityRepository } from './impl/mongo/agri-entity.repository.mongo';
+import { MongoAnveshanAnswerRepository } from './impl/mongo/anveshan-answer.repository.mongo';
+import { MongoAppFeedbackRepository } from './impl/mongo/app-feedback.repository.mongo';
+import { MongoSessionRepository } from './impl/mongo/session.repository.mongo';
 // ─── Build Repository Providers ───────────────────────────────────────────
 
 /**

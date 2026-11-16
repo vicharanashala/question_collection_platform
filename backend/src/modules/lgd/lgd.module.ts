@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { LgdService } from './lgd.service';
-import { LgdController } from './lgd.controller';
+import { LgdService } from './services/lgd.service';
+import { LgdController } from './controllers/lgd.controller';
 
 @Module({
   controllers: [LgdController],

@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { mergeMap } from "rxjs/operators";
-import { StorageService, isStorageUri } from "../../../modules/storage/storage.service";
+import { StorageService, isStorageUri } from "../../../modules/storage/services/storage.service";
 
 /** Depth cap — responses are plain DTO trees, so this only guards against cycles. */
 const MAX_DEPTH = 12;

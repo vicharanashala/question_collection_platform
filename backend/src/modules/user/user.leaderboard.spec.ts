@@ -1,5 +1,5 @@
-import { UserService } from './user.service';
-import type { IUserRepository } from '../../shared/database/repositories/IUser.repository';
+import { UserService } from './services/user.service';
+import type { IUserRepository } from '../../shared/database/repositories/user.repository.interface';
 
 type LeaderboardRepo = Pick<IUserRepository, 'getLeaderboard' | 'getLeaderboardRank'>;
 

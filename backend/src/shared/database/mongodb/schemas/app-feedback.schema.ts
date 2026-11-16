@@ -35,5 +35,3 @@ deletedAt: Date | null;
 }
 
 export const AppFeedbackSchema = SchemaFactory.createForClass(AppFeedback);
-// One feedback per user per context.
-AppFeedbackSchema.index({ userId: 1, context: 1 }, { unique: true });

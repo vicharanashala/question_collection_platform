@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UserService } from './services/user.service';
 import { AnveshanSubmissionsOpenGuard } from './guards/anveshan-submissions-open.guard';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 

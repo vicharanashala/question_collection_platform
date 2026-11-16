@@ -1,8 +1,8 @@
 import { Logger, Module } from '@nestjs/common';
 import { DbModule } from '../../shared/database/db.module';
-import { ReportsController } from './reports.controller';
-import { ReportsService } from './reports.service';
-import { AuditService } from '../audit-logs/audit.service';
+import { ReportsController } from './controllers/reports.controller';
+import { ReportsService } from './services/reports.service';
+import { AuditService } from '../audit-logs/services/audit.service';
 
 @Module({
   imports: [DbModule],

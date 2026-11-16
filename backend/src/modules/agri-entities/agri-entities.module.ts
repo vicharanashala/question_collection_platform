@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DbModule } from '../../shared/database/db.module';
-import { AgriEntitiesController } from './agri-entities.controller';
-import { AgriEntitiesService } from './agri-entities.service';
+import { AgriEntitiesController } from './controllers/agri-entities.controller';
+import { AgriEntitiesService } from './services/agri-entities.service';
 import { UserModule } from '../user/user.module';
 
 @Module({

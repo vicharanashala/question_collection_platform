@@ -1,6 +1,6 @@
 import { Transform } from "class-transformer";
 import { INestApplication } from "@nestjs/common";
-import { StorageService } from "../../../modules/storage/storage.service";
+import { StorageService } from "../../../modules/storage/services/storage.service";
 
 declare global {
   // eslint-disable-next-line no-var

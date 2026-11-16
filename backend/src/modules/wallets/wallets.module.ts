@@ -1,7 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { WalletsController } from './wallets.controller';
-import { WalletsService } from './wallets.service';
+import { WalletsController } from './controllers/wallets.controller';
+import { WalletsService } from './services/wallets.service';
 import { DbModule } from '../../shared/database/db.module';
 import { AdminModule } from '../admin/admin.module';
 import { PaymentModule } from '../payment/payment.module';

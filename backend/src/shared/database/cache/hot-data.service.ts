@@ -10,8 +10,8 @@ import {
   metaKey,
 } from './cache.keys';
 import { CacheTTL } from '../../../config/cache-ttl.constants';
-import { IQuestionRepository } from '../repositories/IQuestion.repository';
-import { IAdminConfigRepository } from '../repositories/IAdminConfig.repository';
+import { IQuestionRepository } from '../repositories/question.repository.interface';
+import { IAdminConfigRepository } from '../repositories/admin-config.repository.interface';
 import { REPOSITORY_TOKENS } from '../repositories';
 import { QuestionStatus } from '../../classes/enums';
 

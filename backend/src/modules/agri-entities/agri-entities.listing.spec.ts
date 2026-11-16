@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { ForbiddenException } from '@nestjs/common';
-import { AgriEntitiesService } from './agri-entities.service';
+import { AgriEntitiesService } from './services/agri-entities.service';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import { UserRole } from '../../shared/classes/enums';
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/services/user.service';
 
 const anveshan = [
   { id: 'u1', name: 'Asha', mobileNumber: '9000000001' },

@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
-import { UserService } from '../user.service';
+import { UserService } from '../services/user.service';
 
 export const ANVESHAN_COMPLETED_MESSAGE =
   'You have completed your Anveshan milestone, so new submissions are closed. Please continue on the Anveshan platform.';

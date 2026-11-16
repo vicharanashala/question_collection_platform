@@ -1,0 +1,469 @@
+import {
+  ANVESHAN_REQUIRED_ANSWER_COUNT,
+  getAnveshanRequiredQuestionCount,
+} from "../../../shared/constants/anveshan.constant";
+import {
+  countAnveshanAnswers,
+  evaluateAnveshanProgress,
+  findAnveshanAnswerableQuestions,
+} from "../../../shared/utils/anveshan.util";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from "@nestjs/common";
+// import {
+//   AuditLog,
+//   Question,
+//   Transaction,
+// } from "../../../shared/database/entities";
+import {
+  AuditAction,
+  ActorType,
+  AgriEntityType,
+  QuestionStatus,
+  TransactionType,
+  TransactionSource,
+  TransactionStatus,
+  UserRole,
+} from "../../../shared/classes/enums";
+import { UpdateProfileDto, UpdateCropDetailsDto } from "../dto";
+import {
+  IUserRepository,
+  IAuditLogRepository,
+  INotificationRepository,
+  IQuestionRepository,
+  ITransactionRepository,
+  IAgriEntityRepository,
+  IAnveshanCandidateRepository,
+} from "../../../shared/database/repositories";
+import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Notification } from "@/shared/database/mongodb/schemas/notification.schema";
+import { Types } from "mongoose";
+@Injectable()
+export class UserService {
+  constructor(
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notifRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.AgriEntity)
+    private readonly agriEntityRepo: IAgriEntityRepository,
+    @Inject(REPOSITORY_TOKENS.Candidate)
+    private readonly anveshanCandidateRepo: IAnveshanCandidateRepository,
+  ) {}
+
+  // Re-fetches the Anveshan candidate and overwrites name, state and district where they differ.
+  async refreshFromAnveshan(
+    userId: string,
+  ): Promise<{ user: User; updatedFields: string[] }> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    if (!user.isAnveshanUser) {
+      throw new ForbiddenException(
+        "Only Anveshan users can refresh data from Anveshan",
+      );
+    }
+
+    // Deleted candidates are excluded by the repository, so they count as not found.
+    const candidate = await this.anveshanCandidateRepo.findByPhone(
+      user.mobileNumber,
+    );
+    if (!candidate) {
+      throw new NotFoundException(
+        "No active Anveshan record was found for this number",
+      );
+    }
+
+    const incoming = {
+      name: candidate.full_name,
+      state: candidate.state,
+      district: candidate.district,
+    };
+    const updates: Partial<Pick<User, "name" | "state" | "district">> = {};
+    for (const [field, value] of Object.entries(incoming)) {
+      const next = value?.trim();
+      if (next && next !== user[field as keyof typeof incoming]) {
+        updates[field as keyof typeof incoming] = next;
+      }
+    }
+
+    const updatedFields = Object.keys(updates);
+    if (updatedFields.length === 0) {
+      return { user, updatedFields };
+    }
+
+    await this.userRepo.update(user._id, updates);
+    return { user: { ...user, ...updates } as User, updatedFields };
+  }
+  async getProfile(userId: Types.ObjectId): Promise<User> {
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    return user;
+  }
+
+  // ─── Anveshan Progress ──────────────────────────────────────────────────────
+
+  // True when an Anveshan user has met every milestone goal. Non-Anveshan users are never considered completed.
+  async isAnveshanMilestoneCompleted(userId: string): Promise<boolean> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.isAnveshanUser) return false;
+
+    const [questions, crop, weed, pest, disease, answerableQuestions] =
+      await Promise.all([
+        this.questionRepo.countByUserId(userId),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+        findAnveshanAnswerableQuestions(this.questionRepo, userId),
+      ]);
+
+    return evaluateAnveshanProgress({
+      questions,
+      crop,
+      weed,
+      pest,
+      disease,
+      answers: countAnveshanAnswers(answerableQuestions),
+    }).completed;
+  }
+
+  // Reports each Anveshan requirement, including answers to their own questions, for the given mobile number.
+  async getAnveshanProgress(mobileNumber: string) {
+    const user = await this.userRepo.findByMobile(mobileNumber);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const userId = user._id.toString();
+    const isAnveshanUser = user.isAnveshanUser === true;
+    const requiredQuestions = getAnveshanRequiredQuestionCount();
+
+    // If not an Anveshan user, short-circuit — nothing to check
+    if (!isAnveshanUser) {
+      return {
+        isCompleted: false,
+        requirements: {
+          questions: { required: requiredQuestions, submitted: 0, met: false },
+          crop: { required: 1, submitted: 0, met: false },
+          pest: { required: 1, submitted: 0, met: false },
+          weed: { required: 1, submitted: 0, met: false },
+          disease: { required: 1, submitted: 0, met: false },
+          answerCreated: {
+            required: ANVESHAN_REQUIRED_ANSWER_COUNT,
+            submitted: 0,
+            met: false,
+          },
+        },
+      };
+    }
+
+    // Run all counts in parallel for performance
+    const [
+      questionCount,
+      cropCount,
+      pestCount,
+      weedCount,
+      diseaseCount,
+      answerableQuestions,
+    ] = await Promise.all([
+      this.questionRepo.countByUserId(userId),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+      findAnveshanAnswerableQuestions(this.questionRepo, userId),
+    ]);
+    const answerCount = countAnveshanAnswers(answerableQuestions);
+
+    const questionsMet = questionCount >= requiredQuestions;
+    const cropMet = cropCount >= 1;
+    const pestMet = pestCount >= 1;
+    const weedMet = weedCount >= 1;
+    const diseaseMet = diseaseCount >= 1;
+    const answersMet = answerCount >= ANVESHAN_REQUIRED_ANSWER_COUNT;
+
+    const isCompleted =
+      questionsMet && cropMet && pestMet && weedMet && diseaseMet && answersMet;
+
+    return {
+      isCompleted,
+      requirements: {
+        questions: {
+          required: requiredQuestions,
+          submitted: questionCount,
+          met: questionsMet,
+        },
+        crop: { required: 1, submitted: cropCount, met: cropMet },
+        pest: { required: 1, submitted: pestCount, met: pestMet },
+        weed: { required: 1, submitted: weedCount, met: weedMet },
+        disease: { required: 1, submitted: diseaseCount, met: diseaseMet },
+        answerCreated: {
+          required: ANVESHAN_REQUIRED_ANSWER_COUNT,
+          submitted: answerCount,
+          met: answersMet,
+        },
+      },
+    };
+  }
+
+  async updateProfile(
+    userId: Types.ObjectId,
+    dto: UpdateProfileDto,
+    actorType: ActorType = ActorType.USER,
+    actorId?: string,
+  ): Promise<User> {
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const oldValue: Record<string, unknown> = {};
+    const newValue: Record<string, unknown> = {};
+
+    // All DTO fields are now top-level columns — assign directly
+    const userRecord = user as unknown as Record<string, unknown>;
+    for (const [key, newVal] of Object.entries(dto)) {
+      if (newVal === undefined) continue;
+      oldValue[key] = userRecord[key];
+      userRecord[key] = newVal;
+      newValue[key] = newVal;
+    }
+
+    const savedUser = await this.userRepo.save(user);
+
+    // await this.logAudit(
+    //   actorType,
+    //   actorId ?? userId,
+    //   AuditAction.USER_PROFILE_UPDATED,
+    //   "User",
+    //   userId,
+    //   oldValue,
+    //   newValue,
+    // );
+
+    return savedUser;
+  }
+
+  /**
+   * Replace the user's crop list. Thin wrapper around updateProfile.
+   * Kept for backwards-compatible /me/crops endpoint.
+   */
+  async updateCropDetails(
+    userId: Types.ObjectId,
+    dto: UpdateCropDetailsDto,
+  ): Promise<string[]> {
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    user.crops = dto.crops ?? [];
+    await this.userRepo.save(user);
+    return user.crops;
+  }
+
+  // ─── Notifications ───────────────────────────────────────────────────────
+
+  async getNotifications(
+    userId: string,
+    options: { page?: number; limit?: number } = {},
+  ): Promise<{ notifications: Notification[]; unread: number; total: number }> {
+    const page = Math.max(1, options.page ?? 1);
+    const limit = Math.min(50, Math.max(1, options.limit ?? 20));
+    const skip = (page - 1) * limit;
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      this.notifRepo.findAll(
+        { userId },
+        { pagination: { page, limit, sort: { createdAt: -1 } } },
+      ),
+      this.notifRepo.count({ userId }),
+      this.notifRepo.count({ userId, isRead: false }),
+    ]);
+
+    return {
+      notifications,
+      unread: unreadCount,
+      total,
+    };
+  }
+
+  // ─── Leaderboard ─────────────────────────────────────────────────────────────
+
+  // async getLeaderboard(
+  //   userId: string,
+  //   options: { limit?: number; offset?: number } = {},
+  // ): Promise<{
+  //   entries: Array<{
+  //     rank: number;
+  //     userId: string;
+  //     name: string;
+  //     totalEarned: number;
+  //     totalQuestions: number;
+  //     medal: string | null;
+  //     isCurrentUser: boolean;
+  //   }>;
+  //   userRank: number | null;
+  //   total: number;
+  // }> {
+  //   const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+
+  //   const offset = Math.max(0, options.offset ?? 0);
+
+  //   // Get ONLY the requested page from MongoDB
+  //   const { entries: rows, total } = await this.userRepo.getLeaderboard({
+  //     limit,
+  //     offset,
+  //   });
+
+  //   // Assign the GLOBAL rank, not page-relative rank
+  //   const ranked = rows.map((row, index) => ({
+  //     ...row,
+  //     rank: offset + index + 1,
+  //   }));
+
+  //   // TODO: calculate this properly in Step 3
+  //   const userRank = await this.userRepo.getLeaderboardRank({
+  //     userId,
+  //   });
+
+  //   const entries = ranked.map((row) => ({
+  //     rank: row.rank,
+  //     userId: row.id,
+  //     name: row.name,
+  //     totalEarned: row.totalEarned,
+  //     totalQuestions: row.totalQuestions,
+  //     medal:
+  //       row.rank === 1
+  //         ? "gold"
+  //         : row.rank === 2
+  //           ? "silver"
+  //           : row.rank === 3
+  //             ? "bronze"
+  //             : null,
+  //     isCurrentUser: row.id === userId,
+  //   }));
+
+  //   return {
+  //     entries,
+  //     userRank,
+  //     total,
+  //   };
+  // }
+
+  async getLeaderboard(
+    userId: string,
+    options: { limit?: number; offset?: number } = {},
+  ): Promise<{
+    entries: Array<{
+      rank: number;
+      userId: string;
+      name: string;
+      totalQuestions: number;
+      medal: string | null;
+      isCurrentUser: boolean;
+    }>;
+    userRank: number | null;
+    userTotalQuestions: number;
+    total: number;
+    totalApprovedQuestions: number;
+  }> {
+    const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+    const offset = Math.max(0, options.offset ?? 0);
+
+    // The list and the user's own rank are independent queries, so run them together.
+    // Neither is given state/category, so both are global and agree with each other.
+    const [{ entries: rows, total, totalApprovedQuestions }, me] = await Promise.all([
+      this.userRepo.getLeaderboard({ limit, offset }),
+      this.userRepo.getLeaderboardRank({ userId }),
+    ]);
+
+    const entries = rows.map((row, index) => {
+      const rank = offset + index + 1; // global rank, not page-relative
+      return {
+        rank,
+        userId: row.id,
+        name: row.name,
+        totalQuestions: row.totalQuestions,
+        medal:
+          row.totalQuestions > 0 && rank === 1
+            ? "gold"
+            : row.totalQuestions > 0 && rank === 2
+              ? "silver"
+              : row.totalQuestions > 0 && rank === 3
+                ? "bronze"
+                : null,
+        isCurrentUser: row.id === userId,
+      };
+    });
+
+    return {
+  entries,
+  userRank: me?.rank ?? null,
+  userTotalQuestions: me?.totalQuestions ?? 0, // still used by the app's "your position" card
+  total,
+  totalApprovedQuestions,
+};
+  }
+
+  async markAsRead(userId: string, notificationId: string): Promise<void> {
+    await this.notifRepo.update(notificationId, { isRead: true });
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await this.notifRepo.updateMany(
+      { userId, isRead: false },
+      { isRead: true },
+    );
+  }
+
+  async createNotification(params: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    data?: Record<string, unknown>;
+  }): Promise<Notification> {
+    return this.notifRepo.create({
+      userId: params.userId,
+      type: params.type as any,
+      title: params.title,
+      body: params.body,
+      data: params.data ?? null,
+    });
+  }
+
+  // private async logAudit(
+  //   actorType: ActorType,
+  //   actorId: string | null,
+  //   action: string,
+  //   entityType: string,
+  //   entityId: string,
+  //   oldValue?: Record<string, unknown> | null,
+  //   newValue?: Record<string, unknown> | null,
+  // ): Promise<void> {
+  //   const log = await this.auditRepo.create({
+  //     actorType,
+  //     actorId,
+  //     action,
+  //     entityType,
+  //     entityId,
+  //     oldValue: oldValue ?? null,
+  //     newValue: newValue ?? null,
+  //   });
+  // }
+}

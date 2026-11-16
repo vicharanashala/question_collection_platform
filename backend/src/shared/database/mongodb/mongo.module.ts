@@ -18,6 +18,10 @@ import { Faq, FaqSchema } from './schemas/faq.schema';
 import { Candidate, CandidateSchema } from './schemas/anveshan.schema';
 import { softDeleteConnectionFactory } from './soft-delete.plugin';
 import { Session, SessionSchema } from './schemas/session.schema';
+import { applySchemaIndexes } from './schema-indexes';
+
+// Attach all schema-level indexes before any model is compiled.
+applySchemaIndexes();
 
 const SCHEMAS = [
   { name: User.name, schema: UserSchema },

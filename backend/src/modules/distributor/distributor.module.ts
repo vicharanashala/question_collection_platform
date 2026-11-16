@@ -1,8 +1,8 @@
 import { Logger, Module } from '@nestjs/common';
 import { DbModule } from '../../shared/database/db.module';
-import { DistributorController } from './distributor.controller';
-import { DistributorService } from './distributor.service';
-import { AuditService } from '../audit-logs/audit.service';
+import { DistributorController } from './controllers/distributor.controller';
+import { DistributorService } from './services/distributor.service';
+import { AuditService } from '../audit-logs/services/audit.service';
 
 @Module({
   imports: [DbModule],

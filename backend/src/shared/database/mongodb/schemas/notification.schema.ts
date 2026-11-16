@@ -47,6 +47,3 @@ deletedAt: Date | null;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
-
-NotificationSchema.index({ userId: 1, createdAt: -1 });
-NotificationSchema.index({ userId: 1, isRead: 1 });

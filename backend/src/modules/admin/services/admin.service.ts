@@ -1,0 +1,5324 @@
+import { isTesterCondition } from "../../../shared/utils/tester.util";
+import { resolveUserIdScope } from "../../../shared/utils/anveshan-mode.util";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  OnModuleInit,
+  Inject,
+  forwardRef,
+  Logger,
+} from "@nestjs/common";
+import { SelectQueryBuilder, ILike, Between, In } from "typeorm";
+import { RedisService } from "../../../shared/database/cache/redis.service";
+import { usernameKey } from "../../../shared/database/cache/cache.keys";
+import { HotDataService } from "../../../shared/database/cache/hot-data.service";
+import { AnalyticsCacheService } from "../../../shared/database/cache/analytics-cache.service";
+import {
+  Question,
+  Transaction,
+  AuditLog,
+  AdminConfig,
+  Notification,
+  PaymentLog,
+  UserPaymentDetail,
+} from "../../../shared/database/entities";
+import {
+  VerificationStatus,
+  QuestionStatus,
+  UserRole,
+  UserCategory,
+  AuditAction,
+  ActorType,
+  TransactionSource,
+  TransactionStatus,
+  TransactionType,
+  WithdrawalStatus,
+  PaymentLogStatus,
+} from "../../../shared/classes/enums";
+import {
+  ListUsersDto,
+  ListUserStatsDto,
+  ListReviewQueueDto,
+  ReviewActionDto,
+  UpdateConfigDto,
+  CreateConfigDto,
+  AnalyticsQueryDto,
+  ExportQueryDto,
+  ListWithdrawalsDto,
+  ProcessWithdrawalDto,
+  FraudQueryDto,
+  ListUserTransactionsDto,
+  ListUserWithdrawalsDto,
+  AdjustWalletDto,
+  ListAllWalletsDto,
+  WalletScopeDto,
+} from "../dto";
+import { ConfigService } from "@nestjs/config";
+import { WalletsService } from "../../wallets/services/wallets.service";
+import { PinelabsService } from "../../payment/services/pinelabs.service";
+import { RazorpayPayoutService } from "../../payment/services/razorpay-payout.service";
+import { GdbService } from "../../ai/services/gdb.service";
+import { AnveshanProgressService } from "./anveshan-progress.service";
+import { decrypt } from "../../../shared/functions/utils/encryption.util";
+import {
+  IUserRepository,
+  IQuestionRepository,
+  IWalletRepository,
+  ITransactionRepository,
+  IWithdrawalRequestRepository,
+  IAuditLogRepository,
+  IAdminConfigRepository,
+  INotificationRepository,
+  IPaymentLogRepository,
+  IUserPaymentDetailRepository,
+  IFinalQuestionRepository,
+  IAgriEntityRepository,
+  IReportRepository,
+  IAppFeedbackRepository,
+  IAnveshanAnswerRepository,
+  AdminWalletScope,
+} from "../../../shared/database/repositories";
+import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
+import { MongoTransactionService } from "../../../shared/database/mongodb/mongo-transaction.service";
+import { ClientSession, Types } from "mongoose";
+import { INCLUDE_DELETED } from "../../../shared/database/abstractions/mongo-utils";
+import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Wallet } from "@/shared/database/mongodb/schemas/wallet.schema";
+import {
+  NotificationType,
+  NotificationTriggerType,
+} from "../../../shared/classes/enums";
+import { WithdrawalRequest } from "@/shared/database/mongodb/schemas/withdrawal-request.schema";
+import { ExceptionMessages } from "node_modules/@google-cloud/storage/build/cjs/src/storage";
+// Config key constants — mirrors database.md defaults
+const DEFAULT_CONFIG: Record<string, { value: number; description: string }> = {
+  max_users_per_state: {
+    value: 100,
+    description: "Maximum registered users per state",
+  },
+  min_withdrawal_amount: {
+    value: 50,
+    description: "Minimum withdrawal threshold (INR)",
+  },
+
+  daily_question_limit: {
+    value: 20,
+    description: "Max questions per user per day",
+  },
+  video_max_duration_seconds: {
+    value: 10,
+    description: "Maximum video duration (seconds)",
+  },
+  video_max_size_mb: { value: 10, description: "Maximum video file size (MB)" },
+  max_question_chars: {
+    value: 1000,
+    description: "Maximum characters allowed in a question",
+  },
+  // 0 = disabled, 1 = enabled. Withdrawals stay off until the payment integration
+  // is signed off; flipping this is an admin action.
+  payment_withdrawal_enabled: {
+    value: 0,
+    description: "Enable wallet withdrawals",
+  },
+  // 0 = disabled, 1 = enabled. Independent from payment_withdrawal_enabled —
+  // gates adding a new UPI/bank payment method and its verification, so the
+  // two can be turned on/off separately (e.g. let users verify a payout
+  // method before withdrawals themselves go live).
+  payment_verification_enabled: {
+    value: 0,
+    description: "Enable adding and verifying payment methods",
+  },
+};
+
+// Builds a createdAt range from YYYY-MM-DD strings as whole days in Indian Standard Time, end date inclusive.
+function buildJoinedRange(fromDate?: string, toDate?: string): Record<string, Date> | undefined {
+  if (!fromDate && !toDate) return undefined;
+  const range: Record<string, Date> = {};
+  if (fromDate) range.$gte = new Date(fromDate.length <= 10 ? `${fromDate}T00:00:00.000+05:30` : fromDate);
+  if (toDate) range.$lte = new Date(toDate.length <= 10 ? `${toDate}T23:59:59.999+05:30` : toDate);
+  return range;
+}
+
+@Injectable()
+export class AdminService implements OnModuleInit {
+  // In-memory TTL cache for config values (30-second cache)
+  private configCache: Map<string, number> = new Map();
+  private configCacheExpiry = 0;
+  private static readonly CONFIG_CACHE_TTL_MS = 30_000;
+
+  async onModuleInit() {
+    // Pre-populate cache on startup so first requests aren't cache-miss latency
+    await this.refreshConfigCache();
+  }
+
+  private async refreshConfigCache(): Promise<void> {
+    const rows = await this.configRepo.find();
+    this.configCache.clear();
+    for (const row of rows) {
+      this.configCache.set(row.key, row.value as number);
+    }
+    this.configCacheExpiry = Date.now() + AdminService.CONFIG_CACHE_TTL_MS;
+  }
+
+  private async getCachedConfigValue(key: string): Promise<number> {
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (
+      !isPaymentModifiable &&
+      (key === "payment_withdrawal_enabled" ||
+        key === "payment_verification_enabled")
+    ) {
+      return 0;
+    }
+
+    if (Date.now() > this.configCacheExpiry) {
+      await this.refreshConfigCache();
+    }
+    if (this.configCache.has(key)) {
+      return this.configCache.get(key)!;
+    }
+    // Fallback to DB for keys that may not be seeded
+    const row = await this.configRepo.findOne({ where: { key } });
+    const value = row
+      ? (row.value as number)
+      : (DEFAULT_CONFIG[key]?.value ?? 0);
+    this.configCache.set(key, value);
+    return value;
+  }
+
+  /**
+   * Bulk-fetch multiple config values in a single DB call (uses cache).
+   * Returns a plain object of key → value for the requested keys.
+   */
+  async getConfigValues(keys: string[]): Promise<Record<string, number>> {
+    if (Date.now() > this.configCacheExpiry) {
+      await this.refreshConfigCache();
+    }
+    const result: Record<string, number> = {};
+    const missing: string[] = [];
+    for (const key of keys) {
+      if (this.configCache.has(key)) {
+        result[key] = this.configCache.get(key)!;
+      } else {
+        missing.push(key);
+      }
+    }
+    if (missing.length > 0) {
+      const rows = await this.configRepo.find({
+        where: missing.map((k) => ({ key: k })),
+      });
+      for (const row of rows) {
+        this.configCache.set(row.key, row.value as number);
+        result[row.key] = row.value as number;
+      }
+      // Fill missing with defaults
+      for (const k of missing) {
+        if (result[k] === undefined) {
+          const def = DEFAULT_CONFIG[k]?.value ?? 0;
+          this.configCache.set(k, def);
+          result[k] = def;
+        }
+      }
+    }
+
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+    if (!isPaymentModifiable) {
+      if (keys.includes("payment_withdrawal_enabled"))
+        result["payment_withdrawal_enabled"] = 0;
+      if (keys.includes("payment_verification_enabled"))
+        result["payment_verification_enabled"] = 0;
+    }
+
+    return result;
+  }
+  constructor(
+    @Inject(REPOSITORY_TOKENS.User)
+    private readonly userRepo: IUserRepository,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.Wallet)
+    private readonly walletRepo: IWalletRepository,
+    @Inject(REPOSITORY_TOKENS.Transaction)
+    private readonly transactionRepo: ITransactionRepository,
+    @Inject(REPOSITORY_TOKENS.WithdrawalRequest)
+    private readonly withdrawalRepo: IWithdrawalRequestRepository,
+    @Inject(REPOSITORY_TOKENS.AuditLog)
+    private readonly auditRepo: IAuditLogRepository,
+    @Inject(REPOSITORY_TOKENS.AdminConfig)
+    private readonly configRepo: IAdminConfigRepository,
+    @Inject(REPOSITORY_TOKENS.Notification)
+    private readonly notificationRepo: INotificationRepository,
+    @Inject(REPOSITORY_TOKENS.PaymentLog)
+    private readonly paymentLogRepo: IPaymentLogRepository,
+    @Inject(REPOSITORY_TOKENS.UserPaymentDetail)
+    private readonly paymentDetailRepo: IUserPaymentDetailRepository,
+    @Inject(REPOSITORY_TOKENS.FinalQuestion)
+    private readonly finalQuestionRepo: IFinalQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AgriEntity)
+    private readonly agriEntityRepo: IAgriEntityRepository,
+    @Inject(REPOSITORY_TOKENS.Report)
+    private readonly reportRepo: IReportRepository,
+    @Inject(REPOSITORY_TOKENS.AppFeedback)
+    private readonly feedbackRepo: IAppFeedbackRepository,
+    @Inject(REPOSITORY_TOKENS.AnveshanAnswer)
+    private readonly anveshanAnswerRepo: IAnveshanAnswerRepository,
+    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => WalletsService))
+    private readonly walletsService: WalletsService,
+    private readonly pinelabsService: PinelabsService,
+    private readonly razorpayPayoutService: RazorpayPayoutService,
+    private readonly redisService: RedisService,
+    private readonly hotDataService: HotDataService,
+    private readonly analyticsCacheService: AnalyticsCacheService,
+    private readonly gdbService: GdbService,
+    private readonly mongoTransactionService: MongoTransactionService,
+    private readonly anveshanProgressService: AnveshanProgressService,
+  ) {}
+
+  private readonly logger = new Logger(AdminService.name);
+
+  /** Maps an audit action + entity to a human-readable description string. */
+  private buildActivityDescription(
+    action: string,
+    entityType: string | null,
+    metadata: Record<string, unknown> | null,
+  ): string {
+    switch (action) {
+      case AuditAction.QUESTION_APPROVED:
+        return `Approved ${entityType ?? "question"}`;
+      case AuditAction.QUESTION_REJECTED:
+        return `Rejected ${entityType ?? "question"}`;
+      case AuditAction.USER_VERIFIED:
+        return `Verified user`;
+      case AuditAction.USER_SUSPENDED:
+        return `Suspended user`;
+      case AuditAction.USER_BANNED:
+        return `Banned user`;
+      case AuditAction.USER_UNSUSPENDED:
+        return `Unsuspended user`;
+      case AuditAction.USER_UNBANNED:
+        return `Unbanned user`;
+      case AuditAction.REWARD_CREDITED:
+        return `Credited reward${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
+      case AuditAction.WITHDRAWAL_REQUESTED:
+        return `Requested withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
+      case AuditAction.WITHDRAWAL_COMPLETED:
+        return `Completed withdrawal${metadata?.amount ? ` of ₹${metadata.amount}` : ""}`;
+      default:
+        return (action ?? "").replace(/_/g, " ") || action;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 1: User Management
+  // ─────────────────────────────────────────────────────────────
+
+  async createUser(
+    actorId: string,
+    actorRole: UserRole,
+    dto: {
+      name: string;
+      mobileNumber: string;
+      role: UserRole;
+      category?: UserCategory;
+      isUserCreatedBySuperAdmin: boolean;
+      profileCreatedByAdminCompleted: boolean;
+    },
+  ) {
+    // Super admin cannot create another super admin
+    if (
+      actorRole === UserRole.SUPER_ADMIN &&
+      dto.role === UserRole.SUPER_ADMIN
+    ) {
+      throw new ForbiddenException(
+        "Super admin cannot assign a super admin role.",
+      );
+    }
+
+    // Cannot create a super admin through this endpoint (only ADMIN can create one)
+    if (dto.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException(
+        "Super admin role cannot be assigned via this endpoint.",
+      );
+    }
+
+    // Normalize: strip +91 or 0 prefix so numbers are stored consistently
+    const mobile = dto.mobileNumber.replace(/^\+91 ?/, "").replace(/^0/, "");
+
+    // Check for duplicate mobile number
+    const existing = await this.userRepo.findOne({
+      where: { mobileNumber: mobile },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        "A user with this mobile number already exists.",
+      );
+    }
+
+    const isEndUser = dto.role === UserRole.USER;
+    if (isEndUser && !dto.category) {
+      throw new BadRequestException("Category is required for user accounts.");
+    }
+    const isCreatedBySuperAdmin = dto.isUserCreatedBySuperAdmin ?? true;
+
+    const profileCreatedByAdminCompleted =
+      dto.profileCreatedByAdminCompleted ?? false;
+
+    const user = await this.userRepo.create({
+      name: dto.name.trim(),
+      mobileNumber: mobile,
+      role: dto.role,
+      category: isEndUser ? dto.category! : null,
+      languagePreference: "en",
+      consentGiven: false,
+      verificationStatus: VerificationStatus.VERIFIED,
+      tokenVersion: 0,
+      lastLoginAt: null,
+      isUserCreatedBySuperAdmin: isCreatedBySuperAdmin,
+      profileCreatedByAdminCompleted: profileCreatedByAdminCompleted,
+    });
+
+    await this.userRepo.save(user);
+
+    // await this.logAudit({
+    //   actorType:
+    //     actorRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN,
+    //   actorId,
+    //   action: AuditAction.USER_REGISTERED,
+    //   entityType: "user",
+    //   entityId: user.id,
+    //   newValue: {
+    //     name: user.name,
+    //     mobileNumber: user.mobileNumber,
+    //     role: user.role,
+    //     category: user.category,
+    //   },
+    // });
+    return { user: this.toPublicUser(user) };
+  }
+
+// Counts users by type for an optional join date range.
+async getUserStats(dto: ListUserStatsDto) {
+  const base: Record<string, unknown> = {};
+  const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
+  if (joinedRange) base.createdAt = joinedRange;
+  if (dto.anveshanScope) base.isAnveshanUser = dto.anveshanScope === 'only' ? true : { $ne: true };
+  Object.assign(base, isTesterCondition(dto.tester));
+
+  const [total, testers, anveshan] = await Promise.all([
+    this.userRepo.countByFilter(base),
+    this.userRepo.countByFilter({ ...base, is_tester: true }),
+    this.userRepo.countByFilter({ ...base, isAnveshanUser: true }),
+  ]);
+  return { total, testers, anveshan, nonAnveshan: total - anveshan };
+}
+
+  async listUsers(dto: ListUsersDto) {
+    const {
+      page = 1,
+      limit = 20,
+      state,
+      category,
+      status,
+      role, // ← destructure it
+      search,
+      anveshan,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+    } = dto;
+    // The admin list shows deleted users too, so they can be restored.
+    const filter: Record<string, unknown> = { isDeleted: INCLUDE_DELETED };
+    if (state) filter.state = state;
+    if (category) filter.category = category;
+    if (status) filter.verificationStatus = status;
+    if (role) filter.role = role; // ← apply it
+    if (search) {
+      const regex = { $regex: search, $options: "i" };
+      filter.$or = [
+        { name: regex },
+        { mobileNumber: regex },
+        { username: regex },
+      ];
+    }
+    // Keep this a plain string, not a Types.ObjectId instance — the query builder's
+    // translateValue() recurses into any non-primitive object value (Object.entries()),
+    // which mangles a real ObjectId into its raw internal buffer. Mongoose casts a valid
+    // hex string to ObjectId automatically during query execution, so a string is both
+    // simpler and safe here.
+    if (dto.excludeId) filter._id = { $ne: dto.excludeId };
+
+    const testerCondition = isTesterCondition(dto.tester);
+    if (testerCondition) Object.assign(filter, testerCondition);
+    if (dto.anveshanScope) filter.isAnveshanUser = dto.anveshanScope === 'only' ? true : { $ne: true };
+
+    // Anveshan filter: completion is computed from submissions, so 100% / in-progress become an id list.
+    if (anveshan) {
+      filter.isAnveshanUser = true;
+      if (anveshan !== "all") {
+        const completedIds =
+          await this.anveshanProgressService.findCompletedUserIds();
+        filter._id =
+          anveshan === "completed"
+            ? { $in: completedIds.filter((id) => id !== dto.excludeId) }
+            : {
+                $nin: dto.excludeId
+                  ? [...completedIds, dto.excludeId]
+                  : completedIds,
+              };
+      }
+    }
+
+    const direction = sortOrder === "ASC" ? 1 : -1;
+
+    const { data, total } =
+      sortBy === "anveshanProgress"
+        ? await this.findUsersByAnveshanProgress(filter, direction, page, limit)
+        : await this.userRepo.findAndCount(filter, {
+            pagination: {
+              page,
+              limit,
+              // The id tie breaker keeps page contents stable when many users share a value.
+              sort: { [sortBy]: direction, _id: direction },
+            },
+          });
+
+    // Project down to the same field set the admin user list has always returned
+    // (excludes otpHash and other internal-only fields on the User document).
+    const items = data.map((u) => ({
+      id: u._id.toString(),
+      mobileNumber: u.mobileNumber,
+      name: u.name,
+      username: u.username,
+      category: u.category,
+      state: u.state,
+      district: u.district,
+      verificationStatus: u.verificationStatus,
+      role: u.role,
+      createdAt: u.createdAt,
+      lastLoginAt: u.lastLoginAt,
+      isAnveshanUser: !!u.isAnveshanUser,
+      isTester: !!u.is_tester,
+      isDeleted: !!u.isDeleted,  
+    }));
+
+    // Attach milestone progress for the Anveshan users on this page only.
+    const anveshanIds = items.filter((u) => u.isAnveshanUser).map((u) => u.id);
+    const progressById =
+      await this.anveshanProgressService.getProgressForUsers(anveshanIds);
+    const itemsWithProgress = items.map((u) => ({
+      ...u,
+      anveshanProgress: progressById.get(u.id) ?? null,
+    }));
+
+    return {
+      items: itemsWithProgress,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  // Pages users ordered by Anveshan progress. Progress is computed, so Anveshan users are ranked in memory
+  // and other users follow, newest first.
+  private async findUsersByAnveshanProgress(
+    filter: Record<string, unknown>,
+    direction: 1 | -1,
+    page: number,
+    limit: number,
+  ) {
+    const anveshanOnly = filter.isAnveshanUser === true;
+    const nonAnveshanOnly = typeof filter.isAnveshanUser === "object" && filter.isAnveshanUser !== null;
+    const anveshanUsers = nonAnveshanOnly ? [] : await this.userRepo.findAll({ ...filter, isAnveshanUser: true });
+    const progress = await this.anveshanProgressService.getProgressForUsers(anveshanUsers.map((u) => u._id.toString()));
+    const percentOf = (id: string) => progress.get(id)?.percent ?? 0;
+    const ranked = [...anveshanUsers].sort(
+      (a, b) =>
+        direction * (percentOf(a._id.toString()) - percentOf(b._id.toString())) ||
+        b.createdAt.getTime() - a.createdAt.getTime() ||
+        (a._id.toString() < b._id.toString() ? -1 : 1),
+    );
+
+    const start = (page - 1) * limit;
+    const data = ranked.slice(start, start + limit);
+    const otherFilter = { ...filter, isAnveshanUser: { $ne: true } };
+    const otherTotal = anveshanOnly ? 0 : await this.userRepo.count(otherFilter);
+    const missing = limit - data.length;
+    if (missing > 0 && otherTotal > 0) {
+      const skip = Math.max(0, start - ranked.length);
+      const others = await this.userRepo.findAll(otherFilter, {
+        pagination: { page: 1, limit: skip + missing, sort: { createdAt: -1, _id: -1 } },
+      });
+      data.push(...others.slice(skip, skip + missing));
+    }
+    return { data, total: ranked.length + otherTotal };
+  }
+  // async getUserDetail(userId: string) {
+  //   const user = await this.userRepo.findOne({
+  //     where: { id: userId },
+  //     relations: ["wallet"],
+  //     select: [
+  //       "id",
+  //       "mobileNumber",
+  //       "name",
+  //       "username",
+  //       "role",
+  //       "verificationStatus",
+  //       "category",
+  //       "district",
+  //       "state",
+  //       "block",
+  //       "village",
+  //       "kvk",
+  //       "numberOfFarmers",
+  //       "organisationType",
+  //       "languagePreference",
+  //       "age",
+  //       "gender",
+  //       "farmSize",
+  //       "season",
+  //       "cropType",
+  //       "courseName",
+  //       "collegeName",
+  //       "universityName",
+  //       "organizationName",
+  //       "organizationRole",
+  //       "organizationState",
+  //       "organizationDistrict",
+  //       "organizationBlock",
+  //       "organizationVillage",
+  //       "crops",
+  //       "createdAt",
+  //       "lastLoginAt",
+  //       "suspendedAt",
+  //       "suspendedUntil",
+  //       "suspendedReason",
+  //       "bannedAt",
+  //       "bannedReason",
+  //       "consentGiven",
+  //       "consentTimestamp",
+  //     ],
+  //   });
+  //   if (!user) throw new NotFoundException("User not found");
+
+  //   const questions = await this.questionRepo.find({
+  //     where: { userId },
+  //     order: { submittedAt: "DESC" },
+  //     take: 20,
+  //     select: [
+  //       "id",
+  //       "questionText",
+  //       "status",
+  //       "submittedAt",
+  //       "reviewedAt",
+  //       "rejectionReason",
+  //     ],
+  //   });
+
+  //   const paymentDetails = await this.paymentDetailRepo.find({
+  //     where: { userId },
+  //     order: { createdAt: "DESC" },
+  //   });
+
+  //   return { user, questions, paymentDetails, crops: user.crops ?? [] };
+  // }
+
+  async getUserDetail(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new NotFoundException("User not found");
+  }
+
+  // The explicit isDeleted key bypasses the default "hide deleted" filter,
+  // so a deleted user's page still opens (with the Restore button).
+  const user = await this.userRepo.findOne({
+    _id: userId, // plain string: Mongoose casts it, the repo won't mangle it
+    isDeleted: INCLUDE_DELETED,
+  });
+  if (!user) throw new NotFoundException("User not found");
+
+  // A deleted user's related records were marked deleted by the cascade,
+  // so for them we need to read the deleted ones instead of hiding them.
+  const recordScope = user.isDeleted ? { isDeleted: true } : { isDeleted: { $ne: true } };
+
+  const [{ data: questionRows }, paymentRows] = await Promise.all([
+    this.questionRepo.findAndCount(
+      { userId, ...recordScope },
+      { pagination: { page: 1, limit: 20, sort: { submittedAt: -1, _id: -1 } } },
+    ),
+    this.paymentDetailRepo.findAll({ userId, ...recordScope }),
+  ]);
+
+  const questions = questionRows.map((q) => ({
+    id: String(q._id),
+    questionText: q.questionText,
+    status: q.status,
+    submittedAt: q.submittedAt,
+    reviewedAt: q.reviewedAt,
+    rejectionReason: q.rejectionReason,
+    // the page's search box reads these two; without them q.cropType.toLowerCase() throws
+    cropType: q.cropType ?? "",
+    domains: q.domains ?? [],
+  }));
+
+  // Never send secrets to the browser (the old code returned whole entities)
+  const paymentDetails = paymentRows
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .map(({ accountNumberEncrypted, razorpayFundAccountId, ...safe }: any) => ({
+      ...safe,
+      id: String(safe._id),
+    }));
+
+  return {
+    user: {
+      id: String(user._id),
+      mobileNumber: user.mobileNumber,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      verificationStatus: user.verificationStatus,
+      category: user.category,
+      district: user.district,
+      state: user.state,
+      block: user.block,
+      village: user.village,
+      kvk: user.kvk,
+      numberOfFarmers: user.numberOfFarmers,
+      organisationType: user.organisationType,
+      languagePreference: user.languagePreference,
+      age: user.age,
+      gender: user.gender,
+      farmSize: user.farmSize,
+      season: user.season,
+      cropType: user.cropType,
+      courseName: user.courseName,
+      collegeName: user.collegeName,
+      universityName: user.universityName,
+      organizationName: user.organizationName,
+      organizationRole: user.organizationRole,
+      organizationState: user.organizationState,
+      organizationDistrict: user.organizationDistrict,
+      organizationBlock: user.organizationBlock,
+      organizationVillage: user.organizationVillage,
+      crops: user.crops ?? [],
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+      suspendedAt: user.suspendedAt,
+      suspendedUntil: user.suspendedUntil,
+      suspendedReason: user.suspendedReason,
+      bannedAt: user.bannedAt,
+      bannedReason: user.bannedReason,
+      consentGiven: user.consentGiven,
+      consentTimestamp: user.consentTimestamp,
+      // needed by the Restore button, the "Deleted account" banner and hiding Verify
+      isDeleted: !!user.isDeleted,
+      deletedAt: user.deletedAt ?? null,
+    },
+    questions,
+    paymentDetails,
+    crops: user.crops ?? [],
+  };
+}
+
+  async suspendOrBanUser(
+    adminId: string,
+    userId: string,
+    action: "suspend" | "ban",
+    reason?: string,
+    suspendedUntil?: string,
+  ) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+    if (user.isDeleted)
+      throw new Error("Deleted users can not be Ban or Suspend");
+
+    const isSuperAdmin = await this.isSuperAdmin(adminId);
+    if (!isSuperAdmin)
+      throw new ForbiddenException(
+        "Only super admins can suspend or ban users",
+      );
+
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException("Cannot suspend or ban a super admin");
+    }
+
+    // Guard: cannot suspend an already suspended user, or ban an already banned user
+    if (
+      action === "suspend" &&
+      user.verificationStatus === VerificationStatus.SUSPENDED
+    ) {
+      throw new BadRequestException("User is already suspended");
+    }
+    if (
+      action === "ban" &&
+      user.verificationStatus === VerificationStatus.BANNED
+    ) {
+      throw new BadRequestException("User is already banned");
+    }
+    // Also guard against banning an already-suspended user (must unsuspend first)
+    if (
+      action === "ban" &&
+      user.verificationStatus === VerificationStatus.SUSPENDED
+    ) {
+      throw new BadRequestException(
+        "User is currently suspended — lift the suspension before banning",
+      );
+    }
+
+    const newStatus =
+      action === "ban"
+        ? VerificationStatus.BANNED
+        : VerificationStatus.SUSPENDED;
+    const oldStatus = user.verificationStatus;
+    const now = new Date();
+
+    await this.userRepo.update(userId, {
+      verificationStatus: newStatus,
+      ...(action === "ban"
+        ? {
+            bannedAt: now,
+            bannedReason: reason ?? null,
+            suspendedAt: null,
+            suspendedReason: null,
+            suspendedUntil: null,
+          }
+        : {
+            suspendedAt: now,
+            suspendedUntil: suspendedUntil ? new Date(suspendedUntil) : null,
+            suspendedReason: reason ?? null,
+            bannedAt: null,
+            bannedReason: null,
+          }),
+    });
+
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action:
+    //     action === "ban" ? AuditAction.USER_BANNED : AuditAction.USER_SUSPENDED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: {
+    //     verificationStatus: newStatus,
+    //     reason,
+    //     suspendedUntil: suspendedUntil ?? null,
+    //   },
+    // });
+
+    return { success: true, userId, newStatus };
+  }
+
+  async unsuspendOrUnbanUser(adminId: string, userId: string) {
+    console.log("User id coming to be-----------------------------", userId);
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException("User not found");
+    if (user.isDeleted)
+      throw new Error("Deleted User can not be unbanned or unsuspend");
+    const isSuperAdmin = await this.isSuperAdmin(adminId);
+    if (!isSuperAdmin)
+      throw new ForbiddenException(
+        "Only super admins can unsuspend or unban users",
+      );
+
+    if (
+      user.verificationStatus !== VerificationStatus.SUSPENDED &&
+      user.verificationStatus !== VerificationStatus.BANNED
+    ) {
+      throw new BadRequestException("User is not suspended or banned");
+    }
+
+    const oldStatus = user.verificationStatus;
+    await this.userRepo.update(userId, {
+      verificationStatus: VerificationStatus.VERIFIED,
+      suspendedAt: null,
+      suspendedUntil: null,
+      suspendedReason: null,
+      bannedAt: null,
+      bannedReason: null,
+    });
+
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action:
+    //     oldStatus === VerificationStatus.BANNED
+    //       ? AuditAction.USER_UNBANNED
+    //       : AuditAction.USER_UNSUSPENDED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    // });
+
+    return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
+  }
+
+  async verifyUser(actorId: string, userId: string) {
+    const actor = await this.userRepo.findOne({ where: { id: actorId } });
+    if (!actor) throw new NotFoundException("Actor not found");
+    const validActors = [
+      UserRole.ADMIN,
+      UserRole.SUPER_ADMIN,
+      UserRole.FINANCE,
+    ];
+    if (!validActors.includes(actor.role as UserRole)) {
+      throw new ForbiddenException(
+        "Only admins, super admins or finance can verify users",
+      );
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+    if (user.isDeleted) throw new Error("Deleted users cannot be verified.");
+    const oldStatus = user.verificationStatus;
+    if (oldStatus === VerificationStatus.VERIFIED) {
+      return {
+        success: true,
+        userId,
+        newStatus: oldStatus,
+        message: "User already verified",
+      };
+    }
+
+    await this.userRepo.update(userId, {
+      verificationStatus: VerificationStatus.VERIFIED,
+    });
+
+    // await this.logAudit({
+    //   actorType:
+    //     actor.role === UserRole.FINANCE ? ActorType.FINANCE : ActorType.ADMIN,
+    //   actorId: actorId,
+    //   action: AuditAction.USER_VERIFIED,
+    //   entityType: "user",
+    //   entityId: userId,
+    //   oldValue: { verificationStatus: oldStatus },
+    //   newValue: { verificationStatus: VerificationStatus.VERIFIED },
+    // });
+
+    return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 2: Question Review
+  // ─────────────────────────────────────────────────────────────
+
+  // async listReviewQueue(dto: ListReviewQueueDto) {
+  //   const {
+  //     page = 1,
+  //     limit = 20,
+  //     state,
+  //     search,
+  //     status,
+  //     sortBy = "submittedAt",
+  //     sortOrder = "DESC",
+  //     fromDate,
+  //     toDate,
+  //   } = dto;
+
+  //   const qb = this.questionRepo
+  //     .createQueryBuilder("q")
+  //     .leftJoinAndSelect("q.user", "u")
+  //     .leftJoinAndSelect("q.reviewer", "r")
+  //     .select([
+  //       "q.id",
+  //       "q.userId",
+  //       "q.questionText",
+  //       "q.mediaType",
+  //       "q.mediaUrls",
+  //       "q.status",
+  //       "q.submittedAt",
+  //       "q.reviewedAt",
+  //       "q.rejectionReason",
+  //       "q.heldReason",
+  //       "q.approvalReason",
+  //       "q.language",
+  //       "q.domains",
+  //       "q.cropType",
+  //       "q.state",
+  //       "q.district",
+  //       "u.name",
+  //       "u.mobileNumber",
+  //       "r.name",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   // Status filter
+  //   if (status && status.length > 0) {
+  //     if (status.length === 1) {
+  //       qb.andWhere("q.status = :status", { status: status[0] });
+  //     } else {
+  //       qb.andWhere("q.status IN (:...statuses)", { statuses: status });
+  //     }
+  //   } else {
+  //     // Default: show all reviewable statuses
+  //     const defaultStatuses = [QuestionStatus.PENDING, QuestionStatus.HELD];
+  //     qb.andWhere("q.status IN (:...statuses)", { statuses: defaultStatuses });
+  //   }
+
+  //   // State filter
+  //   if (state) qb.andWhere("q.state = :state", { state });
+
+  //   // Search: question text or user mobile
+  //   if (search) {
+  //     qb.andWhere(
+  //       `(q.questionText ILIKE :search OR u.mobileNumber ILIKE :search)`,
+  //       { search: `%${search}%` },
+  //     );
+  //   }
+
+  //   // Date range
+  //   if (fromDate)
+  //     qb.andWhere("q.submittedAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("q.submittedAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   // Sorting
+  //   const sortColumn =
+  //     sortBy === "state"
+  //       ? "q.state"
+  //       : sortBy === "reviewedAt"
+  //         ? "q.reviewedAt"
+  //         : "q.submittedAt";
+  //   qb.orderBy(sortColumn, sortOrder);
+
+  //   const [items, total] = await qb.getManyAndCount();
+  //   return {
+  //     items: items.map((q) => ({
+  //       ...q,
+  //       user: q.user
+  //         ? {
+  //             id: q.user.id,
+  //             name: q.user.name,
+  //             mobileNumber: q.user.mobileNumber,
+  //           }
+  //         : null,
+  //       reviewedByName: (q as any).reviewer?.name ?? null,
+  //     })),
+  //     total,
+  //     page,
+  //     limit,
+  //     pages: Math.ceil(total / limit),
+  //   };
+  // }
+
+  async listReviewQueue(dto: ListReviewQueueDto) {
+    return this.questionRepo.listQueue(dto);
+  }
+
+  // async getQuestionForReview(questionId: string) {
+  //   const question = await this.questionRepo.findOne({
+  //     where: { id: questionId },
+  //     relations: ["user", "reviewer"],
+  //   });
+  //   if (!question) throw new NotFoundException("Question not found");
+  //   return {
+  //     ...question,
+  //     user: question.user
+  //       ? {
+  //           id: question.user.id,
+  //           name: question.user.name,
+  //           mobileNumber: question.user.mobileNumber,
+  //           state: question.user.state,
+  //         }
+  //       : null,
+  //     reviewedByName: question.reviewer?.name ?? null,
+  //   };
+  // }
+
+  async getQuestionForReview(questionId: string) {
+    if (!Types.ObjectId.isValid(questionId)) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const question = await this.questionRepo.findById(questionId);
+    if (!question || question.isDeleted) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const [user, reviewer] = await Promise.all([
+      Types.ObjectId.isValid(String(question.userId))
+        ? this.userRepo.findById(String(question.userId))
+        : null,
+      question.reviewerId && Types.ObjectId.isValid(String(question.reviewerId))
+        ? this.userRepo.findById(String(question.reviewerId))
+        : null,
+    ]);
+
+    return {
+      ...question,
+      id: String(question._id),
+      user: user
+        ? {
+            id: String(user._id),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+          }
+        : null,
+      reviewedByName: reviewer?.name ?? null,
+    };
+  }
+
+  /**
+   * Check whether a question in the curator queue is a duplicate of an existing
+   * approved question. Mirrors the duplicate-detection logic used at submit time
+   * (exact-match via Redis + DB, then GDB semantic search).
+   *
+   * Returns { isDuplicate: false } if no duplicate is found.
+   * Returns { isDuplicate: true, matchedQuestion, matchedAnswer, similarityScore }
+   *         if a duplicate was found in either the DB or GDB.
+   */
+  // async checkDuplicate(questionId: string): Promise<{
+  //   isDuplicate: boolean;
+  //   matchedQuestion?: string;
+  //   matchedAnswer?: string | null;
+  //   similarityScore?: number | null;
+  //   matchedUserName?: string | null;
+  // }> {
+  //   const question = await this.questionRepo.findOne({
+  //     where: { id: questionId },
+  //   });
+  //   if (!question) throw new NotFoundException("Question not found");
+  //   // Step 1: DB exact-match (case-insensitive trimmed comparison, excluding self)
+  //   const dbDup = await this.questionRepo
+  //     .createQueryBuilder("q")
+  //     .innerJoinAndSelect("q.user", "u")
+  //     .where("LOWER(TRIM(q.questionText)) = LOWER(TRIM(:text))", {
+  //       text: question.questionText,
+  //     })
+  //     .andWhere("q.id != :id", { id: questionId })
+  //     .andWhere("q.status = :status", { status: QuestionStatus.APPROVED })
+  //     .select(["q.id", "q.questionText", "u.name"])
+  //     .getOne();
+
+  //   if (dbDup) {
+  //     return {
+  //       isDuplicate: true,
+  //       matchedQuestion: dbDup.questionText,
+  //       matchedAnswer: null, // exact DB match has no stored answer in this query path
+  //       similarityScore: null,
+  //       matchedUserName: dbDup.user?.name ?? null,
+  //     };
+  //   }
+
+  //   // Step 2: GDB semantic duplicate check
+  //   // Pass the question's stored language so non-English text gets translated
+  //   // to English before the semantic GDB search.
+  //   const gdbResult = await this.gdbService.checkDuplicate({
+  //     questionText: question.questionText,
+  //     languageCode: question.language,
+  //   });
+
+  //   if (gdbResult.isDuplicate) {
+  //     return {
+  //       isDuplicate: true,
+  //       matchedQuestion: gdbResult.matchedQuestion ?? undefined,
+  //       matchedAnswer: gdbResult.matchedAnswer ?? null,
+  //       similarityScore: gdbResult.similarityScore ?? null,
+  //       matchedUserName: gdbResult.matchedUserName ?? null,
+  //     };
+  //   }
+
+  //   return { isDuplicate: false };
+  // }
+
+  async checkDuplicate(questionId: string): Promise<{
+    isDuplicate: boolean;
+    matchedQuestion?: string;
+    matchedAnswer?: string | null;
+    similarityScore?: number | null;
+    matchedUserName?: string | null;
+  }> {
+    if (!Types.ObjectId.isValid(questionId)) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const question = await this.questionRepo.findById(questionId);
+    if (!question || question.isDeleted) {
+      throw new NotFoundException("Question not found");
+    }
+
+    // Step 1: DB exact-match (case-insensitive, whitespace-trimmed, excluding self)
+    const text = question.questionText.trim();
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const dbDup = await this.questionRepo.findOne({
+      questionText: { $regex: `^\\s*${escaped}\\s*$`, $options: "i" },
+      _id: { $ne: questionId }, // plain string: Mongoose casts it, and the repo won't mangle it
+      status: QuestionStatus.APPROVED,
+      isDeleted: { $ne: true },
+    });
+
+    if (dbDup) {
+      // Replaces innerJoinAndSelect("q.user", "u")
+      const matchedUser = Types.ObjectId.isValid(String(dbDup.userId))
+        ? await this.userRepo.findById(String(dbDup.userId))
+        : null;
+
+      return {
+        isDuplicate: true,
+        matchedQuestion: dbDup.questionText,
+        matchedAnswer: null, // exact DB match has no stored answer in this query path
+        similarityScore: null,
+        matchedUserName: matchedUser?.name ?? null,
+      };
+    }
+
+    // Step 2: GDB semantic duplicate check (unchanged)
+    const gdbResult = await this.gdbService.checkDuplicate({
+      questionText: question.questionText,
+      languageCode: question.language,
+    });
+
+    if (gdbResult.isDuplicate) {
+      return {
+        isDuplicate: true,
+        matchedQuestion: gdbResult.matchedQuestion ?? undefined,
+        matchedAnswer: gdbResult.matchedAnswer ?? null,
+        similarityScore: gdbResult.similarityScore ?? null,
+        matchedUserName: gdbResult.matchedUserName ?? null,
+      };
+    }
+
+    return { isDuplicate: false };
+  }
+
+  async reviewQuestion(
+    reviewerId: string,
+    questionId: string,
+    dto: ReviewActionDto,
+    reviewerRole: UserRole = UserRole.ADMIN,
+  ) {
+    const question = await this.questionRepo.findOne({
+      where: { id: questionId },
+    });
+    if (!question) throw new NotFoundException("Question not found");
+    if (question.isDeleted)
+      throw new Error("Deleted questions are not allowed to review...");
+    const terminalStatuses = [QuestionStatus.APPROVED, QuestionStatus.REJECTED];
+    if (terminalStatuses.includes(question.status)) {
+      throw new BadRequestException("Question has already been reviewed");
+    }
+
+    const actorType: ActorType =
+      reviewerRole === UserRole.CURATOR ? ActorType.CURATOR : ActorType.ADMIN;
+    const oldStatus = question.status;
+
+    if (dto.action === "approve") {
+      // Count total approved questions for this user (to compute reward tier)
+      const approvedCount = await this.questionRepo.count({
+        where: { userId: question.userId, status: QuestionStatus.APPROVED },
+      });
+      // Include the one being approved right now in the count for tier calculation
+      const rewardTierCount = approvedCount + 1;
+
+      await this.questionRepo.update(questionId, {
+        status: QuestionStatus.APPROVED,
+        reviewerId: reviewerId,
+        reviewedAt: new Date(),
+        approvalReason: dto.reason ?? null,
+      });
+
+      // Credit reward to user wallet
+      const rewardResult = await this.walletsService.creditReward({
+        userId: question.userId,
+        questionId,
+        approvedCount: rewardTierCount,
+      });
+
+      // Update Redis caches: leaderboard score + analytics counters
+      await Promise.all([
+        this.hotDataService.incrementLeaderboardScore(
+          Number(question.userId),
+          1,
+        ),
+        this.analyticsCacheService.onQuestionApproved(),
+        this.hotDataService.incrementTodayApprovals(),
+      ]).catch((err) =>
+        this.logger.warn(
+          `Redis cache update failed after approval: ${err.message}`,
+        ),
+      );
+
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: AuditAction.QUESTION_APPROVED,
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: {
+      //     status: QuestionStatus.APPROVED,
+      //     reward: rewardResult.transaction.amount,
+      //   },
+      // });
+
+      await this.notificationRepo.save(
+        await this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_APPROVED,
+          title: "Question Approved",
+          body: `Your question "${question.questionText.slice(0, 80)}..." has been approved. Rs. ${rewardResult.transaction.amount} has been credited to your wallet.`,
+          data: { questionId, status: "approved" },
+          triggerType: NotificationTriggerType.QUESTION,
+        }),
+      );
+
+      return {
+        success: true,
+        action: "approved",
+        questionId,
+        rewardCredited: rewardResult.transaction.amount,
+        newBalance: rewardResult.newBalance,
+      };
+    }
+
+    if (dto.action === "reject") {
+      // Reason is required for rejection
+      if (!dto.reason || !dto.reason.trim()) {
+        throw new BadRequestException(
+          "Rejection reason is required when rejecting a question",
+        );
+      }
+      await this.questionRepo.update(questionId, {
+        status: QuestionStatus.REJECTED,
+        reviewerId: reviewerId,
+        reviewedAt: new Date(),
+        rejectionReason: dto.reason ?? null,
+      });
+      await this.analyticsCacheService
+        .onQuestionRejected()
+        .catch((err) =>
+          this.logger.warn(
+            `Redis cache update failed after rejection: ${err.message}`,
+          ),
+        );
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: AuditAction.QUESTION_REJECTED,
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.REJECTED, reason: dto.reason },
+      // });
+      await this.notificationRepo.save(
+        await this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_REJECTED,
+          title: "Question Not Approved",
+          body: `Your question "${question.questionText.slice(0, 80)}..." was not approved. Reason: ${dto.reason}`,
+          data: { questionId, status: "rejected" },
+          triggerType: NotificationTriggerType.QUESTION,
+        }),
+      );
+      return {
+        success: true,
+        action: "rejected",
+        questionId,
+        rejectionReason: dto.reason,
+      };
+    }
+
+    if (dto.action === "hold") {
+      // Held reason is required when putting a question on hold
+      if (!dto.heldReason || !dto.heldReason.trim()) {
+        throw new BadRequestException(
+          "Held reason is required when holding a question",
+        );
+      }
+      // Held status: question is put on hold for later re-review
+      await this.questionRepo.update(questionId, {
+        status: QuestionStatus.HELD,
+        reviewerId: reviewerId,
+        reviewedAt: new Date(),
+        heldReason: dto.heldReason ?? null,
+      });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: "question_held",
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.HELD, reason: dto.heldReason },
+      // });
+      await this.notificationRepo.save(
+        await this.notificationRepo.create({
+          userId: question.userId,
+          type: NotificationType.QUESTION_HELD,
+          title: "Question Under Review",
+          body: `Your question "${question.questionText.slice(0, 80)}..." has been placed under review. Reason: ${dto.heldReason}`,
+          data: { questionId, status: "held" },
+          triggerType: NotificationTriggerType.QUESTION,
+        }),
+      );
+      return {
+        success: true,
+        action: "held",
+        questionId,
+        heldReason: dto.heldReason,
+      };
+    }
+
+    // request_info — hold for more info from user
+    await this.questionRepo.update(questionId, {
+      status: QuestionStatus.HELD,
+      // });
+      // await this.logAudit({
+      //   actorType,
+      //   actorId: reviewerId,
+      //   action: "question_review_request_info",
+      //   entityType: "question",
+      //   entityId: questionId,
+      //   oldValue: { status: oldStatus },
+      //   newValue: { status: QuestionStatus.HELD },
+    });
+    await this.notificationRepo.save(
+      await this.notificationRepo.create({
+        userId: question.userId,
+        type: NotificationType.QUESTION_INFO_REQUESTED,
+        title: "More Information Needed",
+        body: `Your question "${question.questionText.slice(0, 80)}..." requires additional information.`,
+        data: { questionId, status: "human_review" },
+        triggerType: NotificationTriggerType.QUESTION,
+      }),
+    );
+    return { success: true, action: "request_info", questionId };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 3: Configuration Management
+  // ─────────────────────────────────────────────────────────────
+
+  async listConfig() {
+    // Seed defaults that don't exist yet
+    for (const [key, cfg] of Object.entries(DEFAULT_CONFIG)) {
+      const existing = await this.configRepo.findOne({ where: { key } });
+      if (!existing) {
+        await this.configRepo.save({
+          key,
+          value: cfg.value,
+          description: cfg.description,
+        });
+      }
+    }
+
+    const configs = await this.configRepo.find({
+      where: {},
+      order: { key: "ASC" },
+    });
+    // TEMPORARY RESTRICTION
+    const isPaymentModifiable = false;
+
+    return {
+      items: configs.map((c) => {
+        if (
+          !isPaymentModifiable &&
+          (c.key === "payment_withdrawal_enabled" ||
+            c.key === "payment_verification_enabled")
+        ) {
+          return {
+            key: c.key,
+            value: 0,
+            description: c.description,
+          };
+        }
+        return {
+          key: c.key,
+          value: c.value,
+          description: c.description,
+        };
+      }),
+    };
+  }
+
+  async updateConfig(adminId: string, dto: UpdateConfigDto) {
+    // TEMPORARY RESTRICTION: Block enabling/disabling payment features
+    const isPaymentModifiable = false;
+    if (
+      !isPaymentModifiable &&
+      (dto.key === "payment_withdrawal_enabled" ||
+        dto.key === "payment_verification_enabled")
+    ) {
+      throw new BadRequestException(
+        "Payment features cannot be enabled or disabled at the moment. Kindly contact the development team.",
+      );
+    }
+
+    const config = await this.configRepo.findOne({ where: { key: dto.key } });
+    if (!config)
+      throw new NotFoundException(`Config key '${dto.key}' not found`);
+
+    const oldValue = config.value;
+
+    await this.configRepo.updateMany(
+      { key: dto.key },
+      {
+        value: dto.value,
+        description: dto.description ?? config.description,
+        updatedBy: adminId,
+      },
+    );
+
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: AuditAction.ADMIN_CONFIG_UPDATED,
+    //   entityType: "admin_config",
+    //   entityId: config.id,
+    //   oldValue: { key: dto.key, value: oldValue },
+    //   newValue: { key: dto.key, value: dto.value },
+    // });
+
+    // Invalidate cache so next read gets the new value
+    this.configCache.delete(dto.key);
+
+    return { success: true, key: dto.key, oldValue, newValue: dto.value };
+  }
+
+  async createConfig(adminId: string, dto: CreateConfigDto) {
+    const existing = await this.configRepo.findOne({ where: { key: dto.key } });
+    if (existing)
+      throw new BadRequestException(`Config key '${dto.key}' already exists`);
+
+    const saved = await this.configRepo.save({
+      key: dto.key,
+      value: dto.value,
+      description: dto.description,
+      updatedBy: adminId,
+    });
+
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: AuditAction.ADMIN_CONFIG_UPDATED,
+    //   entityType: "admin_config",
+    //   entityId: saved.id,
+    //   newValue: { key: dto.key, value: dto.value },
+    // });
+
+    // Populate cache for the new key
+    this.configCache.set(dto.key, dto.value);
+
+    return {
+      success: true,
+      config: {
+        key: saved.key,
+        value: saved.value,
+        description: saved.description,
+      },
+    };
+  }
+
+  // Get a single config value (with fallback to default) — uses in-memory cache
+  async getConfigValue(key: string): Promise<number> {
+    return this.getCachedConfigValue(key);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 4: Analytics & Dashboard
+  // ─────────────────────────────────────────────────────────────
+
+  async getDashboardStats(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state, cropType } = query;
+    const from = fromDate
+      ? new Date(fromDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const whereClause: Record<string, unknown> = {
+      submittedAt: Between(from, to),
+    };
+    if (state) whereClause["state"] = state;
+    if (cropType) whereClause["cropType"] = cropType;
+
+    const [
+      totalQuestions,
+      approvedQuestions,
+      rejectedQuestions,
+      pendingQuestions,
+      totalUsers,
+      flaggedQuestions,
+    ] = await Promise.all([
+      this.questionRepo.count({ where: { ...whereClause } }),
+      this.questionRepo.count({
+        where: { ...whereClause, status: QuestionStatus.APPROVED },
+      }),
+      this.questionRepo.count({
+        where: { ...whereClause, status: QuestionStatus.REJECTED },
+      }),
+      this.questionRepo.count({
+        where: {
+          ...whereClause,
+          status: In([QuestionStatus.PENDING, QuestionStatus.HELD]),
+        },
+      }),
+      this.userRepo.count(),
+      this.questionRepo.count({
+        where: { ...whereClause, duplicateFlag: true },
+      }),
+    ]);
+
+    // State breakdown
+    const stateBreakdownRaw: Array<{ state: string; count: number }> =
+      await this.questionRepo
+        .createQueryBuilder("q")
+        .select("q.state", "state")
+        .addSelect("COUNT(*)", "count")
+        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
+        .groupBy("q.state")
+        .orderBy("count", "DESC")
+        .limit(10)
+        .getRawMany();
+
+    // Category breakdown
+    const categoryBreakdownRaw: Array<{ category: string; count: number }> =
+      await this.userRepo
+        .createQueryBuilder("u")
+        .select("u.category", "category")
+        .addSelect("COUNT(*)", "count")
+        .groupBy("u.category")
+        .getRawMany();
+
+    // Daily question volume (last 7 days)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const dailyVolumeRaw: Array<{
+      date: string;
+      total: string;
+      approved: string;
+    }> = await this.questionRepo
+      .createQueryBuilder("q")
+      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", "date")
+      .addSelect("COUNT(*)", "total")
+      .addSelect(
+        `COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`,
+        "approved",
+      )
+      .where("q.submittedAt >= :sevenDaysAgo", { sevenDaysAgo })
+      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+      .orderBy("date", "ASC")
+      .getRawMany();
+
+    return {
+      summary: {
+        totalQuestions,
+        approvedQuestions,
+        rejectedQuestions,
+        pendingQuestions,
+        totalUsers,
+        flaggedQuestions,
+        approvalRate:
+          totalQuestions > 0
+            ? Math.round((approvedQuestions / totalQuestions) * 100)
+            : 0,
+      },
+      stateBreakdown: stateBreakdownRaw.map((r) => ({
+        state: r.state,
+        count: Number(r.count),
+      })),
+      categoryBreakdown: categoryBreakdownRaw.map((r) => ({
+        category: r.category,
+        count: Number(r.count),
+      })),
+      dailyVolume: dailyVolumeRaw.map((r) => ({
+        date: r.date,
+        total: Number(r.total),
+        approved: Number(r.approved),
+      })),
+    };
+  }
+
+  /**
+   * Full stats payload matching frontend/src/types/AdminStats.
+   * GET /admin/stats
+   */
+  // async getStats(_query: AnalyticsQueryDto) {
+  //   const [
+  //     totalUsers,
+  //     verifiedUsers,
+  //     pendingUsers,
+  //     suspendedUsers,
+  //     bannedUsers,
+  //     totalQuestions,
+  //     approvedQuestions,
+  //     rejectedQuestions,
+  //     pendingQuestions,
+  //     usersThisWeek,
+  //     questionsThisWeek,
+  //     roleDist,
+  //     categoryDist,
+  //     historical,
+  //   ] = await Promise.all([
+  //     this.userRepo.count(),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.VERIFIED } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.PENDING } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.SUSPENDED } }),
+  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.BANNED } }),
+  //     this.questionRepo.count(),
+  //     this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
+  //     this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
+  //     this.questionRepo.count({
+  //       where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) },
+  //     }),
+  //     // Users registered in last 7 days
+  //     this.userRepo.count({
+  //       where: { createdAt: Between(
+  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  //         new Date(),
+  //       ) },
+  //     }),
+  //     // Questions submitted in last 7 days
+  //     this.questionRepo.count({
+  //       where: { submittedAt: Between(
+  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  //         new Date(),
+  //       ) },
+  //     }),
+  //     // Role distribution
+  //     this.userRepo
+  //       .createQueryBuilder('u')
+  //       .select('u.role', 'role')
+  //       .addSelect('COUNT(*)', 'count')
+  //       .groupBy('u.role')
+  //       .getRawMany<{ role: string; count: string }>(),
+  //     // Category distribution
+  //     this.userRepo
+  //       .createQueryBuilder('u')
+  //       .select('u.category', 'category')
+  //       .addSelect('COUNT(*)', 'count')
+  //       .groupBy('u.category')
+  //       .getRawMany<{ category: string; count: string }>(),
+  //     // 90-day daily history (users, questions, signups, approved, rejected)
+  //     this.questionRepo
+  //       .createQueryBuilder('q')
+  //       .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+  //       .addSelect('COUNT(DISTINCT q.userId)', 'users')
+  //       .addSelect('COUNT(*)', 'questions')
+  //       .addSelect(`COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`, 'approved')
+  //       .addSelect(`COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)`, 'rejected')
+  //       .where('q.submittedAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+  //       .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+  //       .orderBy('date', 'ASC')
+  //       .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
+  //   ])
+
+  //   // Recent audit logs (last 20, joined with user for actor name)
+  //   const recentLogs: Array<AuditLog & { actorName?: string }> = await this.auditRepo
+  //     .createQueryBuilder('al')
+  //     .leftJoin('users', 'u', 'al.actor_id = u.id')
+  //     .select([
+  //       'al.id AS id',
+  //       'al.action AS action',
+  //       'al.entity_type AS "entityType"',
+  //       'al.metadata AS metadata',
+  //       'al.created_at AS "createdAt"',
+  //       'u.name AS "actorName"',
+  //     ])
+  //     .orderBy('al.created_at', 'DESC')
+  //     .take(20)
+  //     .getRawMany();
+
+  //   // Signups per day from user registrations
+  //   const signupRaw = await this.userRepo
+  //     .createQueryBuilder('u')
+  //     .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
+  //     .addSelect('COUNT(*)', 'signups')
+  //     .where('u.createdAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
+  //     .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
+  //     .orderBy('date', 'ASC')
+  //     .getRawMany<{ date: string; signups: string }>()
+
+  //   const signupMap = new Map(signupRaw.map((r) => [r.date, Number(r.signups)]))
+
+  //   const historicalDays: Array<{
+  //     date: string
+  //     users: number
+  //     questions: number
+  //     signups: number
+  //     approved: number
+  //     rejected: number
+  //   }> = historical.map((h) => ({
+  //     date: h.date,
+  //     users: Number(h.users),
+  //     questions: Number(h.questions),
+  //     signups: signupMap.get(h.date) ?? 0,
+  //     approved: Number(h.approved),
+  //     rejected: Number(h.rejected),
+  //   }))
+
+  //   return {
+  //     dashboard: {
+  //       totalUsers,
+  //       verifiedUsers,
+  //       pendingUsers,
+  //       suspendedUsers,
+  //       bannedUsers,
+  //       totalQuestions,
+  //       approvedQuestions,
+  //       rejectedQuestions,
+  //       pendingQuestions,
+  //       questionsThisWeek,
+  //       usersThisWeek,
+  //     },
+  //     recentActivity: recentLogs.map((log) => ({
+  //       id: log.id,
+  //       action: log.action,
+  //       description: this.buildActivityDescription(log.action, log.entityType as string | null, log.metadata as Record<string, unknown> | null),
+  //       performedBy: (log as any).actorName ?? 'System',
+  //       performedAt: (log as any).createdAt ? new Date((log as any).createdAt).toISOString() : new Date().toISOString(),
+  //     })),
+  //     roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
+  //     categoryDistribution: categoryDist
+  //       .filter((c) => c.category != null)
+  //       .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
+  //     historical: historicalDays,
+  //     avgReviewTurnaroundMinutes: null, // populated separately via getQuestionMetrics for admin dashboard
+  //   }
+  // }
+
+  // Turns the staff Anveshan and Tester scope into a condition for each data source behind the dashboard.
+  private async resolveDashboardScope(query: AnalyticsQueryDto) {
+    const userFilter: Record<string, unknown> = { ...isTesterCondition(query.tester) };
+    if (query.anveshanScope) {
+      userFilter.isAnveshanUser = query.anveshanScope === "only" ? true : { $ne: true };
+    }
+    const userIdFilter = await resolveUserIdScope(this.userRepo, query);
+    let walletIdFilter: Record<string, unknown> | undefined;
+    if (userIdFilter) {
+      const wallets = await this.walletRepo.findAll({ userId: userIdFilter });
+      walletIdFilter = { $in: wallets.map((wallet) => wallet._id.toString()) };
+    }
+    return {
+      userFilter: Object.keys(userFilter).length > 0 ? userFilter : undefined,
+      userIdFilter,
+      walletIdFilter,
+    };
+  }
+
+  async getStats(query: AnalyticsQueryDto) {
+    const scope = await this.resolveDashboardScope(query);
+    const now = new Date();
+
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const [
+      userStats,
+      questionStats,
+      usersThisWeek,
+      questionsThisWeek,
+      roleDistribution,
+      categoryDistribution,
+      historical,
+      signupRaw,
+    ] = await Promise.all([
+      this.userRepo.getVerificationStats(scope.userFilter),
+
+      this.questionRepo.getQuestionStats(scope.userIdFilter),
+
+      this.userRepo.countCreatedBetween(sevenDaysAgo, now, scope.userFilter),
+
+      this.questionRepo.countSubmittedBetween(sevenDaysAgo, now, scope.userIdFilter),
+
+      this.userRepo.getRoleDistribution(scope.userFilter),
+
+      this.userRepo.getCategoryDistribution(scope.userFilter),
+
+      this.questionRepo.getDailyStatsSince(ninetyDaysAgo, scope.userIdFilter),
+
+      this.userRepo.getDailySignupsSince(ninetyDaysAgo, scope.userFilter),
+
+      // this.auditRepo.getRecentWithActorName(20),
+    ]);
+
+    const signupMap = new Map(signupRaw.map((r) => [r.date, r.signups]));
+
+    const historicalDays = historical.map((h) => ({
+      date: h.date,
+      users: h.users,
+      questions: h.questions,
+      signups: signupMap.get(h.date) ?? 0,
+      approved: h.approved,
+      rejected: h.rejected,
+    }));
+
+    return {
+      dashboard: {
+        totalUsers: userStats.total,
+        verifiedUsers: userStats.verified,
+        pendingUsers: userStats.pending,
+        suspendedUsers: userStats.suspended,
+        bannedUsers: userStats.banned,
+
+        totalQuestions: questionStats.total,
+        approvedQuestions: questionStats.approved,
+        rejectedQuestions: questionStats.rejected,
+        pendingQuestions: questionStats.pending,
+
+        questionsThisWeek,
+        usersThisWeek,
+      },
+
+      // recentActivity: recentLogs.map((log) => ({
+      //   id: log.id,
+      //   action: log.action,
+      //   description: this.buildActivityDescription(
+      //     log.action,
+      //     log.entityType,
+      //     log.metadata,
+      //   ),
+      //   performedBy: log.actorName ?? "System",
+      //   performedAt: log.createdAt
+      //     ? new Date(log.createdAt).toISOString()
+      //     : now.toISOString(),
+      // })),
+
+      roleDistribution,
+
+      categoryDistribution,
+
+      historical: historicalDays,
+
+      avgReviewTurnaroundMinutes: null,
+    };
+  }
+
+  async getFinancialSummary(query: AnalyticsQueryDto) {
+    const days = query.days ?? 30;
+
+    const now = new Date();
+
+    const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+    const todayStart = new Date(now);
+
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [withdrawalSummary, totalWalletBalance] = await Promise.all([
+      this.withdrawalRepo.getFinancialSummary(since, todayStart, now),
+
+      this.walletRepo.getTotalBalance(),
+    ]);
+
+    return {
+      totalPaidOut: withdrawalSummary.totalPaidOut,
+
+      pendingWithdrawals: withdrawalSummary.pendingWithdrawals,
+
+      completedWithdrawals: withdrawalSummary.completedWithdrawals,
+
+      failedWithdrawals: withdrawalSummary.failedWithdrawals,
+
+      totalWalletBalance,
+
+      today: withdrawalSummary.today,
+
+      dailyPayoutTrend: withdrawalSummary.dailyPayoutTrend,
+    };
+  }
+
+  async getRewardSummary(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state } = query;
+
+    const from = fromDate
+      ? new Date(fromDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const [rewardTxs, withdrawalStats] = await Promise.all([
+      this.transactionRepo.getRewardSummary(from, to, state),
+
+      this.withdrawalRepo.getRewardSummary(from, to),
+    ]);
+
+    return {
+      totalRewarded: rewardTxs.totalRewarded,
+      rewardCount: rewardTxs.rewardCount,
+      avgReward: rewardTxs.avgReward,
+
+      totalWithdrawn: withdrawalStats.totalWithdrawn,
+      withdrawalCount: withdrawalStats.withdrawalCount,
+      pendingWithdrawals: withdrawalStats.pendingWithdrawals,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 5: Reward & Payout
+  // ─────────────────────────────────────────────────────────────
+
+  async listWithdrawals(dto: ListWithdrawalsDto) {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      state,
+      search,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      fromDate,
+      toDate,
+      filterStatus,
+      tester,
+      anveshanScope,
+    } = dto;
+
+    const result = await this.withdrawalRepo.listWithdrawals({
+      page,
+      limit,
+      status,
+      state,
+      search,
+      sortBy,
+      sortOrder,
+      fromDate: fromDate ? new Date(fromDate) : undefined,
+      toDate: toDate ? new Date(toDate) : undefined,
+      filterStatus,
+      tester,
+      anveshanScope,
+    });
+
+    return {
+      items: result.items,
+      total: result.total,
+      page,
+      limit,
+      pages: Math.ceil(result.total / limit),
+    };
+  }
+
+  // async processWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  //   dto: ProcessWithdrawalDto,
+  //   reviewerRole?: UserRole,
+  // ) {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.PENDING) {
+  //     // Idempotent: if already processed, return current state without error.
+  //     return {
+  //       success: true,
+  //       action:
+  //         withdrawal.status === WithdrawalStatus.PROCESSING
+  //           ? "approved"
+  //           : "rejected",
+  //       withdrawalId,
+  //       status: withdrawal.status,
+  //     };
+  //   }
+
+  //   if (dto.action === "approve") {
+  //     // ── Step 1: Fetch user's verified payment detail ──────────────────────────
+  //     const paymentDetail = await this.paymentDetailRepo.findOne({
+  //       where: { userId: withdrawal.userId, status: "verified" },
+  //       order: { verifiedAt: "DESC" },
+  //     });
+  //     if (!paymentDetail) {
+  //       throw new BadRequestException(
+  //         "No verified payment detail found for this user.",
+  //       );
+  //     }
+
+  //     // ── Step 2: Create or reuse Razorpay fund account ─────────────────────────
+  //     let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //     if (!fundAccountId) {
+  //       const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //         userId: withdrawal.userId,
+  //         phone: withdrawal.user.mobileNumber,
+  //         name: withdrawal.user.name ?? "User",
+  //         existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //         vpa: paymentDetail.upiId ?? undefined,
+  //         bankAccount:
+  //           paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //             ? {
+  //                 accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //                 ifsc: paymentDetail.ifsc,
+  //                 accountHolderName: paymentDetail.accountHolderName ?? "",
+  //               }
+  //             : undefined,
+  //       });
+  //       fundAccountId = fundAccount.fundAccountId;
+  //       // Persist fund account and contact ID for future use
+  //       await this.paymentDetailRepo.update(paymentDetail.id, {
+  //         razorpayFundAccountId: fundAccountId,
+  //       });
+  //       if (!withdrawal.user.razorpayContactId) {
+  //         await this.userRepo.update(withdrawal.userId, {
+  //           razorpayContactId: fundAccount.contactId,
+  //         });
+  //       }
+  //     }
+
+  //     const referenceId = `wd_${withdrawalId}`;
+  //     const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //     const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //     let payoutResult: {
+  //       payoutId: string;
+  //       status: string;
+  //       utrNumber?: string | null;
+  //     };
+  //     try {
+  //       payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //         fundAccountId,
+  //         amount: amountPaise,
+  //         referenceId,
+  //         mode: payoutMode,
+  //         narration: "Withdrawal payout",
+  //       });
+  //     } catch (err) {
+  //       // Payout initiation failed — mark FAILED and refund immediately
+  //       this.logger.error(
+  //         `[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${err.message}`,
+  //       );
+  //       await this.handleWithdrawalFailure({
+  //         withdrawal,
+  //         orderId: referenceId,
+  //         adminId,
+  //         result: {
+  //           pinelabsTransactionId: null,
+  //           errorCode: "RAZORPAY_INIT_ERROR",
+  //           errorMessage: err.message,
+  //           rawResponse: {},
+  //         },
+  //       });
+  //       return {
+  //         success: true,
+  //         action: "approved",
+  //         withdrawalId,
+  //         status: WithdrawalStatus.FAILED,
+  //         paymentFailed: true,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //       };
+  //     }
+
+  //     // ── Step 4: Update withdrawal based on Razorpay response ─────────────────
+  //     const { payoutId, status: razorpayStatus } = payoutResult;
+  //     const finalStatus =
+  //       razorpayStatus === "success" || razorpayStatus === "processed"
+  //         ? WithdrawalStatus.COMPLETED
+  //         : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //           ? WithdrawalStatus.FAILED
+  //           : WithdrawalStatus.PROCESSING;
+
+  //     await this.withdrawalRepo.update(withdrawalId, {
+  //       status: finalStatus,
+  //       processedAt:
+  //         finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //       razorpayPayoutId: payoutId,
+  //       orderId: referenceId,
+  //       utrNumber: payoutResult.utrNumber ?? null,
+  //     });
+
+  //     // ── Step 5: Log the payment attempt ─────────────────────────────────────
+  //     const paymentLog = await this.paymentLogRepo.create({
+  //       withdrawalRequestId: withdrawalId,
+  //       adminId,
+  //       orderId: referenceId,
+  //       razorpayPayoutId: payoutId,
+  //       utrNumber: payoutResult.utrNumber ?? null,
+  //       status:
+  //         finalStatus === WithdrawalStatus.COMPLETED
+  //           ? PaymentLogStatus.SUCCESS
+  //           : finalStatus === WithdrawalStatus.FAILED
+  //             ? PaymentLogStatus.FAILED
+  //             : PaymentLogStatus.PENDING,
+  //     });
+  //     await this.paymentLogRepo.save(paymentLog);
+
+  //     const actorType: ActorType =
+  //       reviewerRole === UserRole.FINANCE
+  //         ? ActorType.FINANCE
+  //         : reviewerRole === UserRole.CURATOR
+  //           ? ActorType.CURATOR
+  //           : ActorType.ADMIN;
+
+  //     // await this.logAudit({
+  //     //   actorType,
+  //     //   actorId: adminId,
+  //     //   action:
+  //     //     finalStatus === WithdrawalStatus.COMPLETED
+  //     //       ? "withdrawal_completed"
+  //     //       : "withdrawal_approved",
+  //     //   entityType: "withdrawal_request",
+  //     //   entityId: withdrawalId,
+  //     // });
+
+  //     // ── Step 6: On FAILED, trigger refund ────────────────────────────────────
+  //     if (finalStatus === WithdrawalStatus.FAILED) {
+  //       await this.handleWithdrawalFailure({
+  //         withdrawal,
+  //         orderId: referenceId,
+  //         adminId,
+  //         result: {
+  //           pinelabsTransactionId: null,
+  //           errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //           errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //           rawResponse: { payoutId, razorpayStatus },
+  //         },
+  //       });
+  //     } else {
+  //       // Send notification (PROCESSING or COMPLETED)
+  //       await this.notificationRepo.save(
+  //         await this.notificationRepo.create({
+  //           userId: withdrawal.userId,
+  //           type: NotificationType.WITHDRAWAL_APPROVED,
+  //           title: "Withdrawal Approved",
+  //           body:
+  //             finalStatus === WithdrawalStatus.COMPLETED
+  //               ? `Your withdrawal of Rs. ${withdrawal.amount} has been credited to your account.`
+  //               : `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
+  //           data: {
+  //             withdrawalId,
+  //             status:
+  //               finalStatus === WithdrawalStatus.COMPLETED
+  //                 ? "completed"
+  //                 : "processing",
+  //             userId: withdrawal.userId,
+  //           },
+  //           triggerType: NotificationTriggerType.WITHDRAW,
+  //         }),
+  //       );
+  //     }
+
+  //     return {
+  //       success: true,
+  //       action: "approved",
+  //       withdrawalId,
+  //       status: finalStatus,
+  //       razorpayPayoutId: payoutId,
+  //       paymentFailed: finalStatus === WithdrawalStatus.FAILED,
+  //     };
+  //   } else {
+  //     const rejectionReason = dto.rejectionReason ?? "Rejected by admin";
+  //     await this.walletRepo.increment(
+  //       { id: withdrawal.walletId },
+  //       "balance",
+  //       Number(withdrawal.amount),
+  //     );
+  //     const updatedWallet = await this.walletRepo.findOne({
+  //       where: { id: withdrawal.walletId },
+  //     });
+  //     const newBalance = updatedWallet ? Number(updatedWallet.balance) : 0;
+  //     await this.withdrawalRepo.update(withdrawalId, {
+  //       status: WithdrawalStatus.REJECTED,
+  //       processedAt: new Date(),
+  //     });
+  //     await this.transactionRepo.updateMany(
+  //       { referenceId: withdrawalId, status: TransactionStatus.PENDING },
+  //       { status: TransactionStatus.REJECTED, rejectionReason },
+  //     );
+  //     await this.transactionRepo.save(
+  //       await this.transactionRepo.create({
+  //         walletId: withdrawal.walletId,
+  //         amount: Number(withdrawal.amount),
+  //         type: TransactionType.CREDIT,
+  //         source: TransactionSource.REFUND,
+  //         description: `Withdrawal refunded${rejectionReason ? ": " + rejectionReason : ""}`,
+  //         status: TransactionStatus.COMPLETED,
+  //         referenceId: withdrawalId,
+  //         balanceAfter: newBalance,
+  //       }),
+  //     );
+  //     // await this.logAudit({
+  //     //   actorType: ActorType.ADMIN,
+  //     //   actorId: adminId,
+  //     //   action: "withdrawal_rejected",
+  //     //   entityType: "withdrawal_request",
+  //     //   entityId: withdrawalId,
+  //     //   oldValue: { status: WithdrawalStatus.PENDING },
+  //     //   newValue: {
+  //     //     status: WithdrawalStatus.REJECTED,
+  //     //     reason: rejectionReason,
+  //     //   },
+  //     // });
+  //     const notification = await this.notificationRepo.save(
+  //       await this.notificationRepo.create({
+  //         userId: withdrawal.userId,
+  //         type: NotificationType.WITHDRAWAL_REJECTED,
+  //         title: "Withdrawal Rejected",
+  //         body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? " Reason: " + rejectionReason + "." : ""} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
+  //         data: {
+  //           withdrawalId,
+  //           status: "rejected",
+  //           reason: rejectionReason,
+  //           userId: withdrawal.userId,
+  //         },
+  //         triggerType: NotificationTriggerType.WITHDRAW,
+  //       }),
+  //     );
+  //     this.notificationsService
+  //       .sendToUser(withdrawal.userId, {
+  //         title: notification.title,
+  //         body: notification.body,
+  //         data: notification.data ?? undefined,
+  //         sound: "default",
+  //         priority: "high",
+  //       })
+  //       .catch((pushErr) =>
+  //         console.error(
+  //           "[AdminService] Failed to send withdrawal rejection push:",
+  //           pushErr,
+  //         ),
+  //       );
+  //     return {
+  //       success: true,
+  //       action: "rejected",
+  //       withdrawalId,
+  //       status: WithdrawalStatus.REJECTED,
+  //     };
+  //   }
+  // }
+
+  async processWithdrawal(
+    adminId: string,
+    withdrawalId: string,
+    dto: ProcessWithdrawalDto,
+    reviewerRole?: UserRole,
+  ) {
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const alreadyProcessed = (status: WithdrawalStatus) => ({
+      success: true,
+      action: status === WithdrawalStatus.PROCESSING ? "approved" : "rejected",
+      withdrawalId,
+      status,
+    });
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+    if (withdrawal.status !== WithdrawalStatus.PENDING) {
+      return alreadyProcessed(withdrawal.status);
+    }
+
+    // ───────────────────────────── APPROVE ─────────────────────────────
+    if (dto.action === "approve") {
+      // No joins in Mongo: fetch the user explicitly
+      const user = await this.userRepo.findById(withdrawal.userId);
+      if (!user)
+        throw new NotFoundException("User not found for this withdrawal");
+
+      const paymentDetail =
+        await this.paymentDetailRepo.findLatestVerifiedByUserId(
+          withdrawal.userId,
+        );
+      if (!paymentDetail) {
+        throw new BadRequestException(
+          "No verified payment detail found for this user.",
+        );
+      }
+
+      // Atomic claim: only one admin request can move PENDING -> PROCESSING,
+      // so two simultaneous approvals can never trigger two payouts.
+      const claimed = await this.withdrawalRepo.findOneAndUpdate(
+        { _id: withdrawalId, status: WithdrawalStatus.PENDING },
+        { status: WithdrawalStatus.PROCESSING },
+      );
+      if (!claimed) {
+        const current = await this.withdrawalRepo.findById(withdrawalId);
+        return alreadyProcessed(current?.status ?? WithdrawalStatus.PROCESSING);
+      }
+
+      // Fund account setup. If this throws, release the claim so it can be retried
+      // (matches the old behaviour where status stayed PENDING).
+      let fundAccountId = paymentDetail.razorpayFundAccountId;
+      try {
+        if (!fundAccountId) {
+          const fundAccount =
+            await this.razorpayPayoutService.createFundAccount({
+              userId: withdrawal.userId,
+              phone: user.mobileNumber,
+              name: user.name ?? "User",
+              existingContactId: user.razorpayContactId ?? undefined,
+              vpa: paymentDetail.upiId ?? undefined,
+              bankAccount:
+                paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+                  ? {
+                      accountNumber: decrypt(
+                        paymentDetail.accountNumberEncrypted,
+                      ),
+                      ifsc: paymentDetail.ifsc,
+                      accountHolderName: paymentDetail.accountHolderName ?? "",
+                    }
+                  : undefined,
+            });
+          fundAccountId = fundAccount.fundAccountId;
+
+          await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
+            razorpayFundAccountId: fundAccountId,
+          });
+          if (!user.razorpayContactId) {
+            await this.userRepo.update(withdrawal.userId, {
+              razorpayContactId: fundAccount.contactId,
+            });
+          }
+        }
+      } catch (err) {
+        await this.withdrawalRepo.update(withdrawalId, {
+          status: WithdrawalStatus.PENDING,
+        });
+        throw err;
+      }
+
+      const referenceId = `wd_${withdrawalId}`;
+      const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+      const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+      let payoutResult: {
+        payoutId: string;
+        status: string;
+        utrNumber?: string | null;
+      };
+      try {
+        payoutResult = await this.razorpayPayoutService.initiatePayout({
+          fundAccountId,
+          amount: amountPaise,
+          referenceId,
+          mode: payoutMode,
+          narration: "Withdrawal payout",
+        });
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : String(err);
+        this.logger.error(
+          `[Razorpay] initiatePayout failed for withdrawal ${withdrawalId}: ${errorMessage}`,
+        );
+        await this.handleWithdrawalFailure({
+          withdrawal,
+          orderId: referenceId,
+          adminId,
+          result: {
+            pinelabsTransactionId: null,
+            errorCode: "RAZORPAY_INIT_ERROR",
+            errorMessage,
+            rawResponse: {},
+          },
+        });
+        return {
+          success: true,
+          action: "approved",
+          withdrawalId,
+          status: WithdrawalStatus.FAILED,
+          paymentFailed: true,
+          errorCode: "RAZORPAY_INIT_ERROR",
+          errorMessage,
+        };
+      }
+
+      const { payoutId, status: razorpayStatus } = payoutResult;
+      const finalStatus =
+        razorpayStatus === "success" || razorpayStatus === "processed"
+          ? WithdrawalStatus.COMPLETED
+          : razorpayStatus === "failed" || razorpayStatus === "rejected"
+            ? WithdrawalStatus.FAILED
+            : WithdrawalStatus.PROCESSING;
+
+      await this.withdrawalRepo.update(withdrawalId, {
+        status: finalStatus,
+        processedAt:
+          finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+        razorpayPayoutId: payoutId,
+        orderId: referenceId,
+        utrNumber: payoutResult.utrNumber ?? null,
+      });
+
+      await this.paymentLogRepo.save(
+        await this.paymentLogRepo.create({
+          withdrawalRequestId: withdrawalId,
+          adminId,
+          orderId: referenceId,
+          razorpayPayoutId: payoutId,
+          utrNumber: payoutResult.utrNumber ?? null,
+          status:
+            finalStatus === WithdrawalStatus.COMPLETED
+              ? PaymentLogStatus.SUCCESS
+              : finalStatus === WithdrawalStatus.FAILED
+                ? PaymentLogStatus.FAILED
+                : PaymentLogStatus.PENDING,
+        }),
+      );
+
+      const actorType: ActorType =
+        reviewerRole === UserRole.FINANCE
+          ? ActorType.FINANCE
+          : reviewerRole === UserRole.CURATOR
+            ? ActorType.CURATOR
+            : ActorType.ADMIN;
+      // logAudit stays commented out as before; actorType is ready for it.
+
+      if (finalStatus === WithdrawalStatus.FAILED) {
+        await this.handleWithdrawalFailure({
+          withdrawal,
+          orderId: referenceId,
+          adminId,
+          result: {
+            pinelabsTransactionId: null,
+            errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+            errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+            rawResponse: { payoutId, razorpayStatus },
+          },
+        });
+      } else {
+        await this.notificationRepo.save(
+          await this.notificationRepo.create({
+            userId: withdrawal.userId,
+            type: NotificationType.WITHDRAWAL_APPROVED,
+            title: "Withdrawal Approved",
+            body:
+              finalStatus === WithdrawalStatus.COMPLETED
+                ? `Your withdrawal of Rs. ${withdrawal.amount} has been credited to your account.`
+                : `Your withdrawal of Rs. ${withdrawal.amount} has been approved and will be processed shortly.`,
+            data: {
+              withdrawalId,
+              status:
+                finalStatus === WithdrawalStatus.COMPLETED
+                  ? "completed"
+                  : "processing",
+              userId: withdrawal.userId,
+            },
+            triggerType: NotificationTriggerType.WITHDRAW,
+          }),
+        );
+      }
+
+      return {
+        success: true,
+        action: "approved",
+        withdrawalId,
+        status: finalStatus,
+        razorpayPayoutId: payoutId,
+        paymentFailed: finalStatus === WithdrawalStatus.FAILED,
+      };
+    }
+
+    // ───────────────────────────── REJECT ─────────────────────────────
+    const rejectionReason = dto.rejectionReason ?? "Rejected by admin";
+
+    // Claim FIRST (PENDING -> REJECTED), then refund. A retry or double click can
+    // never refund twice. If the process crashes between the claim and the refund,
+    // you get a rejected withdrawal with no REFUND transaction, which is detectable
+    // and fixable, whereas a double refund creates money.
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      { _id: withdrawalId, status: WithdrawalStatus.PENDING },
+      {
+        status: WithdrawalStatus.REJECTED,
+        processedAt: new Date(),
+        failureReason: rejectionReason,
+      },
+    );
+    if (!claimed) {
+      const current = await this.withdrawalRepo.findById(withdrawalId);
+      return alreadyProcessed(current?.status ?? WithdrawalStatus.REJECTED);
+    }
+
+    const refundedBalance = await this.walletRepo.incrementBalance(
+      withdrawal.walletId,
+      Number(withdrawal.amount),
+    );
+    if (refundedBalance === null) {
+      this.logger.error(
+        `Wallet ${withdrawal.walletId} not found while refunding withdrawal ${withdrawalId}`,
+      );
+    }
+    const newBalance = refundedBalance ?? 0;
+
+    await this.transactionRepo.updateMany(
+      { referenceId: withdrawalId, status: TransactionStatus.PENDING },
+      { status: TransactionStatus.REJECTED, rejectionReason },
+    );
+
+    await this.transactionRepo.save(
+      await this.transactionRepo.create({
+        walletId: withdrawal.walletId,
+        amount: Number(withdrawal.amount),
+        type: TransactionType.CREDIT,
+        source: TransactionSource.REFUND,
+        description: `Withdrawal refunded${rejectionReason ? ": " + rejectionReason : ""}`,
+        status: TransactionStatus.COMPLETED,
+        referenceId: withdrawalId,
+        balanceAfter: newBalance,
+      }),
+    );
+
+    await this.notificationRepo.save(
+      await this.notificationRepo.create({
+        userId: withdrawal.userId,
+        type: NotificationType.WITHDRAWAL_REJECTED,
+        title: "Withdrawal Rejected",
+        body: `Your withdrawal of Rs. ${withdrawal.amount} was rejected.${rejectionReason ? " Reason: " + rejectionReason + "." : ""} Rs. ${withdrawal.amount} has been credited back to your wallet.`,
+        data: {
+          withdrawalId,
+          status: "rejected",
+          reason: rejectionReason,
+          userId: withdrawal.userId,
+        },
+        triggerType: NotificationTriggerType.WITHDRAW,
+      }),
+    );
+
+    return {
+      success: true,
+      action: "rejected",
+      withdrawalId,
+      status: WithdrawalStatus.REJECTED,
+    };
+  }
+
+  /**
+   * Retry a PROCESSING withdrawal via Razorpay.
+   * On payout failure the withdrawal is marked FAILED (no auto-refund —
+   * admin must explicitly call markWithdrawalFailed to refund the user).
+   */
+  // async retryWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  // ): Promise<{
+  //   success: boolean;
+  //   withdrawalId: string;
+  //   status: WithdrawalStatus;
+  //   paymentFailed?: boolean;
+  //   errorCode?: string | null;
+  //   errorMessage?: string | null;
+  // }> {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
+  //     throw new BadRequestException(
+  //       `Cannot retry withdrawal in '${withdrawal.status}' status. Only PROCESSING withdrawals can be retried.`,
+  //     );
+  //   }
+  //   if (!withdrawal.orderId) {
+  //     throw new BadRequestException(
+  //       "No orderId found for this withdrawal. Please re-approve the withdrawal first.",
+  //     );
+  //   }
+
+  //   // Fetch user's payment detail for fund account
+  //   const paymentDetail = await this.paymentDetailRepo.findOne({
+  //     where: { userId: withdrawal.userId, status: "verified" },
+  //     order: { verifiedAt: "DESC" },
+  //   });
+  //   if (!paymentDetail) {
+  //     throw new BadRequestException(
+  //       "No verified payment detail found for this user.",
+  //     );
+  //   }
+
+  //   // Reuse or recreate fund account
+  //   let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //   if (!fundAccountId) {
+  //     const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //       userId: withdrawal.userId,
+  //       phone: withdrawal.user.mobileNumber,
+  //       name: withdrawal.user.name ?? "User",
+  //       existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //       vpa: paymentDetail.upiId ?? undefined,
+  //       bankAccount:
+  //         paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //           ? {
+  //               accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //               ifsc: paymentDetail.ifsc,
+  //               accountHolderName: paymentDetail.accountHolderName ?? "",
+  //             }
+  //           : undefined,
+  //     });
+  //     fundAccountId = fundAccount.fundAccountId;
+  //     await this.paymentDetailRepo.update(paymentDetail.id, {
+  //       razorpayFundAccountId: fundAccountId,
+  //     });
+  //     if (!withdrawal.user.razorpayContactId) {
+  //       await this.userRepo.update(withdrawal.userId, {
+  //         razorpayContactId: fundAccount.contactId,
+  //       });
+  //     }
+  //   }
+  //   const referenceId = `wd_${withdrawalId}`;
+  //   const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //   const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //   let payoutResult: {
+  //     payoutId: string;
+  //     status: string;
+  //     utrNumber?: string | null;
+  //   };
+  //   try {
+  //     payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //       fundAccountId,
+  //       amount: amountPaise,
+  //       referenceId,
+  //       mode: payoutMode,
+  //       narration: "Withdrawal payout retry",
+  //     });
+  //   } catch (err) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "RAZORPAY_INIT_ERROR",
+  //       errorMessage: err.message,
+  //     };
+  //   }
+
+  //   const { payoutId, status: razorpayStatus } = payoutResult;
+  //   const finalStatus =
+  //     razorpayStatus === "success" || razorpayStatus === "processed"
+  //       ? WithdrawalStatus.COMPLETED
+  //       : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //         ? WithdrawalStatus.FAILED
+  //         : WithdrawalStatus.PROCESSING;
+
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: finalStatus,
+  //     processedAt:
+  //       finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //     razorpayPayoutId: payoutId,
+  //     utrNumber: payoutResult.utrNumber ?? null,
+  //   });
+
+  //   if (finalStatus === WithdrawalStatus.FAILED) {
+  //     await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //         errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //         rawResponse: { payoutId, razorpayStatus },
+  //         utrNumber: payoutResult.utrNumber ?? null,
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: finalStatus,
+  //       paymentFailed: true,
+  //       errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //       errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //     };
+  //   }
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_completed",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   // });
+
+  //   return { success: true, withdrawalId, status: finalStatus };
+  // }
+
+  private async getLatestVerifiedPaymentDetail(userId: string) {
+    const details = await this.paymentDetailRepo.findAll({
+      userId,
+      status: "verified",
+    });
+    const time = (d: { verifiedAt: Date | null }) =>
+      d.verifiedAt ? new Date(d.verifiedAt).getTime() : 0;
+    return details.sort((a, b) => time(b) - time(a))[0] ?? null;
+  }
+
+  async retryWithdrawal(
+    adminId: string,
+    withdrawalId: string,
+  ): Promise<{
+    success: boolean;
+    withdrawalId: string;
+    status: WithdrawalStatus;
+    paymentFailed?: boolean;
+    errorCode?: string | null;
+    errorMessage?: string | null;
+  }> {
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+    if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
+      throw new BadRequestException(
+        `Cannot retry withdrawal in '${withdrawal.status}' status. Only PROCESSING withdrawals can be retried.`,
+      );
+    }
+    if (!withdrawal.orderId) {
+      throw new BadRequestException(
+        "No orderId found for this withdrawal. Please re-approve the withdrawal first.",
+      );
+    }
+
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (!user)
+      throw new NotFoundException("User not found for this withdrawal");
+
+    // Latest verified payment detail (same lookup as processWithdrawal)
+    const details = await this.paymentDetailRepo.findAll({
+      userId: withdrawal.userId,
+      status: "verified",
+    });
+    const paymentDetail = await this.getLatestVerifiedPaymentDetail(
+      withdrawal.userId,
+    );
+    if (!paymentDetail) {
+      throw new BadRequestException(
+        "No verified payment detail found for this user.",
+      );
+    }
+
+    // Optimistic lock: only one concurrent retry can move retryCount from N to N+1
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      {
+        _id: withdrawalId,
+        status: WithdrawalStatus.PROCESSING,
+        retryCount: withdrawal.retryCount ?? 0,
+      },
+      { $inc: { retryCount: 1 } },
+    );
+    if (!claimed) {
+      throw new BadRequestException(
+        "This withdrawal is already being retried. Please refresh.",
+      );
+    }
+
+    let fundAccountId = paymentDetail.razorpayFundAccountId;
+    if (!fundAccountId) {
+      const fundAccount = await this.razorpayPayoutService.createFundAccount({
+        userId: withdrawal.userId,
+        phone: user.mobileNumber,
+        name: user.name ?? "User",
+        existingContactId: user.razorpayContactId ?? undefined,
+        vpa: paymentDetail.upiId ?? undefined,
+        bankAccount:
+          paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+            ? {
+                accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                ifsc: paymentDetail.ifsc,
+                accountHolderName: paymentDetail.accountHolderName ?? "",
+              }
+            : undefined,
+      });
+      fundAccountId = fundAccount.fundAccountId;
+      await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
+        razorpayFundAccountId: fundAccountId,
+      });
+      if (!user.razorpayContactId) {
+        await this.userRepo.update(withdrawal.userId, {
+          razorpayContactId: fundAccount.contactId,
+        });
+      }
+    }
+
+    const referenceId = `wd_${withdrawalId}`;
+    const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+    const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+    let payoutResult: {
+      payoutId: string;
+      status: string;
+      utrNumber?: string | null;
+    };
+    try {
+      payoutResult = await this.razorpayPayoutService.initiatePayout({
+        fundAccountId,
+        amount: amountPaise,
+        referenceId,
+        mode: payoutMode,
+        narration: "Withdrawal payout retry",
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: "RAZORPAY_INIT_ERROR",
+          errorMessage,
+          rawResponse: {},
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: newStatus,
+        paymentFailed: true,
+        errorCode: "RAZORPAY_INIT_ERROR",
+        errorMessage,
+      };
+    }
+
+    const { payoutId, status: razorpayStatus } = payoutResult;
+    const finalStatus =
+      razorpayStatus === "success" || razorpayStatus === "processed"
+        ? WithdrawalStatus.COMPLETED
+        : razorpayStatus === "failed" || razorpayStatus === "rejected"
+          ? WithdrawalStatus.FAILED
+          : WithdrawalStatus.PROCESSING;
+
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: finalStatus,
+      processedAt:
+        finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+      razorpayPayoutId: payoutId,
+      utrNumber: payoutResult.utrNumber ?? null,
+    });
+
+    if (finalStatus === WithdrawalStatus.FAILED) {
+      await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+          errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+          rawResponse: { payoutId, razorpayStatus },
+          utrNumber: payoutResult.utrNumber ?? null,
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: finalStatus,
+        paymentFailed: true,
+        errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+        errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+      };
+    }
+
+    return { success: true, withdrawalId, status: finalStatus };
+  }
+
+  /**
+   * Retry a FAILED withdrawal (one that was already refunded).
+   * Resets to PROCESSING, creates a fresh DEBIT transaction, re-attempts payout.
+   * If payout fails again, withdrawal is marked FAILED again — no auto-refund;
+   * admin must explicitly call markWithdrawalFailed to refund.
+   */
+  // async retryFailedWithdrawal(
+  //   adminId: string,
+  //   withdrawalId: string,
+  // ): Promise<{
+  //   success: boolean;
+  //   withdrawalId: string;
+  //   status: WithdrawalStatus;
+  //   paymentFailed?: boolean;
+  //   errorCode?: string | null;
+  //   errorMessage?: string | null;
+  // }> {
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { id: withdrawalId },
+  //     relations: ["user", "wallet"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+  //   if (withdrawal.status !== WithdrawalStatus.FAILED) {
+  //     throw new BadRequestException(
+  //       `Cannot retry-refund a withdrawal in '${withdrawal.status}' status. Only FAILED withdrawals can be retried.`,
+  //     );
+  //   }
+
+  //   // Use existing referenceId if present, otherwise build a new one
+  //   const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
+
+  //   // Reset withdrawal to PROCESSING and increment retry count
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: WithdrawalStatus.PROCESSING,
+  //     processedAt: new Date(),
+  //     orderId: referenceId,
+  //     razorpayPayoutId: null,
+  //     retryCount: (withdrawal.retryCount ?? 0) + 1,
+  //   });
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_retry_refund",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   //   newValue: { action: "retry_refund_attempted", orderId: referenceId },
+  //   // });
+
+  //   // 2. Fetch user's payment detail for fund account
+  //   const paymentDetail = await this.paymentDetailRepo.findOne({
+  //     where: { userId: withdrawal.userId, status: "verified" },
+  //     order: { verifiedAt: "DESC" },
+  //   });
+  //   if (!paymentDetail) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "NO_PAYMENT_DETAIL",
+  //         errorMessage: "No verified payment detail found for this user.",
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "NO_PAYMENT_DETAIL",
+  //       errorMessage: "No verified payment detail found.",
+  //     };
+  //   }
+
+  //   // 3. Reuse or recreate fund account
+  //   let fundAccountId = paymentDetail.razorpayFundAccountId;
+  //   if (!fundAccountId) {
+  //     const fundAccount = await this.razorpayPayoutService.createFundAccount({
+  //       userId: withdrawal.userId,
+  //       phone: withdrawal.user.mobileNumber,
+  //       name: withdrawal.user.name ?? "User",
+  //       existingContactId: withdrawal.user.razorpayContactId ?? undefined,
+  //       vpa: paymentDetail.upiId ?? undefined,
+  //       bankAccount:
+  //         paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+  //           ? {
+  //               accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+  //               ifsc: paymentDetail.ifsc,
+  //               accountHolderName: paymentDetail.accountHolderName ?? "",
+  //             }
+  //           : undefined,
+  //     });
+  //     fundAccountId = fundAccount.fundAccountId;
+  //     await this.paymentDetailRepo.update(paymentDetail.id, {
+  //       razorpayFundAccountId: fundAccountId,
+  //     });
+  //     if (!withdrawal.user.razorpayContactId) {
+  //       await this.userRepo.update(withdrawal.userId, {
+  //         razorpayContactId: fundAccount.contactId,
+  //       });
+  //     }
+  //   }
+
+  //   const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+  //   const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+  //   let payoutResult: {
+  //     payoutId: string;
+  //     status: string;
+  //     utrNumber?: string | null;
+  //   };
+  //   try {
+  //     payoutResult = await this.razorpayPayoutService.initiatePayout({
+  //       fundAccountId,
+  //       amount: amountPaise,
+  //       referenceId,
+  //       mode: payoutMode,
+  //       narration: "Withdrawal payout retry",
+  //     });
+  //   } catch (err) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: "RAZORPAY_INIT_ERROR",
+  //         errorMessage: err.message,
+  //         rawResponse: {},
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: "RAZORPAY_INIT_ERROR",
+  //       errorMessage: err.message,
+  //     };
+  //   }
+
+  //   const { payoutId, status: razorpayStatus } = payoutResult;
+  //   const finalStatus =
+  //     razorpayStatus === "success" || razorpayStatus === "processed"
+  //       ? WithdrawalStatus.COMPLETED
+  //       : razorpayStatus === "failed" || razorpayStatus === "rejected"
+  //         ? WithdrawalStatus.FAILED
+  //         : WithdrawalStatus.PROCESSING;
+
+  //   await this.withdrawalRepo.update(withdrawalId, {
+  //     status: finalStatus,
+  //     processedAt:
+  //       finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+  //     razorpayPayoutId: payoutId,
+  //     utrNumber: payoutResult.utrNumber ?? null,
+  //   });
+
+  //   if (finalStatus === WithdrawalStatus.FAILED) {
+  //     const newStatus = await this.handleWithdrawalFailure({
+  //       withdrawal,
+  //       orderId: referenceId,
+  //       adminId,
+  //       result: {
+  //         pinelabsTransactionId: null,
+  //         errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //         errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //         rawResponse: { payoutId, razorpayStatus },
+  //         utrNumber: payoutResult.utrNumber ?? null,
+  //       },
+  //     });
+  //     return {
+  //       success: true,
+  //       withdrawalId,
+  //       status: newStatus,
+  //       paymentFailed: true,
+  //       errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+  //       errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+  //     };
+  //   }
+
+  //   // await this.logAudit({
+  //   //   actorType: ActorType.ADMIN,
+  //   //   actorId: adminId,
+  //   //   action: "withdrawal_completed",
+  //   //   entityType: "withdrawal_request",
+  //   //   entityId: withdrawalId,
+  //   // });
+
+  //   return { success: true, withdrawalId, status: finalStatus };
+  // }
+
+  async retryFailedWithdrawal(
+    adminId: string,
+    withdrawalId: string,
+  ): Promise<{
+    success: boolean;
+    withdrawalId: string;
+    status: WithdrawalStatus;
+    paymentFailed?: boolean;
+    errorCode?: string | null;
+    errorMessage?: string | null;
+  }> {
+    if (!Types.ObjectId.isValid(withdrawalId)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(withdrawalId);
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+    if (withdrawal.status !== WithdrawalStatus.FAILED) {
+      throw new BadRequestException(
+        `Cannot retry-refund a withdrawal in '${withdrawal.status}' status. Only FAILED withdrawals can be retried.`,
+      );
+    }
+
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (!user)
+      throw new NotFoundException("User not found for this withdrawal");
+
+    const referenceId = withdrawal.orderId ?? `wd_${withdrawalId}`;
+
+    // Atomic claim: only one request can move FAILED -> PROCESSING
+    const claimed = await this.withdrawalRepo.findOneAndUpdate(
+      { _id: withdrawalId, status: WithdrawalStatus.FAILED },
+      {
+        $set: {
+          status: WithdrawalStatus.PROCESSING,
+          processedAt: new Date(),
+          orderId: referenceId,
+          razorpayPayoutId: null,
+        },
+        $inc: { retryCount: 1 },
+      },
+    );
+    if (!claimed) {
+      throw new BadRequestException(
+        "This withdrawal is already being retried. Please refresh.",
+      );
+    }
+
+    // Latest verified payment detail
+    const details = await this.paymentDetailRepo.findAll({
+      userId: withdrawal.userId,
+      status: "verified",
+    });
+    const paymentDetail = await this.getLatestVerifiedPaymentDetail(
+      withdrawal.userId,
+    );
+
+    if (!paymentDetail) {
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: "NO_PAYMENT_DETAIL",
+          errorMessage: "No verified payment detail found for this user.",
+          rawResponse: {},
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: newStatus,
+        paymentFailed: true,
+        errorCode: "NO_PAYMENT_DETAIL",
+        errorMessage: "No verified payment detail found.",
+      };
+    }
+
+    // Fund account setup; if it throws, put the withdrawal back to FAILED
+    // so it isn't stuck in PROCESSING with no payout behind it.
+    let fundAccountId = paymentDetail.razorpayFundAccountId;
+    try {
+      if (!fundAccountId) {
+        const fundAccount = await this.razorpayPayoutService.createFundAccount({
+          userId: withdrawal.userId,
+          phone: user.mobileNumber,
+          name: user.name ?? "User",
+          existingContactId: user.razorpayContactId ?? undefined,
+          vpa: paymentDetail.upiId ?? undefined,
+          bankAccount:
+            paymentDetail.ifsc && paymentDetail.accountNumberEncrypted
+              ? {
+                  accountNumber: decrypt(paymentDetail.accountNumberEncrypted),
+                  ifsc: paymentDetail.ifsc,
+                  accountHolderName: paymentDetail.accountHolderName ?? "",
+                }
+              : undefined,
+        });
+        fundAccountId = fundAccount.fundAccountId;
+        await this.paymentDetailRepo.update(paymentDetail._id.toString(), {
+          razorpayFundAccountId: fundAccountId,
+        });
+        if (!user.razorpayContactId) {
+          await this.userRepo.update(withdrawal.userId, {
+            razorpayContactId: fundAccount.contactId,
+          });
+        }
+      }
+    } catch (err) {
+      await this.withdrawalRepo.update(withdrawalId, {
+        status: WithdrawalStatus.FAILED,
+      });
+      throw err;
+    }
+
+    const amountPaise = Math.round(Number(withdrawal.amount) * 100);
+    const payoutMode = withdrawal.payoutMethod === "upi" ? "UPI" : "IMPS";
+
+    let payoutResult: {
+      payoutId: string;
+      status: string;
+      utrNumber?: string | null;
+    };
+    try {
+      payoutResult = await this.razorpayPayoutService.initiatePayout({
+        fundAccountId,
+        amount: amountPaise,
+        referenceId,
+        mode: payoutMode,
+        narration: "Withdrawal payout retry",
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : String(err);
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: "RAZORPAY_INIT_ERROR",
+          errorMessage,
+          rawResponse: {},
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: newStatus,
+        paymentFailed: true,
+        errorCode: "RAZORPAY_INIT_ERROR",
+        errorMessage,
+      };
+    }
+
+    const { payoutId, status: razorpayStatus } = payoutResult;
+    const finalStatus =
+      razorpayStatus === "success" || razorpayStatus === "processed"
+        ? WithdrawalStatus.COMPLETED
+        : razorpayStatus === "failed" || razorpayStatus === "rejected"
+          ? WithdrawalStatus.FAILED
+          : WithdrawalStatus.PROCESSING;
+
+    await this.withdrawalRepo.update(withdrawalId, {
+      status: finalStatus,
+      processedAt:
+        finalStatus === WithdrawalStatus.COMPLETED ? new Date() : null,
+      razorpayPayoutId: payoutId,
+      utrNumber: payoutResult.utrNumber ?? null,
+    });
+
+    if (finalStatus === WithdrawalStatus.FAILED) {
+      const newStatus = await this.handleWithdrawalFailure({
+        withdrawal,
+        orderId: referenceId,
+        adminId,
+        result: {
+          pinelabsTransactionId: null,
+          errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+          errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+          rawResponse: { payoutId, razorpayStatus },
+          utrNumber: payoutResult.utrNumber ?? null,
+        },
+      });
+      return {
+        success: true,
+        withdrawalId,
+        status: newStatus,
+        paymentFailed: true,
+        errorCode: `RAZORPAY_${razorpayStatus.toUpperCase()}`,
+        errorMessage: `Razorpay payout status: ${razorpayStatus}`,
+      };
+    }
+
+    return { success: true, withdrawalId, status: finalStatus };
+  }
+
+  /**
+   * Handle a PineLabs payout failure by:
+   * 1. Logging to payment_logs
+   * 2. Marking the withdrawal as FAILED
+   *
+   * No refund is issued here. The admin must explicitly call markWithdrawalFailed
+   * to trigger the refund after reviewing the failure.
+   *
+   * Returns the new withdrawal status (always FAILED).
+   */
+  private async handleWithdrawalFailure(params: {
+    withdrawal: WithdrawalRequest;
+    orderId: string;
+    adminId: string;
+    result: {
+      pinelabsTransactionId: string | null;
+      errorCode: string | null;
+      errorMessage: string | null;
+      rawResponse: Record<string, unknown>;
+      utrNumber?: string | null;
+    };
+  }): Promise<WithdrawalStatus> {
+    const { withdrawal, orderId, adminId, result } = params;
+
+    // 1. Log failure to payment_logs
+    await this.paymentLogRepo.save(
+      await this.paymentLogRepo.create({
+        withdrawalRequestId: withdrawal._id.toString(),
+        adminId,
+        orderId,
+        pinelabsTransactionId: result.pinelabsTransactionId,
+        status: PaymentLogStatus.FAILED,
+        errorCode: result.errorCode,
+        errorMessage: result.errorMessage,
+        rawResponse: result.rawResponse,
+        utrNumber: result.utrNumber ?? null,
+      }),
+    );
+
+    // 2. Mark withdrawal as FAILED — NO refund here; admin must explicitly call markWithdrawalFailed
+    const failureReason =
+      result.errorCode === "NETWORK_ERROR"
+        ? (result.errorMessage ?? "Payout dispatch failed")
+        : `${result.errorCode ?? "Payout failed"}: ${result.errorMessage ?? "Unknown error"}`;
+
+    await this.withdrawalRepo.update(withdrawal._id, {
+      status: WithdrawalStatus.FAILED,
+      failureReason,
+    });
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_payment_failed",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawal.id,
+    //   newValue: {
+    //     status: WithdrawalStatus.FAILED,
+    //     reason: failureReason,
+    //     refundPending: true,
+    //   },
+    // });
+
+    // No notification here — notification is sent only after admin explicitly clicks "Mark Failed"
+    return WithdrawalStatus.FAILED;
+  }
+
+  /**
+   * Admin explicitly marks a PROCESSING withdrawal as FAILED.
+   * Refunds balance to user and marks the corresponding transaction as FAILED.
+   */
+  async markWithdrawalFailed(
+    adminId: string,
+    withdrawalId: string,
+    reason?: string,
+  ): Promise<{
+    success: boolean;
+    withdrawalId: string;
+    status: WithdrawalStatus;
+  }> {
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId },
+    });
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+    if (withdrawal.status === WithdrawalStatus.FAILED) {
+      // Idempotent: already failed — update the DEBIT and CREDIT (refund) transaction reasons
+      if (reason) {
+        await this.transactionRepo.updateMany(
+          { referenceId: withdrawalId, type: TransactionType.DEBIT },
+          { rejectionReason: reason },
+        );
+        await this.transactionRepo.updateMany(
+          {
+            referenceId: withdrawalId,
+            type: TransactionType.CREDIT,
+            source: TransactionSource.REFUND,
+          },
+          { rejectionReason: reason },
+        );
+        await this.withdrawalRepo.update(withdrawalId, {
+          failureReason: reason,
+        });
+      }
+      return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
+    }
+    if (withdrawal.status !== WithdrawalStatus.PROCESSING) {
+      throw new BadRequestException(
+        `Cannot mark withdrawal as failed in '${withdrawal.status}' status. Only PROCESSING withdrawals can be marked failed.`,
+      );
+    }
+
+    let claimedOk = true;
+
+    await this.mongoTransactionService.runInTransaction(async (session) => {
+      // 1. Mark withdrawal as FAILED
+      // await this.withdrawalRepo.update(
+      //   withdrawalId,
+      //   {
+      //     status: WithdrawalStatus.FAILED,
+      //     processedAt: new Date(),
+      //     failureReason: reason ?? "Marked failed by admin",
+      //   },
+      //   session,
+      // );
+
+      const claimed = await this.withdrawalRepo.findOneAndUpdate(
+        { _id: withdrawalId, status: WithdrawalStatus.PROCESSING },
+        {
+          status: WithdrawalStatus.FAILED,
+          processedAt: new Date(),
+          failureReason: reason ?? "Marked failed by admin",
+        },
+        session,
+      );
+      if (!claimed) {
+        claimedOk = false;
+        return; // someone else already handled it; don't refund
+      }
+
+      // 2. Mark the DEBIT transaction as FAILED and store the reason
+      await this.transactionRepo.updateMany(
+        { referenceId: withdrawalId, type: TransactionType.DEBIT },
+        {
+          status: TransactionStatus.FAILED,
+          rejectionReason: reason ?? "Marked failed by admin",
+        },
+        session,
+      );
+
+      // 3. Refund balance to wallet (atomic $inc — also returns the post-refund balance)
+      const newBalance = await this.walletRepo.incrementBalance(
+        withdrawal.walletId,
+        Number(withdrawal.amount),
+        session,
+      );
+
+      // 4. Create refund CREDIT transaction
+      await this.transactionRepo.save(
+        {
+          walletId: withdrawal.walletId,
+          amount: Number(withdrawal.amount),
+          type: TransactionType.CREDIT,
+          source: TransactionSource.REFUND,
+          description: `Withdrawal failed${reason ? ": " + reason : ""}`,
+          rejectionReason: reason ?? "Marked failed by admin",
+          status: TransactionStatus.COMPLETED,
+          referenceId: withdrawalId,
+          balanceAfter: newBalance,
+        },
+        session,
+      );
+    });
+
+    // Send two notifications: one for failed withdrawal, one for refund
+    // const withdrawalForNotify = await this.withdrawalRepo.findOne({
+    //   where: { id: withdrawalId },
+    //   relations: ["user"],
+    // });
+    // if (withdrawalForNotify?.user) {
+    //   const maskPayout = (details: Record<string, unknown> | null) => {
+    //     if (!details) return {};
+    //     return Object.fromEntries(
+    //       Object.entries(details).map(([k, v]) => [
+    //         k,
+    //         typeof v === "string" && v.length > 4
+    //           ? v.slice(0, 2) + "****" + v.slice(-2)
+    //           : (v ?? ""),
+    //       ]),
+    //     );
+    //   };
+    //   const maskedDetails = maskPayout(
+    //     (withdrawalForNotify.payoutDetails as Record<string, unknown>) ?? null,
+    //   );
+
+    //   // 6a. Notify: withdrawal failed
+    //   const failedNotification = await this.notificationRepo.save(
+    //     await this.notificationRepo.create({
+    //       userId: withdrawalForNotify.userId,
+    //       type: NotificationType.WITHDRAWAL_FAILED,
+    //       title: "Withdrawal Failed",
+    //       body: `Your withdrawal of Rs. ${withdrawalForNotify.amount} has failed.${reason ? " Reason: " + reason + "." : ""}`,
+    //       data: {
+    //         withdrawalId,
+    //         status: "failed",
+    //         reason,
+    //         payoutDetails: maskedDetails,
+    //         userId: withdrawalForNotify.userId,
+    //       },
+    //       triggerType: NotificationTriggerType.WITHDRAW,
+    //     }),
+    //   );
+    //   this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+    //     title: failedNotification.title,
+    //     body: failedNotification.body,
+    //     data: failedNotification.data ?? undefined,
+    //   });
+
+    //   // 6b. Notify: refund completed
+    //   const refundNotification = await this.notificationRepo.save(
+    //     await this.notificationRepo.create({
+    //       userId: withdrawalForNotify.userId,
+    //       type: NotificationType.REFUND_COMPLETED,
+    //       title: "Refund Processed",
+    //       body: `Rs. ${withdrawalForNotify.amount} has been credited back to your wallet.${reason ? " Reason: " + reason + "." : ""}`,
+    //       data: {
+    //         withdrawalId,
+    //         refundAmount: Number(withdrawalForNotify.amount),
+    //         reason,
+    //         payoutDetails: maskedDetails,
+    //         userId: withdrawalForNotify.userId,
+    //       },
+    //       triggerType: NotificationTriggerType.WITHDRAW,
+    //     }),
+    //   );
+    //   this.notificationsService.sendToUser(withdrawalForNotify.userId, {
+    //     title: refundNotification.title,
+    //     body: refundNotification.body,
+    //     data: refundNotification.data ?? undefined,
+    //   });
+    // }
+
+    // return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
+
+    const user = await this.userRepo.findById(withdrawal.userId);
+    if (user) {
+      const maskPayout = (details: Record<string, unknown> | null) => {
+        if (!details) return {};
+        return Object.fromEntries(
+          Object.entries(details).map(([k, v]) => [
+            k,
+            typeof v === "string" && v.length > 4
+              ? v.slice(0, 2) + "****" + v.slice(-2)
+              : (v ?? ""),
+          ]),
+        );
+      };
+      const maskedDetails = maskPayout(withdrawal.payoutDetails ?? null);
+
+      // Notify: withdrawal failed
+      await this.notificationRepo.save(
+        await this.notificationRepo.create({
+          userId: withdrawal.userId,
+          type: NotificationType.WITHDRAWAL_FAILED,
+          title: "Withdrawal Failed",
+          body: `Your withdrawal of Rs. ${withdrawal.amount} has failed.${reason ? " Reason: " + reason + "." : ""}`,
+          data: {
+            withdrawalId,
+            status: "failed",
+            reason,
+            payoutDetails: maskedDetails,
+            userId: withdrawal.userId,
+          },
+          triggerType: NotificationTriggerType.WITHDRAW,
+        }),
+      );
+
+      // Notify: refund completed
+      await this.notificationRepo.save(
+        await this.notificationRepo.create({
+          userId: withdrawal.userId,
+          type: NotificationType.REFUND_COMPLETED,
+          title: "Refund Processed",
+          body: `Rs. ${withdrawal.amount} has been credited back to your wallet.${reason ? " Reason: " + reason + "." : ""}`,
+          data: {
+            withdrawalId,
+            refundAmount: Number(withdrawal.amount),
+            reason,
+            payoutDetails: maskedDetails,
+            userId: withdrawal.userId,
+          },
+          triggerType: NotificationTriggerType.WITHDRAW,
+        }),
+      );
+    }
+
+    return { success: true, withdrawalId, status: WithdrawalStatus.FAILED };
+  }
+
+  /** Admin updates the failure reason on an already-failed withdrawal. */
+  async updateWithdrawalFailureReason(
+    adminId: string,
+    withdrawalId: string,
+    reason: string,
+  ): Promise<{ success: boolean; withdrawalId: string }> {
+    const withdrawal = await this.withdrawalRepo.findOne({
+      where: { id: withdrawalId },
+    });
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+    if (withdrawal.status !== WithdrawalStatus.FAILED) {
+      throw new BadRequestException(
+        `Can only update failure reason for FAILED withdrawals. Current status: ${withdrawal.status}`,
+      );
+    }
+
+    // Update the rejection reason on the associated DEBIT transaction
+    const debitTx = await this.transactionRepo.findOne({
+      where: { referenceId: withdrawalId, type: TransactionType.DEBIT },
+    });
+    await this.transactionRepo.updateMany(
+      { referenceId: withdrawalId, type: TransactionType.DEBIT },
+      { rejectionReason: reason },
+    );
+
+    // await this.logAudit({
+    //   actorType: ActorType.ADMIN,
+    //   actorId: adminId,
+    //   action: "withdrawal_failure_reason_updated",
+    //   entityType: "withdrawal_request",
+    //   entityId: withdrawalId,
+    //   oldValue: { rejectionReason: debitTx?.rejectionReason ?? null },
+    //   newValue: { rejectionReason: reason },
+    // });
+
+    return { success: true, withdrawalId };
+  }
+
+  // async listRewardLogs(dto: AnalyticsQueryDto) {
+  //   const { fromDate, toDate, state, cropType } = dto;
+  //   const from = fromDate
+  //     ? new Date(fromDate)
+  //     : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  //   const to = toDate ? new Date(toDate) : new Date();
+
+  //   const qb = this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .innerJoin("tx.wallet", "w")
+  //     .innerJoinAndSelect("w.user", "u")
+  //     .select([
+  //       "tx.id",
+  //       "tx.amount",
+  //       "tx.type",
+  //       "tx.source",
+  //       "tx.description",
+  //       "tx.status",
+  //       "tx.referenceId",
+  //       "tx.createdAt",
+  //       "w.id",
+  //     ])
+  //     .where("tx.source = :source", { source: TransactionSource.REWARD })
+  //     .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
+  //     .orderBy("tx.createdAt", "DESC")
+  //     .take(100);
+
+  //   if (state) qb.andWhere("u.state = :state", { state });
+
+  //   const items = await qb.getMany();
+
+  //   return {
+  //     items: items.map((tx) => ({
+  //       id: tx.id,
+  //       amount: tx.amount,
+  //       type: tx.type,
+  //       source: tx.source,
+  //       description: tx.description,
+  //       status: tx.status,
+  //       referenceId: tx.referenceId,
+  //       createdAt: tx.createdAt,
+  //       user: tx.wallet?.user
+  //         ? {
+  //             id: tx.wallet.user.id,
+  //             name: tx.wallet.user.name,
+  //             mobileNumber: tx.wallet.user.mobileNumber,
+  //             state: tx.wallet.user.state,
+  //           }
+  //         : null,
+  //     })),
+  //     from,
+  //     to,
+  //   };
+  // }
+
+  async listRewardLogs(dto: AnalyticsQueryDto) {
+    const { fromDate, toDate, state } = dto;
+    const from = fromDate
+      ? new Date(fromDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    // 1. State filter: users in state -> their wallets
+    let walletIdFilter: string[] | undefined;
+    if (state) {
+      const stateUsers = await this.userRepo.findAll({ state });
+      const stateUserIds = stateUsers.map((u) => u._id.toString());
+      const stateWallets = stateUserIds.length
+        ? await this.walletRepo.findAll({ userId: { $in: stateUserIds } })
+        : [];
+      walletIdFilter = stateWallets.map((w) => w._id.toString());
+      if (walletIdFilter.length === 0) return { items: [], from, to };
+    }
+
+    // 2. Transactions
+    const transactions = await this.transactionRepo.findBySource(
+      TransactionSource.REWARD,
+      {
+        fromDate: from,
+        toDate: to,
+        walletIds: walletIdFilter,
+        limit: 100,
+        select:
+          "amount type source description status referenceId createdAt walletId",
+      },
+    );
+
+    // 3. Batch-fetch wallets, then users
+    const walletIds = [
+      ...new Set(transactions.map((tx) => String(tx.walletId))),
+    ].filter((id) => Types.ObjectId.isValid(id));
+    const wallets = walletIds.length
+      ? await this.walletRepo.findAll({
+          _id: { $in: walletIds.map((id) => new Types.ObjectId(id)) },
+        })
+      : [];
+    const walletsById = new Map(wallets.map((w) => [w._id.toString(), w]));
+
+    const userIds = [...new Set(wallets.map((w) => String(w.userId)))].filter(
+      (id) => Types.ObjectId.isValid(id),
+    );
+    const users = userIds.length
+      ? await this.userRepo.findAll({
+          _id: { $in: userIds.map((id) => new Types.ObjectId(id)) },
+        })
+      : [];
+    const usersById = new Map(users.map((u) => [u._id.toString(), u]));
+
+    // 4. Join (mirrors the inner joins: orphaned rows are dropped)
+    const items = transactions.flatMap((tx) => {
+      const wallet = walletsById.get(String(tx.walletId));
+      const user = wallet ? usersById.get(String(wallet.userId)) : undefined;
+      if (!user) return [];
+      return [
+        {
+          id: tx._id.toString(),
+          amount: tx.amount,
+          type: tx.type,
+          source: tx.source,
+          description: tx.description,
+          status: tx.status,
+          referenceId: tx.referenceId,
+          createdAt: tx.createdAt,
+          user: {
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+          },
+        },
+      ];
+    });
+
+    return { items, from, to };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 6: Fraud Monitoring
+  // ─────────────────────────────────────────────────────────────
+
+  async getFraudStats(query: FraudQueryDto) {
+    const { page = 1, limit = 20, state } = query;
+
+    // Duplicate submissions (questions flagged as duplicates)
+    const duplicateQb = this.questionRepo
+      .createQueryBuilder("q")
+      .innerJoin("q.user", "u")
+      .where("q.duplicateFlag = :flag", { flag: true })
+      .select([
+        "q.id",
+        "q.questionText",
+        "q.state",
+        "q.submittedAt",
+        "u.id as userId",
+        "u.name as userName",
+        "u.mobileNumber",
+      ])
+      .orderBy("q.submittedAt", "DESC")
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (state) duplicateQb.andWhere("q.state = :state", { state });
+
+    const [items, total] = await duplicateQb.getManyAndCount();
+
+    const rejectedCount = await this.questionRepo.count({
+      where: { status: QuestionStatus.REJECTED },
+    });
+
+    return {
+      duplicateSubmissions: items,
+      totalDuplicates: total,
+      totalRejected: rejectedCount,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 8: Question Metrics (curator read-only)
+  // ─────────────────────────────────────────────────────────────
+
+  async getQuestionMetrics(query: AnalyticsQueryDto) {
+    const { fromDate, toDate, state, cropType } = query;
+    const from = fromDate
+      ? new Date(fromDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const baseWhere: Record<string, unknown> = {
+      submittedAt: Between(from, to),
+    };
+    if (state) baseWhere["state"] = state;
+    if (cropType) baseWhere["cropType"] = cropType;
+
+    const [total, approved, rejected, pending, held, duplicates] =
+      await Promise.all([
+        this.questionRepo.count({ where: { ...baseWhere } }),
+        this.questionRepo.count({
+          where: { ...baseWhere, status: QuestionStatus.APPROVED },
+        }),
+        this.questionRepo.count({
+          where: { ...baseWhere, status: QuestionStatus.REJECTED },
+        }),
+        this.questionRepo.count({
+          where: { ...baseWhere, status: QuestionStatus.PENDING },
+        }),
+        this.questionRepo.count({
+          where: { ...baseWhere, status: QuestionStatus.HELD },
+        }),
+        this.questionRepo.count({
+          where: { ...baseWhere, duplicateFlag: true },
+        }),
+      ]);
+
+    // Submission volume by day
+    const dailyRaw: Array<{
+      date: string;
+      total: string;
+      approved: string;
+      rejected: string;
+    }> = await this.questionRepo
+      .createQueryBuilder("q")
+      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", "date")
+      .addSelect("COUNT(*)", "total")
+      .addSelect(
+        "COUNT(CASE WHEN q.status = 'approved' THEN 1 END)",
+        "approved",
+      )
+      .addSelect(
+        "COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)",
+        "rejected",
+      )
+      .where("q.submittedAt BETWEEN :from AND :to", { from, to })
+      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+      .orderBy("date", "ASC")
+      .getRawMany();
+
+    // Top crops by volume
+    const cropBreakdownRaw: Array<{ cropType: string; count: number }> =
+      await this.questionRepo
+        .createQueryBuilder("q")
+        .select("q.cropType", "cropType")
+        .addSelect("COUNT(*)", "count")
+        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
+        .groupBy("q.cropType")
+        .orderBy("count", "DESC")
+        .limit(10)
+        .getRawMany();
+
+    // State breakdown
+    const stateBreakdownRaw: Array<{ state: string; count: number }> =
+      await this.questionRepo
+        .createQueryBuilder("q")
+        .select("q.state", "state")
+        .addSelect("COUNT(*)", "count")
+        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
+        .groupBy("q.state")
+        .orderBy("count", "DESC")
+        .getRawMany();
+
+    // Review turnaround (avg time from submittedAt to reviewedAt for approved/rejected)
+    const avgTurnaroundRaw = await this.questionRepo
+      .createQueryBuilder("q")
+      .select(
+        "AVG(EXTRACT(EPOCH FROM (q.reviewedAt - q.submittedAt)))",
+        "avg_seconds",
+      )
+      .where("q.submittedAt BETWEEN :from AND :to", { from, to })
+      .andWhere("q.reviewedAt IS NOT NULL")
+      .andWhere("q.status IN (:...statuses)", {
+        statuses: [QuestionStatus.APPROVED, QuestionStatus.REJECTED],
+      })
+      .getRawOne<{ avg_seconds: string | null }>();
+
+    const avgTurnaroundSeconds = Number(avgTurnaroundRaw?.avg_seconds ?? 0);
+    const avgTurnaroundMinutes = Math.round(avgTurnaroundSeconds / 60);
+
+    return {
+      period: { from: from.toISOString(), to: to.toISOString() },
+      summary: {
+        total,
+        approved,
+        rejected,
+        pending,
+        inAiReview: 0,
+        inHumanReview: 0,
+        duplicates,
+        approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
+        rejectionRate: total > 0 ? Math.round((rejected / total) * 100) : 0,
+      },
+      dailyVolume: dailyRaw.map((r) => ({
+        date: r.date,
+        total: Number(r.total),
+        approved: Number(r.approved),
+        rejected: Number(r.rejected),
+      })),
+      cropBreakdown: cropBreakdownRaw.map((r) => ({
+        cropType: r.cropType,
+        count: Number(r.count),
+      })),
+      stateBreakdown: stateBreakdownRaw.map((r) => ({
+        state: r.state,
+        count: Number(r.count),
+      })),
+      avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
+    };
+  }
+
+  /**
+   * Curator dashboard: question metrics + live review queue depth.
+   * Wraps getQuestionMetrics with the current queue counts curators care about.
+   * GET /admin/analytics/curator-dashboard  →  getCuratorDashboard
+   */
+  async getCuratorDashboard(query: AnalyticsQueryDto) {
+    const [metrics, queueDepth] = await Promise.all([
+      this.getQuestionMetrics(query),
+      this.getReviewQueueDepth(),
+    ]);
+
+    return {
+      questions: metrics,
+      reviewQueue: queueDepth,
+    };
+  }
+
+  /** Current count of questions in each pending/review status bucket. */
+  private async getReviewQueueDepth() {
+    const [pending, held] = await Promise.all([
+      this.questionRepo.count({ where: { status: QuestionStatus.PENDING } }),
+      this.questionRepo.count({ where: { status: QuestionStatus.HELD } }),
+    ]);
+    return {
+      pending,
+      held,
+      totalActionable: pending + held,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 8c: Analytics (Task 11 — dedicated analytics endpoints)
+  // ─────────────────────────────────────────────────────────────
+
+  /** Explicit fromDate/toDate win; otherwise the window is the last `days` (default 30). */
+  private resolveAnalyticsRange(query: AnalyticsQueryDto) {
+    const to = query.toDate ? new Date(query.toDate) : new Date();
+    const from = query.fromDate
+      ? new Date(query.fromDate)
+      : new Date(to.getTime() - (query.days ?? 30) * 24 * 60 * 60 * 1000);
+    return { from, to };
+  }
+
+  /**
+   * All analytics dashboard data in a single call.
+   * GET /analytics/dashboard  →  getAnalyticsDashboard
+   */
+  async getAnalyticsDashboard(query: AnalyticsQueryDto) {
+    const scope = await this.resolveDashboardScope(query);
+    const [userAnalytics, questionAnalytics, rewardAnalytics] =
+      await Promise.all([
+        this.getUserAnalytics(query),
+        this.getQuestionAnalytics(query),
+        this.getRewardAnalytics(query),
+      ]);
+
+    // Dataset growth rate: approved questions this month vs last month
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const [thisMonthApproved, lastMonthApproved] = await Promise.all([
+      this.questionRepo.count({
+        where: {
+          status: QuestionStatus.APPROVED,
+          submittedAt: Between(thisMonthStart, now),
+          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
+        },
+      }),
+      this.questionRepo.count({
+        where: {
+          status: QuestionStatus.APPROVED,
+          submittedAt: Between(lastMonthStart, lastMonthEnd),
+          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
+        },
+      }),
+    ]);
+
+    const growthRate =
+      lastMonthApproved > 0
+        ? Math.round(
+            ((thisMonthApproved - lastMonthApproved) / lastMonthApproved) * 100,
+          )
+        : thisMonthApproved > 0
+          ? 100
+          : 0;
+
+    // Cost per approved question (total rewards paid / approved questions)
+    const totalRewarded = rewardAnalytics.totalRewarded;
+    const totalApproved = questionAnalytics.summary.approved;
+    const costPerApproved =
+      totalApproved > 0
+        ? parseFloat((totalRewarded / totalApproved).toFixed(2))
+        : 0;
+
+    const { from, to } = this.resolveAnalyticsRange(query);
+    const [statesWithApproved, avgReviewTurnaroundMinutes] = await Promise.all([
+      this.questionRepo.countDistinctStates(from, to, [
+        QuestionStatus.APPROVED,
+        QuestionStatus.MOVED_TO_FINAL,
+      ], scope.userIdFilter),
+      this.questionRepo.avgReviewTurnaroundMinutesSince(from, [
+        QuestionStatus.APPROVED,
+        QuestionStatus.MOVED_TO_FINAL,
+        QuestionStatus.REJECTED,
+      ], scope.userIdFilter),
+    ]);
+
+    // Indian states count reference (29 states + 8 UTs)
+    const totalPossibleStates = 37;
+    const participationRate = Math.round(
+      (statesWithApproved / totalPossibleStates) * 100,
+    );
+
+    return {
+      // Success metric cards
+      totalRegisteredUsers: userAnalytics.totalUsers,
+      monthlyActiveUsers: userAnalytics.mau,
+      totalApprovedQuestions: questionAnalytics.summary.approved,
+      totalRewarded: rewardAnalytics.totalRewarded,
+      datasetGrowthRate: growthRate,
+      costPerApprovedQuestion: costPerApproved,
+      stateParticipationRate: participationRate,
+      statesWithApprovedQuestions: statesWithApproved,
+      avgReviewTurnaroundMinutes,
+      // Sub-analytics (for charts)
+      users: userAnalytics,
+      questions: questionAnalytics,
+      rewards: rewardAnalytics,
+    };
+  }
+
+  /**
+   * User engagement: DAU, MAU, new signups, retention.
+   * GET /analytics/users  →  getUserAnalytics
+   */
+  async getUserAnalytics(query: AnalyticsQueryDto) {
+    const { state } = query;
+    const scope = await this.resolveDashboardScope(query);
+    const { from, to } = this.resolveAnalyticsRange(query);
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    // Prior window of equal length, for the signup growth delta
+    const periodMs = Math.max(DAY_MS, to.getTime() - from.getTime());
+    const priorFrom = new Date(from.getTime() - periodMs);
+    const priorTo = new Date(from.getTime() - 1);
+
+    const [totalUsers, activity, priorSignups, categoryBreakdown, roleDistribution] =
+      await Promise.all([
+        this.userRepo.countByFilter(scope.userFilter ?? {}),
+        this.userRepo.getActivityAnalytics({
+          from,
+          to,
+          mauFrom: new Date(Date.now() - 30 * DAY_MS),
+          todayStart,
+          state,
+          userFilter: scope.userFilter,
+        }),
+        this.userRepo.countCreatedBetween(priorFrom, priorTo, scope.userFilter),
+        this.userRepo.getCategoryDistribution(scope.userFilter),
+        this.userRepo.getRoleDistribution(scope.userFilter),
+      ]);
+
+    const signupMap = new Map(
+      activity.signupTrend.map((r) => [r.date, r.signups]),
+    );
+    const loginMap = new Map(activity.loginTrend.map((r) => [r.date, r.dau]));
+    const signupTrend = [...new Set([...signupMap.keys(), ...loginMap.keys()])]
+      .sort()
+      .map((date) => ({
+        date,
+        signups: signupMap.get(date) ?? 0,
+        dau: loginMap.get(date) ?? 0,
+      }));
+
+    const currSignups = activity.newUsers;
+    const signupGrowth =
+      priorSignups > 0
+        ? Math.round(((currSignups - priorSignups) / priorSignups) * 100)
+        : currSignups > 0
+          ? 100
+          : 0;
+
+    return {
+      totalUsers,
+      newUsers: activity.newUsers,
+      newVerified: activity.newVerified,
+      newPending: activity.newPending,
+      activeUsers: activity.activeUsers,
+      mau: activity.mau,
+      dau: activity.dau,
+      signupGrowth,
+      signupTrend,
+      stateBreakdown: activity.stateBreakdown,
+      districtBreakdown: activity.districtBreakdown,
+      categoryBreakdown,
+      roleDistribution,
+    };
+  }
+
+  /**
+   * Question volume + breakdown by state, crop, domain.
+   * GET /analytics/questions  →  getQuestionAnalytics
+   */
+  // async getQuestionAnalytics(query: AnalyticsQueryDto) {
+  //   const { fromDate, toDate, state, cropType } = query;
+  //   const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  //   const to = toDate ? new Date(toDate) : new Date();
+
+  //   const baseWhere: Record<string, unknown> = { submittedAt: Between(from, to) };
+  //   if (state) baseWhere['state'] = state;
+  //   if (cropType) baseWhere['cropType'] = cropType;
+
+  //   const [total, approved, rejected, pending] = await Promise.all([
+  //     this.questionRepo.count({ where: { ...baseWhere } }),
+  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
+  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
+  //     this.questionRepo.count({ where: { status: In([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
+  //   ]);
+
+  //   // Daily volume: submitted, approved, rejected per day
+  //   const dailyRaw: Array<{ date: string; submitted: string; approved: string; rejected: string }> = await this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
+  //     .addSelect('COUNT(*)', 'submitted')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
+  //     .orderBy('date', 'ASC')
+  //     .getRawMany();
+
+  //   const dailyVolume = dailyRaw.map((r) => ({
+  //     date: r.date,
+  //     submitted: Number(r.submitted),
+  //     approved: Number(r.approved),
+  //     rejected: Number(r.rejected),
+  //   }));
+
+  //   // State breakdown (top 20)
+  //   let stateQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.state', 'state')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.state')
+  //     .orderBy('count', 'DESC')
+  //     .limit(20);
+  //   if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
+  //   const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
+  //     await stateQb.getRawMany()
+  //   ).map((r) => ({ state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Crop-type breakdown (top 15)
+  //   let cropQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.cropType', 'cropType')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.cropType')
+  //     .orderBy('count', 'DESC')
+  //     .limit(15);
+  //   if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
+  //   const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
+  //     await cropQb.getRawMany()
+  //   ).map((r) => ({ cropType: r.cropType as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Domain category breakdown
+  //   const domainBreakdownRaw = await this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('unnest(q.domains)', 'domain')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('unnest(q.domains)')
+  //     .orderBy('count', 'DESC')
+  //     .getRawMany();
+  //   const domainBreakdown = domainBreakdownRaw.map((r) => ({
+  //     domain: r.domain,
+  //     count: Number(r.count),
+  //     approved: Number(r.approved),
+  //   }));
+
+  //   // District breakdown (top 20 per state if filtered, else overall top 20)
+  //   let districtQb = this.questionRepo
+  //     .createQueryBuilder('q')
+  //     .select('q.district', 'district')
+  //     .addSelect('q.state', 'state')
+  //     .addSelect('COUNT(*)', 'count')
+  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
+  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
+  //     .groupBy('q.district')
+  //     .addGroupBy('q.state')
+  //     .orderBy('count', 'DESC')
+  //     .limit(50);
+  //   if (state) districtQb = districtQb.andWhere('q.state = :state', { state });
+  //   const districtBreakdown: Array<{ district: string; state: string; count: number; approved: number }> = (
+  //     await districtQb.getRawMany()
+  //   )
+  //     .filter((r) => r.district != null)
+  //     .map((r) => ({ district: r.district as string, state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
+
+  //   // Approval rate
+  //   const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+  //   // Month-over-month growth
+  //   const periodDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
+  //   const priorFrom = new Date(from.getTime() - periodDays * 24 * 60 * 60 * 1000);
+  //   const priorTo = new Date(from.getTime() - 1);
+  //   const priorApproved = await this.questionRepo.count({
+  //     where: { status: QuestionStatus.APPROVED, submittedAt: Between(priorFrom, priorTo) },
+  //   });
+  //   const growthRate = priorApproved > 0
+  //     ? Math.round(((approved - priorApproved) / priorApproved) * 100)
+  //     : approved > 0 ? 100 : 0;
+
+  //   return {
+  //     summary: {
+  //       total,
+  //       approved,
+  //       rejected,
+  //       pending,
+  //       approvalRate,
+  //       growthRate,
+  //     },
+  //     dailyVolume,
+  //     stateBreakdown,
+  //     districtBreakdown,
+  //     cropBreakdown,
+  //     domainBreakdown,
+  //   };
+  // }
+
+  async getQuestionAnalytics(query: AnalyticsQueryDto) {
+    const { state, cropType } = query;
+    const scope = await this.resolveDashboardScope(query);
+    const { from, to } = this.resolveAnalyticsRange(query);
+
+    // Prior window of equal length, for the submission growth delta
+    const periodMs = Math.max(
+      24 * 60 * 60 * 1000,
+      to.getTime() - from.getTime(),
+    );
+    const priorFrom = new Date(from.getTime() - periodMs);
+    const priorTo = new Date(from.getTime() - 1);
+
+    const [analytics, priorTotal] = await Promise.all([
+      this.questionRepo.getQuestionAnalytics({
+        from,
+        to,
+        state,
+        cropType,
+        userIdFilter: scope.userIdFilter,
+      }),
+      this.questionRepo.countSubmittedBetween(priorFrom, priorTo, scope.userIdFilter),
+    ]);
+
+    const { total, approved } = analytics.summary;
+
+    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+    const growthRate =
+      priorTotal > 0
+        ? Math.round(((total - priorTotal) / priorTotal) * 100)
+        : total > 0
+          ? 100
+          : 0;
+
+    return {
+      ...analytics,
+      summary: {
+        ...analytics.summary,
+        approvalRate,
+        growthRate,
+      },
+    };
+  }
+
+  /**
+   * Reward and payout analytics.
+   * GET /analytics/rewards  →  getRewardAnalytics
+   */
+  async getRewardAnalytics(query: AnalyticsQueryDto) {
+    const { state } = query;
+    const scope = await this.resolveDashboardScope(query);
+    const { from, to } = this.resolveAnalyticsRange(query);
+
+    const [rewards, withdrawals] = await Promise.all([
+      this.transactionRepo.getRewardAnalytics(from, to, state, scope.walletIdFilter),
+      this.withdrawalRepo.getStatusSummary(from, to, scope.userIdFilter),
+    ]);
+
+    return {
+      totalRewarded: parseFloat(rewards.totalRewarded.toFixed(2)),
+      rewardCount: rewards.rewardCount,
+      avgReward: parseFloat(rewards.avgReward.toFixed(2)),
+      totalPool: rewards.totalPool,
+      dailyRewardTrend: rewards.dailyRewardTrend,
+      withdrawals,
+    };
+  }
+
+  private toCSV(rows: Record<string, unknown>[], columns: string[]): string {
+    const header = columns.join(",");
+    const lines = rows.map((row) =>
+      columns
+        .map((col) => {
+          const val = row[col];
+          if (val === null || val === undefined) return "";
+          const str = String(val);
+          return str.includes(",") || str.includes('"') || str.includes("\n")
+            ? `"${str.replace(/"/g, '""')}"`
+            : str;
+        })
+        .join(","),
+    );
+    return [header, ...lines].join("\n");
+  }
+
+  /**
+   * Export with true Excel support (json2xls).
+   * Returns { format, data: string } for CSV, { format, xls: Buffer } for Excel.
+   */
+  async exportData(dto: ExportQueryDto) {
+    const {
+      fromDate,
+      toDate,
+      state,
+      cropType,
+      format = "csv",
+      dataType = "questions",
+    } = dto;
+    const from = fromDate ? new Date(fromDate) : new Date(0);
+    const to = toDate ? new Date(toDate) : new Date();
+
+    const COLUMNS: Record<NonNullable<ExportQueryDto["dataType"]>, string[]> = {
+      questions: [
+        "id",
+        "mobileNumber",
+        "name",
+        "questionText",
+        "language",
+        "domains",
+        "cropType",
+        "season",
+        "state",
+        "district",
+        "mediaType",
+        "status",
+        "submittedAt",
+        "reviewedAt",
+        "rejectionReason",
+        "heldReason",
+        "approvalReason",
+      ],
+      users: [
+        "id",
+        "mobileNumber",
+        "name",
+        "category",
+        "state",
+        "district",
+        "verificationStatus",
+        "role",
+        "createdAt",
+        "lastLoginAt",
+      ],
+      rewards: [
+        "id",
+        "mobileNumber",
+        "name",
+        "amount",
+        "type",
+        "source",
+        "description",
+        "status",
+        "referenceId",
+        "createdAt",
+      ],
+      withdrawals: [
+        "id",
+        "mobileNumber",
+        "name",
+        "amount",
+        "payoutMethod",
+        "status",
+        "createdAt",
+        "processedAt",
+        "rejectionReason",
+      ],
+    };
+    const columns = COLUMNS[dataType];
+
+    const filters = { from, to, state };
+    const rawRows =
+      dataType === "questions"
+        ? await this.questionRepo.findForExport({ ...filters, cropType })
+        : dataType === "users"
+          ? await this.userRepo.findForExport(filters)
+          : dataType === "rewards"
+            ? await this.transactionRepo.findRewardsForExport(filters)
+            : await this.withdrawalRepo.findForExport(filters);
+
+    // Flatten to plain strings/numbers so CSV and Excel cells are readable
+    const rows = rawRows.map((row) =>
+      Object.fromEntries(
+        columns.map((col) => {
+          const v = row[col];
+          if (v == null) return [col, ""];
+          if (v instanceof Date) return [col, v.toISOString()];
+          if (Array.isArray(v)) return [col, v.join(", ")];
+          if (typeof v === "number") return [col, v];
+          return [col, String(v)];
+        }),
+      ),
+    );
+
+    if (format === "csv") {
+      return { format: "csv", data: this.toCSV(rows, columns) };
+    }
+
+    // json2xls reads column types from the first row, so it needs at least one
+    const json2xls = require("json2xls");
+    const xls = json2xls(
+      rows.length ? rows : [Object.fromEntries(columns.map((c) => [c, ""]))],
+      { fields: columns },
+    );
+    return { format: "excel", xls: xls as unknown as string };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 8b: Wallet Management (super_admin only for adjustments)
+  // ─────────────────────────────────────────────────────────────
+
+  // async getUserWallet(userId: string) {
+  //   const wallet = await this.walletRepo.findOne({
+  //     where: { userId },
+  //     relations: ["user"],
+  //     select: ["id", "balance", "createdAt", "updatedAt"],
+  //   });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   // Aggregate total earned (completed credits from rewards + refunds)
+  //   const earnedAgg = await this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
+  //     .andWhere("tx.type = :type", { type: TransactionType.CREDIT })
+  //     .andWhere("tx.source IN (:...sources)", {
+  //       sources: [TransactionSource.REWARD, TransactionSource.REFUND],
+  //     })
+  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
+  //     .getRawOne();
+
+  //   // Aggregate total withdrawn (completed debits from withdrawals)
+  //   const withdrawnAgg = await this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
+  //     .andWhere("tx.type = :type", { type: TransactionType.DEBIT })
+  //     .andWhere("tx.source = :source", { source: TransactionSource.WITHDRAWAL })
+  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
+  //     .getRawOne();
+
+  //   return {
+  //     id: wallet.id,
+  //     balance: Number(wallet.balance),
+  //     totalEarned: Number(earnedAgg?.total ?? 0),
+  //     totalWithdrawn: Number(withdrawnAgg?.total ?? 0),
+  //     currency: "INR",
+  //     createdAt: wallet.createdAt,
+  //     updatedAt: wallet.updatedAt,
+  //     user: wallet.user
+  //       ? {
+  //           id: wallet.user.id,
+  //           name: wallet.user.name,
+  //           mobileNumber: wallet.user.mobileNumber,
+  //           state: wallet.user.state,
+  //           district: wallet.user.district,
+  //           category: wallet.user.category,
+  //           role: wallet.user.role,
+  //           verificationStatus: wallet.user.verificationStatus,
+  //         }
+  //       : null,
+  //   };
+  // }
+
+  async getUserWallet(userId: string) {
+    const wallet = await this.walletRepo.findOne({ userId });
+    if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted) throw new Error("Wallet is deleted for this user.");
+
+    const [user, { totalEarned, totalWithdrawn }] = await Promise.all([
+      // replaces relations: ["user"]; there are no joins in Mongo
+      this.userRepo.findById(userId),
+      this.transactionRepo.getEarnedAndWithdrawn(wallet._id.toString()),
+    ]);
+
+    return {
+      id: wallet._id.toString(),
+      balance: Number(wallet.balance),
+      totalEarned,
+      totalWithdrawn,
+      currency: "INR",
+      createdAt: wallet.createdAt,
+      updatedAt: wallet.updatedAt,
+      user: user
+        ? {
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+            district: user.district,
+            category: user.category,
+            role: user.role,
+            verificationStatus: user.verificationStatus,
+          }
+        : null,
+    };
+  }
+
+  // async getWithdrawalWithTransactions(id: string) {
+  //   const objectId = new Types.ObjectId(id);
+  //   const withdrawal = await this.withdrawalRepo.findOne({
+  //     where: { objectId },
+  //     relations: ["user", "paymentLogs"],
+  //   });
+  //   if (!withdrawal)
+  //     throw new NotFoundException("Withdrawal request not found");
+
+  //   const transactions = await this.transactionRepo.find({
+  //     where: { referenceId: id },
+  //     order: { createdAt: "ASC" },
+  //   });
+
+  //   const paymentLogs = (withdrawal.paymentLogs ?? []).map((pl) => ({
+  //     id: pl.id,
+  //     orderId: pl.orderId,
+  //     pinelabsTransactionId: pl.pinelabsTransactionId,
+  //     razorpayPayoutId: pl.razorpayPayoutId,
+  //     utrNumber: pl.utrNumber,
+  //     status: pl.status,
+  //     errorCode: pl.errorCode,
+  //     errorMessage: pl.errorMessage,
+  //     rawResponse: pl.rawResponse,
+  //     attemptedAt: pl.attemptedAt,
+  //   }));
+
+  //   return {
+  //     ...withdrawal,
+  //     transactions: transactions.map((tx) => ({
+  //       id: tx._id.toString(),
+  //       type: tx.type,
+  //       amount: Number(tx.amount),
+  //       status: tx.status,
+  //       rejectionReason: tx.rejectionReason,
+  //       description: tx.description,
+  //       source: tx.source,
+  //       createdAt: tx.createdAt,
+  //     })),
+  //     paymentLogs,
+  //   };
+  // }
+
+  async getWithdrawalWithTransactions(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException("Withdrawal request not found");
+    }
+
+    const withdrawal = await this.withdrawalRepo.findById(id);
+    if (!withdrawal)
+      throw new NotFoundException("Withdrawal request not found");
+
+    const [user, logs, transactions] = await Promise.all([
+      this.userRepo.findById(withdrawal.userId),
+      this.paymentLogRepo.findAll({ withdrawalRequestId: id }),
+      this.transactionRepo.findAll({ referenceId: id }),
+    ]);
+
+    // Sort in JS so this doesn't depend on whether findAll supports sorting.
+    // A single withdrawal only has a handful of logs and transactions.
+    const byDate = (
+      a: { createdAt?: Date; attemptedAt?: Date },
+      b: typeof a,
+      key: "createdAt" | "attemptedAt",
+    ) =>
+      new Date(a[key] as Date).getTime() - new Date(b[key] as Date).getTime();
+
+    const paymentLogs = logs
+      .sort((a, b) => byDate(a, b, "attemptedAt"))
+      .map((pl) => ({
+        id: pl._id.toString(),
+        orderId: pl.orderId,
+        pinelabsTransactionId: pl.pinelabsTransactionId,
+        razorpayPayoutId: pl.razorpayPayoutId,
+        utrNumber: pl.utrNumber,
+        status: pl.status,
+        errorCode: pl.errorCode,
+        errorMessage: pl.errorMessage,
+        rawResponse: pl.rawResponse,
+        attemptedAt: pl.attemptedAt,
+      }));
+
+    return {
+      ...withdrawal,
+      id: withdrawal._id.toString(),
+      user: user
+        ? {
+            id: user._id.toString(),
+            name: user.name,
+            mobileNumber: user.mobileNumber,
+            state: user.state,
+            district: user.district,
+          }
+        : null,
+      transactions: transactions
+        .sort((a, b) => byDate(a, b, "createdAt"))
+        .map((tx) => ({
+          id: tx._id.toString(),
+          type: tx.type,
+          amount: Number(tx.amount),
+          status: tx.status,
+          rejectionReason: tx.rejectionReason,
+          description: tx.description,
+          source: tx.source,
+          createdAt: tx.createdAt,
+        })),
+      paymentLogs,
+    };
+  }
+
+  // async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
+  //   const {
+  //     page = 1,
+  //     limit = 50,
+  //     type,
+  //     status,
+  //     source,
+  //     fromDate,
+  //     toDate,
+  //     sortBy = "createdAt",
+  //     sortOrder = "DESC",
+  //   } = dto;
+
+  //   // Verify user/wallet exists
+  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   const qb = this.transactionRepo
+  //     .createQueryBuilder("tx")
+  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
+  //     .select([
+  //       "tx.id",
+  //       "tx.amount",
+  //       "tx.type",
+  //       "tx.source",
+  //       "tx.description",
+  //       "tx.rejectionReason",
+  //       "tx.status",
+  //       "tx.referenceId",
+  //       "tx.balanceAfter",
+  //       "tx.createdAt",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   if (type && type !== "all") qb.andWhere("tx.type = :type", { type });
+  //   if (status && status !== "all")
+  //     qb.andWhere("tx.status = :status", { status });
+  //   if (source && source !== "all")
+  //     qb.andWhere("tx.source = :source", { source });
+  //   if (fromDate)
+  //     qb.andWhere("tx.createdAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("tx.createdAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   const sortCol = sortBy === "amount" ? "tx.amount" : "tx.createdAt";
+  //   qb.orderBy(sortCol, sortOrder);
+
+  //   const [items, total] = await qb.getManyAndCount();
+
+  //   // Compute summary
+  //   const summary = await this.transactionRepo.getWalletSummary(String(wallet._id));
+
+  //   return {
+  //     items,
+  //     total,
+  //     page,
+  //     limit,
+  //     pages: Math.ceil(total / limit),
+  //     summary: {
+  //       totalTransactions: summary.totalCount,
+  //       totalCredits: summary.totalCredits,
+  //       totalDebits: summary.totalDebits,
+  //       completedCredits: summary.completedCredits,
+  //       completedDebits: summary.completedDebits,
+  //       withdrawalTransactions: summary.withdrawalCount,
+  //     },
+  //   };
+  // }
+
+  async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
+    const {
+      page = 1,
+      limit = 50,
+      type,
+      status,
+      source,
+      fromDate,
+      toDate,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+    } = dto;
+
+    const wallet = await this.walletRepo.findOne({ userId });
+    if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted)
+      throw new Error(
+        "Wallet for this user is deleted so unable to show transcations!!",
+      );
+    const walletId = wallet._id.toString();
+
+    const [{ items, total }, summary] = await Promise.all([
+      this.transactionRepo.findPaginatedByWalletId(walletId, page, limit, {
+        type: type && type !== "all" ? type : undefined,
+        status: status && status !== "all" ? status : undefined,
+        source: source && source !== "all" ? source : undefined,
+        fromDate: fromDate ? new Date(fromDate) : undefined,
+        toDate: toDate ? new Date(toDate) : undefined,
+        sortBy: sortBy === "amount" ? "amount" : "createdAt",
+        sortOrder: sortOrder === "ASC" ? "ASC" : "DESC",
+        select:
+          "amount type source description rejectionReason status referenceId balanceAfter createdAt",
+      }),
+      this.transactionRepo.getWalletSummary(walletId),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+      summary: {
+        totalTransactions: summary.totalCount,
+        totalCredits: summary.totalCredits,
+        totalDebits: summary.totalDebits,
+        completedCredits: summary.completedCredits,
+        completedDebits: summary.completedDebits,
+        withdrawalTransactions: summary.withdrawalCount,
+      },
+    };
+  }
+
+  // async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
+  //   const { page = 1, limit = 20, status, fromDate, toDate } = dto;
+
+  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
+  //   if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+  //   const qb = this.withdrawalRepo
+  //     .createQueryBuilder("wr")
+  //     .where("wr.walletId = :walletId", { walletId: wallet.id })
+  //     .select([
+  //       "wr.id",
+  //       "wr.amount",
+  //       "wr.payoutMethod",
+  //       "wr.payoutDetails",
+  //       "wr.status",
+  //       "wr.processedAt",
+  //       "wr.createdAt",
+  //       "wr.utrNumber",
+  //       "wr.razorpayPayoutId",
+  //     ])
+  //     .skip((page - 1) * limit)
+  //     .take(limit);
+
+  //   if (status) qb.andWhere("wr.status = :status", { status });
+  //   if (fromDate)
+  //     qb.andWhere("wr.createdAt >= :fromDate", {
+  //       fromDate: new Date(fromDate),
+  //     });
+  //   if (toDate)
+  //     qb.andWhere("wr.createdAt <= :toDate", { toDate: new Date(toDate) });
+
+  //   qb.orderBy("wr.createdAt", "DESC");
+
+  //   const [items, total] = await qb.getManyAndCount();
+  //   return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  // }
+
+  async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
+    const { page = 1, limit = 20, status, fromDate, toDate } = dto;
+
+    const wallet = await this.walletRepo.findOne({ userId });
+    if (!wallet) throw new NotFoundException("Wallet not found for this user");
+    if (wallet.isDeleted)
+      throw new Error(
+        "Wallet is deleted so unable to show the withdrawal data",
+      );
+    const { items, total } = await this.withdrawalRepo.findPaginatedByWalletId(
+      wallet._id.toString(),
+      page,
+      limit,
+      {
+        status,
+        fromDate: fromDate ? new Date(fromDate) : undefined,
+        toDate: toDate ? new Date(toDate) : undefined,
+        select:
+          "amount payoutMethod payoutDetails status processedAt createdAt utrNumber razorpayPayoutId",
+      },
+    );
+
+    return { items, total, page, limit, pages: Math.ceil(total / limit) };
+  }
+
+  async adjustWalletBalance(adminId: string, dto: AdjustWalletDto) {
+    const isSuperAdmin = await this.isSuperAdmin(adminId);
+    if (!isSuperAdmin)
+      throw new ForbiddenException(
+        "Only super admins can manually adjust wallet balances",
+      );
+
+    const wallet = await this.walletRepo.findOne({
+      where: { userId: dto.userId },
+    });
+    if (!wallet) throw new NotFoundException("Wallet not found for this user");
+
+    // Extract non-null values immediately after the guard — TypeScript cannot narrow across await
+    const walletId = wallet!._id.toString();
+    const initialBalance = Number(wallet!.balance);
+    let currentBalance = initialBalance;
+
+    const amount = Number(dto.amount);
+    if (amount === 0)
+      throw new BadRequestException("Adjustment amount cannot be zero");
+
+    if (amount > 0) {
+      await this.walletRepo.increment(
+        { _id: new Types.ObjectId(walletId) },
+        "balance",
+        amount,
+      );
+      currentBalance += amount;
+      await this.transactionRepo.save({
+        walletId,
+        amount,
+        type: TransactionType.CREDIT,
+        source: TransactionSource.ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        description: dto.description ?? `Manual adjustment: ${dto.reason}`,
+        balanceAfter: currentBalance,
+      });
+    } else {
+      const debit = Math.abs(amount);
+      if (currentBalance < debit) {
+        throw new BadRequestException(
+          "Insufficient balance for this debit adjustment",
+        );
+      }
+      await this.walletRepo.decrement(
+        { _id: new Types.ObjectId(walletId) },
+        "balance",
+        debit,
+      );
+      currentBalance -= debit;
+      await this.transactionRepo.save({
+        walletId,
+        amount: debit,
+        type: TransactionType.DEBIT,
+        source: TransactionSource.ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        description: dto.description ?? `Manual adjustment: ${dto.reason}`,
+        balanceAfter: currentBalance,
+      });
+    }
+
+    const updatedWallet = await this.walletRepo.findOne({
+      where: { id: walletId },
+    });
+
+    return {
+      success: true,
+      userId: dto.userId,
+      walletId,
+      previousBalance: initialBalance,
+      newBalance: Number(updatedWallet!.balance),
+      adjustment: amount,
+      reason: dto.reason,
+    };
+  }
+
+  async listAllWallets(dto: ListAllWalletsDto) {
+    const { page = 1, limit = 50, sortBy = "createdAt", sortOrder = "DESC" } = dto;
+
+    const { items, total } = await this.walletRepo.findAdminPage(
+      this.toWalletScope(dto),
+      { page, limit, sortBy, sortOrder },
+    );
+
+    return {
+      items: items.map(({ owner, ...wallet }) => ({ ...wallet, user: owner })),
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  /** Wallet count and money totals across every wallet the filters cover, plus the filters that were applied. */
+  async getWalletsSummary(dto: WalletScopeDto) {
+    const scope = this.toWalletScope(dto);
+    const totals = await this.walletRepo.getAdminTotals(scope);
+    const appliedFilters = Object.fromEntries(
+      Object.entries(scope).filter(([, value]) => value !== undefined),
+    ) as AdminWalletScope;
+
+    return {
+      ...totals,
+      appliedFilters,
+      isFiltered: Object.keys(appliedFilters).length > 0,
+    };
+  }
+
+  // Normalizes the wallet filters so the list and the summary read them the same way.
+  private toWalletScope(dto: WalletScopeDto): AdminWalletScope {
+    return {
+      userId: dto.userId || undefined,
+      search: dto.search?.trim() || undefined,
+      state: dto.state || undefined,
+      tester: dto.tester,
+      anveshanScope: dto.anveshanScope,
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Section 9: Helpers
+  // ─────────────────────────────────────────────────────────────
+
+  private async isSuperAdmin(adminId: string): Promise<boolean> {
+    const admin = await this.userRepo.findOne({ where: { id: adminId } });
+    return admin?.role === UserRole.SUPER_ADMIN;
+  }
+
+  private toPublicUser(user: User): Record<string, unknown> {
+    return {
+      id: user._id.toString(),
+      mobileNumber: user.mobileNumber,
+      name: user.name,
+      category: user.category,
+      state: user.state,
+      district: user.district,
+      block: user.block,
+      village: user.village,
+      kvk: user.kvk,
+      languagePreference: user.languagePreference,
+      verificationStatus: user.verificationStatus,
+      role: user.role,
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt,
+      isUserCreatedBySuperAdmin: user.isUserCreatedBySuperAdmin,
+      profileCreatedByAdminCompleted: user.profileCreatedByAdminCompleted,
+    };
+  }
+
+  // private async logAudit(params: {
+  //   actorType: ActorType;
+  //   actorId: string;
+  //   action: string;
+  //   entityType: string;
+  //   entityId?: string;
+  //   oldValue?: Record<string, unknown>;
+  //   newValue?: Record<string, unknown>;
+  //   metadata?: Record<string, unknown>;
+  // }) {
+  //   await this.auditRepo.save({
+  //     actorType: params.actorType,
+  //     actorId: params.actorId,
+  //     action: params.action,
+  //     entityType: params.entityType,
+  //     entityId: params.entityId ?? null,
+  //     oldValue: params.oldValue ?? null,
+  //     newValue: params.newValue ?? null,
+  //     metadata: params.metadata ?? null,
+  //   });
+  // }
+
+  /** Flush cache keys matching a pattern. Super admin only. */
+  async flushCache(keyPattern: string): Promise<{ flushed: number }> {
+    const count = await this.redisService.delByPattern(keyPattern);
+    this.logger.log(
+      `Cache flush: ${count} keys deleted matching "${keyPattern}"`,
+    );
+    return { flushed: count };
+  }
+
+  async deleteUser(
+    userId: string,
+  ): Promise<{ message: string; userId: string; deleted: any }> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new NotFoundException("User not found");
+    }
+    const user = await this.userRepo.findById(userId);
+    if (!user || user.isDeleted) throw new NotFoundException("User not found");
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException("A super admin cannot be deleted");
+    }
+
+    const [wallets, withdrawals] = await Promise.all([
+      this.walletRepo.findAll({ userId }),
+      this.withdrawalRepo.findAll({ userId }),
+    ]);
+    const walletIds = wallets.map((w) => String(w._id));
+    const withdrawalIds = withdrawals.map((w) => String(w._id));
+
+    const mark = { isDeleted: true, deletedAt: new Date() };
+    const notDeleted = { isDeleted: { $ne: true } };
+
+    const count = (r: unknown): number | null => {
+      const x = r as
+        | { modifiedCount?: number; affected?: number }
+        | null
+        | undefined;
+      return x?.modifiedCount ?? x?.affected ?? null;
+    };
+
+    const none = Promise.resolve(null);
+
+    const [
+      questions,
+      wallets_,
+      withdrawals_,
+      paymentDetails,
+      notifications,
+      finalQuestions,
+      agriEntities,
+      reports,
+      feedback,
+      anveshanAnswers,
+      transactions,
+      paymentLogs,
+    ] = await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Checked inside the transaction so a withdrawal that touches the wallet at the same
+      // time causes a write conflict, and the retry sees it.
+      const openWithdrawal = await this.withdrawalRepo.findOne(
+        {
+          userId,
+          status: { $in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
+        },
+        session,
+      );
+      if (openWithdrawal) {
+        throw new BadRequestException(
+          "User has pending or processing withdrawals. Settle them before deleting.",
+        );
+      }
+
+      // Sequential on purpose: a transaction session must not run operations in parallel.
+      const operations: Array<() => Promise<unknown>> = [
+      () => this.questionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.walletRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.withdrawalRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.paymentDetailRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.notificationRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.finalQuestionRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.agriEntityRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.reportRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.feedbackRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () => this.anveshanAnswerRepo.updateMany({ userId, ...notDeleted }, mark, session),
+      () =>
+        walletIds.length
+        ? this.transactionRepo.updateMany(
+            { walletId: { $in: walletIds }, ...notDeleted },
+            mark,
+            session,
+          )
+        : none,
+      () =>
+        withdrawalIds.length
+        ? this.paymentLogRepo.updateMany(
+            { withdrawalRequestId: { $in: withdrawalIds }, ...notDeleted },
+            mark,
+            session,
+          )
+        : none,
+      ];
+      const results: unknown[] = [];
+      for (const run of operations) results.push(await run());
+
+      await this.userRepo.update(
+        userId,
+        {
+          ...mark,
+          tokenVersion: (user.tokenVersion ?? 0) + 1,
+          otpHash: null,
+          otpExpiresAt: null,
+          expoPushToken: null,
+        },
+        session,
+      );
+      return results;
+    });
+
+    // The username is free again, so the cached "taken" entry must go.
+    if (user.username) await this.clearUsernameCache(user.username);
+
+    return {
+      message: "User deleted successfully.",
+      userId,
+      deleted: {
+        user: 1,
+        questions: count(questions),
+        wallets: count(wallets_),
+        withdrawals: count(withdrawals_),
+        paymentDetails: count(paymentDetails),
+        notifications: count(notifications),
+        finalQuestions: count(finalQuestions),
+        agriEntities: count(agriEntities),
+        reports: count(reports),
+        feedback: count(feedback),
+        anveshanAnswers: count(anveshanAnswers),
+        transactions: count(transactions),
+        paymentLogs: count(paymentLogs),
+      },
+    };
+  }
+
+  // Restores a soft deleted user and every record that was deleted together with them, in one transaction.
+  async restoreUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Explicit isDeleted key bypasses the default "hide deleted" filter
+    const user = await this.userRepo.findOne({ _id: userId, isDeleted: true });
+    if (!user) throw new NotFoundException("Deleted user not found");
+
+    // Users deleted before deletedAt existed have no stamp. Their cascade left deletedAt
+    // empty, so matching null skips records that were deleted separately with a timestamp.
+    const deletedWithUser = (extra: Record<string, unknown>) => ({
+      ...extra,
+      isDeleted: true,
+      deletedAt: user.deletedAt ?? null,
+    });
+    const unmark = { isDeleted: false, deletedAt: null };
+
+    await this.mongoTransactionService.runInTransaction(async (session) => {
+      // Inside the transaction so a concurrent sign up with the same value is caught
+      // by the unique index and rolls everything back.
+      await this.assertNoActiveUserWith("mobileNumber", user.mobileNumber, session);
+      await this.assertNoActiveUserWith("username", user.username, session);
+
+      const [wallets, withdrawals] = await Promise.all([
+        this.walletRepo.findAll(deletedWithUser({ userId })),
+        this.withdrawalRepo.findAll(deletedWithUser({ userId })),
+      ]);
+      const walletIds = wallets.map((w) => String(w._id));
+      const withdrawalIds = withdrawals.map((w) => String(w._id));
+
+      // Sequential on purpose: a transaction session must not run operations in parallel.
+      const operations: Array<() => Promise<unknown>> = [
+        () => this.questionRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.walletRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.withdrawalRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.paymentDetailRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.notificationRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.finalQuestionRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.agriEntityRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.reportRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.feedbackRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () => this.anveshanAnswerRepo.updateMany(deletedWithUser({ userId }), unmark, session),
+        () =>
+          walletIds.length
+            ? this.transactionRepo.updateMany(
+                deletedWithUser({ walletId: { $in: walletIds } }),
+                unmark,
+                session,
+              )
+            : Promise.resolve(),
+        () =>
+          withdrawalIds.length
+            ? this.paymentLogRepo.updateMany(
+                deletedWithUser({ withdrawalRequestId: { $in: withdrawalIds } }),
+                unmark,
+                session,
+              )
+            : Promise.resolve(),
+        // update() only touches active records, so the user is restored with an explicit filter.
+        () => this.userRepo.updateMany({ _id: userId, isDeleted: true }, unmark, session),
+      ];
+      for (const run of operations) await run();
+    });
+
+    if (user.username) await this.cacheUsername(user.username, String(user._id));
+
+    return { message: "User restored successfully.", userId };
+  }
+
+  // Rejects a restore when an active user already holds the deleted user's mobile number or username.
+  private async assertNoActiveUserWith(
+    field: "mobileNumber" | "username",
+    value: string | null | undefined,
+    session: ClientSession,
+  ): Promise<void> {
+    if (!value) return;
+    const activeUser = await this.userRepo.findOne({ [field]: value }, session);
+    if (!activeUser) return;
+    const label = field === "mobileNumber" ? "mobile number" : "username";
+    throw new BadRequestException(`Another active user already uses this ${label}.`);
+  }
+
+  // Marks a username as taken in the availability cache. A cache failure must not undo a committed restore.
+  private async cacheUsername(username: string, userId: string): Promise<void> {
+    try {
+      await this.redisService.set(usernameKey(username), userId);
+    } catch (error) {
+      this.logger.warn(
+        `Could not cache username "${username}": ${(error as Error).message}`,
+      );
+    }
+  }
+
+  // Removes a username from the availability cache. A cache failure must not undo a committed delete.
+  private async clearUsernameCache(username: string): Promise<void> {
+    try {
+      await this.redisService.del(usernameKey(username));
+    } catch (error) {
+      this.logger.warn(
+        `Could not clear username cache for "${username}": ${(error as Error).message}`,
+      );
+    }
+  }
+
+async getUserAuditSnapshot(userId: string) {
+  if (!Types.ObjectId.isValid(userId)) return null;
+  const u = await this.userRepo.findOne({
+    _id: userId,
+    isDeleted: INCLUDE_DELETED,
+  });
+  if (!u) return null;
+  return {
+    name: u.name,
+    mobileNumber: u.mobileNumber,
+    role: u.role,
+    verificationStatus: u.verificationStatus,
+    isDeleted: !!u.isDeleted,
+    deletedAt: u.deletedAt ?? null,
+  };
+}
+
+}

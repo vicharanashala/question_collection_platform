@@ -63,11 +63,3 @@ deletedAt: Date | null;
 }
 
 export const WithdrawalRequestSchema = SchemaFactory.createForClass(WithdrawalRequest);
-
-// Compound index for common query pattern
-WithdrawalRequestSchema.index({ userId: 1, status: 1 });
-WithdrawalRequestSchema.index({ walletId: 1, createdAt: -1 });
-WithdrawalRequestSchema.index(
-  { orderId: 1 },
-  { unique: true, partialFilterExpression: { orderId: { $type: 'string' } } },
-);

@@ -36,7 +36,7 @@ import { AgriEntitiesModule } from './modules/agri-entities/agri-entities.module
 import { FeedbacksModule } from './modules/feedbacks/feedbacks.module';
 import { DistributorModule } from './modules/distributor/distributor.module';
 import { JwtAuthGuard } from './shared/middleware/guards/jwt-auth.guard';
-import { HealthController } from './modules/health/health.controller';
+import { HealthController } from './modules/health/controllers/health.controller';
 import { CacheModule } from './shared/database/cache/cache.module';
 import { CacheInterceptor } from './shared/database/cache/interceptors/cache.interceptor';
 import { CacheInvalidationInterceptor } from './shared/database/cache/interceptors/cache-invalidation.interceptor';

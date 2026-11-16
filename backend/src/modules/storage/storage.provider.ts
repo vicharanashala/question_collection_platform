@@ -1,6 +1,6 @@
 import { Provider } from '@nestjs/common';
-import { StorageService } from './storage.service';
-import { GcpStorageService } from './gcp-storage.service';
+import { StorageService } from './services/storage.service';
+import { GcpStorageService } from './services/gcp-storage.service';
 
 /**
  * Single storage implementation across all environments. GcpStorageService targets the

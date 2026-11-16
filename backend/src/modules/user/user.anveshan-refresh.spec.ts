@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UserService } from './services/user.service';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 describe('UserService.refreshFromAnveshan', () => {

@@ -182,17 +182,5 @@ deletedAt: Date | null;
   @Prop({ name: 'updatedAt' })
   updatedAt: Date;
 
-
 }
 export const FinalQuestionSchema = SchemaFactory.createForClass(FinalQuestion);
-
-// Enforce one row per (referenceQuestionId, distributionState) pair
-FinalQuestionSchema.index({ referenceQuestionId: 1, distributionState: 1 }, { unique: true });
-
-// Fast lookup of state docs that belong to a given reference doc.
-FinalQuestionSchema.index({ parentReferenceId: 1 });
-
-// Fast lookups by asker / reviewer FKs (used by moderation dashboards and
-// per-user activity feeds that aggregate off final_questions snapshots).
-FinalQuestionSchema.index({ userId: 1 });
-FinalQuestionSchema.index({ reviewerId: 1 });

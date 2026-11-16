@@ -4,11 +4,11 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { ConfigService } from "@nestjs/config";
 import { VerificationStatus } from "../../classes/enums";
 import { UserAccountLockedException } from "../../classes/exceptions/user-status.exception";
-import { IUserRepository } from "../../../shared/database/repositories/IUser.repository";
-import { REPOSITORY_TOKENS } from "../../../shared/database/repositories";
+import { IUserRepository } from "../../database/repositories/user.repository.interface";
+import { REPOSITORY_TOKENS } from "../../database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { Types } from "mongoose";
-import { SessionService } from "@/modules/session/session.service";
+import { SessionService } from "@/modules/session/services/session.service";
 
 export interface JwtPayload {
   sub: string;

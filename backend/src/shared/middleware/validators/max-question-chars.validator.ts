@@ -6,7 +6,7 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import { INestApplication } from '@nestjs/common';
-import { AdminService } from '../../../modules/admin/admin.service';
+import { AdminService } from '../../../modules/admin/services/admin.service';
 
 declare global {
   // eslint-disable-next-line no-var

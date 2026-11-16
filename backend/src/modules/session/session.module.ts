@@ -1,5 +1,5 @@
 import { Logger, Module } from '@nestjs/common';
-import { SessionService } from './session.service';
+import { SessionService } from './services/session.service';
 import { DbModule } from '../../shared/database/db.module';
 
 @Module({

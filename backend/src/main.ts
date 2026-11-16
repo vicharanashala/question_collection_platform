@@ -12,7 +12,7 @@ import { EndpointLoggerService } from './shared/services/endpoint-logger/endpoin
 import { installVmProxy } from './bootstrap/tailnetProxy.js';
 import { spaFallback } from './shared/middleware/spa-fallback.middleware';
 import { SignedUrlInterceptor } from './shared/middleware/interceptors/signed-url.interceptor';
-import { StorageService } from './modules/storage/storage.service';
+import { StorageService } from './modules/storage/services/storage.service';
 import { getAppEnvironment, isDevelopment, isProduction } from './config/environment';
 
 // Validate required env vars before attempting to start.

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
+import { UserService } from './services/user.service';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 
 // Staging and development need 5 questions; tests run outside production.

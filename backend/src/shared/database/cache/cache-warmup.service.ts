@@ -2,8 +2,8 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Logger, Inject } from '@nest
 import { RedisService } from './redis.service';
 import { metaKey, HOT_REWARD_TIERS_KEY, LEADERBOARD_KEY } from './cache.keys';
 import { CacheTTL } from '../../../config/cache-ttl.constants';
-import { IAdminConfigRepository } from '../repositories/IAdminConfig.repository';
-import { IQuestionRepository } from '../repositories/IQuestion.repository';
+import { IAdminConfigRepository } from '../repositories/admin-config.repository.interface';
+import { IQuestionRepository } from '../repositories/question.repository.interface';
 import { REPOSITORY_TOKENS } from '../repositories';
 
 @Injectable()

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MulterModule } from '@nestjs/platform-express';
 import { join } from 'path';
-import { StorageController } from './storage.controller';
+import { StorageController } from './controllers/storage.controller';
 import { storageProvider } from './storage.provider';
 import { AdminModule } from '../admin/admin.module';
 import { isDevelopment } from '../../config/environment';
@@ -34,4 +34,4 @@ import { isDevelopment } from '../../config/environment';
 })
 export class StorageModule {}
 
-export { StorageService } from './storage.service';
+export { StorageService } from './services/storage.service';

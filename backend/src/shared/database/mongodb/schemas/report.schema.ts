@@ -46,6 +46,3 @@ deletedAt: Date | null;
 }
 
 export const ReportSchema = SchemaFactory.createForClass(Report);
-
-ReportSchema.index({ userId: 1, createdAt: -1 });
-ReportSchema.index({ status: 1, priority: -1 });
