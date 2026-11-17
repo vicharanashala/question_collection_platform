@@ -17,6 +17,8 @@ __pycache__/
 dist/
 build/
 *.egg
+reports/
+generated/
 
 # Virtual environments
 venv/

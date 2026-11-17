@@ -19,8 +19,9 @@ export class ApiKeyGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const apiKey = request.headers['x-api-key'] as string | undefined;
-
+    console.log('ApiKeyGuard: Received API key:', apiKey);
     const expectedKey = process.env.ANVESHAN_ANNADATHA_AUTH_KEY;
+    console.log('ApiKeyGuard: Expected API key from env:', expectedKey);
     if (!expectedKey) {
       throw new UnauthorizedException('API key authentication is not configured');
     }

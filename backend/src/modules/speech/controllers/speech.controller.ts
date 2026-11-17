@@ -20,8 +20,14 @@ import {
   Min,
   IsIn,
   IsOptional,
+  IsArray,
+  ArrayMaxSize,
+  ValidateNested,
 } from 'class-validator';
 import { Request } from 'express';
+import { ApiKeyGuard } from '@/shared/middleware/guards/api-key.guard';
+import { Public } from '@/shared';
+import { Type } from 'class-transformer';
 
 interface MultipartFile {
   buffer: Buffer;
@@ -41,6 +47,12 @@ class SttDto {
   @IsOptional()
   language?: string;
 }
+
+const TARGET_LANGUAGES = [
+  'as-IN', 'bn-IN', 'brx-IN', 'doi-IN', 'gu-IN', 'hi-IN', 'kn-IN', 'ks-IN',
+  'kok-IN', 'mai-IN', 'ml-IN', 'mni-IN', 'mr-IN', 'ne-IN', 'or-IN', 'pa-IN',
+  'sa-IN', 'sat-IN', 'sd-IN', 'ta-IN', 'te-IN', 'ur-IN',
+] as const;
 
 class ChunkTranscribeDto {
   @IsString()
@@ -65,6 +77,32 @@ class TranslateDto {
     'sa-IN', 'sat-IN', 'sd-IN', 'ta-IN', 'te-IN', 'ur-IN', 'en-IN',
   ])
   targetLanguage: string;
+
+  @IsString()
+  @IsOptional()
+  sourceLanguage?: string;
+}
+
+class BulkTranslationItemDto {
+  @IsString()
+  @IsNotEmpty()
+  key: string;
+
+  @IsString()
+  @IsNotEmpty()
+  text: string;
+}
+
+export class BulkTranslateDto {
+  @IsArray()
+  @ArrayMaxSize (50)
+  @ValidateNested({ each: true })
+  @Type(() => BulkTranslationItemDto)
+  items: BulkTranslationItemDto[];
+
+  @IsString()
+  @IsIn(TARGET_LANGUAGES)
+  targetLanguage: (typeof TARGET_LANGUAGES)[number];
 
   @IsString()
   @IsOptional()
@@ -178,5 +216,59 @@ export class SpeechController {
       dto.targetLanguage,
       dto.sourceLanguage ?? "en-IN",
     );
+  }
+
+  @Post('translate/internal')
+  @Public()
+  @UseGuards(ApiKeyGuard)
+  @HttpCode(HttpStatus.OK)
+async translateBulk(@Body() dto: BulkTranslateDto) {
+    const sourceLanguage = dto.sourceLanguage ?? 'en-IN';
+    const items = dto.items ?? [];
+    const results = new Array(items.length);
+    let nextIndex = 0;
+    const concurrency = 5;
+
+    const worker = async () => {
+      while (true) {
+        const index = nextIndex++;
+        if (index >= items.length) return;
+        const item = items[index];
+        try {
+          const translated = await this.sarvamService.translateText(
+            item.text,
+            dto.targetLanguage,
+            sourceLanguage,
+          );
+          results[index] = {
+            key: item.key,
+            status: 'success',
+            translatedText: translated.translatedText,
+            confidence: translated.confidence,
+            sourceLanguage: translated.sourceLanguage,
+            targetLanguage: translated.targetLanguage,
+          };
+        } catch (error) {
+          results[index] = {
+            key: item.key,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Translation failed',
+          };
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, items.length) }, () => worker()),
+    );
+
+    return {
+      targetLanguage: dto.targetLanguage,
+      sourceLanguage,
+      total: results.length,
+      succeeded: results.filter((item) => item.status === 'success').length,
+      failed: results.filter((item) => item.status === 'failed').length,
+      results,
+    };
   }
 }
