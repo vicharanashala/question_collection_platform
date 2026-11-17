@@ -1,36 +1,18 @@
-#!/usr/bin/env node
-/*
- * Read-only audit for end-user web i18n coverage.
- *
- * Usage:
- *   node scripts/i18n/scan-web-i18n.cjs
- *   node scripts/i18n/scan-web-i18n.cjs --json report.json
- *
- * This intentionally never writes to source files.  It uses the TypeScript
- * Compiler API rather than regexes so JSX text, attributes, and t() calls can
- * be classified without scanning backend, mobile, or staff-only areas.
- */
-
 const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
 const repoRoot = path.resolve(__dirname, "../..");
 const webRoot = path.join(repoRoot, "web");
-const resourceFile = path.join(
-  webRoot,
-  "src/i18n/resources.ts"
-);
+const resourceFile = path.join(webRoot, "src/i18n/resources.ts");
+const defaultReport = path.join(__dirname, "reports", "incremental-scan.json");
+const ts = require(path.join(webRoot, "node_modules/typescript"));
 
-const manifestFile = path.join(__dirname, "scan-manifest.json");
-const defaultReport = path.join(
-  __dirname,
-  "reports/incremental-scan.json"
-);
-
-const ts = require(
-  path.join(webRoot, "node_modules/typescript")
-);
+const expectedLanguages = [
+  "en", "as", "bn", "brx", "doi", "gu", "hi", "kn", "ks", "kok",
+  "mai", "ml", "mni", "mr", "ne", "or", "pa", "sa", "sat", "sd",
+  "ta", "te", "ur",
+];
 
 const publicLayouts = new Set([
   "PublicLayout.tsx",
@@ -89,42 +71,20 @@ const ignoredAttributes = new Set([
 const extensions = /\.(ts|tsx|js|jsx)$/i;
 
 function git(args) {
-  return execFileSync("git", args, {
-    cwd: repoRoot,
-    encoding: "utf8",
-  }).trim();
-}
-
-function currentCommit() {
-  return git(["rev-parse", "HEAD"]);
-}
-
-function readManifest() {
-  if (!fs.existsSync(manifestFile)) {
-    throw new Error(
-      "No scan baseline found. Run: node scripts/i18n/scanner.cjs init"
-    );
+  try {
+    return execFileSync("git", args, {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch (error) {
+    const details = error.stderr ? String(error.stderr).trim() : error.message;
+    throw new Error(`Git command failed (${args.join(" ")}): ${details}`);
   }
-
-  return JSON.parse(fs.readFileSync(manifestFile, "utf8"));
-}
-
-function writeManifest(data) {
-  fs.mkdirSync(path.dirname(manifestFile), {
-    recursive: true,
-  });
-
-  fs.writeFileSync(
-    manifestFile,
-    JSON.stringify(data, null, 2) + "\n"
-  );
 }
 
 function isInScope(file) {
-  const relative = path
-    .relative(webRoot, file)
-    .replace(/\\/g, "/");
-
+  const relative = path.relative(webRoot, file).replace(/\\/g, "/");
   const segments = relative.split("/");
 
   if (!extensions.test(relative)) return false;
@@ -139,13 +99,9 @@ function isInScope(file) {
     return false;
   }
 
-  if (segments.some((segment) => excludedSegments.has(segment))) {
-    return false;
-  }
+  if (segments.some((segment) => excludedSegments.has(segment))) return false;
 
-  if (
-    /\.(spec|test|stories|generated)\.[jt]sx?$/i.test(relative)
-  ) {
+  if (/\.(spec|test|stories|generated)\.[jt]sx?$/i.test(relative)) {
     return false;
   }
 
@@ -163,19 +119,18 @@ function isInScope(file) {
   return true;
 }
 
-function getChangedFiles(baseline) {
-  // Includes committed, staged and unstaged changes relative
-  // to the saved baseline.
+function getChangedFiles(baseRef) {
+  // Includes committed, staged and unstaged changes relative to the base ref.
   const changed = git([
     "diff",
     "--name-only",
     "--diff-filter=ACMR",
-    baseline,
+    baseRef,
     "--",
     "web/src",
   ]);
 
-  // Git diff does not include untracked files.
+  // Include new, untracked files that are not ignored by Git.
   const untracked = git([
     "ls-files",
     "--others",
@@ -184,17 +139,81 @@ function getChangedFiles(baseline) {
     "web/src",
   ]);
 
-  const files = new Set([
-    ...changed.split("\n"),
-    ...untracked.split("\n"),
-  ]);
+  const files = new Set([...changed.split("\n"), ...untracked.split("\n")]);
 
   return [...files]
     .filter(Boolean)
     .map((file) => path.resolve(repoRoot, file))
-    .filter((file) => fs.existsSync(file))
-    .filter((file) => isInScope(file))
+    .filter((file) => fs.existsSync(file) && fs.statSync(file).isFile())
+    .filter(isInScope)
     .sort();
+}
+
+function getUntrackedFiles() {
+  const output = git([
+    "ls-files",
+    "--others",
+    "--exclude-standard",
+    "--",
+    "web/src",
+  ]);
+
+  return new Set(output.split("\n").filter(Boolean));
+}
+
+function mergeLineRanges(ranges) {
+  const sorted = ranges
+    .filter((range) => range.start <= range.end)
+    .sort((a, b) => a.start - b.start);
+  const merged = [];
+
+  for (const range of sorted) {
+    const previous = merged[merged.length - 1];
+    if (previous && range.start <= previous.end + 1) {
+      previous.end = Math.max(previous.end, range.end);
+    } else {
+      merged.push({ start: range.start, end: range.end });
+    }
+  }
+
+  return merged;
+}
+
+function getChangedLineRanges(file, baseRef, untrackedFiles) {
+  const relativeFile = path.relative(repoRoot, file).replace(/\\/g, "/");
+
+  // New, untracked files have no Git diff hunks: every source line is new.
+  if (untrackedFiles.has(relativeFile)) {
+    const lineCount = fs.readFileSync(file, "utf8").split(/\r?\n/).length;
+    return lineCount ? [{ start: 1, end: lineCount }] : [];
+  }
+
+  const diff = git([
+    "diff",
+    "--no-ext-diff",
+    "--no-color",
+    "--unified=0",
+    baseRef,
+    "--",
+    relativeFile,
+  ]);
+
+  const ranges = [];
+  const hunkPattern = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm;
+  let match;
+
+  while ((match = hunkPattern.exec(diff)) !== null) {
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+
+    // A deletion has a zero-length new-side range and contains no source
+    // lines that can produce a translation finding.
+    if (count > 0) {
+      ranges.push({ start, end: start + count - 1 });
+    }
+  }
+
+  return mergeLineRanges(ranges);
 }
 
 function propertyName(node) {
@@ -205,11 +224,10 @@ function propertyName(node) {
   ) {
     return node.text;
   }
-
   return undefined;
 }
 
-// Reads nested resource objects without executing resources.ts.
+// Flattens nested resource objects without executing resources.ts.
 function flattenObject(node, prefix = [], result = new Map()) {
   if (!ts.isObjectLiteralExpression(node)) return result;
 
@@ -266,10 +284,10 @@ function readResources() {
   });
 
   if (!resourcesNode || !ts.isObjectLiteralExpression(resourcesNode)) {
-    throw new Error("Could not find const resources = { ... }");
+    throw new Error("Could not find const resources = { ... } in resources.ts");
   }
 
-  const languages = new Map();
+  const parsedLanguages = new Map();
 
   for (const property of resourcesNode.properties) {
     if (!ts.isPropertyAssignment(property)) continue;
@@ -288,14 +306,23 @@ function readResources() {
       }
     }
 
-    languages.set(language, commonValues);
+    parsedLanguages.set(language, commonValues);
   }
 
-  if (!languages.has("en")) {
-    throw new Error("English resources are missing.");
-  }
+  // Always validate against the complete expected language set. A missing
+  // language is represented by an empty map, so its keys are reported missing.
+  const languages = new Map(
+    expectedLanguages.map((language) => [
+      language,
+      parsedLanguages.get(language) || new Map(),
+    ])
+  );
 
-  return languages;
+  const missingLanguages = expectedLanguages.filter(
+    (language) => !parsedLanguages.has(language)
+  );
+
+  return { languages, missingLanguages };
 }
 
 function normalizeText(value) {
@@ -319,7 +346,6 @@ function looksLikeUiText(value) {
 function suggestedKey(file, value) {
   const basename = path.basename(file, path.extname(file));
   const prefix = basename.charAt(0).toLowerCase() + basename.slice(1);
-
   const words = normalizeText(value)
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")
@@ -327,18 +353,13 @@ function suggestedKey(file, value) {
     .filter(Boolean)
     .slice(0, 6);
 
-  return words.length
-    ? `${prefix}.${words.join("")}`
-    : undefined;
+  return words.length ? `${prefix}.${words.join("")}` : undefined;
 }
 
 function isTranslationCall(node) {
   if (!ts.isCallExpression(node)) return false;
 
-  if (
-    ts.isIdentifier(node.expression) &&
-    node.expression.text === "t"
-  ) {
+  if (ts.isIdentifier(node.expression) && node.expression.text === "t") {
     return true;
   }
 
@@ -357,21 +378,20 @@ function jsxName(node) {
 }
 
 function isTransElement(node) {
-  if (
-    ts.isJsxElement(node) ||
-    ts.isJsxSelfClosingElement(node)
-  ) {
-    const tag = node.openingElement
-      ? node.openingElement.tagName
-      : node.tagName;
+  if (ts.isJsxElement(node)) {
+    return jsxName(node.openingElement.tagName) === "Trans";
+  }
 
-    return jsxName(tag) === "Trans";
+  if (ts.isJsxSelfClosingElement(node)) {
+    return jsxName(node.tagName) === "Trans";
   }
 
   return false;
 }
 
 function getStaticString(node) {
+  if (!node) return undefined;
+
   if (
     ts.isStringLiteral(node) ||
     ts.isNoSubstitutionTemplateLiteral(node)
@@ -382,44 +402,63 @@ function getStaticString(node) {
   return undefined;
 }
 
-function scanFile(file, languages) {
+function scanFile(file, languages, changedLineRanges) {
   const text = fs.readFileSync(file, "utf8");
-
   const source = ts.createSourceFile(
     file,
     text,
     ts.ScriptTarget.Latest,
     true,
-    /\.(tsx|jsx)$/i.test(file)
-      ? ts.ScriptKind.TSX
-      : ts.ScriptKind.TS
+    /\.(tsx|jsx)$/i.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
 
   const findings = [];
   const references = [];
   const dynamicKeys = [];
+  const relativeFile = path.relative(repoRoot, file).replace(/\\/g, "/");
 
-  const relativeFile = path
-    .relative(repoRoot, file)
-    .replace(/\\/g, "/");
+  function isChangedLine(line) {
+    return changedLineRanges.some(
+      (range) => line >= range.start && line <= range.end
+    );
+  }
 
-  function location(node) {
+  function overlapsChangedLines(node) {
+    if (!node || changedLineRanges.length === 0) return false;
+
+    const startPosition = Math.max(0, node.getStart(source));
+    const endPosition = Math.max(startPosition, node.getEnd() - 1);
+    const startLine = source.getLineAndCharacterOfPosition(startPosition).line + 1;
+    const endLine = source.getLineAndCharacterOfPosition(endPosition).line + 1;
+
+    return changedLineRanges.some(
+      (range) => startLine <= range.end && endLine >= range.start
+    );
+  }
+
+  function location(node, lineOverride) {
     return {
       file: relativeFile,
       line:
-        source.getLineAndCharacterOfPosition(
-          node.getStart(source)
-        ).line + 1,
+        lineOverride ??
+        source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
     };
   }
 
-  function addFinding(node, rawText, confidence, classification) {
-    const value = normalizeText(rawText);
+  function addFinding(node, rawText, confidence, classification, sourceLine) {
+    if (
+      sourceLine !== undefined
+        ? !isChangedLine(sourceLine)
+        : !overlapsChangedLines(node)
+    ) {
+      return;
+    }
 
+    const value = normalizeText(rawText);
     if (!looksLikeUiText(value)) return;
 
     findings.push({
-      ...location(node),
+      ...location(node, sourceLine),
       text: value,
       confidence,
       classification,
@@ -428,6 +467,8 @@ function scanFile(file, languages) {
   }
 
   function recordReference(key, node, pattern) {
+    if (!overlapsChangedLines(node)) return;
+
     const english = languages.get("en");
     const missingLanguages = [...languages.entries()]
       .filter(([, values]) => !values.has(key))
@@ -446,18 +487,12 @@ function scanFile(file, languages) {
     if (!expression) return;
 
     const value = getStaticString(expression);
-
     if (value !== undefined) {
-      addFinding(
-        expression,
-        value,
-        "medium",
-        "static-jsx-expression"
-      );
+      addFinding(expression, value, "medium", "static-jsx-expression");
       return;
     }
 
-    // Only inspect rendered branches, not the condition.
+    // Inspect rendered branches, not the condition itself.
     if (ts.isConditionalExpression(expression)) {
       visitVisibleExpression(expression.whenTrue);
       visitVisibleExpression(expression.whenFalse);
@@ -466,15 +501,14 @@ function scanFile(file, languages) {
 
     if (
       ts.isBinaryExpression(expression) &&
-      expression.operatorToken.kind ===
-        ts.SyntaxKind.AmpersandAmpersandToken
+      expression.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
     ) {
       visitVisibleExpression(expression.right);
       return;
     }
 
-    // Do not interpret callback arguments, object values or
-    // function implementation strings as visible copy.
+    // Do not interpret callback arguments, object values or function bodies
+    // as visible copy.
     if (
       ts.isCallExpression(expression) ||
       ts.isArrowFunction(expression) ||
@@ -489,14 +523,13 @@ function scanFile(file, languages) {
 
   function visit(node) {
     if (isTransElement(node)) {
-      const attributes = node.openingElement
+      const attributes = ts.isJsxElement(node)
         ? node.openingElement.attributes.properties
         : node.attributes.properties;
 
       const keyAttribute = attributes.find(
         (item) =>
-          ts.isJsxAttribute(item) &&
-          item.name.text === "i18nKey"
+          ts.isJsxAttribute(item) && item.name.text === "i18nKey"
       );
 
       const key = keyAttribute?.initializer
@@ -508,45 +541,60 @@ function scanFile(file, languages) {
         : undefined;
 
       if (key) {
-        recordReference(key, node, "Trans");
+        recordReference(
+          key,
+          keyAttribute?.initializer || keyAttribute || node,
+          "Trans"
+        );
       } else {
-        dynamicKeys.push({
-          ...location(node),
-          pattern: "Trans",
-          expression: keyAttribute?.getText(source) || "missing i18nKey",
-        });
+        const dynamicNode = keyAttribute?.initializer || keyAttribute || node;
+        if (overlapsChangedLines(dynamicNode)) {
+          dynamicKeys.push({
+            ...location(dynamicNode),
+            pattern: "Trans",
+            expression: keyAttribute?.getText(source) || "missing i18nKey",
+          });
+        }
       }
-
       return;
     }
 
     if (isTranslationCall(node)) {
       const key = getStaticString(node.arguments[0]);
-      const pattern = ts.isIdentifier(node.expression)
-        ? "t"
-        : "i18n.t";
+      const pattern = ts.isIdentifier(node.expression) ? "t" : "i18n.t";
 
+      const keyNode = node.arguments[0] || node;
       if (key !== undefined) {
-        recordReference(key, node, pattern);
-      } else {
+        recordReference(key, keyNode, pattern);
+      } else if (overlapsChangedLines(keyNode)) {
         dynamicKeys.push({
-          ...location(node),
+          ...location(keyNode),
           pattern,
-          expression:
-            node.arguments[0]?.getText(source) || "missing argument",
+          expression: keyNode.getText(source) || "missing argument",
         });
       }
-
       return;
     }
 
     if (ts.isJsxText(node)) {
-      addFinding(
-        node,
-        node.getText(source),
-        "high",
-        "hardcoded-jsx-text"
-      );
+      // JSXText can span several lines. Only submit the changed lines, rather
+      // than the entire text node when an unchanged neighboring line exists.
+      const startLine =
+        source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+      const textLines = node.getText(source).split(/\r?\n/);
+
+      textLines.forEach((lineText, index) => {
+        const sourceLine = startLine + index;
+        if (isChangedLine(sourceLine)) {
+          addFinding(
+            node,
+            lineText,
+            "high",
+            "hardcoded-jsx-text",
+            sourceLine
+          );
+        }
+      });
       return;
     }
 
@@ -557,11 +605,7 @@ function scanFile(file, languages) {
 
     if (ts.isJsxAttribute(node)) {
       const name = node.name.text;
-
-      if (
-        ignoredAttributes.has(name) ||
-        !userFacingAttributes.has(name)
-      ) {
+      if (ignoredAttributes.has(name) || !userFacingAttributes.has(name)) {
         return;
       }
 
@@ -589,129 +633,120 @@ function scanFile(file, languages) {
   }
 
   visit(source);
-
   return { findings, references, dynamicKeys };
 }
 
 function uniqueBy(items, getKey) {
   const map = new Map();
-
-  for (const item of items) {
-    map.set(getKey(item), item);
-  }
-
+  for (const item of items) map.set(getKey(item), item);
   return [...map.values()];
 }
 
-function initBaseline() {
-  const commit = currentCommit();
-
-  writeManifest({
-    lastSuccessfulCommit: commit,
-    initializedAt: new Date().toISOString(),
-  });
-
-  console.log(`Translation scan baseline initialized: ${commit}`);
-}
-
-function markSuccess() {
-  const manifest = readManifest();
-
-  manifest.lastSuccessfulCommit = currentCommit();
-  manifest.lastSuccessfulAt = new Date().toISOString();
-
-  writeManifest(manifest);
-
-  console.log(
-    `Translation scan baseline updated: ${manifest.lastSuccessfulCommit}`
-  );
+function getCliValue(flag) {
+  const index = process.argv.indexOf(flag);
+  if (index === -1) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`Expected a value after ${flag}.`);
+  }
+  return value;
 }
 
 function scan() {
-  const manifest = readManifest();
-  const baseline = manifest.lastSuccessfulCommit;
+  const baseRef = getCliValue("--base") || process.env.I18N_BASE || "develop";
+  const outputArg = getCliValue("--out");
 
-  const files = getChangedFiles(baseline);
-  const languages = readResources();
+  // Fail early with a clear message if the requested Git ref does not exist.
+  git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
 
+  const files = getChangedFiles(baseRef);
+  const untrackedFiles = getUntrackedFiles();
+  const { languages, missingLanguages } = readResources();
   const findings = [];
   const references = [];
   const dynamicKeys = [];
+  const changedLineRangesByFile = {};
 
   for (const file of files) {
-    const result = scanFile(file, languages);
+    const relativeFile = path.relative(repoRoot, file).replace(/\\/g, "/");
+    const changedLineRanges = getChangedLineRanges(
+      file,
+      baseRef,
+      untrackedFiles
+    );
+    changedLineRangesByFile[relativeFile] = changedLineRanges;
 
+    const result = scanFile(file, languages, changedLineRanges);
     findings.push(...result.findings);
     references.push(...result.references);
     dynamicKeys.push(...result.dynamicKeys);
   }
 
+  const changedLinesScanned = Object.values(changedLineRangesByFile)
+    .flat()
+    .reduce((total, range) => total + range.end - range.start + 1, 0);
+
   const uniqueFindings = uniqueBy(
     findings,
     (item) => `${item.file}:${item.line}:${item.text}`
   );
-
   const uniqueReferences = uniqueBy(
     references,
     (item) => `${item.file}:${item.line}:${item.key}`
   );
-
-  const missingReferences = uniqueReferences.filter(
-    (item) => !item.existsInEnglish || item.missingLanguages.length
+  const uniqueDynamicKeys = uniqueBy(
+    dynamicKeys,
+    (item) => `${item.file}:${item.line}:${item.expression}`
   );
 
+  const missingReferences = uniqueReferences.filter(
+    (item) => !item.existsInEnglish || item.missingLanguages.length > 0
+  );
   const highConfidence = uniqueFindings.filter(
     (item) => item.confidence === "high"
   );
-
   const ambiguous = uniqueFindings.filter(
     (item) => item.confidence !== "high"
   );
 
   const report = {
     generatedAt: new Date().toISOString(),
-    baselineCommit: baseline,
-    currentCommit: currentCommit(),
-
+    baseRef,
     summary: {
       changedFilesScanned: files.length,
+      changedLinesScanned,
       hardcodedStrings: uniqueFindings.length,
       highConfidence: highConfidence.length,
       ambiguous: ambiguous.length,
       translationReferences: uniqueReferences.length,
       missingTranslationReferences: missingReferences.length,
-      dynamicTranslationKeys: dynamicKeys.length,
-      languages: [...languages.keys()],
+      dynamicTranslationKeys: uniqueDynamicKeys.length,
+      languages: expectedLanguages,
+      missingResourceLanguages: missingLanguages,
     },
-
     files: files.map((file) =>
       path.relative(repoRoot, file).replace(/\\/g, "/")
     ),
-
+    changedLineRanges: changedLineRangesByFile,
     findings: uniqueFindings,
     highConfidenceFindings: highConfidence,
     ambiguousFindings: ambiguous,
     references: uniqueReferences,
     missingReferences,
-    dynamicKeys,
-
-    nextBaselineCommit: currentCommit(),
-
-    note:
-      "This is a read-only scan. The baseline is not advanced automatically.",
+    dynamicKeys: uniqueDynamicKeys,
+    resourceValidation: {
+      expectedLanguages,
+      missingLanguages,
+    },
+    note: "Read-only scan against the selected Git base reference. Findings are limited to AST nodes overlapping added or modified Git diff lines. Untracked files are scanned in full. Translation strings and source files are not modified.",
   };
 
-  const outputIndex = process.argv.indexOf("--out");
-  const output = outputIndex >= 0
-    ? path.resolve(repoRoot, process.argv[outputIndex + 1])
+  const output = outputArg
+    ? path.resolve(repoRoot, outputArg)
     : defaultReport;
 
   fs.mkdirSync(path.dirname(output), { recursive: true });
-
-  fs.writeFileSync(
-    output,
-    JSON.stringify(report, null, 2) + "\n"
-  );
+  fs.writeFileSync(output, JSON.stringify(report, null, 2) + "\n");
 
   console.log("\nIncremental i18n scan completed.");
   console.log(JSON.stringify(report.summary, null, 2));
@@ -721,23 +756,19 @@ function scan() {
 try {
   const command = process.argv[2];
 
-  if (command === "init") {
-    initBaseline();
-  } else if (command === "scan") {
+  if (command === "scan") {
     scan();
-  } else if (command === "mark-success") {
-    markSuccess();
   } else {
     console.log(`
 Usage:
 
-  node scripts/i18n/scanner.cjs init
-  node scripts/i18n/scanner.cjs scan
-  node scripts/i18n/scanner.cjs mark-success
+  node scripts/i18n/scan-web-i18n.cjs scan
 
 Optional:
 
-  node scripts/i18n/scanner.cjs scan --out path/to/report.json
+  node scripts/i18n/scan-web-i18n.cjs scan --base develop
+  node scripts/i18n/scan-web-i18n.cjs scan --base main
+  node scripts/i18n/scan-web-i18n.cjs scan --out reports/custom.json
 `);
     process.exitCode = 1;
   }
