@@ -198,7 +198,7 @@ const allOptions = useMemo(() => {
                             : "border-border-subtle hover:border-emerald-300",
                         )}
                       >
-                        <CropImage name={c.value} imageUrl={c.imageUrl} className="h-full w-full rounded-full object-cover" />
+                        <CropImage imageUrl={c.imageUrl} className="h-full w-full rounded-full object-cover" />
                       </div>
                       {isSelected && (
                         <div className="absolute -bottom-0.5 -right-0.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow">

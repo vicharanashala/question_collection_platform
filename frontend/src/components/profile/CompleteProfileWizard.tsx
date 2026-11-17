@@ -757,7 +757,6 @@ function Step3({
                   >
                     <div className="relative h-14 w-14 overflow-hidden rounded-full">
                       <CropImage
-                        name={crop.value}
                         imageUrl={crop.imageUrl}
                         className="h-full w-full rounded-full object-cover"
                       />
@@ -1076,7 +1075,6 @@ function Step3({
                     >
                       <div className="relative h-14 w-14 overflow-hidden rounded-full">
                         <CropImage
-                          name={crop.value}
                           imageUrl={crop.imageUrl}
                           className="h-full w-full rounded-full object-cover"
                         />
