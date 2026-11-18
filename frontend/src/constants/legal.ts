@@ -74,7 +74,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   },
 ]
 
-// Inlined summary of PRIVACY_POLICY.md (12 sections).
+// Privacy Policy copy (12 sections).
 export const PRIVACY_POLICY_SECTIONS: LegalSection[] = [
   {
     id: '1',
