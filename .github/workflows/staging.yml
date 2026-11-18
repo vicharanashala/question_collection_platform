@@ -178,9 +178,14 @@ jobs:
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
             USE_VM_PROXY=true
-            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=annadatha-cloudrun
             PROXY=${{ secrets.PROXY }}
             WEB_DIST_PATH=/app/frontend/dist
           env_vars_update_strategy: merge
-          flags: --allow-unauthenticated
+          # Ephemeral, reusable Tailscale key resolved by Cloud Run from Secret Manager at
+          # instance start. The runtime service account needs secretAccessor on it.
+          secrets: |
+            TAILSCALE_AUTHKEY=Tailscale_Auth_Key:latest
+          # merge keeps the old plain TAILSCALE_AUTHKEY env var, which Cloud Run will not let
+          # a secret replace in place, so it is removed in the same deploy.
+          flags: --allow-unauthenticated --remove-env-vars=TAILSCALE_AUTHKEY
