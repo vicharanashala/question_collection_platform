@@ -104,7 +104,7 @@ export class PaymentWebhookController {
       return { received: true };
     }
 
-    const withdrawal = await this.withdrawalRepo.findOne({ where: { orderId } });
+    const withdrawal = await this.withdrawalRepo.findOne({ orderId });
 
     if (!withdrawal) {
       this.logger.warn(`[Webhook] No withdrawal found for orderId=${orderId}`);

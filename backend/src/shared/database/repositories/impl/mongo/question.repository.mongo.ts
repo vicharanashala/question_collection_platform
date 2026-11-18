@@ -6,10 +6,10 @@ import {
   DailyVolumeRow,
   IQuestionRepository,
   QuestionAnalyticsFilters,
-  QuestionAnalyticsResult, UserQuestionCounts } from '../../question.repository.interface';
+  QuestionAnalyticsResult, UserQuestionCounts, DuplicateSubmissionRow } from '../../question.repository.interface';
 // import { Question } from '../../../entities';
 import { QuestionStatus } from '../../../../classes/enums';
-import { mongoLike, escapeRegex, lookupByStringId } from '../../../abstractions/mongo-utils';
+import { mongoLike, escapeRegex, lookupByStringId, mongoRange } from '../../../abstractions/mongo-utils';
 import { ListQuestionsDto } from '@/modules/question/dto';
 import { ListReviewQueueDto } from '@/modules/admin/dto/review-question.dto';
 import { userIdTesterCondition, type TesterFilter } from '../../../../utils/tester.util';
@@ -17,6 +17,11 @@ import { Question } from '@/shared/database/mongodb/schemas/question.schema';
 
 /** Distributed questions (moved_to_final) were approved first, so they count as approved. */
 const APPROVED_STATUSES = [QuestionStatus.APPROVED, QuestionStatus.MOVED_TO_FINAL];
+
+// Inclusive submittedAt window; open-ended when `to` is not given.
+function dateWindow(from: Date, to?: Date): Record<string, Date> {
+  return to ? mongoRange(from, to) : { $gte: from };
+}
 
 @Injectable()
 export class MongoQuestionRepository
@@ -62,7 +67,7 @@ export class MongoQuestionRepository
         userId,
         state,
         district,
-        // Case-insensitive match on questionText — mirrors Postgres LOWER() behaviour
+        // Case-insensitive match on questionText
         questionText: { $regex: `^${escapeRegex(questionText)}$`, $options: 'i' },
       } as Record<string, unknown>)
       .exec() as Promise<Question | null>;
@@ -125,7 +130,7 @@ export class MongoQuestionRepository
     return rows.map((r) => ({ status: r._id, count: r.count }));
   }
 
-  async dailyVolumeSince(from: Date): Promise<DailyVolumeRow[]> {
+  async dailyVolumeSince(from: Date, to?: Date): Promise<DailyVolumeRow[]> {
     const rows = await this._model
       .aggregate<{
         _id: string;
@@ -134,7 +139,7 @@ export class MongoQuestionRepository
         rejected: number;
         held: number;
       }>([
-        { $match: { submittedAt: { $gte: from } } },
+        { $match: { submittedAt: dateWindow(from, to) } },
         {
           $group: {
             _id: {
@@ -221,14 +226,15 @@ export class MongoQuestionRepository
   async topFieldSince(
     field: 'cropType' | 'state',
     from: Date,
-    limit: number,
+    limit?: number,
+    to?: Date,
   ): Promise<Array<{ key: string; count: number }>> {
     const rows = await this._model
       .aggregate<{ _id: string; count: number }>([
-        { $match: { submittedAt: { $gte: from } } },
+        { $match: { submittedAt: dateWindow(from, to) } },
         { $group: { _id: `$${field}`, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
-        { $limit: limit },
+        ...(limit === undefined ? [] : [{ $limit: limit }]),
       ])
       .exec();
     return rows
@@ -357,21 +363,59 @@ export class MongoQuestionRepository
   }
 
 
+  // Duplicate-flagged questions with the submitter's name and mobile, newest first.
+  async findDuplicatesWithSubmitter(params: {
+    state?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ items: DuplicateSubmissionRow[]; total: number }> {
+    const match: Record<string, unknown> = { duplicateFlag: true };
+    if (params.state) match.state = params.state;
+
+    const [items, total] = await Promise.all([
+      this._model
+        .aggregate<DuplicateSubmissionRow>([
+          { $match: match },
+          { $sort: { submittedAt: -1 } },
+          { $skip: (params.page - 1) * params.limit },
+          { $limit: params.limit },
+          ...lookupByStringId('users', 'userId', 'u'),
+          {
+            $project: {
+              _id: 0,
+              id: { $toString: '$_id' },
+              questionText: 1,
+              state: 1,
+              submittedAt: 1,
+              userId: { $toString: '$userId' },
+              userName: '$u.name',
+              mobileNumber: '$u.mobileNumber',
+            },
+          },
+        ])
+        .exec(),
+      this._model.countDocuments(match).exec(),
+    ]);
+    return { items, total };
+  }
+
   async avgReviewTurnaroundMinutes(
   from: Date,
   to: Date,
   filter: Record<string, unknown>,
   statuses: QuestionStatus[],
+  windowField: 'reviewedAt' | 'submittedAt' = 'reviewedAt',
 ): Promise<number | null> {
   if (statuses.length === 0) return null;
 
+  const window = { $ne: null, $gte: from, $lte: to };
   const row = await this._model
     .aggregate<{ avgMs: number | null }>([
       {
         $match: {
           ...filter, // state / cropType, plain equality
-          reviewedAt: { $ne: null, $gte: from, $lte: to },
-          submittedAt: { $ne: null },
+          reviewedAt: windowField === 'reviewedAt' ? window : { $ne: null },
+          submittedAt: windowField === 'submittedAt' ? window : { $ne: null },
           status: { $in: statuses },
         },
       },
@@ -826,8 +870,7 @@ async getDailyStatsSince(
       },
     },
 
-    // First group by date + user.
-    // This allows us to reproduce SQL's COUNT(DISTINCT userId).
+    // First group by date + user so each user is counted once per day.
     {
       $group: {
         _id: {

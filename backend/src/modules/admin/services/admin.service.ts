@@ -181,7 +181,7 @@ export class AdminService implements OnModuleInit {
       return this.configCache.get(key)!;
     }
     // Fallback to DB for keys that may not be seeded
-    const row = await this.configRepo.findOne({ where: { key } });
+    const row = await this.configRepo.findOne({ key });
     const value = row
       ? (row.value as number)
       : (DEFAULT_CONFIG[key]?.value ?? 0);
@@ -207,9 +207,7 @@ export class AdminService implements OnModuleInit {
       }
     }
     if (missing.length > 0) {
-      const rows = await this.configRepo.find({
-        where: missing.map((k) => ({ key: k })),
-      });
+      const rows = await this.configRepo.find({ key: mongoIn(missing) });
       for (const row of rows) {
         this.configCache.set(row.key, row.value as number);
         result[row.key] = row.value as number;
@@ -350,9 +348,7 @@ export class AdminService implements OnModuleInit {
     const mobile = dto.mobileNumber.replace(/^\+91 ?/, "").replace(/^0/, "");
 
     // Check for duplicate mobile number
-    const existing = await this.userRepo.findOne({
-      where: { mobileNumber: mobile },
-    });
+    const existing = await this.userRepo.findOne({ mobileNumber: mobile });
     if (existing) {
       throw new BadRequestException(
         "A user with this mobile number already exists.",
@@ -430,11 +426,7 @@ async getUserStats(dto: ListUserStatsDto) {
         { username: regex },
       ];
     }
-    // Keep this a plain string, not a Types.ObjectId instance — the query builder's
-    // translateValue() recurses into any non-primitive object value (Object.entries()),
-    // which mangles a real ObjectId into its raw internal buffer. Mongoose casts a valid
-    // hex string to ObjectId automatically during query execution, so a string is both
-    // simpler and safe here.
+    // Mongoose casts a valid hex string to ObjectId during query execution.
     if (dto.excludeId) filter._id = { $ne: dto.excludeId };
 
     const testerCondition = isTesterCondition(dto.tester);
@@ -694,7 +686,7 @@ async getUserStats(dto: ListUserStatsDto) {
     reason?: string,
     suspendedUntil?: string,
   ) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user) throw new NotFoundException("User not found");
     if (user.isDeleted)
       throw new Error("Deleted users can not be Ban or Suspend");
@@ -793,7 +785,7 @@ async getUserStats(dto: ListUserStatsDto) {
   }
 
   async verifyUser(actorId: string, userId: string) {
-    const actor = await this.userRepo.findOne({ where: { id: actorId } });
+    const actor = await this.userRepo.findOne({ id: actorId });
     if (!actor) throw new NotFoundException("Actor not found");
     const validActors = [
       UserRole.ADMIN,
@@ -806,7 +798,7 @@ async getUserStats(dto: ListUserStatsDto) {
       );
     }
 
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user) throw new NotFoundException("User not found");
     if (user.isDeleted) throw new Error("Deleted users cannot be verified.");
     const oldStatus = user.verificationStatus;
@@ -829,59 +821,6 @@ async getUserStats(dto: ListUserStatsDto) {
   // ─────────────────────────────────────────────────────────────
   // Section 2: Question Review
   // ─────────────────────────────────────────────────────────────
-
-  // async listReviewQueue(dto: ListReviewQueueDto) {
-  //   const {
-  //     page = 1,
-  //     limit = 20,
-  //     state,
-  //     search,
-  //     status,
-  //     sortBy = "submittedAt",
-  //     sortOrder = "DESC",
-  //     fromDate,
-  //     toDate,
-  //   } = dto;
-
-  //   const qb = this.questionRepo
-  //     .createQueryBuilder("q")
-  //     .leftJoinAndSelect("q.user", "u")
-  //     .leftJoinAndSelect("q.reviewer", "r")
-  //     .select([
-  //       "q.id",
-  //       "q.userId",
-  //       "q.questionText",
-  //       "q.mediaType",
-  //       "q.mediaUrls",
-  //       "q.status",
-  //       "q.submittedAt",
-  //       "q.reviewedAt",
-  //       "q.rejectionReason",
-  //       "q.heldReason",
-  //       "q.approvalReason",
-  //       "q.language",
-  //       "q.domains",
-  //       "q.cropType",
-  //       "q.state",
-  //       "q.district",
-  //       "u.name",
-  //       "u.mobileNumber",
-  //       "r.name",
-  //     ])
-  //     .skip((page - 1) * limit)
-  //     .take(limit);
-
-  //   // State filter
-  //   if (state) qb.andWhere("q.state = :state", { state });
-
-  //   // Sorting
-  //   const sortColumn =
-  //     sortBy === "state"
-  //       ? "q.state"
-  //       : sortBy === "reviewedAt"
-  //         ? "q.reviewedAt"
-  //         : "q.submittedAt";
-  //   qb.orderBy(sortColumn, sortOrder);
 
   async listReviewQueue(dto: ListReviewQueueDto) {
     return this.questionRepo.listQueue(dto);
@@ -935,29 +874,6 @@ async getUserStats(dto: ListUserStatsDto) {
    * Returns { isDuplicate: true, matchedQuestion, matchedAnswer, similarityScore }
    *         if a duplicate was found in either the DB or GDB.
    */
-  // async checkDuplicate(questionId: string): Promise<{
-  //   isDuplicate: boolean;
-  //   matchedQuestion?: string;
-  //   matchedAnswer?: string | null;
-  //   similarityScore?: number | null;
-  //   matchedUserName?: string | null;
-  // }> {
-  //   const question = await this.questionRepo.findOne({
-  //     where: { id: questionId },
-  //   });
-  //   if (!question) throw new NotFoundException("Question not found");
-  //   // Step 1: DB exact-match (case-insensitive trimmed comparison, excluding self)
-  //   const dbDup = await this.questionRepo
-  //     .createQueryBuilder("q")
-  //     .innerJoinAndSelect("q.user", "u")
-  //     .where("LOWER(TRIM(q.questionText)) = LOWER(TRIM(:text))", {
-  //       text: question.questionText,
-  //     })
-  //     .andWhere("q.id != :id", { id: questionId })
-  //     .andWhere("q.status = :status", { status: QuestionStatus.APPROVED })
-  //     .select(["q.id", "q.questionText", "u.name"])
-  //     .getOne();
-
   async checkDuplicate(questionId: string): Promise<{
     isDuplicate: boolean;
     matchedQuestion?: string;
@@ -1025,9 +941,7 @@ async getUserStats(dto: ListUserStatsDto) {
     dto: ReviewActionDto,
     reviewerRole: UserRole = UserRole.ADMIN,
   ) {
-    const question = await this.questionRepo.findOne({
-      where: { id: questionId },
-    });
+    const question = await this.questionRepo.findOne({ id: questionId });
     if (!question) throw new NotFoundException("Question not found");
     if (question.isDeleted)
       throw new Error("Deleted questions are not allowed to review...");
@@ -1042,9 +956,7 @@ async getUserStats(dto: ListUserStatsDto) {
 
     if (dto.action === "approve") {
       // Count total approved questions for this user (to compute reward tier)
-      const approvedCount = await this.questionRepo.count({
-        where: { userId: question.userId, status: QuestionStatus.APPROVED },
-      });
+      const approvedCount = await this.questionRepo.count({ userId: question.userId, status: QuestionStatus.APPROVED });
       // Include the one being approved right now in the count for tier calculation
       const rewardTierCount = approvedCount + 1;
 
@@ -1190,7 +1102,7 @@ async getUserStats(dto: ListUserStatsDto) {
   async listConfig() {
     // Seed defaults that don't exist yet
     for (const [key, cfg] of Object.entries(DEFAULT_CONFIG)) {
-      const existing = await this.configRepo.findOne({ where: { key } });
+      const existing = await this.configRepo.findOne({ key });
       if (!existing) {
         await this.configRepo.save({
           key,
@@ -1200,10 +1112,7 @@ async getUserStats(dto: ListUserStatsDto) {
       }
     }
 
-    const configs = await this.configRepo.find({
-      where: {},
-      order: { key: "ASC" },
-    });
+    const configs = await this.configRepo.findAll({}, { pagination: { sort: { key: 1 } } });
     // TEMPORARY RESTRICTION
     const isPaymentModifiable = false;
 
@@ -1242,7 +1151,7 @@ async getUserStats(dto: ListUserStatsDto) {
       );
     }
 
-    const config = await this.configRepo.findOne({ where: { key: dto.key } });
+    const config = await this.configRepo.findOne({ key: dto.key });
     if (!config)
       throw new NotFoundException(`Config key '${dto.key}' not found`);
 
@@ -1264,7 +1173,7 @@ async getUserStats(dto: ListUserStatsDto) {
   }
 
   async createConfig(adminId: string, dto: CreateConfigDto) {
-    const existing = await this.configRepo.findOne({ where: { key: dto.key } });
+    const existing = await this.configRepo.findOne({ key: dto.key });
     if (existing)
       throw new BadRequestException(`Config key '${dto.key}' already exists`);
 
@@ -1318,64 +1227,26 @@ async getUserStats(dto: ListUserStatsDto) {
       totalUsers,
       flaggedQuestions,
     ] = await Promise.all([
-      this.questionRepo.count({ where: { ...whereClause } }),
+      this.questionRepo.count({ ...whereClause }),
+      this.questionRepo.count({ ...whereClause, status: QuestionStatus.APPROVED }),
+      this.questionRepo.count({ ...whereClause, status: QuestionStatus.REJECTED }),
       this.questionRepo.count({
-        where: { ...whereClause, status: QuestionStatus.APPROVED },
-      }),
-      this.questionRepo.count({
-        where: { ...whereClause, status: QuestionStatus.REJECTED },
-      }),
-      this.questionRepo.count({
-        where: {
-          ...whereClause,
-          status: mongoIn([QuestionStatus.PENDING, QuestionStatus.HELD]),
-        },
+        ...whereClause,
+        status: mongoIn([QuestionStatus.PENDING, QuestionStatus.HELD]),
       }),
       this.userRepo.count(),
-      this.questionRepo.count({
-        where: { ...whereClause, duplicateFlag: true },
-      }),
+      this.questionRepo.count({ ...whereClause, duplicateFlag: true }),
     ]);
 
     // State breakdown
-    const stateBreakdownRaw: Array<{ state: string; count: number }> =
-      await this.questionRepo
-        .createQueryBuilder("q")
-        .select("q.state", "state")
-        .addSelect("COUNT(*)", "count")
-        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-        .groupBy("q.state")
-        .orderBy("count", "DESC")
-        .limit(10)
-        .getRawMany();
+    const stateBreakdownRaw = await this.questionRepo.topFieldSince("state", from, 10, to);
 
     // Category breakdown
-    const categoryBreakdownRaw: Array<{ category: string; count: number }> =
-      await this.userRepo
-        .createQueryBuilder("u")
-        .select("u.category", "category")
-        .addSelect("COUNT(*)", "count")
-        .groupBy("u.category")
-        .getRawMany();
+    const categoryBreakdownRaw = await this.userRepo.getCategoryDistribution();
 
     // Daily question volume (last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const dailyVolumeRaw: Array<{
-      date: string;
-      total: string;
-      approved: string;
-    }> = await this.questionRepo
-      .createQueryBuilder("q")
-      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", "date")
-      .addSelect("COUNT(*)", "total")
-      .addSelect(
-        `COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`,
-        "approved",
-      )
-      .where("q.submittedAt >= :sevenDaysAgo", { sevenDaysAgo })
-      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-      .orderBy("date", "ASC")
-      .getRawMany();
+    const dailyVolumeRaw = await this.questionRepo.dailyVolumeSince(sevenDaysAgo);
 
     return {
       summary: {
@@ -1391,152 +1262,20 @@ async getUserStats(dto: ListUserStatsDto) {
             : 0,
       },
       stateBreakdown: stateBreakdownRaw.map((r) => ({
-        state: r.state,
-        count: Number(r.count),
+        state: r.key,
+        count: r.count,
       })),
       categoryBreakdown: categoryBreakdownRaw.map((r) => ({
         category: r.category,
-        count: Number(r.count),
+        count: r.count,
       })),
       dailyVolume: dailyVolumeRaw.map((r) => ({
         date: r.date,
-        total: Number(r.total),
-        approved: Number(r.approved),
+        total: r.submitted,
+        approved: r.approved,
       })),
     };
   }
-
-  /**
-   * Full stats payload matching frontend/src/types/AdminStats.
-   * GET /admin/stats
-   */
-  // async getStats(_query: AnalyticsQueryDto) {
-  //   const [
-  //     totalUsers,
-  //     verifiedUsers,
-  //     pendingUsers,
-  //     suspendedUsers,
-  //     bannedUsers,
-  //     totalQuestions,
-  //     approvedQuestions,
-  //     rejectedQuestions,
-  //     pendingQuestions,
-  //     usersThisWeek,
-  //     questionsThisWeek,
-  //     roleDist,
-  //     categoryDist,
-  //     historical,
-  //   ] = await Promise.all([
-  //     this.userRepo.count(),
-  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.VERIFIED } }),
-  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.PENDING } }),
-  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.SUSPENDED } }),
-  //     this.userRepo.count({ where: { verificationStatus: VerificationStatus.BANNED } }),
-  //     this.questionRepo.count(),
-  //     this.questionRepo.count({ where: { status: QuestionStatus.APPROVED } }),
-  //     this.questionRepo.count({ where: { status: QuestionStatus.REJECTED } }),
-  //     this.questionRepo.count({
-  //       where: { status: mongoIn([QuestionStatus.PENDING, QuestionStatus.HELD]) },
-  //     }),
-  //     // Users registered in last 7 days
-  //     this.userRepo.count({
-  //       where: { createdAt: mongoRange(
-  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-  //         new Date(),
-  //       ) },
-  //     }),
-  //     // Questions submitted in last 7 days
-  //     this.questionRepo.count({
-  //       where: { submittedAt: mongoRange(
-  //         new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-  //         new Date(),
-  //       ) },
-  //     }),
-  //     // Role distribution
-  //     this.userRepo
-  //       .createQueryBuilder('u')
-  //       .select('u.role', 'role')
-  //       .addSelect('COUNT(*)', 'count')
-  //       .groupBy('u.role')
-  //       .getRawMany<{ role: string; count: string }>(),
-  //     // Category distribution
-  //     this.userRepo
-  //       .createQueryBuilder('u')
-  //       .select('u.category', 'category')
-  //       .addSelect('COUNT(*)', 'count')
-  //       .groupBy('u.category')
-  //       .getRawMany<{ category: string; count: string }>(),
-  //     // 90-day daily history (users, questions, signups, approved, rejected)
-  //     this.questionRepo
-  //       .createQueryBuilder('q')
-  //       .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
-  //       .addSelect('COUNT(DISTINCT q.userId)', 'users')
-  //       .addSelect('COUNT(*)', 'questions')
-  //       .addSelect(`COUNT(CASE WHEN q.status = 'approved' THEN 1 END)`, 'approved')
-  //       .addSelect(`COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)`, 'rejected')
-  //       .where('q.submittedAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
-  //       .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-  //       .orderBy('date', 'ASC')
-  //       .getRawMany<{ date: string; users: string; questions: string; approved: string; rejected: string }>(),
-  //   ])
-
-  //   // Recent audit logs (last 20, joined with user for actor name)
-  //   const recentLogs: Array<AuditLog & { actorName?: string }> = await this.auditRepo
-  //     .createQueryBuilder('al')
-  //     .leftJoin('users', 'u', 'al.actor_id = u.id')
-  //     .select([
-  //       'al.id AS id',
-  //       'al.action AS action',
-  //       'al.entity_type AS "entityType"',
-  //       'al.metadata AS metadata',
-  //       'al.created_at AS "createdAt"',
-  //       'u.name AS "actorName"',
-  //     ])
-  //     .orderBy('al.created_at', 'DESC')
-  //     .take(20)
-  //     .getRawMany();
-
-  //   // Signups per day from user registrations
-  //   const signupRaw = await this.userRepo
-  //     .createQueryBuilder('u')
-  //     .select("TO_CHAR(u.createdAt, 'YYYY-MM-DD')", 'date')
-  //     .addSelect('COUNT(*)', 'signups')
-  //     .where('u.createdAt >= :ninety', { ninety: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) })
-  //     .groupBy("TO_CHAR(u.createdAt, 'YYYY-MM-DD')")
-  //     .orderBy('date', 'ASC')
-  //     .getRawMany<{ date: string; signups: string }>()
-
-  //   const signupMap = new Map(signupRaw.map((r) => [r.date, Number(r.signups)]))
-
-  //   return {
-  //     dashboard: {
-  //       totalUsers,
-  //       verifiedUsers,
-  //       pendingUsers,
-  //       suspendedUsers,
-  //       bannedUsers,
-  //       totalQuestions,
-  //       approvedQuestions,
-  //       rejectedQuestions,
-  //       pendingQuestions,
-  //       questionsThisWeek,
-  //       usersThisWeek,
-  //     },
-  //     recentActivity: recentLogs.map((log) => ({
-  //       id: log.id,
-  //       action: log.action,
-  //       description: this.buildActivityDescription(log.action, log.entityType as string | null, log.metadata as Record<string, unknown> | null),
-  //       performedBy: (log as any).actorName ?? 'System',
-  //       performedAt: (log as any).createdAt ? new Date((log as any).createdAt).toISOString() : new Date().toISOString(),
-  //     })),
-  //     roleDistribution: roleDist.map((r) => ({ role: r.role as UserRole, count: Number(r.count) })),
-  //     categoryDistribution: categoryDist
-  //       .filter((c) => c.category != null)
-  //       .map((c) => ({ category: c.category as UserCategory, count: Number(c.count) })),
-  //     historical: historicalDays,
-  //     avgReviewTurnaroundMinutes: null, // populated separately via getQuestionMetrics for admin dashboard
-  //   }
-  // }
 
   // Turns the staff Anveshan and Tester scope into a condition for each data source behind the dashboard.
   private async resolveDashboardScope(query: AnalyticsQueryDto) {
@@ -2565,9 +2304,7 @@ async getUserStats(dto: ListUserStatsDto) {
     withdrawalId: string;
     status: WithdrawalStatus;
   }> {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-    });
+    const withdrawal = await this.withdrawalRepo.findOne({ id: withdrawalId });
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
     if (withdrawal.status === WithdrawalStatus.FAILED) {
@@ -2712,9 +2449,7 @@ async getUserStats(dto: ListUserStatsDto) {
     withdrawalId: string,
     reason: string,
   ): Promise<{ success: boolean; withdrawalId: string }> {
-    const withdrawal = await this.withdrawalRepo.findOne({
-      where: { id: withdrawalId },
-    });
+    const withdrawal = await this.withdrawalRepo.findOne({ id: withdrawalId });
     if (!withdrawal)
       throw new NotFoundException("Withdrawal request not found");
     if (withdrawal.status !== WithdrawalStatus.FAILED) {
@@ -2724,9 +2459,7 @@ async getUserStats(dto: ListUserStatsDto) {
     }
 
     // Update the rejection reason on the associated DEBIT transaction
-    const debitTx = await this.transactionRepo.findOne({
-      where: { referenceId: withdrawalId, type: TransactionType.DEBIT },
-    });
+    const debitTx = await this.transactionRepo.findOne({ referenceId: withdrawalId, type: TransactionType.DEBIT });
     await this.transactionRepo.updateMany(
       { referenceId: withdrawalId, type: TransactionType.DEBIT },
       { rejectionReason: reason },
@@ -2734,30 +2467,6 @@ async getUserStats(dto: ListUserStatsDto) {
 
     return { success: true, withdrawalId };
   }
-
-  //   const qb = this.transactionRepo
-  //     .createQueryBuilder("tx")
-  //     .innerJoin("tx.wallet", "w")
-  //     .innerJoinAndSelect("w.user", "u")
-  //     .select([
-  //       "tx.id",
-  //       "tx.amount",
-  //       "tx.type",
-  //       "tx.source",
-  //       "tx.description",
-  //       "tx.status",
-  //       "tx.referenceId",
-  //       "tx.createdAt",
-  //       "w.id",
-  //     ])
-  //     .where("tx.source = :source", { source: TransactionSource.REWARD })
-  //     .andWhere("tx.createdAt BETWEEN :from AND :to", { from, to })
-  //     .orderBy("tx.createdAt", "DESC")
-  //     .take(100);
-
-  //   if (state) qb.andWhere("u.state = :state", { state });
-
-  //   const items = await qb.getMany();
 
   async listRewardLogs(dto: AnalyticsQueryDto) {
     const { fromDate, toDate, state } = dto;
@@ -2848,30 +2557,9 @@ async getUserStats(dto: ListUserStatsDto) {
     const { page = 1, limit = 20, state } = query;
 
     // Duplicate submissions (questions flagged as duplicates)
-    const duplicateQb = this.questionRepo
-      .createQueryBuilder("q")
-      .innerJoin("q.user", "u")
-      .where("q.duplicateFlag = :flag", { flag: true })
-      .select([
-        "q.id",
-        "q.questionText",
-        "q.state",
-        "q.submittedAt",
-        "u.id as userId",
-        "u.name as userName",
-        "u.mobileNumber",
-      ])
-      .orderBy("q.submittedAt", "DESC")
-      .skip((page - 1) * limit)
-      .take(limit);
+    const { items, total } = await this.questionRepo.findDuplicatesWithSubmitter({ state, page, limit });
 
-    if (state) duplicateQb.andWhere("q.state = :state", { state });
-
-    const [items, total] = await duplicateQb.getManyAndCount();
-
-    const rejectedCount = await this.questionRepo.count({
-      where: { status: QuestionStatus.REJECTED },
-    });
+    const rejectedCount = await this.questionRepo.count({ status: QuestionStatus.REJECTED });
 
     return {
       duplicateSubmissions: items,
@@ -2902,86 +2590,31 @@ async getUserStats(dto: ListUserStatsDto) {
 
     const [total, approved, rejected, pending, held, duplicates] =
       await Promise.all([
-        this.questionRepo.count({ where: { ...baseWhere } }),
-        this.questionRepo.count({
-          where: { ...baseWhere, status: QuestionStatus.APPROVED },
-        }),
-        this.questionRepo.count({
-          where: { ...baseWhere, status: QuestionStatus.REJECTED },
-        }),
-        this.questionRepo.count({
-          where: { ...baseWhere, status: QuestionStatus.PENDING },
-        }),
-        this.questionRepo.count({
-          where: { ...baseWhere, status: QuestionStatus.HELD },
-        }),
-        this.questionRepo.count({
-          where: { ...baseWhere, duplicateFlag: true },
-        }),
+        this.questionRepo.count({ ...baseWhere }),
+        this.questionRepo.count({ ...baseWhere, status: QuestionStatus.APPROVED }),
+        this.questionRepo.count({ ...baseWhere, status: QuestionStatus.REJECTED }),
+        this.questionRepo.count({ ...baseWhere, status: QuestionStatus.PENDING }),
+        this.questionRepo.count({ ...baseWhere, status: QuestionStatus.HELD }),
+        this.questionRepo.count({ ...baseWhere, duplicateFlag: true }),
       ]);
 
     // Submission volume by day
-    const dailyRaw: Array<{
-      date: string;
-      total: string;
-      approved: string;
-      rejected: string;
-    }> = await this.questionRepo
-      .createQueryBuilder("q")
-      .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", "date")
-      .addSelect("COUNT(*)", "total")
-      .addSelect(
-        "COUNT(CASE WHEN q.status = 'approved' THEN 1 END)",
-        "approved",
-      )
-      .addSelect(
-        "COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)",
-        "rejected",
-      )
-      .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-      .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-      .orderBy("date", "ASC")
-      .getRawMany();
+    const dailyRaw = await this.questionRepo.dailyVolumeSince(from, to);
 
     // Top crops by volume
-    const cropBreakdownRaw: Array<{ cropType: string; count: number }> =
-      await this.questionRepo
-        .createQueryBuilder("q")
-        .select("q.cropType", "cropType")
-        .addSelect("COUNT(*)", "count")
-        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-        .groupBy("q.cropType")
-        .orderBy("count", "DESC")
-        .limit(10)
-        .getRawMany();
+    const cropBreakdownRaw = await this.questionRepo.topFieldSince("cropType", from, 10, to);
 
     // State breakdown
-    const stateBreakdownRaw: Array<{ state: string; count: number }> =
-      await this.questionRepo
-        .createQueryBuilder("q")
-        .select("q.state", "state")
-        .addSelect("COUNT(*)", "count")
-        .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-        .groupBy("q.state")
-        .orderBy("count", "DESC")
-        .getRawMany();
+    const stateBreakdownRaw = await this.questionRepo.topFieldSince("state", from, undefined, to);
 
     // Review turnaround (avg time from submittedAt to reviewedAt for approved/rejected)
-    const avgTurnaroundRaw = await this.questionRepo
-      .createQueryBuilder("q")
-      .select(
-        "AVG(EXTRACT(EPOCH FROM (q.reviewedAt - q.submittedAt)))",
-        "avg_seconds",
-      )
-      .where("q.submittedAt BETWEEN :from AND :to", { from, to })
-      .andWhere("q.reviewedAt IS NOT NULL")
-      .andWhere("q.status IN (:...statuses)", {
-        statuses: [QuestionStatus.APPROVED, QuestionStatus.REJECTED],
-      })
-      .getRawOne<{ avg_seconds: string | null }>();
-
-    const avgTurnaroundSeconds = Number(avgTurnaroundRaw?.avg_seconds ?? 0);
-    const avgTurnaroundMinutes = Math.round(avgTurnaroundSeconds / 60);
+    const avgTurnaroundMinutes = await this.questionRepo.avgReviewTurnaroundMinutes(
+      from,
+      to,
+      {},
+      [QuestionStatus.APPROVED, QuestionStatus.REJECTED],
+      "submittedAt",
+    );
 
     return {
       period: { from: from.toISOString(), to: to.toISOString() },
@@ -2998,17 +2631,17 @@ async getUserStats(dto: ListUserStatsDto) {
       },
       dailyVolume: dailyRaw.map((r) => ({
         date: r.date,
-        total: Number(r.total),
-        approved: Number(r.approved),
-        rejected: Number(r.rejected),
+        total: r.submitted,
+        approved: r.approved,
+        rejected: r.rejected,
       })),
       cropBreakdown: cropBreakdownRaw.map((r) => ({
-        cropType: r.cropType,
-        count: Number(r.count),
+        cropType: r.key,
+        count: r.count,
       })),
       stateBreakdown: stateBreakdownRaw.map((r) => ({
-        state: r.state,
-        count: Number(r.count),
+        state: r.key,
+        count: r.count,
       })),
       avgReviewTurnaroundMinutes: avgTurnaroundMinutes || null,
     };
@@ -3034,8 +2667,8 @@ async getUserStats(dto: ListUserStatsDto) {
   /** Current count of questions in each pending/review status bucket. */
   private async getReviewQueueDepth() {
     const [pending, held] = await Promise.all([
-      this.questionRepo.count({ where: { status: QuestionStatus.PENDING } }),
-      this.questionRepo.count({ where: { status: QuestionStatus.HELD } }),
+      this.questionRepo.count({ status: QuestionStatus.PENDING }),
+      this.questionRepo.count({ status: QuestionStatus.HELD }),
     ]);
     return {
       pending,
@@ -3078,18 +2711,14 @@ async getUserStats(dto: ListUserStatsDto) {
 
     const [thisMonthApproved, lastMonthApproved] = await Promise.all([
       this.questionRepo.count({
-        where: {
-          status: QuestionStatus.APPROVED,
-          submittedAt: mongoRange(thisMonthStart, now),
-          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
-        },
+        status: QuestionStatus.APPROVED,
+        submittedAt: mongoRange(thisMonthStart, now),
+        ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
       }),
       this.questionRepo.count({
-        where: {
-          status: QuestionStatus.APPROVED,
-          submittedAt: mongoRange(lastMonthStart, lastMonthEnd),
-          ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
-        },
+        status: QuestionStatus.APPROVED,
+        submittedAt: mongoRange(lastMonthStart, lastMonthEnd),
+        ...(scope.userIdFilter ? { userId: scope.userIdFilter } : {}),
       }),
     ]);
 
@@ -3222,95 +2851,6 @@ async getUserStats(dto: ListUserStatsDto) {
    * Question volume + breakdown by state, crop, domain.
    * GET /analytics/questions  →  getQuestionAnalytics
    */
-
-  //   const [total, approved, rejected, pending] = await Promise.all([
-  //     this.questionRepo.count({ where: { ...baseWhere } }),
-  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.APPROVED } }),
-  //     this.questionRepo.count({ where: { ...baseWhere, status: QuestionStatus.REJECTED } }),
-  //     this.questionRepo.count({ where: { status: mongoIn([QuestionStatus.PENDING, QuestionStatus.HELD]) } }),
-  //   ]);
-
-  //   // Daily volume: submitted, approved, rejected per day
-  //   const dailyRaw: Array<{ date: string; submitted: string; approved: string; rejected: string }> = await this.questionRepo
-  //     .createQueryBuilder('q')
-  //     .select("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')", 'date')
-  //     .addSelect('COUNT(*)', 'submitted')
-  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-  //     .addSelect("COUNT(CASE WHEN q.status = 'rejected' THEN 1 END)", 'rejected')
-  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-  //     .groupBy("TO_CHAR(q.submittedAt, 'YYYY-MM-DD')")
-  //     .orderBy('date', 'ASC')
-  //     .getRawMany();
-
-  //   // State breakdown (top 20)
-  //   let stateQb = this.questionRepo
-  //     .createQueryBuilder('q')
-  //     .select('q.state', 'state')
-  //     .addSelect('COUNT(*)', 'count')
-  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-  //     .groupBy('q.state')
-  //     .orderBy('count', 'DESC')
-  //     .limit(20);
-  //   if (state) stateQb = stateQb.andWhere('q.state = :state', { state });
-  //   const stateBreakdown: Array<{ state: string; count: number; approved: number }> = (
-  //     await stateQb.getRawMany()
-  //   ).map((r) => ({ state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
-
-  //   // Crop-type breakdown (top 15)
-  //   let cropQb = this.questionRepo
-  //     .createQueryBuilder('q')
-  //     .select('q.cropType', 'cropType')
-  //     .addSelect('COUNT(*)', 'count')
-  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-  //     .groupBy('q.cropType')
-  //     .orderBy('count', 'DESC')
-  //     .limit(15);
-  //   if (cropType) cropQb = cropQb.andWhere('q.cropType = :cropType', { cropType });
-  //   const cropBreakdown: Array<{ cropType: string; count: number; approved: number }> = (
-  //     await cropQb.getRawMany()
-  //   ).map((r) => ({ cropType: r.cropType as string, count: Number(r.count), approved: Number(r.approved) }));
-
-  //   // District breakdown (top 20 per state if filtered, else overall top 20)
-  //   let districtQb = this.questionRepo
-  //     .createQueryBuilder('q')
-  //     .select('q.district', 'district')
-  //     .addSelect('q.state', 'state')
-  //     .addSelect('COUNT(*)', 'count')
-  //     .addSelect("COUNT(CASE WHEN q.status = 'approved' THEN 1 END)", 'approved')
-  //     .where('q.submittedAt BETWEEN :from AND :to', { from, to })
-  //     .groupBy('q.district')
-  //     .addGroupBy('q.state')
-  //     .orderBy('count', 'DESC')
-  //     .limit(50);
-  //   if (state) districtQb = districtQb.andWhere('q.state = :state', { state });
-  //   const districtBreakdown: Array<{ district: string; state: string; count: number; approved: number }> = (
-  //     await districtQb.getRawMany()
-  //   )
-  //     .filter((r) => r.district != null)
-  //     .map((r) => ({ district: r.district as string, state: r.state as string, count: Number(r.count), approved: Number(r.approved) }));
-
-  //   // Approval rate
-  //   const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
-
-  //   return {
-  //     summary: {
-  //       total,
-  //       approved,
-  //       rejected,
-  //       pending,
-  //       approvalRate,
-  //       growthRate,
-  //     },
-  //     dailyVolume,
-  //     stateBreakdown,
-  //     districtBreakdown,
-  //     cropBreakdown,
-  //     domainBreakdown,
-  //   };
-  // }
-
   async getQuestionAnalytics(query: AnalyticsQueryDto) {
     const { state, cropType } = query;
     const scope = await this.resolveDashboardScope(query);
@@ -3511,28 +3051,6 @@ async getUserStats(dto: ListUserStatsDto) {
   // Section 8b: Wallet Management (super_admin only for adjustments)
   // ─────────────────────────────────────────────────────────────
 
-  //   // Aggregate total earned (completed credits from rewards + refunds)
-  //   const earnedAgg = await this.transactionRepo
-  //     .createQueryBuilder("tx")
-  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
-  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
-  //     .andWhere("tx.type = :type", { type: TransactionType.CREDIT })
-  //     .andWhere("tx.source IN (:...sources)", {
-  //       sources: [TransactionSource.REWARD, TransactionSource.REFUND],
-  //     })
-  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
-  //     .getRawOne();
-
-  //   // Aggregate total withdrawn (completed debits from withdrawals)
-  //   const withdrawnAgg = await this.transactionRepo
-  //     .createQueryBuilder("tx")
-  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
-  //     .andWhere("tx.status = :status", { status: TransactionStatus.COMPLETED })
-  //     .andWhere("tx.type = :type", { type: TransactionType.DEBIT })
-  //     .andWhere("tx.source = :source", { source: TransactionSource.WITHDRAWAL })
-  //     .select("COALESCE(SUM(tx.amount), 0)", "total")
-  //     .getRawOne();
-
   async getUserWallet(userId: string) {
     const wallet = await this.walletRepo.findOne({ userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
@@ -3634,42 +3152,6 @@ async getUserStats(dto: ListUserStatsDto) {
     };
   }
 
-  // async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
-  //   const {
-  //     page = 1,
-  //     limit = 50,
-  //     type,
-  //     status,
-  //     source,
-  //     fromDate,
-  //     toDate,
-  //     sortBy = "createdAt",
-  //     sortOrder = "DESC",
-  //   } = dto;
-
-  //   const qb = this.transactionRepo
-  //     .createQueryBuilder("tx")
-  //     .where("tx.walletId = :walletId", { walletId: wallet.id })
-  //     .select([
-  //       "tx.id",
-  //       "tx.amount",
-  //       "tx.type",
-  //       "tx.source",
-  //       "tx.description",
-  //       "tx.rejectionReason",
-  //       "tx.status",
-  //       "tx.referenceId",
-  //       "tx.balanceAfter",
-  //       "tx.createdAt",
-  //     ])
-  //     .skip((page - 1) * limit)
-  //     .take(limit);
-
-  //   const [items, total] = await qb.getManyAndCount();
-
-  //   // Compute summary
-  //   const summary = await this.transactionRepo.getWalletSummary(String(wallet._id));
-
   async listUserTransactions(userId: string, dto: ListUserTransactionsDto) {
     const {
       page = 1,
@@ -3723,28 +3205,6 @@ async getUserStats(dto: ListUserStatsDto) {
     };
   }
 
-  // async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
-  //   const { page = 1, limit = 20, status, fromDate, toDate } = dto;
-
-  //   const qb = this.withdrawalRepo
-  //     .createQueryBuilder("wr")
-  //     .where("wr.walletId = :walletId", { walletId: wallet.id })
-  //     .select([
-  //       "wr.id",
-  //       "wr.amount",
-  //       "wr.payoutMethod",
-  //       "wr.payoutDetails",
-  //       "wr.status",
-  //       "wr.processedAt",
-  //       "wr.createdAt",
-  //       "wr.utrNumber",
-  //       "wr.razorpayPayoutId",
-  //     ])
-  //     .skip((page - 1) * limit)
-  //     .take(limit);
-
-  //   qb.orderBy("wr.createdAt", "DESC");
-
   async listUserWithdrawals(userId: string, dto: ListUserWithdrawalsDto) {
     const { page = 1, limit = 20, status, fromDate, toDate } = dto;
 
@@ -3777,9 +3237,7 @@ async getUserStats(dto: ListUserStatsDto) {
         "Only super admins can manually adjust wallet balances",
       );
 
-    const wallet = await this.walletRepo.findOne({
-      where: { userId: dto.userId },
-    });
+    const wallet = await this.walletRepo.findOne({ userId: dto.userId });
     if (!wallet) throw new NotFoundException("Wallet not found for this user");
 
     // Extract non-null values immediately after the guard — TypeScript cannot narrow across await
@@ -3831,9 +3289,7 @@ async getUserStats(dto: ListUserStatsDto) {
       });
     }
 
-    const updatedWallet = await this.walletRepo.findOne({
-      where: { id: walletId },
-    });
+    const updatedWallet = await this.walletRepo.findOne({ id: walletId });
 
     return {
       success: true,
@@ -3894,7 +3350,7 @@ async getUserStats(dto: ListUserStatsDto) {
   // ─────────────────────────────────────────────────────────────
 
   private async isSuperAdmin(adminId: string): Promise<boolean> {
-    const admin = await this.userRepo.findOne({ where: { id: adminId } });
+    const admin = await this.userRepo.findOne({ id: adminId });
     return admin?.role === UserRole.SUPER_ADMIN;
   }
 

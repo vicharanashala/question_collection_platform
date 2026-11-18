@@ -15,13 +15,12 @@ import { QuestionStatus, MediaType } from '../../classes/enums';
  * `Question` document so that, after distribution, the row is self-contained
  * (no $lookup needed to display context like language, asker's home state,
  * media URLs, etc.). See `final-question.schema.ts` for the full docstring
- * and field-naming notes; this entity is the TypeORM mirror kept in sync.
+ * and field-naming notes; this interface mirrors it.
  *
- * NOTE: This TypeORM entity is a documentation-only mirror of the canonical
- * Mongo schema (`final-question.schema.ts`). The project uses MongoDB as its
- * only DB driver (see `db.module.ts`). The `uuid` column types below reflect
- * the 24-char hex `ObjectId` representation in Mongo — i.e. values are
- * written and read as `Types.ObjectId` (BSON 0x07), not plain strings.
+ * NOTE: This interface is a type-only mirror of the canonical Mongo schema
+ * (`final-question.schema.ts`). Id fields below hold the 24-char hex
+ * `ObjectId` representation, i.e. values are written and read as
+ * `Types.ObjectId` (BSON 0x07), not plain strings.
  */
 export interface FinalQuestion {
   id: string;

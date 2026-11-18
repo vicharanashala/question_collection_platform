@@ -10,7 +10,7 @@ import {
   IWalletRepository,
 } from '../../wallet.repository.interface';
 // import { Wallet } from '../../../entities';
-import { mongoLike, mongoNe, toMongoFilter } from '../../../abstractions/mongo-utils';
+import { mongoLike, mongoNe } from '../../../abstractions/mongo-utils';
 import { Wallet } from '@/shared/database/mongodb/schemas/wallet.schema';
 import { TransactionSource, TransactionStatus, TransactionType } from '@/shared/classes/enums';
 
@@ -175,7 +175,7 @@ export class MongoWalletRepository
 
   async decrement(filter: Record<string, unknown>, field: string, amount: number, session?: ClientSession): Promise<void> {
     await this._model
-      .updateMany(toMongoFilter(filter) as Record<string, unknown>, { $inc: { [field]: -amount } } as Record<string, unknown>)
+      .updateMany(filter as Record<string, unknown>, { $inc: { [field]: -amount } } as Record<string, unknown>)
       .session(session ?? null)
       .exec();
   }

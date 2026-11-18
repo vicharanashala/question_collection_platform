@@ -55,6 +55,17 @@ export interface QuestionFilter {
   rejectedAt?: Date;
 }
 
+/** Duplicate-flagged question joined with its submitter, used by the fraud view. */
+export interface DuplicateSubmissionRow {
+  id: string;
+  questionText: string;
+  state?: string;
+  submittedAt: Date;
+  userId: string;
+  userName?: string;
+  mobileNumber?: string;
+}
+
 /** Daily submission/decision volume row used by the curator dashboard chart. */
 export interface DailyVolumeRow {
   date: string; // YYYY-MM-DD
@@ -136,16 +147,11 @@ export interface IQuestionRepository extends MongoRepository<Question> {
   /**
    * Returns the top N users ranked by their count of APPROVED questions.
    * Used by the leaderboard warmup.
-   * - Postgres: uses createQueryBuilder GROUP BY + COUNT
-   * - MongoDB:  uses an aggregation pipeline ($match → $group → $sort → $limit)
    */
   getLeaderboard(limit: number): Promise<Array<{ userId: string; approvedCount: number }>>;
 
   // ─── Aggregations ──────────────────────────────────────────────────────────
-  // The curator dashboard relies on real GROUP BY / aggregation queries, which
-  // the chainable MongoQueryBuilder does not implement (addSelect/groupBy are
-  // explicit no-ops — see MongoQueryBuilder.addSelect). These dedicated methods
-  // run native Mongoose aggregation pipelines that work in MongoDB.
+  // Native aggregation pipelines behind the dashboard and metrics endpoints.
 
   /**
    * Counts questions per status, restricted to the given statuses. Used to
@@ -159,19 +165,21 @@ export interface IQuestionRepository extends MongoRepository<Question> {
 
   /**
    * Returns one row per calendar day with submitted/approved/rejected/held
-   * counts. Only days that fall within `[from, +∞)` are included, and days
-   * with zero questions are omitted (chart-friendly; the UI handles gaps).
+   * counts. Only days within `[from, to]` (or `[from, +∞)` without `to`) are
+   * included, and days with zero questions are omitted (the UI handles gaps).
    */
-  dailyVolumeSince(from: Date): Promise<DailyVolumeRow[]>;
+  dailyVolumeSince(from: Date, to?: Date): Promise<DailyVolumeRow[]>;
 
   /**
-   * Returns the top-N most frequent values of a single string field
-   * (`cropType` or `state`) among questions submitted on/after `from`.
+   * Returns the most frequent values of a single string field (`cropType` or
+   * `state`) among questions submitted on/after `from`, and on/before `to`
+   * when given. Without `limit`, every value is returned.
    */
   topFieldSince(
     field: 'cropType' | 'state',
     from: Date,
-    limit: number,
+    limit?: number,
+    to?: Date,
   ): Promise<Array<{ key: string; count: number }>>;
 
   /**
@@ -185,15 +193,24 @@ export interface IQuestionRepository extends MongoRepository<Question> {
 
   /**
    * Average review turnaround (in minutes) for questions with the given
-   * statuses that were reviewed on/after `from`. Returns null when there is
-   * no reviewed data in the window.
+   * statuses. The `[from, to]` window applies to `reviewedAt` by default, or to
+   * `submittedAt` when `windowField` says so. Returns null when there is no
+   * reviewed data in the window.
    */
   avgReviewTurnaroundMinutes(
   from: Date,
   to: Date,
   filter: Record<string, unknown>,
   statuses: QuestionStatus[],
+  windowField?: 'reviewedAt' | 'submittedAt',
   ): Promise<number | null>;
+
+  /** Duplicate-flagged questions with the submitter's name and mobile, newest first. */
+  findDuplicatesWithSubmitter(params: {
+    state?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ items: DuplicateSubmissionRow[]; total: number }>;
 
   avgReviewTurnaroundMinutesSince(
     from: Date,

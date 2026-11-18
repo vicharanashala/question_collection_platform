@@ -2,7 +2,7 @@
  * repositories/index.ts
  *
  * Registry of all repository tokens + NestJS providers for the MongoDB
- * abstraction layer. PostgreSQL support has been removed.
+ * abstraction layer.
  */
 
 import { Provider } from '@nestjs/common';

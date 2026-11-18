@@ -112,14 +112,9 @@ export class MongoAuditLogRepository
   const base = this.buildAuditFilter(q);
   const filter = scope ? { $and: [base, scope] } : base;
 
-  const [data, total] = await this.createQueryBuilder('a')
-    .whereRaw(filter)
-    .orderBy(SORT_FIELDS[q.sortBy ?? 'createdAt'], q.sortOrder ?? 'DESC')
-    .skip((page - 1) * limit)
-    .take(limit)
-    .getManyAndCount();
-
-  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  const sortField = SORT_FIELDS[q.sortBy ?? 'createdAt'];
+  const sort: Record<string, 1 | -1> = { [sortField]: q.sortOrder === 'ASC' ? 1 : -1 };
+  return this.findAndCount(filter, { pagination: { page, limit, sort } });
 }
 
  }

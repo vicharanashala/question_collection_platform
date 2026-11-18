@@ -30,16 +30,10 @@ export class FaqsService {
 
   /** Admin: list all (including hidden) */
   async findAll(query: ListFaqsQueryDto): Promise<unknown[]> {
-    const qb = this.faqRepo.createQueryBuilder('faq');
-
-    if (query.category) {
-      qb.andWhere('faq.category = :category', { category: query.category });
-    }
-
-    return qb
-      .orderBy('faq.displayOrder', 'ASC')
-      .addOrderBy('faq.createdAt', 'ASC')
-      .getMany();
+    const filter = query.category ? { category: query.category } : {};
+    return this.faqRepo.findAll(filter, {
+      pagination: { sort: { displayOrder: 1, createdAt: 1 } },
+    });
   }
 
   async findOne(id: string): Promise<unknown> {

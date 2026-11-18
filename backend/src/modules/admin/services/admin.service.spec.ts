@@ -45,6 +45,7 @@ const mockUserRepo = () => ({
   count: jest.fn().mockResolvedValue(0),
   create: jest.fn().mockImplementation((data) => ({ id: undefined, ...data })),
   createQueryBuilder: jest.fn(),
+  getCategoryDistribution: jest.fn(),
 });
 
 const mockQuestionRepo = () => ({
@@ -53,6 +54,8 @@ const mockQuestionRepo = () => ({
   count: jest.fn(),
   update: jest.fn(),
   createQueryBuilder: jest.fn(),
+  topFieldSince: jest.fn(),
+  dailyVolumeSince: jest.fn(),
 });
 
 const mockWalletRepo = () => ({
@@ -766,11 +769,6 @@ describe('AdminService', () => {
 
   describe('getDashboardStats', () => {
     it('should return summary, breakdowns, and daily volume', async () => {
-      const mockQb = () => {
-        const qb = mockQueryBuilder([]);
-        return qb;
-      };
-
       questionRepo.count
         .mockResolvedValueOnce(100) // totalQuestions
         .mockResolvedValueOnce(60)  // approvedQuestions
@@ -779,8 +777,9 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(5);  // flaggedQuestions
       userRepo.count.mockResolvedValueOnce(500); // totalUsers
 
-      questionRepo.createQueryBuilder.mockReturnValue(mockQb());
-      userRepo.createQueryBuilder.mockReturnValue(mockQb());
+      questionRepo.topFieldSince.mockResolvedValue([]);
+      questionRepo.dailyVolumeSince.mockResolvedValue([]);
+      userRepo.getCategoryDistribution.mockResolvedValue([]);
 
       const result = await service.getDashboardStats({});
 

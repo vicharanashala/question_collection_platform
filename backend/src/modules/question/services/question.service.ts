@@ -422,7 +422,7 @@ export class QuestionService {
   // ─── Update ──────────────────────────────────────────────────────────────────
 
   async update(userId: string, questionId: string, dto: UpdateQuestionDto): Promise<Question> {
-    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+    const question = await this.questionRepo.findOne({ id: questionId });
 
     if (!question) throw new NotFoundException('Question not found');
     if (question.userId !== userId) throw new ForbiddenException('Not your question');
@@ -434,7 +434,7 @@ export class QuestionService {
    * Preview runs before any audio is uploaded, so those records are created without it.
    */
   async attachAudio(userId: string, questionId: string, dto: AttachQuestionAudioDto): Promise<{ id: string; audioUrls: string[] }> {
-    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+    const question = await this.questionRepo.findOne({ id: questionId });
 
     if (!question) throw new NotFoundException('Question not found');
     if (question.userId !== userId) throw new ForbiddenException('Not your question');
@@ -457,7 +457,7 @@ export class QuestionService {
   async findOne(id: string, userId?: string): Promise<Question> {
     // Project to the frontend response contract; keeps the embedding vector
     // and other internals out of the response and the question cache.
-    const question = await this.questionRepo.findOne({ where: { id } }, undefined, QUESTION_RESPONSE_SELECT);
+    const question = await this.questionRepo.findOne({ id }, undefined, QUESTION_RESPONSE_SELECT);
     if (!question) throw new NotFoundException('Question not found');
     // Non-owners can only see approved questions (or own questions)
     if (userId && question.userId !== userId && question.status !== QuestionStatus.APPROVED) {
@@ -499,7 +499,7 @@ export class QuestionService {
   }
 
   async approve(questionId: string, reviewerId: string, reason?: string): Promise<Question> {
-    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+    const question = await this.questionRepo.findOne({ id: questionId });
     if (!question) throw new NotFoundException('Question not found');
 
     question.status = QuestionStatus.APPROVED;
@@ -513,7 +513,7 @@ export class QuestionService {
   }
 
   async reject(questionId: string, reviewerId: string, reason: string): Promise<Question> {
-    const question = await this.questionRepo.findOne({ where: { id: questionId } });
+    const question = await this.questionRepo.findOne({ id: questionId });
     if (!question) throw new NotFoundException('Question not found');
 
     question.status = QuestionStatus.REJECTED;
@@ -533,10 +533,8 @@ export class QuestionService {
     startOfDay.setHours(0, 0, 0, 0);
 
     return this.questionRepo.count({
-      where: {
-        userId,
-        submittedAt: mongoGte(startOfDay),
-      },
+      userId,
+      submittedAt: mongoGte(startOfDay),
     });
   }
 
@@ -546,9 +544,7 @@ export class QuestionService {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const count = await this.questionRepo.count({
-      where: { userId, submittedAt: mongoGte(startOfDay) },
-    });
+    const count = await this.questionRepo.count({ userId, submittedAt: mongoGte(startOfDay) });
 
     if (count >= dailyLimit) {
       throw new BadRequestException(
@@ -558,7 +554,7 @@ export class QuestionService {
   }
 
   async getApprovedCount(userId: string): Promise<number> {
-    return this.questionRepo.count({ where: { userId, status: QuestionStatus.APPROVED } });
+    return this.questionRepo.count({ userId, status: QuestionStatus.APPROVED });
   }
 
   async getLimits() {
@@ -782,7 +778,7 @@ export class QuestionService {
   }
 
   async getTotalSubmittedCount(userId: string): Promise<number> {
-  return this.questionRepo.count({ where: { userId } });
+  return this.questionRepo.count({ userId });
 }
 }
 

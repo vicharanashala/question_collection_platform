@@ -89,7 +89,7 @@ export interface User {
   /**
    * Organisation state(s) — fpo / ngo / volunteer.
    * An organisation can operate in multiple Indian states, so this is stored
-   * as a text[] column (PostgreSQL native array).
+   * as an array.
    */
   organizationState: string[] | null;
 

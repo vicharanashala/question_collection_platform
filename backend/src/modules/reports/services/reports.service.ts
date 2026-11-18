@@ -54,10 +54,7 @@ export class ReportsService {
     const oid = new Types.ObjectId(reportId);
     const user = await this.userRepo.findById(userId);
     if(user?.isDeleted) throw new Error("Unable to show user report because it is deleted.")
-    // Same aggregation pattern as getReport() below (with an added userId ownership
-    // match) — a plain .where('a = :x AND b = :y', ...) compound condition isn't one
-    // of the patterns the Mongo query builder's SQL-string translator recognizes, so
-    // it silently produced an unmatchable filter and this always returned null.
+    // Same aggregation pattern as getReport() below, with an added userId ownership match.
     const pipeline: Record<string, unknown>[] = [
       { $match: { _id: oid, userId } },
       { $addFields: { idStr: { $toString: '$_id' } } },

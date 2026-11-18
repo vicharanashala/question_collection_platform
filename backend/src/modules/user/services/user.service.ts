@@ -66,7 +66,7 @@ export class UserService {
   async refreshFromAnveshan(
     userId: string,
   ): Promise<{ user: User; updatedFields: string[] }> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -108,7 +108,7 @@ export class UserService {
     return { user: { ...user, ...updates } as User, updatedFields };
   }
   async getProfile(userId: Types.ObjectId): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    const user = await this.userRepo.findOne({ _id: userId });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -119,7 +119,7 @@ export class UserService {
 
   // True when an Anveshan user has met every milestone goal. Non-Anveshan users are never considered completed.
   async isAnveshanMilestoneCompleted(userId: string): Promise<boolean> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user?.isAnveshanUser) return false;
 
     const [questions, crop, weed, pest, disease, answerableQuestions] =
@@ -227,7 +227,7 @@ export class UserService {
     actorType: ActorType = ActorType.USER,
     actorId?: string,
   ): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    const user = await this.userRepo.findOne({ _id: userId });
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -267,7 +267,7 @@ export class UserService {
     userId: Types.ObjectId,
     dto: UpdateCropDetailsDto,
   ): Promise<string[]> {
-    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    const user = await this.userRepo.findOne({ _id: userId });
     if (!user) {
       throw new NotFoundException("User not found");
     }

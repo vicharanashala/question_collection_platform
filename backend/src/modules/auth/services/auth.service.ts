@@ -155,7 +155,7 @@ export class AuthService {
 
     // Web clients are restricted to registered admin/curator/distributor accounts only
     if (dto.client === "web") {
-      const user = await this.userRepo.findOne({ where: { mobileNumber } });
+      const user = await this.userRepo.findOne({ mobileNumber });
       if (!user) {
         throw new ForbiddenException(
           "This number is not registered on the platform. Please use the mobile app to sign up.",
@@ -486,9 +486,7 @@ export class AuthService {
     user.lastLoginAt = new Date();
     await this.userRepo.save(user);
 
-    const walletExists = await this.walletRepo.count({
-      where: { userId: user._id.toString() },
-    });
+    const walletExists = await this.walletRepo.count({ userId: user._id.toString() });
     if (walletExists === 0) {
       await this.walletRepo.save(
         await this.walletRepo.create({
@@ -511,7 +509,7 @@ export class AuthService {
    */
   async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
     const isDev = isDevelopment();
-    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    const user = await this.userRepo.findOne({ _id: userId });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -531,10 +529,8 @@ export class AuthService {
       "max_users_per_state",
     );
     const stateCount = await this.userRepo.count({
-      where: {
-        state: dto.state,
-        verificationStatus: mongoGte(VerificationStatus.PENDING),
-      },
+      state: dto.state,
+      verificationStatus: mongoGte(VerificationStatus.PENDING),
     });
     if (stateCount >= maxPerState) {
       throw new BadRequestException(
@@ -560,9 +556,7 @@ export class AuthService {
       .toLowerCase()
       .trim()
       .replace(/^@/, "");
-    const usernameTaken = await this.userRepo.findOne({
-      where: { username: normalizedUsername },
-    });
+    const usernameTaken = await this.userRepo.findOne({ username: normalizedUsername });
     if (usernameTaken) {
       const suggestions = await this.suggestUsernames(normalizedUsername, 5);
       throw new BadRequestException(
@@ -628,9 +622,7 @@ export class AuthService {
     await this.userRepo.update(userId, updated);
 
     // Create wallet if it doesn't exist (idempotent — safe to call multiple times)
-    const existingWalletCount = await this.walletRepo.count({
-      where: { userId },
-    });
+    const existingWalletCount = await this.walletRepo.count({ userId });
     if (existingWalletCount === 0) {
       const wallet = await this.walletRepo.create({
         userId,
@@ -652,7 +644,7 @@ export class AuthService {
     //   { category: dto.category, state: dto.state, district: dto.district },
     // );
 
-    const freshUser = await this.userRepo.findOne({ where: { id: userId } });
+    const freshUser = await this.userRepo.findOne({ id: userId });
     const tokens = await this.issueTokens(freshUser!, meta);
     return { tokens, user: this.toPublicUser(freshUser!) };
   }
@@ -714,9 +706,7 @@ export class AuthService {
     await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
 
     // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
-    const user = await this.userRepo.findOne({
-      where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
-    });
+    const user = await this.userRepo.findOne({ id: payload.sub, isDeleted: INCLUDE_DELETED });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -805,7 +795,7 @@ export class AuthService {
     }
     await this.sessionService.validateAccess(payload.sid, payload.sub);
 
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    const user = await this.userRepo.findOne({ id: payload.sub });
     if (!user) throw new UnauthorizedException("User not found");
     return user;
   } catch (err) {
@@ -831,7 +821,7 @@ async logout(userId: string, sid: string): Promise<void> {
   // ─── Profile ─────────────────────────────────────────────────────────────────
 
   async getProfile(userId: string): Promise<PublicUser> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -872,15 +862,12 @@ async logout(userId: string, sid: string): Promise<void> {
       crops?: string[] | null;
     },
   ): Promise<PublicUser> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ id: userId });
     if (!user) throw new UnauthorizedException("User not found");
 
     if (dto.username !== undefined) {
       const username = dto.username.trim().toLowerCase();
-      const existing = await this.userRepo.findOne({
-        where: { username },
-        select: ["id"],
-      });
+      const existing = await this.userRepo.findOne({ username }, undefined, ["id"]);
       if (existing && existing._id.toString() !== user._id.toString())
         throw new BadRequestException("That username is already taken.");
       if (user.username && user.username !== username)
@@ -942,13 +929,13 @@ async logout(userId: string, sid: string): Promise<void> {
   private async findUserByMobileIncludingDeleted(
     mobileNumber: string,
   ): Promise<User | null> {
-    const activeUser = await this.userRepo.findOne({ where: { mobileNumber } });
+    const activeUser = await this.userRepo.findOne({ mobileNumber });
     if (activeUser) return activeUser;
-    return this.userRepo.findOne({ where: { mobileNumber, isDeleted: true } });
+    return this.userRepo.findOne({ mobileNumber, isDeleted: true });
   }
 
   async findUserByMobile(mobileNumber: string): Promise<User | null> {
-    return this.userRepo.findOne({ where: { mobileNumber } });
+    return this.userRepo.findOne({ mobileNumber });
   }
 
   // ─── Username availability ───────────────────────────────────────────────────
@@ -972,10 +959,7 @@ async logout(userId: string, sid: string): Promise<void> {
     }
 
     // Cache miss → check DB (username col is unique, so an exact match means taken)
-    const existing = await this.userRepo.findOne({
-      where: { username: normalized },
-      select: ["_id"],
-    });
+    const existing = await this.userRepo.findOne({ username: normalized }, undefined, ["_id"]);
 
     if (existing) {
       // Populate Redis so subsequent requests are fast
@@ -1001,10 +985,7 @@ async logout(userId: string, sid: string): Promise<void> {
     for (let i = 0; i < maxAttempts && candidates.length < limit; i++) {
       const suffix = Math.floor(Math.random() * 90) + 10; // 10–99
       const candidate = `${normalized}${suffix}`;
-      const exists = await this.userRepo.findOne({
-        where: { username: candidate },
-        select: ["id"],
-      });
+      const exists = await this.userRepo.findOne({ username: candidate }, undefined, ["id"]);
       if (!exists) candidates.push(candidate);
     }
 
@@ -1022,10 +1003,7 @@ async logout(userId: string, sid: string): Promise<void> {
     ];
     for (let i = 0; i < words.length && candidates.length < limit; i++) {
       const candidate = `${normalized}_${words[i]}`;
-      const exists = await this.userRepo.findOne({
-        where: { username: candidate },
-        select: ["id"],
-      });
+      const exists = await this.userRepo.findOne({ username: candidate }, undefined, ["id"]);
       if (!exists && !candidates.includes(candidate))
         candidates.push(candidate);
     }

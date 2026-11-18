@@ -1,8 +1,8 @@
 /**
  * db.module.ts
  *
- * Provides all 13 repository abstractions as NestJS providers.
- * Uses MongoDB/Mongoose exclusively (PostgreSQL support removed).
+ * Provides the repository abstractions as NestJS providers, backed by
+ * MongoDB through Mongoose.
  *
  * Import this module in any feature module that needs database access.
  */

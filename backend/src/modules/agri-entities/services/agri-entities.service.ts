@@ -187,10 +187,10 @@ export class AgriEntitiesService {
   disease: number;
 }> {
   const [crop, weed, pest, disease] = await Promise.all([
-    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.CROP } }),
-    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.WEED } }),
-    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.PEST } }),
-    this.agriEntityRepo.count({ where: { userId, type: AgriEntityType.DISEASE } }),
+    this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+    this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+    this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+    this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
   ]);
 
   return { crop, weed, pest, disease };

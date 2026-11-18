@@ -28,62 +28,6 @@ export class CuratorService {
    * Returns queue counts, submission volume, approval metrics, turnaround,
    * and top crops / states for the last 30 days.
    */
-
-  //   // ── Queue counts (PENDING + HELD, the non-terminal statuses) ─────────────
-  //   // Delegate the aggregation to the repository: the chainable MongoQueryBuilder
-  //   // does not implement groupBy / addSelect, so writing it here would return raw
-  //   // question documents and NaN counts (see MongoQueryBuilder source for details).
-  //   const queueRows = await this.questionRepo.countByStatuses([
-  //     QuestionStatus.PENDING,
-  //     QuestionStatus.HELD,
-  //   ]);
-
-  //   const statusLabels: Record<QuestionStatus, string> = {
-  //     [QuestionStatus.PENDING]: 'Pending',
-  //     [QuestionStatus.HELD]: 'On Hold',
-  //     [QuestionStatus.APPROVED]: 'Approved',
-  //     [QuestionStatus.REJECTED]: 'Rejected',
-  //     [QuestionStatus.MOVED_TO_FINAL]: 'Moved to Final',
-  //   };
-
-  //   const totalQueue = queueBreakdown.reduce((sum, r) => sum + r.count, 0);
-
-  //   // ── Submission volume: today / this week / this month ────────────────────
-  //   const [todayCount, weekCount, monthCount] = await Promise.all([
-  //     this.questionRepo.count({
-  //       where: { submittedAt: mongoRange(startOfToday, now) },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: { submittedAt: mongoRange(startOfWeek, now) },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: { submittedAt: mongoRange(startOfMonth, now) },
-  //     }),
-  //   ]);
-
-  //   const approvalRate = total30 > 0 ? Math.round((approved30 / total30) * 100) : 0;
-
-  //   // ── Aggregations that the chainable MongoQueryBuilder cannot do ──────────
-  //   // These delegate to native Mongoose pipelines so the data actually flows.
-  //   const [avgReviewTurnaroundMinutes, dailyVolume, cropRows, stateRows, domainRows] =
-  //     await Promise.all([
-  //       this.questionRepo.avgReviewTurnaroundMinutesSince(thirtyDaysAgo, [
-  //         QuestionStatus.APPROVED,
-  //         QuestionStatus.REJECTED,
-  //       ]),
-  //       this.questionRepo.dailyVolumeSince(thirtyDaysAgo),
-  //       this.questionRepo.topFieldSince('cropType', thirtyDaysAgo, 8),
-  //       this.questionRepo.topFieldSince('state', thirtyDaysAgo, 10),
-  //       this.questionRepo.topDomainsSince(thirtyDaysAgo, 8),
-  //     ]);
-
-  //   // ── Growth vs prior 30-day period ────────────────────────────────────────
-  //   const growthRate =
-  //     priorTotal > 0
-  //       ? Math.round(((total30 - priorTotal) / priorTotal) * 100)
-  //       : 0;
-  //   const priorApprovalRate = priorTotal > 0 ? Math.round((priorApproved / priorTotal) * 100) : 0;
-
   async getCuratorStats(query: AnalyticsQueryDto) {
   const { fromDate, toDate, state, cropType } = query;
   const to = toDate ? new Date(toDate) : new Date();
@@ -113,28 +57,17 @@ export class CuratorService {
     priorTotal,
     priorApproved,
   ] = await Promise.all([
-    this.questionRepo.count({ where: whereClause }),
-    this.questionRepo.count({
-      where: { ...whereClause, status: QuestionStatus.APPROVED },
-    }),
-    this.questionRepo.count({
-      where: { ...whereClause, status: QuestionStatus.REJECTED },
-    }),
+    this.questionRepo.count(whereClause),
+    this.questionRepo.count({ ...whereClause, status: QuestionStatus.APPROVED }),
+    this.questionRepo.count({ ...whereClause, status: QuestionStatus.REJECTED }),
     // Queue = current backlog, so it is NOT limited by the date range.
-    this.questionRepo.count({
-      where: { ...filter, status: QuestionStatus.PENDING },
-    }),
-    this.questionRepo.count({
-      where: { ...filter, status: QuestionStatus.HELD },
-    }),
-    this.questionRepo.count({ where: priorWhere }),
-    this.questionRepo.count({
-      where: { ...priorWhere, status: QuestionStatus.APPROVED },
-    }),
+    this.questionRepo.count({ ...filter, status: QuestionStatus.PENDING }),
+    this.questionRepo.count({ ...filter, status: QuestionStatus.HELD }),
+    this.questionRepo.count(priorWhere),
+    this.questionRepo.count({ ...priorWhere, status: QuestionStatus.APPROVED }),
   ]);
 
-  // Aggregations the chainable MongoQueryBuilder can't do (no groupBy/addSelect),
-  // so these stay as native Mongoose pipelines in the repository.
+  // Grouped metrics run as native aggregation pipelines in the repository.
   const [avgReviewTurnaroundMinutes, dailyVolumeRaw, cropRows, stateRows, domainRows] =
     await Promise.all([
       this.questionRepo.avgReviewTurnaroundMinutes(from, to, filter, [
@@ -197,32 +130,24 @@ export class CuratorService {
 
     const [approved, rejected, held, pending] = await Promise.all([
       this.questionRepo.count({
-        where: {
-          reviewerId: userId,
-          status: QuestionStatus.APPROVED,
-          reviewedAt: mongoRange(startOfWeek, now),
-        },
+        reviewerId: userId,
+        status: QuestionStatus.APPROVED,
+        reviewedAt: mongoRange(startOfWeek, now),
       }),
       this.questionRepo.count({
-        where: {
-          reviewerId: userId,
-          status: QuestionStatus.REJECTED,
-          reviewedAt: mongoRange(startOfWeek, now),
-        },
+        reviewerId: userId,
+        status: QuestionStatus.REJECTED,
+        reviewedAt: mongoRange(startOfWeek, now),
       }),
       this.questionRepo.count({
-        where: {
-          reviewerId: userId,
-          status: QuestionStatus.HELD,
-          reviewedAt: mongoRange(startOfWeek, now),
-        },
+        reviewerId: userId,
+        status: QuestionStatus.HELD,
+        reviewedAt: mongoRange(startOfWeek, now),
       }),
       // Questions still in queue assigned to / reviewed by this curator
       this.questionRepo.count({
-        where: {
-          reviewerId: userId,
-          status: QuestionStatus.PENDING,
-        },
+        reviewerId: userId,
+        status: QuestionStatus.PENDING,
       }),
     ]);
 

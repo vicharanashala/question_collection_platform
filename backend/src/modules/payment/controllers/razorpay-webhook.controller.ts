@@ -278,7 +278,7 @@ export class RazorpayWebhookController {
     const withdrawalId = referenceId.replace(/^wd_/, '');
     this.logger.debug(`[handlePayoutSuccess] withdrawalId=${withdrawalId}`);
 
-    const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
+    const withdrawal = await this.withdrawalRepo.findOne({ id: withdrawalId });
     if (!withdrawal) {
       this.logger.warn(`[Webhook] Withdrawal not found: ${withdrawalId}`);
       return;
@@ -309,9 +309,7 @@ export class RazorpayWebhookController {
     }
 
     this.logger.debug(`[handlePayoutSuccess] Looking up payment_log for payoutId=${payoutId}`);
-    const existingLog = await this.paymentLogRepo.findOne({
-      where: { razorpayPayoutId: payoutId },
-    });
+    const existingLog = await this.paymentLogRepo.findOne({ razorpayPayoutId: payoutId });
     this.logger.debug(`[handlePayoutSuccess] payment_log exists: ${!!existingLog}`);
 
     if (!existingLog) {
@@ -373,7 +371,7 @@ export class RazorpayWebhookController {
     const withdrawalId = referenceId.replace(/^wd_/, '');
     this.logger.debug(`[handlePayoutFailure] withdrawalId=${withdrawalId}`);
 
-    const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
+    const withdrawal = await this.withdrawalRepo.findOne({ id: withdrawalId });
     if (!withdrawal) {
       this.logger.warn(`[Webhook] Withdrawal not found: ${withdrawalId}`);
       return;
@@ -387,9 +385,7 @@ export class RazorpayWebhookController {
     });
 
     this.logger.debug(`[handlePayoutFailure] Looking up payment_log for payoutId=${payoutId}`);
-    const existingLog = await this.paymentLogRepo.findOne({
-      where: { razorpayPayoutId: payoutId },
-    });
+    const existingLog = await this.paymentLogRepo.findOne({ razorpayPayoutId: payoutId });
     this.logger.debug(`[handlePayoutFailure] payment_log exists: ${!!existingLog}`);
 
     if (!existingLog) {
@@ -456,7 +452,7 @@ export class RazorpayWebhookController {
     const withdrawalId = referenceId.replace(/^wd_/, '');
     this.logger.debug(`[handlePayoutReversed] withdrawalId=${withdrawalId}`);
 
-    const withdrawal = await this.withdrawalRepo.findOne({ where: { id: withdrawalId } });
+    const withdrawal = await this.withdrawalRepo.findOne({ id: withdrawalId });
     if (!withdrawal) {
       this.logger.warn(`[Razorpay Webhook] Withdrawal not found: ${withdrawalId}`);
       return;
@@ -472,9 +468,7 @@ export class RazorpayWebhookController {
 
     // ── Idempotent: find existing log for this payout ─────────────────────────
     this.logger.debug(`[handlePayoutReversed] Looking up payment_log for payoutId=${payoutId}`);
-    let existingLog = await this.paymentLogRepo.findOne({
-      where: { razorpayPayoutId: payoutId },
-    });
+    let existingLog = await this.paymentLogRepo.findOne({ razorpayPayoutId: payoutId });
     this.logger.debug(`[handlePayoutReversed] payment_log exists: ${!!existingLog}`);
 
     // ── Credit the amount back to the user's wallet ───────────────────────────

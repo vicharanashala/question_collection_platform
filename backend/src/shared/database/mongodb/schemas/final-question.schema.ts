@@ -7,8 +7,8 @@ export type FinalQuestionDocument = FinalQuestion & Document;
 /**
  * final_questions â€” the distributed copy of an approved question into a
  * specific Indian state. Created when a Distributor assigns one or more
- * Indian states to an approved question. See final-question.entity.ts for
- * the canonical TypeORM counterpart (kept in sync for documentation purposes).
+ * Indian states to an approved question. final-question.entity.ts mirrors
+ * these fields as a plain TypeScript interface.
  *
  * Snapshot semantics
  * ------------------

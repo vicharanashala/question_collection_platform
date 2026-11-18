@@ -72,7 +72,7 @@ describe('UserService', () => {
       const result = await service.getProfile(userId);
 
       expect(result).toEqual(mockUser);
-      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+      expect(userRepo.findOne).toHaveBeenCalledWith({ id: userId });
     });
 
     it('should throw NotFoundException when user not found', async () => {
