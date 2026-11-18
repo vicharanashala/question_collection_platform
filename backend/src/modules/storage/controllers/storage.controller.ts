@@ -17,7 +17,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../../../shared/middleware/guards/jwt-auth.guard";
 import { StorageService } from "../services/storage.service";
-import { AdminService } from "../../admin/services/admin.service";
+import { AdminConfigService } from "../../admin/services/admin-config.service";
 import { Request, Response } from "express";
 import { Public } from "../../../shared/middleware/decorators/public.decorator";
 import { AgriEntityType } from "../../../shared/classes/enums";
@@ -70,7 +70,7 @@ const AGRI_ENTITY_UPLOAD_OPTIONS = {
 export class StorageController {
   constructor(
     private readonly storageService: StorageService,
-    private readonly adminService: AdminService,
+    private readonly adminConfigService: AdminConfigService,
   ) {}
 
 @Post("upload")

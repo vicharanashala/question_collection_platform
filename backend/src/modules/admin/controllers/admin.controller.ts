@@ -16,6 +16,11 @@ import {
 } from "@nestjs/common";
 import { Response, Request } from "express";
 import { AdminService } from "../services/admin.service";
+import { AdminConfigService } from "../services/admin-config.service";
+import { AdminReviewService } from "../services/admin-review.service";
+import { AdminAnalyticsService } from "../services/admin-analytics.service";
+import { AdminPayoutsService } from "../services/admin-payouts.service";
+import { AdminWalletsService } from "../services/admin-wallets.service";
 import {
   ListUsersDto,
   ListUserStatsDto,
@@ -75,6 +80,11 @@ interface AuthenticatedRequest extends Request {
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
+    private readonly adminConfigService: AdminConfigService,
+    private readonly adminReviewService: AdminReviewService,
+    private readonly adminAnalyticsService: AdminAnalyticsService,
+    private readonly adminPayoutsService: AdminPayoutsService,
+    private readonly adminWalletsService: AdminWalletsService,
     private readonly auditService: AuditService,
     private readonly logger: Logger = new Logger(AdminController.name),
     private readonly userService: UserService,
@@ -437,7 +447,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("review_queue", 60)
   async listReviewQueue(@Query() dto: ListReviewQueueDto) {
-    return this.adminService.listReviewQueue(dto);
+    return this.adminReviewService.listReviewQueue(dto);
   }
 
   /** Question quality and volume metrics — curator read-only */
@@ -445,7 +455,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("question_metrics", 120)
   async getQuestionMetrics(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getQuestionMetrics(dto);
+    return this.adminAnalyticsService.getQuestionMetrics(dto);
   }
 
   @Get("questions/:id")
@@ -453,7 +463,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_question:${args[0]}`, 120)
   async getQuestion(@Param("id") id: string) {
-    return this.adminService.getQuestionForReview(id);
+    return this.adminReviewService.getQuestionForReview(id);
   }
 
   /**
@@ -465,7 +475,7 @@ export class AdminController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   async checkDuplicate(@Param("id") id: string) {
-    return this.adminService.checkDuplicate(id);
+    return this.adminReviewService.checkDuplicate(id);
   }
 
   @Post("questions/:id/review")
@@ -507,7 +517,7 @@ export class AdminController {
 
     let result;
     try {
-      result = await this.adminService.reviewQuestion(
+      result = await this.adminReviewService.reviewQuestion(
         req.user.id,
         id,
         dto,
@@ -642,7 +652,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("config", 300)
   async listConfig() {
-    return this.adminService.listConfig();
+    return this.adminConfigService.listConfig();
   }
 
   @Patch("config")
@@ -668,10 +678,10 @@ export class AdminController {
     let before: unknown = null;
     let result;
     try {
-      const { items } = await this.adminService.listConfig();
+      const { items } = await this.adminConfigService.listConfig();
       before = items.find((c) => c.key === dto.key)?.value ?? null;
 
-      result = await this.adminService.updateConfig(req.user.id, dto);
+      result = await this.adminConfigService.updateConfig(req.user.id, dto);
     } catch (err) {
       await this.safeAudit({
         ...base,
@@ -708,7 +718,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("curator_dashboard", 60)
   async getCuratorDashboard(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getCuratorDashboard(dto);
+    return this.adminAnalyticsService.getCuratorDashboard(dto);
   }
 
   @Get("analytics/dashboard")
@@ -716,7 +726,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("dashboard", 60)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getDashboardStats(dto);
+    return this.adminAnalyticsService.getDashboardStats(dto);
   }
 
   /** Full stats for the admin dashboard */
@@ -725,7 +735,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("admin_stats", 60)
   async getStats(@Query() dto: AnalyticsQueryDto) {
-    const data = await this.adminService.getStats(dto);
+    const data = await this.adminAnalyticsService.getStats(dto);
     return data;
   }
 
@@ -734,7 +744,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("reward_summary", 120)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getRewardSummary(dto);
+    return this.adminAnalyticsService.getRewardSummary(dto);
   }
 
   @Get("analytics/reward-logs")
@@ -742,7 +752,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("reward_logs", 60)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.listRewardLogs(dto);
+    return this.adminPayoutsService.listRewardLogs(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -756,7 +766,7 @@ export class AdminController {
   async getFraudStats(
     @Query() dto: { page?: number; limit?: number; state?: string },
   ) {
-    return this.adminService.getFraudStats(dto);
+    return this.adminAnalyticsService.getFraudStats(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -769,7 +779,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("admin_wallets", 60)
   async listAllWallets(@Query() dto: ListAllWalletsDto) {
-    return this.adminService.listAllWallets(dto);
+    return this.adminWalletsService.listAllWallets(dto);
   }
 
   /** Wallet count and money totals across every wallet matching the filters, for the summary cards */
@@ -778,7 +788,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("admin_wallets_summary", 60)
   async getWalletsSummary(@Query() dto: WalletScopeDto) {
-    return this.adminService.getWalletsSummary(dto);
+    return this.adminWalletsService.getWalletsSummary(dto);
   }
 
   /** Get a single user's wallet + user details */
@@ -787,7 +797,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_wallet:${args[0]}`, 60)
   async getUserWallet(@Param("userId") userId: string) {
-    return this.adminService.getUserWallet(userId);
+    return this.adminWalletsService.getUserWallet(userId);
   }
 
   /** Full transaction history for a specific user */
@@ -799,7 +809,7 @@ export class AdminController {
     @Param("userId") userId: string,
     @Query() dto: ListUserTransactionsDto,
   ) {
-    return this.adminService.listUserTransactions(userId, dto);
+    return this.adminWalletsService.listUserTransactions(userId, dto);
   }
 
   /** Withdrawal history for a specific user */
@@ -811,7 +821,7 @@ export class AdminController {
     @Param("userId") userId: string,
     @Query() dto: ListUserWithdrawalsDto,
   ) {
-    return this.adminService.listUserWithdrawals(userId, dto);
+    return this.adminWalletsService.listUserWithdrawals(userId, dto);
   }
 
   /** Super admin: manually credit or debit a user's wallet */
@@ -829,7 +839,7 @@ export class AdminController {
       req,
       meta,
       { userId: dto.userId, amount: dto.amount, reason: dto.reason },
-      () => this.adminService.adjustWalletBalance(req.user.id, dto),
+      () => this.adminWalletsService.adjustWalletBalance(req.user.id, dto),
     );
   }
 
@@ -839,7 +849,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("financial_summary", 60)
   async getFinancialSummary(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getFinancialSummary(dto);
+    return this.adminAnalyticsService.getFinancialSummary(dto);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -851,7 +861,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable("withdrawals_list", 60)
   async listWithdrawals(@Query() dto: ListWithdrawalsDto) {
-    return this.adminService.listWithdrawals(dto);
+    return this.adminPayoutsService.listWithdrawals(dto);
   }
 
   @Get("withdrawals/:id")
@@ -859,7 +869,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_withdrawal:${args[0]}`, 60)
   async getWithdrawalWithTransactions(@Param("id") id: string) {
-    return this.adminService.getWithdrawalWithTransactions(id);
+    return this.adminWalletsService.getWithdrawalWithTransactions(id);
   }
 
   @Post("withdrawals/:id/process")
@@ -882,7 +892,7 @@ export class AdminController {
         rejectionReason: dto.rejectionReason,
       },
       () =>
-        this.adminService.processWithdrawal(
+        this.adminPayoutsService.processWithdrawal(
           req.user.id,
           id,
           dto,
@@ -906,7 +916,7 @@ export class AdminController {
       req,
       meta,
       { withdrawalId: id },
-      () => this.adminService.retryWithdrawal(req.user.id, id),
+      () => this.adminPayoutsService.retryWithdrawal(req.user.id, id),
     );
   }
 
@@ -929,7 +939,7 @@ export class AdminController {
       req,
       meta,
       { withdrawalId: id },
-      () => this.adminService.retryFailedWithdrawal(req.user.id, id),
+      () => this.adminPayoutsService.retryFailedWithdrawal(req.user.id, id),
     );
   }
 
@@ -949,7 +959,7 @@ export class AdminController {
       req,
       meta,
       { withdrawalId: id, reason: dto.reason },
-      () => this.adminService.markWithdrawalFailed(req.user.id, id, dto.reason),
+      () => this.adminPayoutsService.markWithdrawalFailed(req.user.id, id, dto.reason),
     );
   }
 
@@ -970,7 +980,7 @@ export class AdminController {
       meta,
       { withdrawalId: id, reason: dto.reason },
       () =>
-        this.adminService.updateWithdrawalFailureReason(
+        this.adminPayoutsService.updateWithdrawalFailureReason(
           req.user.id,
           id,
           dto.reason,

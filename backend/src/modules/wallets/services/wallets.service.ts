@@ -14,7 +14,7 @@ import {
   WithdrawalStatus,
   PayoutMethod,
 } from '../../../shared/classes/enums';
-import { AdminService } from '../../admin/services/admin.service';
+import { AdminConfigService } from '../../admin/services/admin-config.service';
 import { PinelabsService } from '../../payment/services/pinelabs.service';
 import { RazorpayPayoutService } from '../../payment/services/razorpay-payout.service';
 import { WithdrawDto } from '../dto';
@@ -60,8 +60,8 @@ export class WalletsService {
     private readonly paymentDetailRepo: IUserPaymentDetailRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
-    @Inject(forwardRef(() => AdminService))
-    private readonly adminService: AdminService,
+    @Inject(forwardRef(() => AdminConfigService))
+    private readonly adminConfigService: AdminConfigService,
     private readonly pinelabsService: PinelabsService,
     private readonly razorpayPayoutService: RazorpayPayoutService,
     private readonly configService: ConfigService,
@@ -74,7 +74,7 @@ export class WalletsService {
    * available so users can still see their balance and saved accounts.
    */
   private async assertWithdrawalsEnabled(): Promise<void> {
-    const enabled = await this.adminService.getConfigValue(
+    const enabled = await this.adminConfigService.getConfigValue(
       'payment_withdrawal_enabled',
     );
     if (!enabled) {
@@ -91,7 +91,7 @@ export class WalletsService {
    * are still off, e.g. to let users verify a payout method ahead of time.
    */
   private async assertPaymentVerificationEnabled(): Promise<void> {
-    const enabled = await this.adminService.getConfigValue(
+    const enabled = await this.adminConfigService.getConfigValue(
       'payment_verification_enabled',
     );
     if (!enabled) {
@@ -169,7 +169,7 @@ export class WalletsService {
     minWithdrawalAmount: number;
     razorpayKeyId: string;
   }> {
-    const minWithdrawalAmount = await this.adminService.getConfigValue('min_withdrawal_amount');
+    const minWithdrawalAmount = await this.adminConfigService.getConfigValue('min_withdrawal_amount');
     const razorpayKeyId = this.configService.get<string>('payment.razorpay.apiKey') ?? '';
     return { minWithdrawalAmount, razorpayKeyId };
   }
@@ -247,7 +247,7 @@ export class WalletsService {
 
     const [wallet, minAmount] = await Promise.all([
       this.walletRepo.findOne({ userId }),
-      this.adminService.getConfigValue('min_withdrawal_amount'),
+      this.adminConfigService.getConfigValue('min_withdrawal_amount'),
     ]);
 
     if (!wallet) throw new NotFoundException('Wallet not found');

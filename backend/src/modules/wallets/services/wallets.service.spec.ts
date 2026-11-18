@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
-import { AdminService } from '../../admin/services/admin.service';
+import { AdminConfigService } from '../../admin/services/admin-config.service';
 import { PinelabsService } from '../../payment/services/pinelabs.service';
 import { Wallet, Transaction, WithdrawalRequest } from '../../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
@@ -78,7 +78,7 @@ describe('WalletsService', () => {
         { provide: REPOSITORY_TOKENS.Transaction, useFactory: mockTransactionRepo },
         { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: mockWithdrawalRepo },
         { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: mockPaymentDetailRepo },
-        { provide: AdminService, useFactory: mockAdminService },
+        { provide: AdminConfigService, useFactory: mockAdminService },
         { provide: PinelabsService, useFactory: mockPinelabsService },
       ],
     }).compile();

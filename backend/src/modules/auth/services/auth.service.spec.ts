@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { SmsService } from './sms.service';
 import { RedisService } from '../../../shared/database/cache/redis.service';
 import { RateLimitCounterService } from '../../../shared/database/cache/rate-limit-counter.service';
-import { AdminService } from '../../admin/services/admin.service';
+import { AdminConfigService } from '../../admin/services/admin-config.service';
 // import { User, Wallet, AuditLog } from '../../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
 import {
@@ -130,7 +130,7 @@ describe('AuthService', () => {
           provide: RateLimitCounterService,
           useFactory: mockRateLimitCounterService,
         },
-        { provide: AdminService, useFactory: mockAdminService },
+        { provide: AdminConfigService, useFactory: mockAdminService },
       ],
     }).compile();
 

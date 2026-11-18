@@ -7,7 +7,7 @@ import { SarvamService } from '../speech/services/sarvam.service';
 @Module({
   imports: [
     DbModule,
-    forwardRef(() => AdminModule), // for AdminService.getConfigValue()
+    forwardRef(() => AdminModule), // for AdminConfigService.getConfigValue()
   ],
   providers: [GdbService, SarvamService],
   exports: [GdbService],

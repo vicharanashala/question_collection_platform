@@ -1,19 +1,19 @@
 import { Test } from '@nestjs/testing';
-import { AdminService } from './admin.service';
+import { AdminWalletsService } from './admin-wallets.service';
 import { REPOSITORY_TOKENS } from '../../../shared/database/repositories';
 
-describe('AdminService wallet listing and summary', () => {
-  let service: AdminService;
+describe('AdminWalletsService wallet listing and summary', () => {
+  let service: AdminWalletsService;
   let walletRepo: { findAdminPage: jest.Mock; getAdminTotals: jest.Mock };
 
   beforeEach(async () => {
     walletRepo = { findAdminPage: jest.fn(), getAdminTotals: jest.fn() };
     const module = await Test.createTestingModule({
-      providers: [AdminService, { provide: REPOSITORY_TOKENS.Wallet, useValue: walletRepo }],
+      providers: [AdminWalletsService, { provide: REPOSITORY_TOKENS.Wallet, useValue: walletRepo }],
     })
       .useMocker(() => ({}))
       .compile();
-    service = module.get(AdminService);
+    service = module.get(AdminWalletsService);
   });
 
   describe('listAllWallets()', () => {

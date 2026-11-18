@@ -6,6 +6,9 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { AdminConfigService } from './admin-config.service';
+import { AdminReviewService } from './admin-review.service';
+import { AdminAnalyticsService } from './admin-analytics.service';
 import { ConfigService } from '@nestjs/config';
 import { WalletsService } from '../../wallets/services/wallets.service';
 import { PinelabsService } from '../../payment/services/pinelabs.service';
@@ -176,6 +179,9 @@ const mockConfig = {
 
 describe('AdminService', () => {
   let service: AdminService;
+  let adminConfigService: AdminConfigService;
+  let adminReviewService: AdminReviewService;
+  let adminAnalyticsService: AdminAnalyticsService;
   let userRepo: ReturnType<typeof mockUserRepo>;
   let questionRepo: ReturnType<typeof mockQuestionRepo>;
   let withdrawalRepo: ReturnType<typeof mockWithdrawalRepo>;
@@ -193,6 +199,9 @@ describe('AdminService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdminService,
+        AdminConfigService,
+        AdminReviewService,
+        AdminAnalyticsService,
         { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
         { provide: REPOSITORY_TOKENS.Question, useFactory: mockQuestionRepo },
         { provide: REPOSITORY_TOKENS.Wallet, useFactory: mockWalletRepo },
@@ -220,6 +229,9 @@ describe('AdminService', () => {
     }).compile();
 
     service = module.get<AdminService>(AdminService);
+    adminConfigService = module.get<AdminConfigService>(AdminConfigService);
+    adminReviewService = module.get<AdminReviewService>(AdminReviewService);
+    adminAnalyticsService = module.get<AdminAnalyticsService>(AdminAnalyticsService);
     userRepo = module.get(REPOSITORY_TOKENS.User);
     questionRepo = module.get(REPOSITORY_TOKENS.Question);
     withdrawalRepo = module.get(REPOSITORY_TOKENS.WithdrawalRequest);
@@ -558,8 +570,8 @@ describe('AdminService', () => {
     it('should return cached value when available', async () => {
       configRepo.find.mockResolvedValue([{ key: 'daily_question_limit', value: 20 }]);
 
-      const val1 = await service.getConfigValue('daily_question_limit');
-      const val2 = await service.getConfigValue('daily_question_limit');
+      const val1 = await adminConfigService.getConfigValue('daily_question_limit');
+      const val2 = await adminConfigService.getConfigValue('daily_question_limit');
 
       expect(val1).toBe(20);
       expect(val2).toBe(20);
@@ -573,7 +585,7 @@ describe('AdminService', () => {
 
       // Trigger cache miss by making expiry old â€” access private via any
       await (service as unknown as { configCacheExpiry: number }).configCacheExpiry; // no-op, just ensure init ran
-      const val = await service.getConfigValue('min_withdrawal_amount');
+      const val = await adminConfigService.getConfigValue('min_withdrawal_amount');
 
       expect(val).toBe(50); // default from DEFAULT_CONFIG
     });
@@ -586,7 +598,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue({ ...mockConfig });
       configRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.updateConfig(mockAdminUser.id, {
+      const result = await adminConfigService.updateConfig(mockAdminUser.id, {
         key: 'daily_question_limit',
         value: 30,
       });
@@ -600,7 +612,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.updateConfig(mockAdminUser.id, { key: 'nonexistent_key', value: 100 }),
+        adminConfigService.updateConfig(mockAdminUser.id, { key: 'nonexistent_key', value: 100 }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -612,7 +624,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue(null);
       configRepo.save.mockImplementation((c) => Promise.resolve({ id: 'c-new', ...c }));
 
-      const result = await service.createConfig(mockAdminUser.id, {
+      const result = await adminConfigService.createConfig(mockAdminUser.id, {
         key: 'new_config_key',
         value: 42,
         description: 'A new config',
@@ -626,7 +638,7 @@ describe('AdminService', () => {
       configRepo.findOne.mockResolvedValue(mockConfig);
 
       await expect(
-        service.createConfig(mockAdminUser.id, {
+        adminConfigService.createConfig(mockAdminUser.id, {
           key: 'daily_question_limit',
           value: 30,
           description: 'Changed',
@@ -644,7 +656,7 @@ describe('AdminService', () => {
       questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.reviewQuestion(
+      const result = await adminReviewService.reviewQuestion(
         mockAdminUser.id,
         'q-1',
         reviewDto,
@@ -663,7 +675,7 @@ describe('AdminService', () => {
       questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.reviewQuestion(
+      const result = await adminReviewService.reviewQuestion(
         mockAdminUser.id,
         'q-1',
         { action: 'reject', reason: 'Off-topic' },
@@ -681,7 +693,7 @@ describe('AdminService', () => {
       questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.PENDING });
       questionRepo.update.mockResolvedValue(undefined);
 
-      const result = await service.reviewQuestion(
+      const result = await adminReviewService.reviewQuestion(
         mockCuratorUser.id,
         'q-1',
         { action: 'request_info' },
@@ -698,7 +710,7 @@ describe('AdminService', () => {
       questionRepo.findOne.mockResolvedValue(null);
 
       await expect(
-        service.reviewQuestion(mockAdminUser.id, 'nonexistent', reviewDto),
+        adminReviewService.reviewQuestion(mockAdminUser.id, 'nonexistent', reviewDto),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -706,7 +718,7 @@ describe('AdminService', () => {
       questionRepo.findOne.mockResolvedValue({ ...mockQuestion, status: QuestionStatus.APPROVED });
 
       await expect(
-        service.reviewQuestion(mockAdminUser.id, 'q-1', reviewDto),
+        adminReviewService.reviewQuestion(mockAdminUser.id, 'q-1', reviewDto),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -718,7 +730,7 @@ describe('AdminService', () => {
       const qb = mockQueryBuilder([{ ...mockQuestion, user: { id: 'user-1', name: 'Ramesh', mobileNumber: '9876' } }]);
       questionRepo.createQueryBuilder.mockReturnValue(qb);
 
-      const result = await service.listReviewQueue({ page: 1, limit: 20 });
+      const result = await adminReviewService.listReviewQueue({ page: 1, limit: 20 });
 
       expect(result.items[0]).toHaveProperty('user');
       expect(result.total).toBe(1);
@@ -728,7 +740,7 @@ describe('AdminService', () => {
       const qb = mockQueryBuilder([]);
       questionRepo.createQueryBuilder.mockReturnValue(qb);
 
-      await service.listReviewQueue({ state: 'Maharashtra' });
+      await adminReviewService.listReviewQueue({ state: 'Maharashtra' });
 
       expect(qb.andWhere).toHaveBeenCalled();
     });
@@ -737,7 +749,7 @@ describe('AdminService', () => {
       const qb = mockQueryBuilder([]);
       questionRepo.createQueryBuilder.mockReturnValue(qb);
 
-      await service.listReviewQueue({});
+      await adminReviewService.listReviewQueue({});
 
       expect(qb.andWhere).toHaveBeenCalled();
     });
@@ -752,7 +764,7 @@ describe('AdminService', () => {
         user: { id: 'user-1', name: 'Ramesh', mobileNumber: '9876543210', state: 'Maharashtra' },
       });
 
-      const result = await service.getQuestionForReview('q-1');
+      const result = await adminReviewService.getQuestionForReview('q-1');
 
       expect(result.user).toHaveProperty('mobileNumber', '9876543210');
       expect(result.user).not.toHaveProperty('passwordHash');
@@ -761,7 +773,7 @@ describe('AdminService', () => {
     it('should throw NotFoundException when question not found', async () => {
       questionRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.getQuestionForReview('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(adminReviewService.getQuestionForReview('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -781,7 +793,7 @@ describe('AdminService', () => {
       questionRepo.dailyVolumeSince.mockResolvedValue([]);
       userRepo.getCategoryDistribution.mockResolvedValue([]);
 
-      const result = await service.getDashboardStats({});
+      const result = await adminAnalyticsService.getDashboardStats({});
 
       expect(result.summary).toMatchObject({
         totalQuestions: 100,

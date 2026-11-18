@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuestionService } from './question.service';
 import { UserService } from '../../user/services/user.service';
-import { AdminService } from '../../admin/services/admin.service';
+import { AdminConfigService } from '../../admin/services/admin-config.service';
 import { StorageService } from '../../storage/services/storage.service';
 import { GemmaService } from '../../ai/services/gemma.service';
 import { GdbService } from '../../ai/services/gdb.service';
@@ -101,7 +101,7 @@ describe('QuestionService', () => {
         { provide: REPOSITORY_TOKENS.Question, useFactory: mockQuestionRepo },
         { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
         { provide: REPOSITORY_TOKENS.Notification, useFactory: mockNotificationRepo },
-        { provide: AdminService, useFactory: mockAdminService },
+        { provide: AdminConfigService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
         { provide: StorageService, useFactory: mockStorageService },
         { provide: GemmaService, useFactory: mockGemmaService },

@@ -2,6 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { AdminController } from './admin.controller';
 import { AdminService } from '../services/admin.service';
+import { AdminConfigService } from '../services/admin-config.service';
+import { AdminReviewService } from '../services/admin-review.service';
+import { AdminAnalyticsService } from '../services/admin-analytics.service';
+import { AdminPayoutsService } from '../services/admin-payouts.service';
+import { AdminWalletsService } from '../services/admin-wallets.service';
 import { JwtAuthGuard } from '../../../shared/middleware/guards/jwt-auth.guard';
 import { Logger } from '@nestjs/common';
 import { AuditService } from '../../audit-logs/services/audit.service';
@@ -69,6 +74,11 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
       controllers: [AdminController],
       providers: [
         { provide: AdminService, useFactory: mockAdminService },
+        { provide: AdminConfigService, useExisting: AdminService },
+        { provide: AdminReviewService, useExisting: AdminService },
+        { provide: AdminAnalyticsService, useExisting: AdminService },
+        { provide: AdminPayoutsService, useExisting: AdminService },
+        { provide: AdminWalletsService, useExisting: AdminService },
         { provide: Logger, useValue: { error: jest.fn() } },
         { provide: AuditService, useValue: { createAuditLog: jest.fn() } },
         { provide: UserService, useValue: { getProfile: jest.fn().mockResolvedValue({ verificationStatus: 'suspended' }) } },

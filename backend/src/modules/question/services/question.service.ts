@@ -16,7 +16,7 @@ import { AttachQuestionAudioDto } from '../dto/attach-question-audio.dto';
 import { ListQuestionsDto } from '../dto/list-questions.dto';
 import { DOMAINS } from '../constants/domains';
 import { UserService } from '../../user/services/user.service';
-import { AdminService } from '../../admin/services/admin.service';
+import { AdminConfigService } from '../../admin/services/admin-config.service';
 import { StorageService } from '../../storage/services/storage.service';
 import { GemmaService } from '../../ai/services/gemma.service';
 import { GdbService, QuestionRejection } from '../../ai/services/gdb.service';
@@ -46,7 +46,7 @@ export class QuestionService {
     private readonly notifRepo: INotificationRepository,
     @Inject(REPOSITORY_TOKENS.User)
     private readonly userRepo: IUserRepository,
-    private readonly adminService: AdminService,
+    private readonly adminConfigService: AdminConfigService,
     private readonly userService: UserService,
     private readonly storageService: StorageService,
     private readonly gemmaService: GemmaService,
@@ -214,7 +214,7 @@ export class QuestionService {
 
     // 1. Enforce daily_question_limit
     if (!user.isAnveshanUser) {
-      const dailyLimit = await this.adminService.getConfigValue('daily_question_limit');
+      const dailyLimit = await this.adminConfigService.getConfigValue('daily_question_limit');
       await this.checkDailyLimit(userId, dailyLimit);
     }
     // 2. Validate image submission: when mediaType is 'image' exactly 1 URL is required
@@ -559,10 +559,10 @@ export class QuestionService {
 
   async getLimits() {
     const [dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars] = await Promise.all([
-      this.adminService.getConfigValue('daily_question_limit'),
-      this.adminService.getConfigValue('video_max_size_mb'),
-      this.adminService.getConfigValue('video_max_duration_seconds'),
-      this.adminService.getConfigValue('max_question_chars'),
+      this.adminConfigService.getConfigValue('daily_question_limit'),
+      this.adminConfigService.getConfigValue('video_max_size_mb'),
+      this.adminConfigService.getConfigValue('video_max_duration_seconds'),
+      this.adminConfigService.getConfigValue('max_question_chars'),
     ]);
     return { dailyLimit, videoMaxSizeMb, videoMaxDurationSec, maxQuestionChars };
   }
@@ -628,7 +628,7 @@ export class QuestionService {
 
     // 7. Daily-limit counters
     const [dailyLimit, dailyCount] = await Promise.all([
-      this.adminService.getConfigValue('daily_question_limit'),
+      this.adminConfigService.getConfigValue('daily_question_limit'),
       this.getDailyCount(userId),
     ]);
 

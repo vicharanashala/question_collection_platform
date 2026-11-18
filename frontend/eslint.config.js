@@ -17,7 +17,7 @@ const customPlugin = {
 }
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'dist/', 'vite.config.ts'] },
+  { ignores: ['node_modules/', 'dist/', 'coverage/', 'vite.config.ts', 'vitest.config.ts'] },
 
   // Base JS recommended
   js.configs.recommended,
@@ -74,7 +74,7 @@ export default tseslint.config(
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.app.json',
+        project: ['./tsconfig.app.json', './tests/tsconfig.json'],
         tsconfigRootDir: rootDir,
         excludeFiles: ['vite.config.ts'],
       },

@@ -6,7 +6,7 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import { INestApplication } from '@nestjs/common';
-import { AdminService } from '../../../modules/admin/services/admin.service';
+import { AdminConfigService } from '../../../modules/admin/services/admin-config.service';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -18,7 +18,7 @@ declare global {
  * `max_question_chars` value stored in the admin_config table.
  *
  * class-validator instantiates this outside NestJS's DI container,
- * so we resolve AdminService via app.get() inside validate().
+ * so we resolve AdminConfigService via app.get() inside validate().
  */
 @ValidatorConstraint({ name: 'maxQuestionChars', async: true })
 export class MaxQuestionCharsConstraint implements ValidatorConstraintInterface {
@@ -27,8 +27,8 @@ export class MaxQuestionCharsConstraint implements ValidatorConstraintInterface 
     try {
       const app = globalThis.nestApp;
       if (!app) return text.length <= 1000; // fallback
-      const adminService = app.get(AdminService, { strict: false });
-      const maxChars = await adminService.getConfigValue('max_question_chars');
+      const adminConfigService = app.get(AdminConfigService, { strict: false });
+      const maxChars = await adminConfigService.getConfigValue('max_question_chars');
       return text.length <= maxChars;
     } catch {
       return text.length <= 1000;

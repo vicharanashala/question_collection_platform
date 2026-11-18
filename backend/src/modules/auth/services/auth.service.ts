@@ -28,7 +28,7 @@ import { RequestOtpDto, VerifyOtpDto, RegisterDto } from "../dto";
 import { SmsService } from "./sms.service";
 import { RedisService } from "../../../shared/database/cache/redis.service";
 import { RateLimitCounterService } from "../../../shared/database/cache/rate-limit-counter.service";
-import { AdminService } from "../../admin/services/admin.service";
+import { AdminConfigService } from "../../admin/services/admin-config.service";
 import { AnveshanProgressService } from "../../admin/services/anveshan-progress.service";
 import { usernameKey } from "../../../shared/database/cache/cache.keys";
 import { INCLUDE_DELETED } from "../../../shared/database/abstractions/mongo-utils";
@@ -125,7 +125,7 @@ export class AuthService {
     private readonly smsService: SmsService,
     private readonly redisService: RedisService,
     private readonly rateLimitCounter: RateLimitCounterService,
-    private readonly adminService: AdminService,
+    private readonly adminConfigService: AdminConfigService,
     private readonly anveshanProgressService: AnveshanProgressService,
     private readonly sessionService: SessionService
   ) {}
@@ -525,7 +525,7 @@ export class AuthService {
     }
 
     // Enforce max_users_per_state from system config
-    const maxPerState = await this.adminService.getConfigValue(
+    const maxPerState = await this.adminConfigService.getConfigValue(
       "max_users_per_state",
     );
     const stateCount = await this.userRepo.count({

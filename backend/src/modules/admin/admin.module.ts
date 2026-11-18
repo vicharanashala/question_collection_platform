@@ -2,6 +2,11 @@ import { Logger, Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './controllers/admin.controller';
 import { AdminService } from './services/admin.service';
+import { AdminConfigService } from './services/admin-config.service';
+import { AdminReviewService } from './services/admin-review.service';
+import { AdminAnalyticsService } from './services/admin-analytics.service';
+import { AdminPayoutsService } from './services/admin-payouts.service';
+import { AdminWalletsService } from './services/admin-wallets.service';
 import { AnveshanProgressService } from './services/anveshan-progress.service';
 import { AnveshanUserDetailController } from './controllers/anveshan-user-detail.controller';
 import { AnveshanUserDetailService } from './services/anveshan-user-detail.service';
@@ -33,6 +38,11 @@ import { SessionModule } from '../session/session.module';
   ],
   providers: [
     AdminService,
+    AdminConfigService,
+    AdminReviewService,
+    AdminAnalyticsService,
+    AdminPayoutsService,
+    AdminWalletsService,
     CuratorService,
     AnveshanProgressService,
     AnveshanUserDetailService,
@@ -40,7 +50,7 @@ import { SessionModule } from '../session/session.module';
     Logger,
     UserService,
   ],
-  exports: [AdminService, AnveshanProgressService],
+  exports: [AdminService, AdminConfigService, AnveshanProgressService],
 })
 export class AdminModule {}
 

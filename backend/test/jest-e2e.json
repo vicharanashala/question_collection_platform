@@ -1,0 +1,20 @@
+{
+  "displayName": "e2e",
+  "rootDir": "..",
+  "roots": ["<rootDir>/test/e2e"],
+  "testRegex": ".*\\.e2e-spec\\.ts$",
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "<rootDir>/test/tsconfig.json" }]
+  },
+  "moduleNameMapper": {
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "setupFiles": ["<rootDir>/test/setup-env.ts"],
+  "setupFilesAfterEnv": ["<rootDir>/test/setup-after-env.ts"],
+  "testEnvironment": "node",
+  "clearMocks": true,
+  "restoreMocks": true,
+  "coverageDirectory": "<rootDir>/coverage/e2e",
+  "coverageReporters": ["text-summary", "lcov"]
+}

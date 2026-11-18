@@ -8,7 +8,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { AdminService } from '../services/admin.service';
+import { AdminAnalyticsService } from '../services/admin-analytics.service';
 import { AnalyticsQueryDto, ExportQueryDto } from '../dto';
 import { JwtAuthGuard } from '../../../shared/middleware/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../shared/middleware/guards/roles.guard';
@@ -26,7 +26,7 @@ import { UserRole } from '../../../shared/classes/enums';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class AnalyticsController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminAnalyticsService: AdminAnalyticsService) {}
 
   /**
    * All dashboard stats + chart data in one call.
@@ -35,7 +35,7 @@ export class AnalyticsController {
   @Get('dashboard')
   @HttpCode(HttpStatus.OK)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
-    const dashboardData =  await this.adminService.getAnalyticsDashboard(dto);
+    const dashboardData =  await this.adminAnalyticsService.getAnalyticsDashboard(dto);
     return dashboardData;
   }
 
@@ -46,7 +46,7 @@ export class AnalyticsController {
   @Get('users')
   @HttpCode(HttpStatus.OK)
   async getUserAnalytics(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getUserAnalytics(dto);
+    return this.adminAnalyticsService.getUserAnalytics(dto);
   }
 
   /**
@@ -56,7 +56,7 @@ export class AnalyticsController {
   @Get('questions')
   @HttpCode(HttpStatus.OK)
   async getQuestionAnalytics(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getQuestionAnalytics(dto);
+    return this.adminAnalyticsService.getQuestionAnalytics(dto);
   }
 
   /**
@@ -69,7 +69,7 @@ export class AnalyticsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)
   async getRewardAnalytics(@Query() dto: AnalyticsQueryDto) {
-    return this.adminService.getRewardAnalytics(dto);
+    return this.adminAnalyticsService.getRewardAnalytics(dto);
   }
 }
 
@@ -82,13 +82,13 @@ export class AnalyticsController {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class ExportController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminAnalyticsService: AdminAnalyticsService) {}
 
   @Get('csv')
   @HttpCode(HttpStatus.OK)
   async exportCSV(@Query() dto: ExportQueryDto, @Res() res: Response) {
     dto.format = 'csv';
-    const result = await this.adminService.exportData(dto);
+    const result = await this.adminAnalyticsService.exportData(dto);
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader(
       'Content-Disposition',
@@ -101,7 +101,7 @@ export class ExportController {
   @HttpCode(HttpStatus.OK)
   async exportExcel(@Query() dto: ExportQueryDto, @Res() res: Response) {
     dto.format = 'excel';
-    const result = await this.adminService.exportData(dto);
+    const result = await this.adminAnalyticsService.exportData(dto);
     // json2xls returns a binary string; sending it as text would corrupt the file
     const xls = (result as { xls: string | Buffer }).xls;
     res.setHeader(
