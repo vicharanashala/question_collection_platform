@@ -14,6 +14,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import axios from "axios";
 import { randomInt, randomUUID } from "crypto";
 import * as bcrypt from "bcryptjs";
 // import { User, Wallet, AuditLog } from "../../../shared/database/entities";
@@ -1064,4 +1065,17 @@ async logout(userId: string, sid: string): Promise<void> {
     };
   }
 
+  // Fetches the crop list from the review system for the crop pickers.
+  async getCrops(): Promise<unknown> {
+    try {
+      const response = await axios.get(`${process.env.REVIEWER_URI}/crops/get-all-crops-client`, {
+        headers: { "x-internal-api-key": process.env.REVIEW_SYSTEM_AUTH_KEY },
+      });
+      return response.data;
+    } catch (err) {
+      this.logger.error("Failed to fetch crops from the review system", err instanceof Error ? err.stack : String(err));
+      // Surface upstream failures instead of replying 200 with an empty body.
+      throw new BadGatewayException("Unable to fetch crops");
+    }
+  }
 }

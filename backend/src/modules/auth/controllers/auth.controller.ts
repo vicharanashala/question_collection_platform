@@ -11,7 +11,6 @@ import {
   Req,
   UnauthorizedException,
   BadRequestException,
-  BadGatewayException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse } from '../services/auth.service';
@@ -19,7 +18,6 @@ import { RequestOtpDto, VerifyOtpDto, RegisterDto, UpdateMeDto } from '../dto';
 import { Public } from '../../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
-import axios from "axios";
 import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
 import { RegistrationAuthGuard } from '@/shared/middleware/guards/registration-auth.guard';
 
@@ -164,21 +162,8 @@ async logout(@Req() req: AuthenticatedRequest) {
   @Public()
   @Get('get-crops')
   @HttpCode(HttpStatus.OK)
-  async getCrops(){
-    try{
-          const resposne = await axios.get(`${process.env.REVIEWER_URI}/crops/get-all-crops-client`, 
-      {
-        headers:{
-          'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
-        },
-      }
-    )
-    return resposne.data
-    }catch(err){
-      console.error("Something went wrong", err);
-      // Surface upstream failures instead of replying 200 with an empty body.
-      throw new BadGatewayException('Unable to fetch crops');
-    }
+  async getCrops() {
+    return this.authService.getCrops();
   }
 }
 
