@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Between } from 'typeorm';
 import { QuestionStatus } from '../../../shared/classes/enums';
+import { mongoRange } from '../../../shared/database/abstractions/mongo-utils';
 import {
   DailyVolumeRow,
   IQuestionRepository,
@@ -28,20 +28,6 @@ export class CuratorService {
    * Returns queue counts, submission volume, approval metrics, turnaround,
    * and top crops / states for the last 30 days.
    */
-  // async getCuratorStats() {
-  //   const now = new Date();
-  //   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  //   const startOfWeek = new Date(startOfToday);
-  //   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
-  //   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  //   const thirtyDaysAgo = new Date(startOfToday);
-  //   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-
-  //   // Prior 30-day window for growth / approval-rate comparison.
-  //   const sixtyDaysAgo = new Date(thirtyDaysAgo);
-  //   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 1);
-  //   const priorStart = new Date(sixtyDaysAgo);
-  //   priorStart.setDate(priorStart.getDate() - 30);
 
   //   // ── Queue counts (PENDING + HELD, the non-terminal statuses) ─────────────
   //   // Delegate the aggregation to the repository: the chainable MongoQueryBuilder
@@ -60,52 +46,18 @@ export class CuratorService {
   //     [QuestionStatus.MOVED_TO_FINAL]: 'Moved to Final',
   //   };
 
-  //   const queueBreakdown: QueueStatusCount[] = queueRows.map((r) => ({
-  //     status: r.status,
-  //     label: statusLabels[r.status] ?? r.status,
-  //     count: r.count,
-  //   }));
-
   //   const totalQueue = queueBreakdown.reduce((sum, r) => sum + r.count, 0);
 
   //   // ── Submission volume: today / this week / this month ────────────────────
   //   const [todayCount, weekCount, monthCount] = await Promise.all([
   //     this.questionRepo.count({
-  //       where: { submittedAt: Between(startOfToday, now) },
+  //       where: { submittedAt: mongoRange(startOfToday, now) },
   //     }),
   //     this.questionRepo.count({
-  //       where: { submittedAt: Between(startOfWeek, now) },
+  //       where: { submittedAt: mongoRange(startOfWeek, now) },
   //     }),
   //     this.questionRepo.count({
-  //       where: { submittedAt: Between(startOfMonth, now) },
-  //     }),
-  //   ]);
-
-  //   // ── 30-day approved / rejected / total + prior 30-day window (for rate + growth)
-  //   const [approved30, rejected30, total30, priorTotal, priorApproved] = await Promise.all([
-  //     this.questionRepo.count({
-  //       where: {
-  //         submittedAt: Between(thirtyDaysAgo, now),
-  //         status: QuestionStatus.APPROVED,
-  //       },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: {
-  //         submittedAt: Between(thirtyDaysAgo, now),
-  //         status: QuestionStatus.REJECTED,
-  //       },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: { submittedAt: Between(thirtyDaysAgo, now) },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: { submittedAt: Between(priorStart, sixtyDaysAgo) },
-  //     }),
-  //     this.questionRepo.count({
-  //       where: {
-  //         submittedAt: Between(priorStart, sixtyDaysAgo),
-  //         status: QuestionStatus.APPROVED,
-  //       },
+  //       where: { submittedAt: mongoRange(startOfMonth, now) },
   //     }),
   //   ]);
 
@@ -125,56 +77,12 @@ export class CuratorService {
   //       this.questionRepo.topDomainsSince(thirtyDaysAgo, 8),
   //     ]);
 
-  //   const cropBreakdown = (cropRows ?? []).map((r) => ({
-  //     cropType: r.key,
-  //     count: r.count,
-  //   }));
-  //   const stateBreakdown = (stateRows ?? []).map((r) => ({
-  //     state: r.key,
-  //     count: r.count,
-  //   }));
-  //   const domainBreakdown = (domainRows ?? []).map((r) => ({
-  //     domain: r.domain,
-  //     count: r.count,
-  //   }));
-
   //   // ── Growth vs prior 30-day period ────────────────────────────────────────
   //   const growthRate =
   //     priorTotal > 0
   //       ? Math.round(((total30 - priorTotal) / priorTotal) * 100)
   //       : 0;
   //   const priorApprovalRate = priorTotal > 0 ? Math.round((priorApproved / priorTotal) * 100) : 0;
-
-  //   return {
-  //     queue: {
-  //       total: totalQueue,
-  //       breakdown: queueBreakdown,
-  //     },
-  //     volume: {
-  //       today: todayCount,
-  //       thisWeek: weekCount,
-  //       thisMonth: monthCount,
-  //       last30Days: total30,
-  //     },
-  //     performance: {
-  //       approved30Days: approved30,
-  //       rejected30Days: rejected30,
-  //       approvalRate,
-  //       priorApprovalRate,
-  //       approvalRateChange: approvalRate - priorApprovalRate,
-  //       avgReviewTurnaroundMinutes,
-  //     },
-  //     growth: {
-  //       last30Days: total30,
-  //       prior30Days: priorTotal,
-  //       growthRate,
-  //     },
-  //     dailyVolume,
-  //     cropBreakdown,
-  //     stateBreakdown,
-  //     domainBreakdown,
-  //   };
-  // }
 
   async getCuratorStats(query: AnalyticsQueryDto) {
   const { fromDate, toDate, state, cropType } = query;
@@ -193,8 +101,8 @@ export class CuratorService {
   if (state) filter['state'] = state;
   if (cropType) filter['cropType'] = cropType;
 
-  const whereClause = { ...filter, submittedAt: Between(from, to) };
-  const priorWhere = { ...filter, submittedAt: Between(priorFrom, priorTo) };
+  const whereClause = { ...filter, submittedAt: mongoRange(from, to) };
+  const priorWhere = { ...filter, submittedAt: mongoRange(priorFrom, priorTo) };
 
   const [
     totalQuestions,
@@ -292,21 +200,21 @@ export class CuratorService {
         where: {
           reviewerId: userId,
           status: QuestionStatus.APPROVED,
-          reviewedAt: Between(startOfWeek, now),
+          reviewedAt: mongoRange(startOfWeek, now),
         },
       }),
       this.questionRepo.count({
         where: {
           reviewerId: userId,
           status: QuestionStatus.REJECTED,
-          reviewedAt: Between(startOfWeek, now),
+          reviewedAt: mongoRange(startOfWeek, now),
         },
       }),
       this.questionRepo.count({
         where: {
           reviewerId: userId,
           status: QuestionStatus.HELD,
-          reviewedAt: Between(startOfWeek, now),
+          reviewedAt: mongoRange(startOfWeek, now),
         },
       }),
       // Questions still in queue assigned to / reviewed by this curator

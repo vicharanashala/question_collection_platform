@@ -123,16 +123,6 @@ export class SmsService {
     //   otp_expiry: '5',
     // });
 
-    // const response = await fetch(url, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    //   body: body.toString(),
-    // });
-
-    // if (!response.ok) {
-    //   throw new Error(`MSG91 API error: ${response.status}`);
-    // }
-
     this.logger.warn('[MSG91] OTP sending not wired — add SMS_API_KEY to .env to enable');
   }
 

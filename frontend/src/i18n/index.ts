@@ -2,7 +2,7 @@ import { IS_DEV } from '@/config/env'
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
-import bundledResources from './resources'
+import enCommon from './locales/en.json'
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English', script: 'Latin' },
@@ -35,7 +35,43 @@ export type SupportedLanguageCode = (typeof SUPPORTED_LANGUAGES)[number]['code']
 // RTL languages (Arabic-script)
 export const RTL_LANGUAGES: SupportedLanguageCode[] = ['ur', 'ks', 'sd']
 
-i18n
+/**
+ * Loads a language's strings on demand. English ships in the entry bundle so
+ * the first paint never waits; every other language is a separate chunk that
+ * Vite emits and the service worker precaches, so offline use is unaffected.
+ */
+// One chunk per language. English is excluded because it ships in the entry
+// bundle via the static import above.
+const localeLoaders = import.meta.glob<{ default: Record<string, unknown> }>([
+  './locales/*.json',
+  '!./locales/en.json',
+])
+
+const lazyLocaleBackend = {
+  type: 'backend' as const,
+  init: () => undefined,
+  read(
+    language: string,
+    namespace: string,
+    callback: (error: unknown, data?: unknown) => void,
+  ) {
+    const load = localeLoaders[`./locales/${language}.json`]
+    if (!load) {
+      callback(new Error(`No translations bundled for "${language}"`))
+      return
+    }
+    load()
+      .then((module) => callback(null, module.default[namespace] ?? {}))
+      .catch((error: unknown) => callback(error))
+  },
+}
+
+/**
+ * Resolves once the detected language is loaded. `main.tsx` awaits it so a
+ * non-English user never sees a frame of raw keys.
+ */
+export const i18nReady = i18n
+  .use(lazyLocaleBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
@@ -56,8 +92,9 @@ i18n
     nsSeparator: false,
     keySeparator: '.',
     react: { useSuspense: false },
-    // Bundled resources — no HTTP backend needed, works fully offline.
-    resources: bundledResources,
+    // English is bundled; the backend above fetches the rest as chunks.
+    partialBundledLanguages: true,
+    resources: { en: enCommon },
   })
 
 // Keep <html dir/lang> in sync with the active language (Urdu/Kashmiri/Sindhi

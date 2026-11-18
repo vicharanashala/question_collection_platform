@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { AdminService } from '../../admin/services/admin.service';
@@ -79,7 +78,6 @@ describe('WalletsService', () => {
         { provide: REPOSITORY_TOKENS.Transaction, useFactory: mockTransactionRepo },
         { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: mockWithdrawalRepo },
         { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: mockPaymentDetailRepo },
-        { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: PinelabsService, useFactory: mockPinelabsService },
       ],
@@ -306,7 +304,7 @@ describe('WalletsService', () => {
       expect(result).toHaveProperty('amount', 100);
       expect(result).toHaveProperty('status', WithdrawalStatus.PENDING);
       expect(mockQueryRunner.manager.update).toHaveBeenCalledWith(
-        Wallet,
+        'Wallet',
         walletId,
         expect.objectContaining({ balance: 400 }),
       );
@@ -479,7 +477,7 @@ describe('WalletsService', () => {
       expect(result.transaction.amount).toBe(1);
       expect(result.newBalance).toBe(1);
       expect(mockQueryRunner.manager.update).toHaveBeenCalledWith(
-        Wallet,
+        'Wallet',
         walletId,
         expect.objectContaining({ balance: 1 }),
       );
@@ -524,7 +522,7 @@ describe('WalletsService', () => {
       });
 
       expect(mockQueryRunner.manager.create).toHaveBeenCalledWith(
-        Transaction,
+        'Transaction',
         expect.objectContaining({
           type: TransactionType.CREDIT,
           source: TransactionSource.REWARD,

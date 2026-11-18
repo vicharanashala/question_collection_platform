@@ -93,11 +93,6 @@ export function ReasonDialog({ open, onOpenChange, mode, amount, userName, initi
     onOpenChange(false)
   }
 
-  // function appendReason(suggestion: string) {
-  //   setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion))
-  //   textareaRef.current?.focus()
-  // }
-
   function isReasonAdded(suggestion: string) {
   return reason
     .split("\n")

@@ -250,34 +250,6 @@ export function AgriEntitySubmitForm({
     }));
   }
 
-  // function handleFilesPicked(e: React.ChangeEvent<HTMLInputElement>) {
-  //   const picked = Array.from(e.target.files ?? [])
-  //   e.target.value = ''
-  //   const typeValid = picked.filter((f) => AGRI_ENTITY_IMAGE_MIME_TYPES.includes(f.type))
-  //   if (typeValid.length < picked.length) {
-  //     toast.error(t('agriEntity.errors.imageType', 'Only JPEG, PNG and WEBP images are supported'))
-  //   }
-  //   const valid = typeValid.filter((f) => f.size <= MAX_AGRI_ENTITY_IMAGE_SIZE_MB * 1024 * 1024)
-  //   if (valid.length < typeValid.length) {
-  //     toast.error(
-  //       t('agriEntity.errors.imageSize', {
-  //         max: MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
-  //         defaultValue: 'Each image must be {{max}} MB or smaller',
-  //       }),
-  //     )
-  //   }
-  //   const room = MAX_AGRI_ENTITY_IMAGES - images.length
-  //   if (valid.length > room) {
-  //     toast.error(t('agriEntity.errors.imageLimit', { max: MAX_AGRI_ENTITY_IMAGES, defaultValue: 'You can add up to {{max}} images' }))
-  //   }
-  //   const added = valid.slice(0, Math.max(room, 0)).map((file) => ({
-  //     id: crypto.randomUUID(),
-  //     file,
-  //     previewUrl: URL.createObjectURL(file),
-  //   }))
-  //   setImages((prev) => [...prev, ...added])
-  // }
-
   function imageErrorMessage(code: ImageProcessingErrorCode): string {
     switch (code) {
       case "unsupportedType":
@@ -372,19 +344,6 @@ export function AgriEntitySubmitForm({
     setShowErrors(false);
     setSubmissionLocation(null); // ask fresh on the next submission, per requirement
   }
-
-  // async function uploadImages(): Promise<string[]> {
-  //   return Promise.all(
-  //     images.map(async (img, index) => {
-  //       const cached = uploadedUrlsRef.current.get(img.id)
-  //       if (cached) return cached
-  //       const filename = buildImageFilename(values.englishName, index, img.file)
-  //       const { url } = await storageApi.uploadAgriEntityImage(img.file, type, filename)
-  //       uploadedUrlsRef.current.set(img.id, url)
-  //       return url
-  //     }),
-  //   )
-  // }
 
   async function uploadImages(): Promise<string[]> {
     const urls: string[] = new Array(images.length);

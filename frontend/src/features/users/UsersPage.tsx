@@ -256,14 +256,6 @@ export function UsersPage() {
   const limit = 20
   const debouncedSearch = useDebouncedValue(search, 400)
 
-  // useEffect(() => {
-  //   setLoading(true)
-  //   adminApi.getUsers({ page, limit, search: debouncedSearch || undefined, status: statusFilter || undefined, role: roleFilter || undefined, excludeId: currentUser?.id })
-  //     .then((res) => { setUsers(res.items); setTotal(res.total) })
-  //     .catch((e) => toast.error(getErrorMessage(e, 'Failed to load users')))
-  //     .finally(() => setLoading(false))
-  // }, [page, debouncedSearch, statusFilter, roleFilter, currentUser?.id])
-
   const { data: statesData, error: statesError } = useStates();
   const states: LgdState[] = statesData?.states ?? [];
 
@@ -277,15 +269,6 @@ export function UsersPage() {
   const usableFrom = isUsableDate(debouncedFrom) ? debouncedFrom : ''
   const usableTo = isUsableDate(debouncedTo) ? debouncedTo : ''
   const dateRangeInvalid = !!usableFrom && !!usableTo && usableFrom > usableTo
-
-  // useEffect(() => {
-  //   if (dateRangeInvalid) return
-  //   let cancelled = false
-  //   adminApi.getUserStats({ fromDate: usableFrom, toDate: usableTo })
-  //     .then((res) => { if (!cancelled) setStats(res) })
-  //     .catch((e) => { if (!cancelled) toast.error(getErrorMessage(e, 'Failed to load user counts')) })
-  //   return () => { cancelled = true }
-  // }, [usableFrom, usableTo, dateRangeInvalid])
 
   // Both lists stay disabled while the typed date range is contradictory.
   const statsQuery = useUserStats({ fromDate: usableFrom, toDate: usableTo }, !dateRangeInvalid)

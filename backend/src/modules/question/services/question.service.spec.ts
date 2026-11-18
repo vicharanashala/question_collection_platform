@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
 import { QuestionService } from './question.service';
 import { UserService } from '../../user/services/user.service';
 import { AdminService } from '../../admin/services/admin.service';
@@ -102,7 +101,6 @@ describe('QuestionService', () => {
         { provide: REPOSITORY_TOKENS.Question, useFactory: mockQuestionRepo },
         { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
         { provide: REPOSITORY_TOKENS.Notification, useFactory: mockNotificationRepo },
-        { provide: DataSource, useFactory: mockDataSource },
         { provide: AdminService, useFactory: mockAdminService },
         { provide: UserService, useFactory: mockUserService },
         { provide: StorageService, useFactory: mockStorageService },

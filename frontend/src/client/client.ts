@@ -1209,14 +1209,6 @@ export const questionApi = {
       .finally(() => invalidateCache("/api/questions")),
 
   /** Daily / total submission stats for the current (public) user. */
-  // getMyStats: () =>
-  //   request<{
-  //     dailyCount: number;
-  //     remainingToday: number;
-  //     totalApproved: number;
-  //     dailyLimit: number;
-  //     [k: string]: unknown;
-  //   }>("/questions/stats/me", {}, false),
 
   getMyStats: () =>
     request<{
@@ -1310,16 +1302,6 @@ export const walletApi = {
   },
 
   /** Recent wallet transactions for the authenticated user. */
-  // getTransactions: (params: { page?: number; limit?: number } = {}) => {
-  //   const qs = new URLSearchParams(
-  //     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>,
-  //   ).toString()
-  //   return request<{ transactions: Transaction[]; total: number }>(
-  //     `/wallets/me/transactions${qs ? `?${qs}` : ''}`,
-  //     {},
-  //     false,
-  //   )
-  // },
 
   getTransactions: (params: { page?: number; limit?: number } = {}) => {
     const qs = new URLSearchParams(
@@ -1389,13 +1371,6 @@ export const walletApi = {
 // ─── Notifications API ─────────────────────────────────────────────────────
 
 export const notificationApi = {
-  // getNotifications: (params: { page?: number; limit?: number } = {}) => {
-  //   const p = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined)) as Record<string, string>
-  //   const qs = new URLSearchParams(p).toString()
-  //   return request<{ notifications: Notification[]; unread: number; total: number }>(
-  //     `/users/me/notifications${qs ? `?${qs}` : ''}`,
-  //   )
-  // },
 
   getNotifications: (params: { page?: number; limit?: number } = {}) => {
     const p = Object.fromEntries(

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { DataSource, Repository } from 'typeorm';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
@@ -123,7 +122,6 @@ describe('AuthService', () => {
         { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
         { provide: REPOSITORY_TOKENS.Wallet, useFactory: mockWalletRepo },
         { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
-        { provide: DataSource, useFactory: mockDataSource },
         { provide: JwtService, useFactory: mockJwtService },
         { provide: ConfigService, useFactory: mockConfigService },
         { provide: SmsService, useFactory: mockSmsService },

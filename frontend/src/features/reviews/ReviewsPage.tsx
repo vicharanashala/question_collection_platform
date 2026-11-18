@@ -399,11 +399,6 @@ function ReasonModal({
     ],
   };
 
-  // function appendReason(suggestion: string) {
-  //   setReason((prev) => (prev ? `${prev}\n${suggestion}` : suggestion));
-  //   textareaRef.current?.focus();
-  // }
-
   function isReasonAdded(suggestion: string) {
   return reason
     .split("\n")

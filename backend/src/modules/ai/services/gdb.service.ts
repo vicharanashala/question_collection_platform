@@ -176,34 +176,9 @@ export class GdbService {
       return this.noDuplicate(raw);
     }
 
-    // ── Duplicate found ───────────────────────────────────────────────────────
-    //    GDB's present_question_id is its own identifier, not our UUID, so the
-    //    matching row is resolved by question text to get our id + submitter.
-    // const matchedQuestionEntity = raw.present_question_text
-    //   ? await this.questionRepo.findOne({
-    //       where: { questionText: raw.present_question_text },
-    //       select: ['id', 'questionText'],
-    //       relations: ['user'],
-    //     })
-    //   : null;
-
     // this.logger.debug(
     //   `[GDB] duplicate found: status=${raw.present_status} exact=${raw.exact_match_found} candidates=${raw.total_candidates_found}`,
     // );
-
-    // return {
-    //   isDuplicate: true,
-    //   matchedQuestionId: matchedQuestionEntity?._id.toString() ?? null,
-    //   matchedQuestion: raw.present_question_text,
-    //   matchedAnswer: raw.present_answer_text?.trim() || null,
-    //   similarityScore: null,
-    //   matchedUserName:
-    //     this.resolveDisplayName(matchedQuestionEntity?.user ?? null) ??
-    //     raw.present_author?.trim() ??
-    //     null,
-    //   rejection: null,
-    //   rawResponse: raw,
-    // };
 
     const matchedQuestionEntity = raw.present_question_text
   ? await this.questionRepo.findOne({

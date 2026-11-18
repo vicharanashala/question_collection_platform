@@ -1,22 +1,4 @@
-// import { useState } from 'react'
-// import { ChevronDown, ChevronUp, FileText, ShieldCheck } from 'lucide-react'
-// import {
-//   Dialog,
-//   DialogContent,
-// } from '@/components/ui/dialog'
-// import { TERMS_SECTIONS, PRIVACY_POLICY_SECTIONS } from '@/constants/legal'
 
-// interface LegalDocumentModalProps {
-//   type: 'terms' | 'privacy'
-//   open: boolean
-//   onOpenChange: (open: boolean) => void
-// }
-
-// export function LegalDocumentModal({ type, open, onOpenChange }: LegalDocumentModalProps) {
-//   const [openId, setOpenId] = useState<string | null>('1')
-//   const sections = type === 'terms' ? TERMS_SECTIONS : PRIVACY_POLICY_SECTIONS
-//   const title = type === 'terms' ? 'Terms of Service' : 'Privacy Policy'
-//   const Icon = type === 'terms' ? FileText : ShieldCheck
 
 //   return (
 //     <Dialog open={open} onOpenChange={onOpenChange}>

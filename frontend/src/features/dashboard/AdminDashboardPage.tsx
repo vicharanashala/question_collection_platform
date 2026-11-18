@@ -277,12 +277,6 @@ export function AdminDashboardPage() {
     0
   )
 
-  // Domain breakdown
-  // const domainBarData = (qAnalytics?.domainBreakdown ?? []).slice(0, 8).map((d_) => ({
-  //   name: d_.domain,
-  //   value: d_.count,
-  // }))
-
   if (loading) return <DashboardSkeleton />
 
   return (

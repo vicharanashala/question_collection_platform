@@ -66,7 +66,6 @@ export interface User {
   lastActivityAt?: string | null;
 }
 
-
 export interface PaymentDetail {
   id: string;
   payoutMethod: PayoutMethod;
@@ -583,42 +582,6 @@ export interface QueueStatusCount {
   label: string
   count: number
 }
-
-// export interface CuratorStats {
-//   queue: {
-//     total: number
-//     breakdown: QueueStatusCount[]
-//   }
-//   volume: {
-//     today: number
-//     thisWeek: number
-//     thisMonth: number
-//     last30Days: number
-//   }
-//   performance: {
-//     approved30Days: number
-//     rejected30Days: number
-//     approvalRate: number
-//     priorApprovalRate: number
-//     approvalRateChange: number
-//     avgReviewTurnaroundMinutes: number | null
-//   }
-//   growth: {
-//     last30Days: number
-//     prior30Days: number
-//     growthRate: number
-//   }
-//   dailyVolume: Array<{
-//     date: string
-//     submitted: number
-//     approved: number
-//     rejected: number
-//     held: number
-//   }>
-//   cropBreakdown: Array<{ cropType: string; count: number }>
-//   stateBreakdown: Array<{ state: string; count: number }>
-//   domainBreakdown: Array<{ domain: string; count: number }>
-// }
 
 export interface CuratorStats {
   summary: {

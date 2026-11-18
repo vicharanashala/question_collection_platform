@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { PayoutMethod } from '../../../shared/classes/enums';
-import { decrypt } from '../../../shared/functions/utils/encryption.util';
+import { decrypt } from '../../../shared/utils/encryption.util';
 
 export interface PayoutResult {
   success: boolean;

@@ -378,32 +378,6 @@ export class MongoWithdrawalRequestRepository
     //     $match: match,
     //   },
 
-    //    {
-    //   $addFields: {
-    //     userObjectId: {
-    //       $convert: { input: '$userId', to: 'objectId', onError: null, onNull: null },
-    //     },
-    //   },
-    // },
-
-    //   // Withdrawal -> User
-    //   {
-    //     $lookup: {
-    //       from: 'users',
-    //       localField: 'userId',
-    //       foreignField: '_id',
-    //       as: 'user',
-    //     },
-    //   },
-
-    //   {
-    //     $unwind: {
-    //       path: '$user',
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-    // ];
-
     const pipeline: any[] = [
       { $match: match },
 
@@ -560,23 +534,6 @@ export class MongoWithdrawalRequestRepository
                   null,
                 ],
               },
-
-              // user: {
-              //   $cond: [
-              //     {
-              //       $ne: ['$user', null],
-              //     },
-              //     {
-              //       id: {
-              //         $toString: '$user._id',
-              //       },
-              //       name: '$user.name',
-              //       mobileNumber: '$user.mobileNumber',
-              //       state: '$user.state',
-              //     },
-              //     null,
-              //   ],
-              // },
 
               user: {
                 $cond: [

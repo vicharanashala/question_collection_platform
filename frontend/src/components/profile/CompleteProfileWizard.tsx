@@ -1431,7 +1431,6 @@ export function CompleteProfileWizard({
           totalCount: number;
           totalPages: number;
         };
-        console.log("response", response)
         setCrops(response.crops);
       } catch (error) {
         console.error("Failed to fetch crops:", error);
@@ -1439,7 +1438,6 @@ export function CompleteProfileWizard({
     }
 
     getCrops();
-    console.log("Crops in Step3", crops);
   }, []);
 
 
@@ -1631,7 +1629,6 @@ export function CompleteProfileWizard({
   }
 
   function next() {
-    console.log("Button is clicked");
     if (validateStep(step)) {
       directionRef.current = 1;
       setStep((s) => Math.min(4, s + 1) as 1 | 2 | 3 | 4);

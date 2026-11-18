@@ -26,6 +26,6 @@ export * from './database/cache/cache.keys';
 export * from './services/endpoint-logger/endpoint-logger.service';
 
 // Utils
-export * from './functions/utils/encryption.util';
+export * from './utils/encryption.util';
 export * from './middleware/validators/is-in-array.validator';
 export * from './middleware/validators/max-question-chars.validator';

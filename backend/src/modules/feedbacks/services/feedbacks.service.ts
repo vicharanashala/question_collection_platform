@@ -27,35 +27,6 @@ export class FeedbacksService {
   //     ...(inputMethod ? { inputMethod } : {}),
   //   };
 
-  //   const [{ data, total }, summary] = await Promise.all([
-  //     this.feedbackRepo.findAndCount(filter, { pagination: { page, limit, sort: { createdAt: -1 } } }),
-  //     this.feedbackRepo.getRatingSummary(ANVESHAN_CONTEXT),
-  //   ]);
-
-  //   const userIds = [...new Set(data.map((feedback) => feedback.userId))];
-  //   const users = userIds.length ? await this.userRepo.find({ id: { $in: userIds } }) : [];
-  //   const usersById = new Map(users.map((user) => [user._id.toString(), user]));
-
-  //   return {
-  //     items: data.map((feedback) => {
-  //       const user = usersById.get(feedback.userId);
-  //       return {
-  //         id: feedback.id,
-  //         rating: feedback.rating,
-  //         comment: feedback.comment,
-  //         inputMethod: feedback.inputMethod,
-  //         createdAt: feedback.createdAt,
-  //         user: user ? { id: user._id.toString(), name: user.name, mobileNumber: user.mobileNumber, state: user.state, district: user.district } : null,
-  //       };
-  //     }),
-  //     total,
-  //     page,
-  //     limit,
-  //     pages: Math.ceil(total / limit),
-  //     summary,
-  //   };
-  // }
-
   async listAnveshanFeedback(dto: ListFeedbacksDto) {
     const { page = 1, limit = 20, rating, inputMethod, tester } = dto;
     const userIdCondition = tester

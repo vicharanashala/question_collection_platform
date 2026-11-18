@@ -3,9 +3,6 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { MongoRepository } from "../../../abstractions/mongo.repository";
 import { IUserRepository } from "../../user.repository.interface";
-// import { User } from "../../../entities";
-// import { Question } from "../../../entities";
-// import { Wallet } from "../../../entities";
 import {
   QuestionStatus,
   UserCategory,
@@ -139,68 +136,11 @@ export class MongoUserRepository
   // }): Promise<LeaderboardEntry[]> {
   //   const { limit = 20, skip = 0, state, category } = opts;
 
-  //   // Build user-set filter (state and/or category)
-  //   const userFilter: Record<string, unknown> = {};
-  //   if (state) userFilter.state = state;
-  //   if (category) userFilter.category = category;
-
-  //   // Step 1: resolve eligible user IDs (avoids running aggregation over the entire collection)
-  //   let eligibleUserIds: string[] | null = null;
-  //   if (Object.keys(userFilter).length > 0) {
-  //     const eligibleUsers = await this._model
-  //       .find(userFilter as Record<string, unknown>, { _id: 1 } as Record<string, unknown>)
-  //       .exec();
-  //     eligibleUserIds = eligibleUsers.map((u) => String((u as unknown as Record<string, unknown>)._id));
-  //     if (eligibleUserIds.length === 0) return []; // no matching users — empty leaderboard
-  //   }
-
   //   // Step 2: count approved questions per user, ranked correctly
   //   const matchStage: Record<string, unknown> = { status: QuestionStatus.APPROVED };
   //   if (eligibleUserIds !== null) matchStage.userId = { $in: eligibleUserIds };
 
-  //   const rankedCounts = await this._questionModel
-  //     .aggregate([
-  //       { $match: matchStage },
-  //       { $group: { _id: '$userId', approvedCount: { $sum: 1 } } },
-  //       { $sort: { approvedCount: -1 } },
-  //       { $skip: skip },
-  //       { $limit: limit },
-  //     ])
-  //     .exec();
-
   //   if (rankedCounts.length === 0) return [];
-
-  //   // Step 3: hydrate user details for the ranked user IDs
-  //   const rankedUserIds = rankedCounts.map((r) => r._id as string);
-  //   const userDocs = await this._model
-  //     .find({ _id: { $in: rankedUserIds.map((id) => new Types.ObjectId(id)) } } as Record<string, unknown>)
-  //     .exec();
-
-  //   const userMap = new Map<string, Record<string, unknown>>();
-  //   for (const doc of userDocs) {
-  //     const d = doc as unknown as Record<string, unknown>;
-  //     userMap.set(String(d._id), d);
-  //   }
-
-  //   // Step 4: assemble leaderboard entries preserving aggregation order
-  //   const result: LeaderboardEntry[] = [];
-  //   for (const row of rankedCounts) {
-  //     const userId = row._id as string;
-  //     const doc = userMap.get(userId);
-  //     if (!doc) continue; // user deleted after aggregation
-  //     result.push({
-  //       id: userId,
-  //       username: (doc.username as string | null) ?? null,
-  //       name: doc.name as string,
-  //       mobileNumber: doc.mobileNumber as string,
-  //       profilePicUrl: (doc.profilePicUrl as string) ?? null,
-  //       crops: (doc.crops as string[]) ?? [],
-  //       approvedCount: row.approvedCount,
-  //     });
-  //   }
-
-  //   return result;
-  // }
 
   //   async getLeaderboard(opts: {
   //   limit: number;
@@ -217,19 +157,6 @@ export class MongoUserRepository
   //     state,
   //     category,
   //   } = opts;
-
-  //   const userFilter: Record<string, unknown> = {
-  //     role: UserRole.USER,
-  //      verificationStatus: VerificationStatus.VERIFIED,
-  //   };
-
-  //   if (state) {
-  //     userFilter.state = state;
-  //   }
-
-  //   if (category) {
-  //     userFilter.category = category;
-  //   }
 
   //   const result = await this._model.aggregate([
   //     // --------------------------------------------------
@@ -292,38 +219,6 @@ export class MongoUserRepository
   //             0,
   //           ],
   //         },
-  //       },
-  //     },
-
-  //     // --------------------------------------------------
-  //     // 3. Find user's wallet
-  //     // --------------------------------------------------
-  //     {
-  //       $lookup: {
-  //         from: 'wallets',
-  //         let: {
-  //           userId: {
-  //             $toString: '$_id',
-  //           },
-  //         },
-  //         pipeline: [
-  //           {
-  //             $match: {
-  //               $expr: {
-  //                 $eq: [
-  //                   '$userId',
-  //                   '$$userId',
-  //                 ],
-  //               },
-  //             },
-  //           },
-  //           {
-  //             $project: {
-  //               _id: 1,
-  //             },
-  //           },
-  //         ],
-  //         as: 'wallets',
   //       },
   //     },
 
@@ -452,20 +347,6 @@ export class MongoUserRepository
   //           },
   //         ],
 
-  //         total: [
-  //           {
-  //             $count: 'count',
-  //           },
-  //         ],
-  //       },
-  //     },
-  //   ]).exec();
-
-  //   const facetResult = result[0] ?? {
-  //     entries: [],
-  //     total: [],
-  //   };
-
   //   const entries = (
   //     facetResult.entries ?? []
   //   ) as LeaderboardEntry[];
@@ -474,12 +355,6 @@ export class MongoUserRepository
   //     facetResult.total?.[0]?.count ?? 0;
 
   //     console.log("Enteries", entries);
-
-  //   return {
-  //     entries,
-  //     total,
-  //   };
-  // }
 
   private eligibleUsersFilter(extra: Record<string, unknown> = {}) {
   return {
@@ -514,31 +389,6 @@ private approvedQuestionCountStages(): any[] {
   ];
 }
 
-  // async getLeaderboard(opts: {
-  //   limit: number;
-  //   offset: number;
-  //   state?: string;
-  //   category?: UserCategory;
-  // }): Promise<{
-  //   entries: LeaderboardEntry[];
-  //   total: number;
-  // }> {
-  //   const { limit, offset, state, category } = opts;
-
-  //   const userFilter: Record<string, unknown> = {
-  //     role: UserRole.USER,
-  //     verificationStatus: VerificationStatus.VERIFIED,
-  //     isDeleted: { $ne: true },
-  //   };
-
-  //   if (state) {
-  //     userFilter.state = state;
-  //   }
-
-  //   if (category) {
-  //     userFilter.category = category;
-  //   }
-
   //   const result = await this._model
   //     .aggregate([
   //       // --------------------------------------------------
@@ -546,56 +396,6 @@ private approvedQuestionCountStages(): any[] {
   //       // --------------------------------------------------
   //       {
   //         $match: userFilter,
-  //       },
-
-  //       // --------------------------------------------------
-  //       // 2. Count approved questions
-  //       // --------------------------------------------------
-  //       {
-  //         $lookup: {
-  //           from: "questions",
-  //           let: {
-  //             userId: {
-  //               $toString: "$_id",
-  //             },
-  //           },
-  //           pipeline: [
-  //             {
-  //               $match: {
-  //                 $expr: {
-  //                   $eq: ["$userId", "$$userId"],
-  //                 },
-  //                 isDeleted: { $ne: true },
-  //               },
-  //             },
-  //             {
-  //               $match: {
-  //                 status: {
-  //                   $in: [
-  //                     QuestionStatus.APPROVED,
-  //                     QuestionStatus.MOVED_TO_FINAL,
-  //                   ],
-  //                 },
-  //                 isDeleted: { $ne: true },
-  //               },
-  //             },
-  //             {
-  //               $group: {
-  //                 _id: null,
-  //                 countOfApproved: {
-  //                   $sum: 1,
-  //                 },
-  //               },
-  //             },
-  //             {
-  //               $project: {
-  //                 _id: 0,
-  //                 countOfApproved: 1,
-  //               },
-  //             },
-  //           ],
-  //           as: "questionStats",
-  //         },
   //       },
 
   //       // --------------------------------------------------
@@ -613,49 +413,6 @@ private approvedQuestionCountStages(): any[] {
   //               },
   //             ],
   //           },
-  //         },
-  //       },
-
-  //       {
-  //         $lookup: {
-  //           from: "wallets",
-  //           let: { userId: { $toString: "$_id" } },
-  //           pipeline: [
-  //             {
-  //               $match: {
-  //                 $expr: { $eq: ["$userId", "$$userId"] },
-  //                 isDeleted: { $ne: true },
-  //               },
-  //             },
-  //             {
-  //               $lookup: {
-  //                 from: "transactions",
-  //                 let: { walletId: { $toString: "$_id" } },
-  //                 pipeline: [
-  //                   {
-  //                     $match: {
-  //                       $expr: { $eq: ["$walletId", "$$walletId"] },
-  //                       type: TransactionType.CREDIT,
-  //                       source: TransactionSource.REWARD,
-  //                       status: TransactionStatus.COMPLETED,
-  //                       isDeleted: { $ne: true },
-  //                     },
-  //                   },
-  //                   { $group: { _id: null, total: { $sum: "$amount" } } },
-  //                 ],
-  //                 as: "earned",
-  //               },
-  //             },
-  //             {
-  //               $project: {
-  //                 _id: 0,
-  //                 earned: {
-  //                   $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
-  //                 },
-  //               },
-  //             },
-  //           ],
-  //           as: "walletStats",
   //         },
   //       },
 
@@ -678,18 +435,6 @@ private approvedQuestionCountStages(): any[] {
   //       },
 
   //       // --------------------------------------------------
-  //       // 6. Prepare leaderboard fields
-  //       // --------------------------------------------------
-  //       {
-  //         $project: {
-  //           _id: 1,
-  //           name: 1,
-  //           totalEarned: "$walletStats.balance",
-  //           totalQuestions: "$questionStats.countOfApproved",
-  //         },
-  //       },
-
-  //       // --------------------------------------------------
   //       // 7. Sort BEFORE pagination
   //       // --------------------------------------------------
   //       {
@@ -700,54 +445,9 @@ private approvedQuestionCountStages(): any[] {
   //         },
   //       },
 
-  //       // --------------------------------------------------
-  //       // 8. Pagination and total count
-  //       // --------------------------------------------------
-  //       {
-  //         $facet: {
-  //           entries: [
-  //             {
-  //               $skip: offset,
-  //             },
-  //             {
-  //               $limit: limit,
-  //             },
-  //             {
-  //               $project: {
-  //                 _id: 0,
-  //                 id: {
-  //                   $toString: "$_id",
-  //                 },
-  //                 name: 1,
-  //                 totalEarned: 1,
-  //                 totalQuestions: 1,
-  //               },
-  //             },
-  //           ],
-  //           total: [
-  //             {
-  //               $count: "count",
-  //             },
-  //           ],
-  //         },
-  //       },
-  //     ])
-  //     .exec();
-
-  //   const facetResult = result[0] ?? {
-  //     entries: [],
-  //     total: [],
-  //   };
-
   //   const entries = (facetResult.entries ?? []) as LeaderboardEntry[];
 
   //   const total = facetResult.total?.[0]?.count ?? 0;
-
-  //   return {
-  //     entries,
-  //     total,
-  //   };
-  // }
 
   async getLeaderboard(opts: {
   limit: number;
@@ -797,7 +497,6 @@ private approvedQuestionCountStages(): any[] {
   };
 }
 
-
   async getApprovedQuestionCount(userId: string): Promise<number> {
     const result = await this._questionModel
       .aggregate([
@@ -814,19 +513,6 @@ private approvedQuestionCountStages(): any[] {
   //   category?: UserCategory;
   // }): Promise<number | null> {
   //   const { userId, state, category } = opts;
-
-  //   const userFilter: Record<string, unknown> = {
-  //     role: UserRole.USER,
-  //     verificationStatus: VerificationStatus.VERIFIED,
-  //   };
-
-  //   if (state) {
-  //     userFilter.state = state;
-  //   }
-
-  //   if (category) {
-  //     userFilter.category = category;
-  //   }
 
   //   const result = await this._model
   //     .aggregate([
@@ -885,86 +571,6 @@ private approvedQuestionCountStages(): any[] {
   //       },
 
   //       // --------------------------------------------------
-  //       // 3. Find user's wallet
-  //       // --------------------------------------------------
-  //       {
-  //         $lookup: {
-  //           from: "wallets",
-  //           let: {
-  //             userId: {
-  //               $toString: "$_id",
-  //             },
-  //           },
-  //           pipeline: [
-  //             {
-  //               $match: {
-  //                 $expr: {
-  //                   $eq: ["$userId", "$$userId"],
-  //                 },
-  //               },
-  //             },
-  //             {
-  //               $project: {
-  //                 _id: 1,
-  //               },
-  //             },
-  //           ],
-  //           as: "wallets",
-  //         },
-  //       },
-
-  //       // --------------------------------------------------
-  //       // 4. Find reward transactions
-  //       // --------------------------------------------------
-  //       {
-  //         $lookup: {
-  //           from: "transactions",
-  //           let: {
-  //             walletIds: {
-  //               $map: {
-  //                 input: "$wallets",
-  //                 as: "wallet",
-  //                 in: {
-  //                   $toString: "$$wallet._id",
-  //                 },
-  //               },
-  //             },
-  //           },
-  //           pipeline: [
-  //             {
-  //               $match: {
-  //                 $expr: {
-  //                   $and: [
-  //                     {
-  //                       $in: ["$walletId", "$$walletIds"],
-  //                     },
-  //                     {
-  //                       $eq: ["$type", TransactionType.CREDIT],
-  //                     },
-  //                     {
-  //                       $eq: ["$source", TransactionSource.REWARD],
-  //                     },
-  //                     {
-  //                       $eq: ["$status", TransactionStatus.COMPLETED],
-  //                     },
-  //                   ],
-  //                 },
-  //               },
-  //             },
-  //             {
-  //               $group: {
-  //                 _id: null,
-  //                 total: {
-  //                   $sum: "$amount",
-  //                 },
-  //               },
-  //             },
-  //           ],
-  //           as: "earnedStats",
-  //         },
-  //       },
-
-  //       // --------------------------------------------------
   //       // 5. Calculate total earned
   //       // --------------------------------------------------
   //       {
@@ -998,47 +604,9 @@ private approvedQuestionCountStages(): any[] {
   //         $group: {
   //           _id: null,
 
-  //           rankedUsers: {
-  //             $push: {
-  //               userId: {
-  //                 $toString: "$_id",
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-
   //       {
   //         $project: {
   //           _id: 0,
-
-  //           userRank: {
-  //             $let: {
-  //               vars: {
-  //                 userIndex: {
-  //                   $indexOfArray: ["$rankedUsers.userId", userId],
-  //                 },
-  //               },
-  //               in: {
-  //                 $cond: [
-  //                   {
-  //                     $eq: ["$$userIndex", -1],
-  //                   },
-  //                   null,
-  //                   {
-  //                     $add: ["$$userIndex", 1],
-  //                   },
-  //                 ],
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     ])
-  //     .exec();
-
-  //   return result[0]?.userRank ?? null;
-  // }
 
   // async getLeaderboardRank(opts: {
   //   userId: string;
@@ -1046,20 +614,6 @@ private approvedQuestionCountStages(): any[] {
   //   category?: UserCategory;
   // }): Promise<number | null> {
   //   const { userId, state, category } = opts;
-
-  //   const userFilter: Record<string, unknown> = {
-  //     role: UserRole.USER,
-  //     verificationStatus: VerificationStatus.VERIFIED,
-  //     isDeleted: { $ne: true },
-  //   };
-
-  //   if (state) {
-  //     userFilter.state = state;
-  //   }
-
-  //   if (category) {
-  //     userFilter.category = category;
-  //   }
 
   //   const result = await this._model
   //     .aggregate([
@@ -1159,49 +713,6 @@ private approvedQuestionCountStages(): any[] {
   //       //   },
   //       // },
 
-  //       {
-  //         $lookup: {
-  //           from: "wallets",
-  //           let: { userId: { $toString: "$_id" } },
-  //           pipeline: [
-  //             {
-  //               $match: {
-  //                 $expr: { $eq: ["$userId", "$$userId"] },
-  //                 isDeleted: { $ne: true },
-  //               },
-  //             },
-  //             {
-  //               $lookup: {
-  //                 from: "transactions",
-  //                 let: { walletId: { $toString: "$_id" } },
-  //                 pipeline: [
-  //                   {
-  //                     $match: {
-  //                       $expr: { $eq: ["$walletId", "$$walletId"] },
-  //                       type: TransactionType.CREDIT,
-  //                       source: TransactionSource.REWARD,
-  //                       status: TransactionStatus.COMPLETED,
-  //                       isDeleted: { $ne: true },
-  //                     },
-  //                   },
-  //                   { $group: { _id: null, total: { $sum: "$amount" } } },
-  //                 ],
-  //                 as: "earned",
-  //               },
-  //             },
-  //             {
-  //               $project: {
-  //                 _id: 0,
-  //                 earned: {
-  //                   $ifNull: [{ $arrayElemAt: ["$earned.total", 0] }, 0],
-  //                 },
-  //               },
-  //             },
-  //           ],
-  //           as: "walletStats",
-  //         },
-  //       },
-
   //       // --------------------------------------------------
   //       // 5. Calculate total earned
   //       // --------------------------------------------------
@@ -1228,57 +739,6 @@ private approvedQuestionCountStages(): any[] {
   //           _id: 1,
   //         },
   //       },
-
-  //       // --------------------------------------------------
-  //       // 7. Find current user's position
-  //       // --------------------------------------------------
-  //       {
-  //         $group: {
-  //           _id: null,
-  //           rankedUsers: {
-  //             $push: {
-  //               userId: {
-  //                 $toString: "$_id",
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-
-  //       // --------------------------------------------------
-  //       // 8. Convert index to 1-based rank
-  //       // --------------------------------------------------
-  //       {
-  //         $project: {
-  //           _id: 0,
-  //           userRank: {
-  //             $let: {
-  //               vars: {
-  //                 userIndex: {
-  //                   $indexOfArray: ["$rankedUsers.userId", userId],
-  //                 },
-  //               },
-  //               in: {
-  //                 $cond: [
-  //                   {
-  //                     $eq: ["$$userIndex", -1],
-  //                   },
-  //                   null,
-  //                   {
-  //                     $add: ["$$userIndex", 1],
-  //                   },
-  //                 ],
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     ])
-  //     .exec();
-
-  //   return result[0]?.userRank ?? null;
-  // }
-
 
   async getLeaderboardRank(opts: {
   userId: string;

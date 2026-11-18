@@ -64,7 +64,6 @@ interface PreviewMeta {
 // isn't in the list can still submit. Module-scope so its identity is stable
 // across renders (same rationale as MobileStage / OtpStage in PublicRegisterPage).
 
-
 interface AskHeaderProps {
   step?: 1 | 2
   title: string
@@ -229,7 +228,6 @@ export function PublicAskPage() {
 
   
 
-
   const [step, setStep] = useState<'ask' | 'details'>('ask')
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewMeta, setPreviewMeta] = useState<PreviewMeta | null>(null)
@@ -347,8 +345,6 @@ useEffect(() => {
   }
 }, [user?.isAnveshanUser, activeTab, setSearchParams])
 
-
-
   // Lock body scroll on the details step to prevent pull-to-scroll ghosting
   useEffect(() => {
     if (step === 'details') {
@@ -388,7 +384,6 @@ useEffect(() => {
 
   // Submit is hard-blocked when the AI flags the text as spam (incl. "too short").
   const blockedByAi = aiValidation?.verdict === 'fail'
-
 
   function toggleDomain(d: string) {
     setDomains((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]))
@@ -461,15 +456,6 @@ useEffect(() => {
       setPreviewLoading(false)
     }
   }
-
-  // ─── Step 2: final submit ──────────────────────────────────────────────────
-//   async function handleFinalSubmit(e: React.FormEvent) {
-//     e.preventDefault()
-//     if (!previewMeta) return
-//     if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
-//     if (!domains.length) { toast.error(t('question.errors.pickDomain')); return }
-//     if (!season) { toast.error(t('question.errors.pickSeason')); return }
-//     if (!cropType.trim()) { toast.error(t('question.errors.enterCrop')); return }
 
 //     setSubmitting(true)
 //     try {
@@ -559,7 +545,6 @@ useEffect(() => {
 //   }
 
 async function handleFinalSubmit(e: React.FormEvent) {
-  console.log("Inside final submit...")
   e.preventDefault()
   if (!previewMeta) { toast.error(t('publicAskPage.somethigWenWrong')); return}
   if (!questionText.trim()) { toast.error(t('question.enterQuestion')); return }
@@ -571,7 +556,6 @@ async function handleFinalSubmit(e: React.FormEvent) {
   // If we don't have it yet, open the capture modal and stop here — it will
   // call performSubmit() itself once the user confirms.
   if (user?.isAnveshanUser && !submissionLocation) {
-    console.log("inside this..")
     setLocationModalOpen(true)
     return
   }
@@ -582,7 +566,6 @@ async function handleFinalSubmit(e: React.FormEvent) {
 async function performSubmit(locationOverride?: SubmissionLocation) {
   if (!previewMeta) return
   const location = locationOverride ?? submissionLocation
-  console.log("inside perform submit...")
   setSubmitting(true)
   try {
     const previewRes = await previewQuestion.mutateAsync({
@@ -655,7 +638,6 @@ async function performSubmit(locationOverride?: SubmissionLocation) {
     setSubmitting(false)
   }
 }
-
 
   // Outcome dialogs render alongside every step so the user's form stays
   // visible behind them instead of being replaced by a full-page state.

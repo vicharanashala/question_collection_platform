@@ -26,7 +26,7 @@ import {
   MAX_AGRI_ENTITY_IMAGE_SIZE_MB,
   MAX_ANVESHAN_AGRI_ENTITY_IMAGE_SIZE_MB,
 } from "../../agri-entities/agri-entities.constants";
-import { detectImage, MAX_IMAGE_SIZE_BYTES } from "@/utils/image-validation";
+import { detectImage, MAX_IMAGE_SIZE_BYTES } from "@/shared/utils/image-validation";
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; role: string; isAnveshanUser?: boolean };
@@ -162,25 +162,6 @@ async uploadAgriEntityImage(
     media.stream.on("error", () => res.destroy());
     media.stream.pipe(res);
   }
-
-  // Ensures an uploaded image is present, of an allowed type and within the configured size limit.
-  // private async assertValidImage(
-  //   file: AuthenticatedRequest["file"],
-  // ): Promise<NonNullable<AuthenticatedRequest["file"]>> {
-  //   if (!file) {
-  //     throw new BadRequestException(
-  //       'No file provided — expected field named "file"',
-  //     );
-  //   }
-
-  //   if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
-  //     throw new BadRequestException(
-  //       "Only JPEG, PNG and WEBP images are supported",
-  //     );
-  //   }
-
-  //   return file;
-  // }
 
   // Anveshan users are exempt from the image type check but images above their size limit are rejected.
   private assertAnveshanImage(file: AuthenticatedRequest["file"]) {

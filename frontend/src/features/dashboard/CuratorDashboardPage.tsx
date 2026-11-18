@@ -117,42 +117,10 @@ function formatDuration(mins: number) {
   return `${Math.round(mins / 1440)}d`
 }
 
-  // if (loading) return <DashboardSkeleton />
-  // if (!stats) return null
-
   // const { queue, performance } = stats
-
-  // // Derive queue pending total (non-terminal statuses)
-  // const pendingTotal = queue.breakdown.reduce((sum, b) => {
-  //   if (b.status !== 'approved' && b.status !== 'rejected') return sum + b.count
-  //   return sum
-  // }, 0)
 
   // // SLA breach: avg turnaround > 60 min
   // const slaBreach = performance.avgReviewTurnaroundMinutes != null && performance.avgReviewTurnaroundMinutes > 60
-
-  // // Chart data — daily volume uses Submitted (all submitted) + Approved + Rejected
-  // const dailyVolume = (stats.dailyVolume ?? []).map((d) => ({
-  //   date: d.date,
-  //   Submitted: d.submitted,
-  //   Approved: d.approved,
-  //   Rejected: d.rejected,
-  // }))
-
-  // const stateBarData = (stats.stateBreakdown ?? []).slice(0, 8).map((s) => ({
-  //   name: s.state,
-  //   value: s.count,
-  // }))
-
-  // const cropBarData = (stats.cropBreakdown ?? []).slice(0, 7).map((c) => ({
-  //   name: c.cropType,
-  //   value: c.count,
-  // }))
-
-  // const queueBarData = queue.breakdown.map((b) => ({
-  //   name: b.label,
-  //   value: b.count,
-  // }))
 
   if (loading) return <DashboardSkeleton />
 if (!stats) return null

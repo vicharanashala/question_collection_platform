@@ -15,8 +15,6 @@ import {
   NotificationType,
   NotificationTriggerType,
 } from '../../../shared/classes/enums';
-// import { Report } from '../../../shared/database/entities/report.entity';
-// import { ReportReply } from '../../../shared/database/entities/report-reply.entity';
 
 import { Report } from '@/shared/database/mongodb/schemas/report.schema';
 import { ReportReply } from '@/shared/database/mongodb/schemas/report-reply.schema';
@@ -411,46 +409,6 @@ export class ReportsService {
 
     return saved;
   }
-
-  // async addReply(
-  //   reportId: string,
-  //   adminId: string,
-  //   dto: ReplyReportDto,
-  // ): Promise<ReportReply> {
-  //   const report = await this.reportRepo.findOne({ id: reportId } as never);
-  //   if (!report) throw new Error('Report not found');
-
-  //   const savedReply = await this.replyRepo.create({
-  //     reportId,
-  //     adminId,
-  //     message: dto.message,
-  //   } as never);
-
-  //   if ((report as { status: ReportStatus }).status === ReportStatus.OPEN) {
-  //     (report as { status: ReportStatus }).status = ReportStatus.IN_PROGRESS;
-  //     await this.reportRepo.save(report);
-  //   }
-
-  //   const body = dto.message.length > 100 ? dto.message.slice(0, 97) + '...' : dto.message;
-  //   const userId = (report as { userId: string }).userId;
-
-  //   await this.notificationRepo.create({
-  //     userId,
-  //     type: NotificationType.REPORT_REPLY,
-  //     triggerType: NotificationTriggerType.REPORT,
-  //     title: 'Your report has been replied to',
-  //     body,
-  //     data: { reportId, replyId: (savedReply as { id: string }).id },
-  //   } as never);
-
-  //   await this.sendPushNotification(userId, {
-  //     title: 'Your report has been replied to',
-  //     body,
-  //     data: { reportId, replyId: (savedReply as { id: string }).id },
-  //   });
-
-  //   return savedReply;
-  // }
 
   async addReply(
   reportId: string,

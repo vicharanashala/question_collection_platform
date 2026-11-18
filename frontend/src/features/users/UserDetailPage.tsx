@@ -566,22 +566,6 @@ export function UserDetailPage() {
     }
   }
 
-  // async function handleDelete() {
-  //   if (!userId) return;
-  //   setActionLoading(true);
-  //   try {
-  //     const res = await adminApi.deleteUser(userId);
-  //     toast.success(res.message ?? "User deleted");
-  //     cache.invalidate(`/admin/users/${userId}`);
-  //     setDeleteModalOpen(false);
-  //   } catch (e) {
-  //     // Shows backend messages like "User has pending or processing withdrawals..."
-  //     toast.error(getErrorMessage(e, "Failed to delete user"));
-  //   } finally {
-  //     setActionLoading(false);
-  //   }
-  // }
-
   async function handleDelete() {
     if (!userId) return;
     setActionLoading(true);
@@ -672,13 +656,6 @@ export function UserDetailPage() {
       setActionLoading(false);
     }
   }
-
-  // async function loadAuditHistory() {
-  //   setAuditCollapsed(false);
-  //   toast.info(
-  //     t('withdrawalDetailModal.entitySpecificAuditHistory'),
-  //   );
-  // }
 
   async function handleReinstate() {
     if (!userId) return;

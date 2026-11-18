@@ -1,4 +1,5 @@
 import { UserAccountLockedException } from "../../../shared/classes/exceptions/user-status.exception";
+import { mongoGte } from "../../../shared/database/abstractions/mongo-utils";
 import {
   Injectable,
   Logger,
@@ -11,7 +12,6 @@ import {
   Optional,
   HttpException,
 } from "@nestjs/common";
-import { MoreThanOrEqual } from "typeorm";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { randomInt, randomUUID } from "crypto";
@@ -49,11 +49,6 @@ export interface AuthTokens {
   refreshToken: string;
   expiresIn: number;
 }
-
-// export interface AuthResponse {
-//   tokens: AuthTokens;
-//   user: PublicUser;
-// }
 
 export interface AnveshanPhaseInfo {
   isAnveshanUser: true;
@@ -538,7 +533,7 @@ export class AuthService {
     const stateCount = await this.userRepo.count({
       where: {
         state: dto.state,
-        verificationStatus: MoreThanOrEqual(VerificationStatus.PENDING),
+        verificationStatus: mongoGte(VerificationStatus.PENDING),
       },
     });
     if (stateCount >= maxPerState) {
@@ -1091,24 +1086,4 @@ async logout(userId: string, sid: string): Promise<void> {
     };
   }
 
-  // private async logAudit(
-  //   actorType: ActorType,
-  //   actorId: string | null,
-  //   action: string,
-  //   entityType?: string,
-  //   entityId?: string,
-  //   oldValue?: Record<string, unknown> | null,
-  //   newValue?: Record<string, unknown> | null,
-  // ): Promise<void> {
-  //   const log = await this.auditRepo.create({
-  //     actorType,
-  //     actorId,
-  //     action,
-  //     entityType,
-  //     entityId,
-  //     oldValue: oldValue ?? null,
-  //     newValue: newValue ?? null,
-  //   });
-  //   await this.auditRepo.save(log);
-  // }
 }

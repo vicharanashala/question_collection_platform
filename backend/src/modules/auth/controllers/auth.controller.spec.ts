@@ -8,10 +8,6 @@ import { UserCategory } from "../../../shared/classes/enums";
 import { Request } from "express";
 import { RegistrationAuthGuard } from "@/shared/middleware/guards/registration-auth.guard";
 
-// interface AuthenticatedRequest extends Request {
-//   user: { id: string; mobileNumber: string; role: string };
-// }
-
 interface AuthenticatedRequest extends Request {
   user: { id: string; sid: string; mobileNumber: string; role: string };
 }
@@ -114,14 +110,6 @@ describe("AuthController", () => {
 
     const req = { user: { id: "64b7f0c2a1b2c3d4e5f60718" } }; // what RegistrationAuthGuard sets
     const meta = { requestId: "req-1", ipAddress: "127.0.0.1" };
-
-    // it('should throw UnauthorizedException when user not found by mobile', async () => {
-    //   authService.findUserByMobile.mockResolvedValue(null);
-
-    //   await expect(controller.register(registerDto, req, meta)).rejects.toThrow(
-    //     UnauthorizedException,
-    //   );
-    // });
 
     it("registers using the user id from the registration token, not the body", async () => {
       authService.register.mockResolvedValue({

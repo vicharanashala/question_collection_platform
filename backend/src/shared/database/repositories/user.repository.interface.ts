@@ -26,24 +26,12 @@ export interface UserFilter {
 }
 
 /** ─── Leaderboard projection ──────────────────────────────────────────────── */
-// export interface LeaderboardEntry {
-//   id: string;
-//   username: string | null;
-//   name: string;
-//   mobileNumber: string;
-//   profilePicUrl: string | null;
-//   crops: string[];
-//   approvedCount: number;
-//   rank?: number;
-// }
 
 export interface LeaderboardEntry {
   id: string;
   name: string;
   totalQuestions: number;
 }
-
-
 
 export interface UserActivityAnalytics {
   /** Users created within [from, to]. */

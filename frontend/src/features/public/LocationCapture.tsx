@@ -295,24 +295,6 @@ export function LocationCaptureModal({
       });
   }
 
-  // function handleConfirm() {
-  //   if (!coords) {
-  //     toast.error(
-  //       "We need your location to continue — please allow location access.",
-  //     );
-  //     return;
-  //   }
-  //   const state = states.find((s) => s.code === stateCode)?.name;
-  //   const district = districts.find((d) => d.code === districtCode)?.name;
-  //   const block = blocks.find((b) => b.code === blockCode)?.name;
-  //   const village = villages.find((v) => v.code === villageCode)?.name;
-  //   if (!state || !district || !block || !village) {
-  //     toast.error("Please select State, District, Block, and Village");
-  //     return;
-  //   }
-  //   onConfirm({ ...coords, state, district, block, village });
-  // }
-
   function handleConfirm() {
     if (!coords) {
       toast.error(

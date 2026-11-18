@@ -115,16 +115,7 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
     });
   });
 
-  // describe('GET /admin/users', () => {
-  //   it('should return paginated user list', async () => {
-  //     const result = { items: [], total: 0, page: 1, limit: 20, pages: 0 };
-  //     service.listUsers.mockResolvedValue(result);
-
   //     const response = await controller.listUsers({ page: 1, limit: 20 } as any);
-
-  //     expect(response.total).toBe(0);
-  //   });
-  // });
 
   describe('GET /admin/users', () => {
   it('should return paginated user list', async () => {
@@ -165,7 +156,6 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
     expect(asAdmin.items[0]).not.toHaveProperty('session');
   });
 });
-
 
   describe('GET /admin/users/:id', () => {
     it('should return user detail with recent questions', async () => {
@@ -332,19 +322,6 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
       expect(result.items).toHaveLength(1);
     });
   });
-
-  // describe('POST /admin/config', () => {
-  //   it('should create a new config entry', async () => {
-  //     service.createConfig.mockResolvedValue({ success: true, config: { key: 'new_key', value: 42 } });
-
-  //     const result = await controller.createConfig(
-  //       { key: 'new_key', value: 42, description: 'New config' } as any,
-  //       adminReq as any,
-  //     );
-
-  //     expect(result.success).toBe(true);
-  //   });
-  // });
 
   describe('PATCH /admin/config', () => {
     it('should update an existing config entry', async () => {

@@ -17,7 +17,6 @@ import { DOMAINS } from '../constants/domains';
 import { NormalizeMediaUrls } from '../../../shared/middleware/transformers/normalize-media-urls.transformer';
 import { Type } from 'class-transformer';
 
-
 export class SubmissionLocationDto {
   @IsNumber({}, { message: 'latitude must be a number' })
   latitude: number;
@@ -45,66 +44,6 @@ export class SubmissionLocationDto {
   @MaxLength(255)
   village: string;
 }
-
-// export class SubmitQuestionDto {
-//   /**
-//    * Language code (ISO 639-1). If omitted, defaults to the user's languagePreference.
-//    * The mobile app no longer sends this field — it is derived server-side.
-//    */
-//   @IsString()
-//   @IsOptional()
-//   @MaxLength(50)
-//   language?: string;
-
-//   @IsArray()
-//   @ArrayMinSize(1)
-//   @IsString({ each: true })
-//   domains: string[];
-
-//   @IsString()
-//   season: Season;
-
-//   @IsString()
-//   @IsNotEmpty()
-//   @MaxLength(255)
-//   cropType: string;
-
-//   @IsString()
-//   @IsNotEmpty()
-//   @MaxQuestionChars()
-//   questionText: string;
-
-//   @IsString()
-//   @IsNotEmpty()
-//   state: string;
-
-//   @IsString()
-//   @IsNotEmpty()
-//   district: string;
-
-//   @IsString()
-//   @IsOptional()
-//   block?: string;
-
-//   @ValidateIf((o) => o.agroClimaticZone !== undefined && o.agroClimaticZone !== null && o.agroClimaticZone !== '')
-//   @IsString({ message: 'agroClimaticZone must be a string' })
-//   @MaxLength(255, { message: 'agroClimaticZone must be shorter than or equal to 255 characters' })
-//   agroClimaticZone?: string;
-
-//   @IsOptional()
-//   @IsIn(['none', 'image', 'video', 'audio'])
-//   mediaType?: 'none' | 'image' | 'video' | 'audio';
-
-//   @IsOptional()
-//   @IsArray()
-//   @IsString({ each: true })
-//   @NormalizeMediaUrls()
-//   mediaUrls?: string[];
-
-//   @IsOptional()
-//   @IsObject()
-//   deviceInfo?: Record<string, unknown>;
-// }
 
 export class SubmitQuestionDto {
   /**

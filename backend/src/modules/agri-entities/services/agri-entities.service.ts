@@ -40,34 +40,8 @@ export class AgriEntitiesService {
     private readonly userService: UserService
   ) {}
 
-  // Stores a user's crop, weed, pest or disease record for later review.
-  // async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
-  //     const now = new Date();
-  //       const submissionLocation = dto.submissionLocation
-  //     ? { ...dto.submissionLocation, capturedAt: now }
-  //     : undefined;
-  //   this.assertImagesOwnedByUser(dto.imageUrls, dto.type, userId);
-
-  //   const saved = await this.agriEntityRepo.create({
-  //     userId,
-  //     type: dto.type,
-  //     localName: dto.localName,
-  //     englishName: dto.englishName,
-  //     botanicalName: dto.botanicalName,
-  //     localNameSource: dto.localNameSource,
-  //     alternateNames: dto.alternateNames.map(({ name, source }) => ({ name, source })),
-  //     imageUrls: dto.imageUrls,
-  //     status: AgriEntityStatus.PENDING,
-  //     ...(submissionLocation ? { submissionLocation } : {}),
       
   //   });
-
-  //   return {
-  //     id: saved.id,
-  //     status: saved.status,
-  //     message: 'Submitted successfully',
-  //   };
-  // }
 
   async submit(userId: string, dto: SubmitAgriEntityDto): Promise<SubmitAgriEntityResponseDto> {
     const objectId = new Types.ObjectId(userId);

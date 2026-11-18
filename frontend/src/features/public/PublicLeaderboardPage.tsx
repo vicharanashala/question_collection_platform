@@ -330,16 +330,6 @@ export function PublicLeaderboardPage(): ReactNode {
   // Stats
   // ─────────────────────────────────────────────────────────────
 
-  // const totalEarningsAll = entries.reduce(
-  //   (sum, e) => sum + (e.totalEarned ?? 0),
-  //   0,
-  // );
-
-  // const totalQuestionsAll = entries.reduce(
-  //   (sum, e) => sum + (e.totalQuestions ?? 0),
-  //   0,
-  // );
-
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-4">
       {/* ─────────────────────────────────────────────

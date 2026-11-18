@@ -645,19 +645,6 @@ export class AdminController {
     return this.adminService.listConfig();
   }
 
-  // @Post("config")
-  // @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
-  // @HttpCode(HttpStatus.CREATED)
-  // @CacheInvalidate("meta:*")
-  // async createConfig(
-  //   @Body() dto: CreateConfigDto,
-  //   @Req() req: AuthenticatedRequest,
-  // ) {
-  //   let result;
-  //   result=  this.adminService.createConfig(req.user.id, dto);
-  //   return result;
-  // }
-
   @Patch("config")
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
   @HttpCode(HttpStatus.OK)

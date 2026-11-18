@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnveshanProgressService } from './anveshan-progress.service';
-import { DataSource, Repository } from 'typeorm';
 import {
   NotFoundException,
   BadRequestException,

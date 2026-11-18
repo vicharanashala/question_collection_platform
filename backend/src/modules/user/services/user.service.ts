@@ -304,59 +304,12 @@ export class UserService {
 
   // ─── Leaderboard ─────────────────────────────────────────────────────────────
 
-  // async getLeaderboard(
-  //   userId: string,
-  //   options: { limit?: number; offset?: number } = {},
-  // ): Promise<{
-  //   entries: Array<{
-  //     rank: number;
-  //     userId: string;
-  //     name: string;
-  //     totalEarned: number;
-  //     totalQuestions: number;
-  //     medal: string | null;
-  //     isCurrentUser: boolean;
-  //   }>;
-  //   userRank: number | null;
-  //   total: number;
-  // }> {
-  //   const limit = Math.min(100, Math.max(1, options.limit ?? 20));
-
   //   const offset = Math.max(0, options.offset ?? 0);
-
-  //   // Get ONLY the requested page from MongoDB
-  //   const { entries: rows, total } = await this.userRepo.getLeaderboard({
-  //     limit,
-  //     offset,
-  //   });
-
-  //   // Assign the GLOBAL rank, not page-relative rank
-  //   const ranked = rows.map((row, index) => ({
-  //     ...row,
-  //     rank: offset + index + 1,
-  //   }));
 
   //   // TODO: calculate this properly in Step 3
   //   const userRank = await this.userRepo.getLeaderboardRank({
   //     userId,
   //   });
-
-  //   const entries = ranked.map((row) => ({
-  //     rank: row.rank,
-  //     userId: row.id,
-  //     name: row.name,
-  //     totalEarned: row.totalEarned,
-  //     totalQuestions: row.totalQuestions,
-  //     medal:
-  //       row.rank === 1
-  //         ? "gold"
-  //         : row.rank === 2
-  //           ? "silver"
-  //           : row.rank === 3
-  //             ? "bronze"
-  //             : null,
-  //     isCurrentUser: row.id === userId,
-  //   }));
 
   //   return {
   //     entries,
@@ -447,23 +400,4 @@ export class UserService {
     });
   }
 
-  // private async logAudit(
-  //   actorType: ActorType,
-  //   actorId: string | null,
-  //   action: string,
-  //   entityType: string,
-  //   entityId: string,
-  //   oldValue?: Record<string, unknown> | null,
-  //   newValue?: Record<string, unknown> | null,
-  // ): Promise<void> {
-  //   const log = await this.auditRepo.create({
-  //     actorType,
-  //     actorId,
-  //     action,
-  //     entityType,
-  //     entityId,
-  //     oldValue: oldValue ?? null,
-  //     newValue: newValue ?? null,
-  //   });
-  // }
 }

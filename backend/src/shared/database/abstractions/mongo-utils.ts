@@ -96,6 +96,16 @@ export const mongoBetween = (
   [field]: { $gte: from, $lte: to },
 });
 
+/**
+ * Value-level inclusive range, for use as a field's value:
+ *   { submittedAt: mongoRange(from, to) }
+ * `mongoBetween` builds the whole `{ field: ... }` object instead.
+ */
+export const mongoRange = (from: Date, to: Date): Record<string, Date> => ({
+  $gte: from,
+  $lte: to,
+});
+
 /** Single-sided date filter (from OR to only) */
 export const dateRangeFilter = (
   field: string,

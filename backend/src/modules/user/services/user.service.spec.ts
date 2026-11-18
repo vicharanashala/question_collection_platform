@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource, Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 // import { User, AuditLog } from '../../../shared/database/entities';
@@ -55,7 +54,6 @@ describe('UserService', () => {
         UserService,
         { provide: REPOSITORY_TOKENS.User, useFactory: mockUserRepo },
         { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
-        { provide: DataSource, useFactory: mockDataSource },
       ],
     }).compile();
 

@@ -24,10 +24,9 @@ export default defineConfig(({ mode }) => {
           'maskable-icon.svg',
         ],
         workbox: {
-          // The entry bundle carries every language's translations (src/i18n/resources.ts, ~2.2 MB),
-          // which exceeds Workbox's 2 MiB default and would fail the build. Raised so it is still
-          // precached for offline use; lazy-loading languages would let this come back down.
-          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+          // Languages load as separate chunks (src/i18n/locales/*.json), so the
+          // entry bundle is small and the default 2 MiB precache limit applies.
+          // Every locale chunk is still precached, so offline use is unchanged.
           // The Zoho support-ticket page is a standalone static HTML file, not a React route —
           // never answer its navigations with the SPA shell. API URLs opened directly in a tab
           // (for example signed media links) must also reach the server, not the SPA shell.

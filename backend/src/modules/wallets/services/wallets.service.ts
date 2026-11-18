@@ -7,8 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-// import { Wallet, Transaction, WithdrawalRequest, User } from '../../../shared/database/entities';
-// import { UserPaymentDetail } from '../../../shared/database/entities/user-payment-detail.entity';
 import {
   TransactionType,
   TransactionSource,
@@ -21,7 +19,7 @@ import { PinelabsService } from '../../payment/services/pinelabs.service';
 import { RazorpayPayoutService } from '../../payment/services/razorpay-payout.service';
 import { WithdrawDto } from '../dto';
 import { AddPaymentDetailDto, PaymentDetailDto } from '../dto/payment-details.dto';
-import { encrypt, decrypt } from '../../../shared/functions/utils/encryption.util';
+import { encrypt, decrypt } from '../../../shared/utils/encryption.util';
 import {
   IWalletRepository,
   ITransactionRepository,
@@ -218,16 +216,6 @@ export class WalletsService {
     return withdrawal;
   }
 
-  // async getWithdrawals(
-  //   userId: string,
-  //   params?: { page?: number; limit?: number },
-  // ): Promise<{ items: WithdrawalRequest[]; total: number; page: number; limit: number; pages: number }> {
-  //   const wallet = await this.walletRepo.findOne({ where: { userId } });
-  //   if (!wallet) throw new NotFoundException('Wallet not found');
-
-  //   const page = Math.max(1, params?.page ?? 1);
-  //   const limit = Math.min(50, Math.max(1, params?.limit ?? 20));
-
   //   const qb = this.withdrawalRepo
   //     .createQueryBuilder('wr')
   //     .where('wr.walletId = :walletId', { walletId: wallet.id })
@@ -235,10 +223,6 @@ export class WalletsService {
   //     .orderBy('wr.createdAt', 'DESC')
   //     .skip((page - 1) * limit)
   //     .take(limit);
-
-  //   const [items, total] = await qb.getManyAndCount();
-  //   return { items, total, page, limit, pages: Math.ceil(total / limit) };
-  // }
 
   async getWithdrawals(
   userId: string,
@@ -468,7 +452,6 @@ export class WalletsService {
 
   // ─── Payment Details ────────────────────────────────────────────────────────
 
-
   async addPaymentDetail(
     userId: string,
     dto: AddPaymentDetailDto,
@@ -679,9 +662,6 @@ export class WalletsService {
     /** Razorpay only: registered name returned by the bank (from fund_account.validated webhook) */
     registeredName?: string;
   }): Promise<void> {
-    // Support both PineLabs (VF_*) and Razorpay (rzp_pl_*) order ID formats.
-    // PineLabs: VF_<paymentDetailId>_<uuid>  → matches UserPaymentDetail.verificationOrderId
-    // Razorpay: rzp_pl_<paymentDetailId>     → extract paymentDetailId and find by primary key
     let detail: UserPaymentDetail | null = null;
 
     // Resolve paymentDetailId from orderId prefix:
