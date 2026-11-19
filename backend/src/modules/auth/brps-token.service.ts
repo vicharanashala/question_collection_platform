@@ -54,6 +54,20 @@ export class BrpsTokenService {
     const tokenId = this.configService.get<string>('sms.tokenId') ?? '1';
     const ipWhitelist = this.configService.get<string>('sms.ipWhitelist') ?? '';
 
+    // Fail with a clear message instead of an opaque BRPS rejection when credentials are not set.
+    const missing = [
+      ['BRPS_SERVICE_ID', serviceId],
+      ['BRPS_USERNAME', username],
+      ['BRPS_PASSWORD', password],
+    ]
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+    if (missing.length > 0) {
+      const message = `BSNL SMS credentials not configured. Missing env vars: ${missing.join(', ')}`;
+      this.logger.error(`[BRPS] ${message}`);
+      throw new Error(message);
+    }
+
     const body: Record<string, unknown> = {
       Service_Id: serviceId,
       Username: username,
