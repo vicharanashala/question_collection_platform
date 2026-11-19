@@ -211,8 +211,6 @@ jobs:
             NODE_ENV=production
             ANSWER_SCORING_ENABLED=${{ vars.ANSWER_SCORING_ENABLED || 'false' }}
             GDB_DUPLICATE_CHECK_ENABLED=${{ vars.GDB_DUPLICATE_CHECK_ENABLED || 'true' }}
-            MONGODB_URL=${{ secrets.MONGODB_URL_PROD }}
-            ANVESHAN_DB_URL=${{ secrets.ANVESHAN_DB_URL_PROD }}
             ANVESHAN_ANNADATHA_AUTH_KEY=${{ secrets.ANVESHAN_ANNADATHA_AUTH_KEY }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS_PROD }}
             JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}
@@ -230,12 +228,10 @@ jobs:
             BRPS_BASE_URL=${{ vars.BRPS_BASE_URL }}
             BRPS_SERVICE_ID=${{ secrets.BRPS_SERVICE_ID }}
             BRPS_USERNAME=${{ secrets.BRPS_USERNAME }}
-            BRPS_PASSWORD=${{ secrets.BRPS_PASSWORD }}
             BRPS_ENTITY_ID=${{ secrets.BRPS_ENTITY_ID }}
             BRPS_HEADER=${{ vars.BRPS_HEADER }}
             BRPS_TEMPLATE_ID=${{ secrets.BRPS_TEMPLATE_ID }}
             BRPS_TOKEN_ID=${{ vars.BRPS_TOKEN_ID }}
-            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
             GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
             GCP_BUCKET_NAME=${{ vars.GCP_BUCKET_NAME }}
             GCP_STORAGE_PREFIX=production
@@ -266,7 +262,12 @@ jobs:
             PROXY=${{ secrets.PROXY }}
             WEB_DIST_PATH=/app/web/dist
           env_vars_update_strategy: overwrite
-          # Ephemeral, reusable Tailscale key resolved by Cloud Run from Secret Manager at
-          # instance start. The runtime service account needs secretAccessor on it.
+          # Values resolved by Cloud Run from Secret Manager at instance start.
+          # The runtime service account needs secretAccessor on each secret.
+          # A variable listed here must not also appear in env_vars above.
           secrets: |
             TAILSCALE_AUTHKEY=Tailscale_Auth_Key:latest
+            MONGODB_URL=QC_MONGO_DB_URL:latest
+            ANVESHAN_DB_URL=ANVESHAN_DB_URL:latest
+            BRPS_PASSWORD=BSNL_PASSWORD:latest
+            SARVAM_API_KEY=REPLACE_WITH_FULL_SARVAM_SECRET_NAME:latest
