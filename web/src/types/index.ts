@@ -162,6 +162,8 @@ export interface AccountLockedInfo {
 export interface AuthUser {
   id: string;
   mobileNumber: string;
+  /** A verified address linked through the email OTP flow. */
+  email?: string | null;
   name: string;
   username?: string | null;
   role: UserRole;

@@ -5,6 +5,7 @@ import {
   UserCategory,
   UserRole,
 } from "../../../classes/enums";
+import { EmailOtpPurpose } from "@/modules/auth/auth.controller";
 
 export type UserDocument = User & Document;
 
@@ -31,6 +32,41 @@ export class User {
 
   @Prop({ default: "" })
   name: string;
+
+  @Prop({
+    type: String,
+    default: null,
+    lowercase: true,
+    trim: true,
+  })
+  email: string | null;
+
+  @Prop({ type: String, default: null })
+  emailOtpHash: string | null;
+
+  @Prop({ type: Date, default: null })
+  emailOtpExpiresAt: Date | null;
+
+  @Prop({
+    type: String,
+    lowercase: true,
+    trim: true,
+    default: null,
+  })
+  emailOtpTarget: string | null;
+
+  @Prop({
+    type: String,
+    enum: EmailOtpPurpose,
+    default: null,
+  })
+  emailOtpPurpose: EmailOtpPurpose | null;
+
+  @Prop({ type: Date, default: null })
+  emailVerifiedAt: Date | null;
+
+  @Prop({ type: Number, default: 0 })
+  emailOtpAttempts: number;
 
   @Prop({ enum: UserRole, index: true, default: UserRole.USER })
   role: UserRole;
@@ -197,7 +233,7 @@ UserSchema.index(
     unique: true,
     partialFilterExpression: {
       isDeleted: false,
-      mobileNumber: { $type: 'string' },
+      mobileNumber: { $type: "string" },
     },
   },
 );
@@ -209,7 +245,7 @@ UserSchema.index(
     unique: true,
     partialFilterExpression: {
       isDeleted: false,
-      username: { $type: 'string' },
+      username: { $type: "string" },
     },
   },
 );

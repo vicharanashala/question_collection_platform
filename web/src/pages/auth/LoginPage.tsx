@@ -23,6 +23,7 @@ import {
   Sprout,
   Camera,
   Award,
+  Mail,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -187,10 +188,50 @@ function StepMobile({
   );
 }
 
+function StepEmail({
+  email,
+  setEmail,
+  loading,
+  onSubmit,
+}: {
+  email: string;
+  setEmail: (value: string) => void;
+  loading: boolean;
+  onSubmit: (event: React.FormEvent) => void;
+}) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-xs sm:text-sm font-medium text-[hsl(var(--text))]">Email address</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(var(--text-tertiary))]" />
+          <Input
+            type="email"
+            inputMode="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="pl-9 text-sm sm:text-base font-medium"
+            autoComplete="email"
+            autoFocus
+          />
+        </div>
+      </div>
+
+      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+        {loading ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Sending OTP...</> : "Send OTP"}
+      </Button>
+
+      <p className="text-center text-[11px] sm:text-xs text-[hsl(var(--text-tertiary))]">A 6-digit code will be sent to your email</p>
+    </form>
+  );
+}
+
 // ─── Step 2: OTP ───────────────────────────────────────────────────────────
 
 function StepOtp({
-  mobile,
+  identifier,
+  method,
   otp,
   setOtp,
   loading,
@@ -199,7 +240,8 @@ function StepOtp({
   onBack,
   onResend,
 }: {
-  mobile: string;
+  identifier: string;
+  method: "phone" | "email";
   otp: string;
   setOtp: (v: string) => void;
   loading: boolean;
@@ -230,11 +272,11 @@ function StepOtp({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Mobile badge */}
+      {/* Delivery address badge */}
       <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 py-2.5">
-        <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
-        <span className="text-xs font-medium text-[hsl(var(--text))] flex-1">
-          +91 {mobile}
+        {method === "phone" ? <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" /> : <Mail className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />}
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[hsl(var(--text))]">
+          {method === "phone" ? `+91 ${identifier}` : identifier}
         </span>
         <button
           type="button"
@@ -336,10 +378,12 @@ export function LoginPage() {
   const { theme, toggleTheme } = useTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
   const location = useLocation();
   // "Check again" on the Anveshan phase gate returns here with the number filled in.
   const prefilledMobile = (location.state as { mobileNumber?: string } | null)?.mobileNumber ?? "";
   const [mobile, setMobile] = useState(prefilledMobile);
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const countdown = useCountdown();
@@ -358,6 +402,27 @@ export function LoginPage() {
       setStep(2);
       countdown.start();
       toast.success(t('loginPage.otpSentToYour'));
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to send OTP"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSendEmailOtp(e: React.FormEvent) {
+    e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authApi.requestEmailOtp(normalizedEmail, "EMAIL_LOGIN");
+      setEmail(normalizedEmail);
+      setStep(2);
+      countdown.start();
+      toast.success("OTP sent to your email");
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to send OTP"));
     } finally {
@@ -472,12 +537,41 @@ export function LoginPage() {
   }
 }
 
+  async function handleVerifyEmailOtp(e: React.FormEvent) {
+    e.preventDefault();
+    const cleaned = otp.replace(/\D/g, "").slice(0, 6);
+    if (cleaned.length !== 6) {
+      toast.error(t('loginPage.enterTheDigitOtp'));
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.verifyEmailOtp(email, cleaned, "EMAIL_LOGIN");
+      if (!res.tokens || !res.user) throw new Error("Unable to sign in with this email");
+      login(
+        { accessToken: res.tokens.accessToken, refreshToken: res.tokens.refreshToken },
+        { ...res.user, token: res.tokens.accessToken },
+      );
+      toast.success(t('loginPage.welcomeBack'));
+      navigate(res.user.role === "user" ? "/home" : "/dashboard", { replace: true });
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Invalid OTP"));
+      setOtp("");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleResend() {
     if (countdown.active) return;
     setOtp("");
     setLoading(true);
     try {
-      await authApi.requestOtp(mobile, false);
+      if (loginMethod === "email") {
+        await authApi.requestEmailOtp(email, "EMAIL_LOGIN");
+      } else {
+        await authApi.requestOtp(mobile, false);
+      }
       countdown.start();
       toast.success(t('loginPage.newOtpSent'));
     } catch (err) {
@@ -578,10 +672,29 @@ export function LoginPage() {
                 </h2>
                 <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
                   {step === 1
-                    ? t('loginPhone.signInDesc')
-                    : `OTP sent to +91 ${mobile}`}
+                    ? (loginMethod === "phone" ? t('loginPhone.signInDesc') : "Enter your email to continue")
+                    : `OTP sent to ${loginMethod === "phone" ? `+91 ${mobile}` : email}`}
                 </p>
               </div>
+
+              {step === 1 && (
+                <div className="mb-4 grid grid-cols-2 rounded-lg bg-[hsl(var(--surface-variant))] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod("phone")}
+                    className={cn("rounded-md px-3 py-2 text-sm font-semibold transition-colors", loginMethod === "phone" ? "bg-[hsl(var(--surface))] text-[hsl(var(--text))] shadow-sm" : "text-[hsl(var(--text-secondary))]")}
+                  >
+                    Phone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLoginMethod("email")}
+                    className={cn("rounded-md px-3 py-2 text-sm font-semibold transition-colors", loginMethod === "email" ? "bg-[hsl(var(--surface))] text-[hsl(var(--text))] shadow-sm" : "text-[hsl(var(--text-secondary))]")}
+                  >
+                    Email
+                  </button>
+                </div>
+              )}
 
               {/* Animated step forms */}
               <AnimatePresence mode="wait">
@@ -592,21 +705,29 @@ export function LoginPage() {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.14 }}
                 >
-                  {step === 1 ? (
+                  {step === 1 && loginMethod === "phone" ? (
                     <StepMobile
                       mobile={mobile}
                       setMobile={setMobile}
                       loading={loading}
                       onSubmit={handleSendOtp}
                     />
+                  ) : step === 1 ? (
+                    <StepEmail
+                      email={email}
+                      setEmail={setEmail}
+                      loading={loading}
+                      onSubmit={handleSendEmailOtp}
+                    />
                   ) : (
                     <StepOtp
-                      mobile={mobile}
+                      identifier={loginMethod === "phone" ? mobile : email}
+                      method={loginMethod}
                       otp={otp}
                       setOtp={setOtp}
                       loading={loading}
                       countdown={countdown}
-                      onSubmit={handleVerifyOtp}
+                      onSubmit={loginMethod === "phone" ? handleVerifyOtp : handleVerifyEmailOtp}
                       onBack={handleBack}
                       onResend={handleResend}
                     />

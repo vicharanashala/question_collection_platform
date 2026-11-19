@@ -55,7 +55,13 @@ import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
 import { getAnveshanScope } from "@/lib/anveshanMode";
 import { getTesterScope } from "@/lib/testerMode";
-const NO_SESSION_END = ["/auth/send-otp", "/auth/verify-otp", "/auth/refresh"];
+const NO_SESSION_END = [
+  "/auth/send-otp",
+  "/auth/verify-otp",
+  "/auth/sync-email",
+  "/auth/verify-email-otp",
+  "/auth/refresh",
+];
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -382,6 +388,31 @@ export const userApi = {
 };
 
 export const authApi = {
+  requestEmailOtp: (email: string, purpose: "EMAIL_SYNC" | "EMAIL_LOGIN" = "EMAIL_SYNC") =>
+    request<{ message: string }>(
+      "/auth/sync-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, purpose }),
+      },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    ),
+
+  verifyEmailOtp: (email: string, otp: string, purpose: "EMAIL_SYNC" | "EMAIL_LOGIN" = "EMAIL_SYNC") =>
+    request<{
+      message?: string;
+      tokens?: { accessToken: string; refreshToken: string; expiresIn: number };
+      user?: AuthUser;
+    }>(
+      "/auth/verify-email-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, otp, purpose }),
+      },
+      false,
+    ),
+
   requestOtp: (mobileNumber: string, isWeb = false) => {
     return request<{ message: string }>(
       "/auth/request-otp",

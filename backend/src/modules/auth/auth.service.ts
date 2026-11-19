@@ -44,6 +44,9 @@ import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
 import { SessionMeta, SessionService } from "../session/session.service";
 import { RequestMeta } from "@/shared/middleware/decorators/request-meta.decorator";
+import { EmailService } from "./email.service";
+import { Types } from "mongoose";
+import { EmailOtpPurpose } from "./auth.controller";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -74,6 +77,7 @@ export interface PublicUser {
   id: string;
   mobileNumber: string | null;
   name: string;
+  email: string | null;
   category: UserCategory | null;
   state: string;
   district: string;
@@ -132,7 +136,8 @@ export class AuthService {
     private readonly rateLimitCounter: RateLimitCounterService,
     private readonly adminService: AdminService,
     private readonly anveshanProgressService: AnveshanProgressService,
-    private readonly sessionService: SessionService
+    private readonly sessionService: SessionService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -321,7 +326,7 @@ export class AuthService {
   async verifyOtp(
     rawMobile: string,
     dto: VerifyOtpDto,
-    meta?: RequestMeta
+    meta?: RequestMeta,
   ): Promise<
     | AuthResponse
     | {
@@ -341,14 +346,14 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
-  if (user.isDeleted) {
-  throw new ForbiddenException({
-    statusCode: 403,
-    error: "Forbidden",
-    code: "ACCOUNT_DELETED",
-    message: "This user is deleted. Please contact admin to restore.",
-  });
-}
+    if (user.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
 
     // Auto-reinstate: suspension period has expired
     if (
@@ -514,7 +519,11 @@ export class AuthService {
    * Complete registration for a new user (after OTP verification).
    * Creates user wallet and returns auth tokens.
    */
-  async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
+  async register(
+    dto: RegisterDto,
+    userId: string,
+    meta?: RequestMeta,
+  ): Promise<AuthResponse> {
     const isDev = isDevelopment();
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
@@ -671,7 +680,7 @@ export class AuthService {
   async issueTokens(user: User, meta?: SessionMeta): Promise<AuthTokens> {
     // NOTE: tokenVersion is NOT incremented here. Each login creates a new session
     // that replaces the user's previous one, so only one device stays logged in.
-    const sid = randomUUID()
+    const sid = randomUUID();
     const tokenVersion = user.tokenVersion;
     const base = {
       sub: user._id.toString(),
@@ -681,8 +690,14 @@ export class AuthService {
       sid,
     };
 
-    const accessToken = this.jwtService.sign({ ...base, type: 'access' }, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign({ ...base, type: 'refresh' }, { expiresIn: '7d' });
+    const accessToken = this.jwtService.sign(
+      { ...base, type: "access" },
+      { expiresIn: "15m" },
+    );
+    const refreshToken = this.jwtService.sign(
+      { ...base, type: "refresh" },
+      { expiresIn: "7d" },
+    );
 
     await this.sessionService.create({
       sessionId: sid,
@@ -700,130 +715,138 @@ export class AuthService {
    * Also validates tokenVersion to reject tokens invalidated by logout.
    */
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-  try {
-    const payload = this.jwtService.verify<{
-      sub: string;
-      mobileNumber: string;
-      role: UserRole;
-      tokenVersion: number;
-      sid?: string;
-      type?: string;
-    }>(refreshToken);
+    try {
+      const payload = this.jwtService.verify<{
+        sub: string;
+        mobileNumber: string;
+        role: UserRole;
+        tokenVersion: number;
+        sid?: string;
+        type?: string;
+      }>(refreshToken);
 
-    // reject access tokens, registration tokens, and old tokens that have no sid
-    if (payload.type !== "refresh" || !payload.sid) {
-      throw new UnauthorizedException("Invalid refresh token");
-    }
+      // reject access tokens, registration tokens, and old tokens that have no sid
+      if (payload.type !== "refresh" || !payload.sid) {
+        throw new UnauthorizedException("Invalid refresh token");
+      }
 
-    // session must exist, be unexpired, and match this refresh token
-    await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
+      // session must exist, be unexpired, and match this refresh token
+      await this.sessionService.validateRefresh(
+        payload.sid,
+        payload.sub,
+        refreshToken,
+      );
 
-    // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
-    const user = await this.userRepo.findOne({
-      where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
-    });
-    if (!user) {
-      throw new UnauthorizedException("User not found");
-    }
-
-    // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
-    if (user.isDeleted) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        error: "Forbidden",
-        code: "ACCOUNT_DELETED",
-        message: "This user is deleted. Please contact admin to restore.",
+      // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
+      const user = await this.userRepo.findOne({
+        where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
       });
+      if (!user) {
+        throw new UnauthorizedException("User not found");
+      }
+
+      // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
+      if (user.isDeleted) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          error: "Forbidden",
+          code: "ACCOUNT_DELETED",
+          message: "This user is deleted. Please contact admin to restore.",
+        });
+      }
+
+      if (user.tokenVersion !== payload.tokenVersion) {
+        throw new UnauthorizedException("Session expired. Please login again.");
+      }
+
+      // Auto-reinstate: suspension period has expired
+      if (
+        user.verificationStatus === VerificationStatus.SUSPENDED &&
+        user.suspendedUntil &&
+        new Date() > new Date(user.suspendedUntil)
+      ) {
+        await this.userRepo.update(user._id, {
+          verificationStatus: VerificationStatus.VERIFIED,
+          suspendedAt: null,
+          suspendedUntil: null,
+          suspendedReason: null,
+        });
+        user.verificationStatus = VerificationStatus.VERIFIED;
+      }
+
+      // Block suspended or banned users from refreshing a session
+      if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.SUSPENDED,
+          reason: user.suspendedReason,
+          suspendedAt: user.suspendedAt,
+          suspendedUntil: user.suspendedUntil,
+          bannedAt: null,
+        });
+      }
+      if (user.verificationStatus === VerificationStatus.BANNED) {
+        throw new UserAccountLockedException({
+          status: VerificationStatus.BANNED,
+          reason: user.bannedReason,
+          suspendedAt: null,
+          suspendedUntil: null,
+          bannedAt: user.bannedAt,
+        });
+      }
+
+      // Same session, same refresh token: only a new access token is issued
+      const accessToken = this.jwtService.sign(
+        {
+          sub: user._id.toString(),
+          mobileNumber: user.mobileNumber,
+          role: user.role,
+          tokenVersion: user.tokenVersion,
+          sid: payload.sid,
+          type: "access",
+        },
+        { expiresIn: "15m" },
+      );
+
+      user.lastLoginAt = new Date();
+      await this.userRepo.save(user);
+
+      return { accessToken, refreshToken, expiresIn: 15 * 60 };
+    } catch (err) {
+      // Rethrow every HttpException (401 with SESSION_REVOKED, 503, account locked)
+      if (err instanceof HttpException) throw err;
+      throw new UnauthorizedException("Invalid or expired refresh token");
     }
-
-    if (user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException("Session expired. Please login again.");
-    }
-
-    // Auto-reinstate: suspension period has expired
-    if (
-      user.verificationStatus === VerificationStatus.SUSPENDED &&
-      user.suspendedUntil &&
-      new Date() > new Date(user.suspendedUntil)
-    ) {
-      await this.userRepo.update(user._id, {
-        verificationStatus: VerificationStatus.VERIFIED,
-        suspendedAt: null,
-        suspendedUntil: null,
-        suspendedReason: null,
-      });
-      user.verificationStatus = VerificationStatus.VERIFIED;
-    }
-
-    // Block suspended or banned users from refreshing a session
-    if (user.verificationStatus === VerificationStatus.SUSPENDED) {
-      throw new UserAccountLockedException({
-        status: VerificationStatus.SUSPENDED,
-        reason: user.suspendedReason,
-        suspendedAt: user.suspendedAt,
-        suspendedUntil: user.suspendedUntil,
-        bannedAt: null,
-      });
-    }
-    if (user.verificationStatus === VerificationStatus.BANNED) {
-      throw new UserAccountLockedException({
-        status: VerificationStatus.BANNED,
-        reason: user.bannedReason,
-        suspendedAt: null,
-        suspendedUntil: null,
-        bannedAt: user.bannedAt,
-      });
-    }
-
-    // Same session, same refresh token: only a new access token is issued
-    const accessToken = this.jwtService.sign(
-      {
-        sub: user._id.toString(),
-        mobileNumber: user.mobileNumber,
-        role: user.role,
-        tokenVersion: user.tokenVersion,
-        sid: payload.sid,
-        type: "access",
-      },
-      { expiresIn: "15m" },
-    );
-
-    user.lastLoginAt = new Date();
-    await this.userRepo.save(user);
-
-    return { accessToken, refreshToken, expiresIn: 15 * 60 };
-  } catch (err) {
-    // Rethrow every HttpException (401 with SESSION_REVOKED, 503, account locked)
-    if (err instanceof HttpException) throw err;
-    throw new UnauthorizedException("Invalid or expired refresh token");
   }
-}
 
   /**
    * Validate a JWT access token and return the user.
    */
   async validateToken(token: string): Promise<User> {
-  try {
-    const payload = this.jwtService.verify<{ sub: string; sid?: string; type?: string }>(token);
-    if (payload.type !== "access" || !payload.sid) {
-      throw new UnauthorizedException("Invalid access token");
+    try {
+      const payload = this.jwtService.verify<{
+        sub: string;
+        sid?: string;
+        type?: string;
+      }>(token);
+      if (payload.type !== "access" || !payload.sid) {
+        throw new UnauthorizedException("Invalid access token");
+      }
+      await this.sessionService.validateAccess(payload.sid, payload.sub);
+
+      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+      if (!user) throw new UnauthorizedException("User not found");
+      return user;
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+      throw new UnauthorizedException("Invalid or expired access token");
     }
-    await this.sessionService.validateAccess(payload.sid, payload.sub);
-
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-    if (!user) throw new UnauthorizedException("User not found");
-    return user;
-  } catch (err) {
-    if (err instanceof HttpException) throw err;
-    throw new UnauthorizedException("Invalid or expired access token");
   }
-}
 
-async logout(userId: string, sid: string): Promise<void> {
-  // Deletes only if sid is still the user's current session, so a stale
-  // device can't log out a newer login. Idempotent: 0 deleted is fine.
-  await this.sessionService.revoke(sid, userId);
-}
+  async logout(userId: string, sid: string): Promise<void> {
+    // Deletes only if sid is still the user's current session, so a stale
+    // device can't log out a newer login. Idempotent: 0 deleted is fine.
+    await this.sessionService.revoke(sid, userId);
+  }
 
   /**
    * Increment tokenVersion to invalidate all existing sessions for a user.
@@ -1038,6 +1061,286 @@ async logout(userId: string, sid: string): Promise<void> {
     return candidates.slice(0, limit);
   }
 
+  async requestEmailOtp(
+    email: string,
+    purpose: EmailOtpPurpose,
+    userId?: string,
+  ): Promise<{ message: string }> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    let user: User | null = null;
+
+    // EMAIL_SYNC requires an authenticated user
+    if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
+      if (!userId) {
+        throw new UnauthorizedException(
+          "Authentication required to sync email",
+        );
+      }
+
+      user = await this.userRepo.findOne({
+        where: { _id: new Types.ObjectId(userId) },
+      });
+
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
+
+      if (user.email) {
+        throw new BadRequestException(
+          "An email address is already linked to this account",
+        );
+      }
+
+      // Prevent syncing an email already associated with another user
+      const existingUser = await this.userRepo.findOne({
+        where: { email: normalizedEmail },
+      });
+
+      if (existingUser && existingUser._id.toString() !== userId) {
+        throw new BadRequestException(
+          "This email is already associated with another account",
+        );
+      }
+    }
+
+    // EMAIL_LOGIN finds the account using its registered email
+    else if (purpose === EmailOtpPurpose.EMAIL_LOGIN) {
+      user = await this.userRepo.findOne({
+        where: { email: normalizedEmail },
+      });
+
+      // Avoid revealing whether an email exists
+      if (!user) {
+        return {
+          message: "If the email is registered, an OTP will be sent.",
+        };
+      }
+
+      if (!user.emailVerifiedAt) {
+        return {
+          message: "If the email is registered, an OTP will be sent.",
+        };
+      }
+    } else {
+      throw new BadRequestException("Invalid email OTP purpose");
+    }
+
+    // Email OTP rate limiting
+    const emailRateLimitKey = `email_otp_rl:${normalizedEmail}`;
+    const userRateLimitKey = `email_otp_user_rl:${user._id.toString()}`;
+
+    const otpRateLimitEnabled =
+      this.configService.get<boolean>("app.otpRateLimit") ?? true;
+
+    if (otpRateLimitEnabled) {
+      const [emailLimit, userLimit] = await Promise.all([
+        this.rateLimitCounter.peek(emailRateLimitKey),
+        this.rateLimitCounter.peek(userRateLimitKey),
+      ]);
+
+      if (
+        (emailLimit && emailLimit.count >= this.otpMaxRequestsPerWindow) ||
+        (userLimit && userLimit.count >= this.otpMaxRequestsPerWindow)
+      ) {
+        throw new BadRequestException(
+          "Too many OTP requests. Please try again after 15 minutes.",
+        );
+      }
+    }
+
+    // Generate OTP
+    const otp = randomInt(100000, 999999).toString();
+    const otpHash = await bcrypt.hash(otp, 12);
+
+    const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
+
+    const body = `Your OTP is ${otp}. It will expire in ${this.otpExpiryMinutes} minutes.`;
+
+    if (isDevelopment()) {
+      this.logger.debug(`[OTP] ${otp} for email=${normalizedEmail}`);
+    }
+
+    // Store email-specific OTP fields
+    await this.userRepo.update(user._id, {
+      emailOtpHash: otpHash,
+      emailOtpExpiresAt: expiresAt,
+      emailOtpTarget: normalizedEmail,
+      emailOtpPurpose: purpose,
+      emailOtpAttempts: 0,
+    });
+
+    // Increment both rate-limit counters
+    if (otpRateLimitEnabled) {
+      await Promise.all([
+        this.rateLimitCounter.hit(
+          emailRateLimitKey,
+          this.otpRateLimitWindowSeconds,
+        ),
+        this.rateLimitCounter.hit(
+          userRateLimitKey,
+          this.otpRateLimitWindowSeconds,
+        ),
+      ]);
+    }
+
+    // Send OTP
+    try {
+      await this.emailService.sendSyncEmailToUser(
+        normalizedEmail,
+        "Email Verification OTP",
+        body,
+      );
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+
+      this.logger.error(
+        `Email OTP delivery failed for ${normalizedEmail}: ${reason}`,
+      );
+
+      throw new BadGatewayException({
+        message: "We could not send the OTP. Please try again later.",
+        code: "EMAIL_OTP_DELIVERY_FAILED",
+        ...(isDevelopment() && { detail: reason }),
+      });
+    }
+
+    return { message: "OTP sent successfully" };
+  }
+
+  async verifyEmailOtp(
+  email: string,
+  otp: string,
+  purpose: EmailOtpPurpose,
+  userId?: string,
+  meta?: RequestMeta,
+) {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  let user: User | null = null;
+
+  if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
+    if (!userId) {
+      throw new UnauthorizedException("Authentication required");
+    }
+
+    user = await this.userRepo.findOne({
+      where: { _id: new Types.ObjectId(userId) },
+    });
+  } else if (purpose === EmailOtpPurpose.EMAIL_LOGIN) {
+    user = await this.userRepo.findOne({
+      where: { email: normalizedEmail },
+    });
+  } else {
+    throw new BadRequestException("Invalid email OTP purpose");
+  }
+
+  if (!user) {
+    throw new UnauthorizedException("Invalid or expired OTP");
+  }
+
+  // Validate OTP target and purpose
+  if (
+    user.emailOtpTarget !== normalizedEmail ||
+    user.emailOtpPurpose !== purpose ||
+    !user.emailOtpHash ||
+    !user.emailOtpExpiresAt
+  ) {
+    throw new UnauthorizedException("Invalid or expired OTP");
+  }
+
+  // Check expiry
+  if (new Date() > new Date(user.emailOtpExpiresAt)) {
+    throw new UnauthorizedException(
+      "OTP has expired. Please request a new one.",
+    );
+  }
+
+  // Verify OTP
+  const isValidOtp = await bcrypt.compare(
+    otp,
+    user.emailOtpHash,
+  );
+
+  if (!isValidOtp) {
+    const attempts = (user.emailOtpAttempts ?? 0) + 1;
+
+    await this.userRepo.update(user._id, {
+      emailOtpAttempts: attempts,
+      ...(attempts >= 5 && {
+        emailOtpHash: null,
+        emailOtpExpiresAt: null,
+        emailOtpTarget: null,
+        emailOtpPurpose: null,
+        emailOtpAttempts: 0,
+      }),
+    });
+
+    throw new UnauthorizedException(
+      attempts >= 5
+        ? "Maximum OTP attempts reached. Please request a new OTP."
+        : "Invalid OTP",
+    );
+  }
+
+  // EMAIL_SYNC: Attach verified email to current user
+  if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
+    if (user.email) {
+      throw new BadRequestException(
+        "An email address is already linked to this account",
+      );
+    }
+
+    const existingUser = await this.userRepo.findOne({
+      where: { email: normalizedEmail },
+    });
+
+    if (
+      existingUser &&
+      existingUser._id.toString() !== user._id.toString()
+    ) {
+      throw new BadRequestException(
+        "This email is already associated with another account",
+      );
+    }
+
+    await this.userRepo.update(user._id, {
+      email: normalizedEmail,
+      emailVerifiedAt: new Date(),
+      emailOtpHash: null,
+      emailOtpExpiresAt: null,
+      emailOtpTarget: null,
+      emailOtpPurpose: null,
+      emailOtpAttempts: 0,
+    });
+
+    return {
+      message: "Email verified and synced successfully",
+    };
+  }
+
+  // EMAIL_LOGIN: Consume OTP without modifying email
+  await this.userRepo.update(user._id, {
+    emailOtpHash: null,
+    emailOtpExpiresAt: null,
+    emailOtpTarget: null,
+    emailOtpPurpose: null,
+    emailOtpAttempts: 0,
+  });
+
+  // Reuse your existing token-generation flow
+  user.lastLoginAt = new Date();
+  await this.userRepo.save(user);
+
+  const tokens = await this.issueTokens(user, meta);
+
+  return {
+    tokens,
+    user: this.toPublicUser(user),
+  };
+}
+
+
   /**
    * Write a username→userId mapping to Redis.
    * Called on registration and profile update.
@@ -1057,6 +1360,7 @@ async logout(userId: string, sid: string): Promise<void> {
       mobileNumber: user.mobileNumber,
       username: user.username ?? null,
       name: user.name,
+      email: user.email ?? null,
       category: user.category,
       state: user.state,
       district: user.district,
