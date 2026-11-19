@@ -2,11 +2,23 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const repoRoot = path.resolve(__dirname, "../..");
-const webRoot = path.join(repoRoot, "web");
-const resourceFile = path.join(webRoot, "src/i18n/resources.ts");
+const {
+  repoRoot,
+  frontendRoot,
+  localesDir,
+  readLocale,
+  flattenNamespace,
+  loadFrontendTypeScript,
+} = require("./locales.cjs");
+
+// Git pathspec for the frontend source folder, e.g. "frontend/src".
+const sourcePathspec = path
+  .relative(repoRoot, path.join(frontendRoot, "src"))
+  .replace(/\\/g, "/");
 const defaultReport = path.join(__dirname, "reports", "incremental-scan.json");
-const ts = require(path.join(webRoot, "node_modules/typescript"));
+
+// Loaded when a scan starts, so a missing install is reported as a clean error.
+let ts;
 
 const expectedLanguages = [
   "en", "as", "bn", "brx", "doi", "gu", "hi", "kn", "ks", "kok",
@@ -84,16 +96,16 @@ function git(args) {
 }
 
 function isInScope(file) {
-  const relative = path.relative(webRoot, file).replace(/\\/g, "/");
+  const relative = path.relative(frontendRoot, file).replace(/\\/g, "/");
   const segments = relative.split("/");
 
   if (!extensions.test(relative)) return false;
 
   if (
     !(
-      relative.startsWith("src/pages/public/") ||
+      relative.startsWith("src/features/public/") ||
       relative.startsWith("src/components/") ||
-      relative === "src/pages/auth/LoginPage.tsx"
+      relative === "src/features/auth/LoginPage.tsx"
     )
   ) {
     return false;
@@ -119,16 +131,41 @@ function isInScope(file) {
   return true;
 }
 
-function getChangedFiles(baseRef) {
-  // Includes committed, staged and unstaged changes relative to the base ref.
-  const changed = git([
+// Maps each source file changed since the base ref to its path in the base ref.
+// Renames are followed, so a file moved from web/src to frontend/src is compared with
+// its old copy and only its edited lines count as new. Added files map to null.
+function getChangedSourceFiles(baseRef) {
+  // Whole-repo diff, so a rename from outside the source folder can still be paired.
+  // -l0 lifts Git's rename limit, which a folder move can exceed.
+  const output = git([
     "diff",
-    "--name-only",
+    "--name-status",
+    "-z",
+    "-M",
+    "-l0",
     "--diff-filter=ACMR",
     baseRef,
-    "--",
-    "web/src",
   ]);
+
+  const tokens = output.split("\0").filter(Boolean);
+  const changed = new Map();
+
+  for (let index = 0; index < tokens.length; ) {
+    const status = tokens[index++];
+    const oldPath = /^[RC]/.test(status) ? tokens[index++] : undefined;
+    const newPath = tokens[index++];
+
+    if (!newPath || !newPath.startsWith(`${sourcePathspec}/`)) continue;
+    changed.set(newPath, status.startsWith("A") ? null : oldPath ?? newPath);
+  }
+
+  return changed;
+}
+
+// Lists in-scope source files changed since the base ref (committed, staged or unstaged),
+// plus new untracked files, with each file's path in the base ref.
+function getChangedFiles(baseRef) {
+  const basePaths = getChangedSourceFiles(baseRef);
 
   // Include new, untracked files that are not ignored by Git.
   const untracked = git([
@@ -136,17 +173,17 @@ function getChangedFiles(baseRef) {
     "--others",
     "--exclude-standard",
     "--",
-    "web/src",
+    sourcePathspec,
   ]);
 
-  const files = new Set([...changed.split("\n"), ...untracked.split("\n")]);
-
-  return [...files]
+  const files = [...new Set([...basePaths.keys(), ...untracked.split("\n")])]
     .filter(Boolean)
     .map((file) => path.resolve(repoRoot, file))
     .filter((file) => fs.existsSync(file) && fs.statSync(file).isFile())
     .filter(isInScope)
     .sort();
+
+  return { files, basePaths };
 }
 
 function getUntrackedFiles() {
@@ -155,7 +192,7 @@ function getUntrackedFiles() {
     "--others",
     "--exclude-standard",
     "--",
-    "web/src",
+    sourcePathspec,
   ]);
 
   return new Set(output.split("\n").filter(Boolean));
@@ -179,23 +216,32 @@ function mergeLineRanges(ranges) {
   return merged;
 }
 
-function getChangedLineRanges(file, baseRef, untrackedFiles) {
-  const relativeFile = path.relative(repoRoot, file).replace(/\\/g, "/");
+// Treats every line of a file as new, for files with no earlier version.
+function wholeFileRange(file) {
+  const lineCount = fs.readFileSync(file, "utf8").split(/\r?\n/).length;
+  return lineCount ? [{ start: 1, end: lineCount }] : [];
+}
 
-  // New, untracked files have no Git diff hunks: every source line is new.
-  if (untrackedFiles.has(relativeFile)) {
-    const lineCount = fs.readFileSync(file, "utf8").split(/\r?\n/).length;
-    return lineCount ? [{ start: 1, end: lineCount }] : [];
+// Returns the line ranges of a file that were added or edited since the base ref.
+function getChangedLineRanges(file, baseRef, untrackedFiles, basePaths) {
+  const relativeFile = path.relative(repoRoot, file).replace(/\\/g, "/");
+  const basePath = basePaths.get(relativeFile);
+
+  // Untracked files and files added since the base ref have no earlier version.
+  if (untrackedFiles.has(relativeFile) || basePath === null) {
+    return wholeFileRange(file);
   }
 
+  // Passing the old and new path together lets Git pair a moved file with its old copy.
   const diff = git([
     "diff",
     "--no-ext-diff",
     "--no-color",
     "--unified=0",
+    "-M",
     baseRef,
     "--",
-    relativeFile,
+    ...new Set([basePath ?? relativeFile, relativeFile]),
   ]);
 
   const ranges = [];
@@ -216,111 +262,21 @@ function getChangedLineRanges(file, baseRef, untrackedFiles) {
   return mergeLineRanges(ranges);
 }
 
-function propertyName(node) {
-  if (
-    ts.isIdentifier(node) ||
-    ts.isStringLiteral(node) ||
-    ts.isNumericLiteral(node)
-  ) {
-    return node.text;
-  }
-  return undefined;
-}
-
-// Flattens nested resource objects without executing resources.ts.
-function flattenObject(node, prefix = [], result = new Map()) {
-  if (!ts.isObjectLiteralExpression(node)) return result;
-
-  for (const property of node.properties) {
-    if (!ts.isPropertyAssignment(property)) continue;
-
-    const name = propertyName(property.name);
-    if (!name) continue;
-
-    const currentPath = [...prefix, name];
-
-    if (ts.isObjectLiteralExpression(property.initializer)) {
-      flattenObject(property.initializer, currentPath, result);
-      continue;
-    }
-
-    if (
-      ts.isStringLiteral(property.initializer) ||
-      ts.isNoSubstitutionTemplateLiteral(property.initializer)
-    ) {
-      result.set(currentPath.join("."), property.initializer.text);
-    }
+// Reads every expected locale file and flattens its common namespace.
+// A language without a file is an empty map, so all of its keys are reported missing.
+function readLocales() {
+  if (!fs.existsSync(localesDir)) {
+    throw new Error(`Locale folder not found: ${path.relative(repoRoot, localesDir)}`);
   }
 
-  return result;
-}
+  const languages = new Map();
+  const missingLanguages = [];
 
-function readResources() {
-  if (!fs.existsSync(resourceFile)) {
-    throw new Error(`Resource file not found: ${resourceFile}`);
+  for (const language of expectedLanguages) {
+    const locale = readLocale(language);
+    if (!locale) missingLanguages.push(language);
+    languages.set(language, locale ? flattenNamespace(locale) : new Map());
   }
-
-  const source = ts.createSourceFile(
-    resourceFile,
-    fs.readFileSync(resourceFile, "utf8"),
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS
-  );
-
-  let resourcesNode;
-
-  source.forEachChild((node) => {
-    if (!ts.isVariableStatement(node)) return;
-
-    for (const declaration of node.declarationList.declarations) {
-      if (
-        ts.isIdentifier(declaration.name) &&
-        declaration.name.text === "resources"
-      ) {
-        resourcesNode = declaration.initializer;
-      }
-    }
-  });
-
-  if (!resourcesNode || !ts.isObjectLiteralExpression(resourcesNode)) {
-    throw new Error("Could not find const resources = { ... } in resources.ts");
-  }
-
-  const parsedLanguages = new Map();
-
-  for (const property of resourcesNode.properties) {
-    if (!ts.isPropertyAssignment(property)) continue;
-
-    const language = propertyName(property.name);
-    if (!language || !ts.isObjectLiteralExpression(property.initializer)) {
-      continue;
-    }
-
-    const allValues = flattenObject(property.initializer);
-    const commonValues = new Map();
-
-    for (const [key, value] of allValues) {
-      if (key.startsWith("common.")) {
-        commonValues.set(key.slice("common.".length), value);
-      }
-    }
-
-    parsedLanguages.set(language, commonValues);
-  }
-
-  // Always validate against the complete expected language set. A missing
-  // language is represented by an empty map, so its keys are reported missing.
-  const languages = new Map(
-    expectedLanguages.map((language) => [
-      language,
-      parsedLanguages.get(language) || new Map(),
-    ])
-  );
-
-  const missingLanguages = expectedLanguages.filter(
-    (language) => !parsedLanguages.has(language)
-  );
 
   return { languages, missingLanguages };
 }
@@ -653,15 +609,16 @@ function getCliValue(flag) {
 }
 
 function scan() {
+  ts = loadFrontendTypeScript();
   const baseRef = getCliValue("--base") || process.env.I18N_BASE || "develop";
   const outputArg = getCliValue("--out");
 
   // Fail early with a clear message if the requested Git ref does not exist.
   git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
 
-  const files = getChangedFiles(baseRef);
+  const { files, basePaths } = getChangedFiles(baseRef);
   const untrackedFiles = getUntrackedFiles();
-  const { languages, missingLanguages } = readResources();
+  const { languages, missingLanguages } = readLocales();
   const findings = [];
   const references = [];
   const dynamicKeys = [];
@@ -672,7 +629,8 @@ function scan() {
     const changedLineRanges = getChangedLineRanges(
       file,
       baseRef,
-      untrackedFiles
+      untrackedFiles,
+      basePaths
     );
     changedLineRangesByFile[relativeFile] = changedLineRanges;
 
@@ -778,32 +736,4 @@ Optional:
 }
 
 
-// ANNADATA I18N SCRIPTS — SETUP AND RUN
-
-// 1.  Copy the updated scripts/i18n/ folder into the repository root.
-
-// 2.  Open PowerShell at the repository root.
-
-// 3.  Optionally set the backend bulk API URL (backend must run with NODE_ENV=development):
-
-//     $env:I18N_BULK_TRANSLATE_URL="http://localhost:3000/api/v1/speech/translate/bulk"
-
-
-// 4.  Start the backend and ensure the bulk translation endpoint is
-//     available.
-
-// 5.  Run the scanner and translator with one command:
-
-//     node scripts/i18n/translator/index.cjs translate –base develop
-
-// 6.  Review the generated translation preview:
-
-//     scripts/i18n/reports/translation-preview.json
-
-// 7.  Apply the reviewed translations:
-
-//     node scripts/i18n/translator/index.cjs translate –apply
-
-// 8.  Verify the changes in:
-
-//     web/src/i18n/resources.ts
+// Setup and usage: scripts/i18n/translator/README.md

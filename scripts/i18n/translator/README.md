@@ -6,7 +6,7 @@ The translator runs the scanner, generates the approved input automatically, and
 
 - Node.js 18+
 - Run commands from the repository root
-- `web/node_modules/typescript` must exist
+- `frontend/node_modules/typescript` must exist (run `npm install` in `frontend/`)
 - Backend running locally with `NODE_ENV=development` and `SARVAM_API_KEY` set (it serves `POST /api/v1/speech/translate/bulk`)
 
 ## Environment
@@ -41,13 +41,13 @@ From the repository root:
 node scripts/i18n/translator/index.cjs translate --base origin/develop
 ```
 
-Or from `web/`: `npm run i18n:translate`. Run `git fetch origin develop` first so the base is current.
+Or from `frontend/`: `npm run i18n:translate`. Run `git fetch origin develop` first so the base is current.
 
 This command:
 
-1. Runs the incremental scanner.
+1. Runs the incremental scanner on changed files in `frontend/src/features/public/`, `frontend/src/components/` and `frontend/src/features/auth/LoginPage.tsx`.
 2. Generates `scripts/i18n/reports/incremental-scan.json`.
-3. Extracts high-confidence findings and generates `translator/generated/approved-translations.json`. Strings whose English text already exists in `resources.ts` are skipped and the existing key is printed so you can reuse it.
+3. Extracts high-confidence findings and generates `translator/generated/approved-translations.json`. Strings whose English text already exists in `frontend/src/i18n/locales/en.json` are skipped and the existing key is printed so you can reuse it.
 4. Keeps ambiguous findings and dynamic keys for manual review.
 5. Groups source strings by target language and sends bulk requests to the backend.
 6. Retries failed batches and then isolates failed items into singleton bulk requests. A 401, 403, 404 or 405 response stops the run, since it means the URL is wrong or the backend is not in development mode.
@@ -64,10 +64,10 @@ It accepts up to 50 items per request and fans out to `SarvamService.translateTe
 ## Translate and apply in one go
 
 ```bash
-cd web && npm run i18n:translate:apply
+cd frontend && npm run i18n:translate:apply
 ```
 
-Runs the full translate step, then applies straight away, but only when every translation passed validation. If anything failed, `resources.ts` is left unchanged and the preview is kept for review. Use the two separate steps below when you want to read the preview first.
+Runs the full translate step, then applies straight away, but only when every translation passed validation. If anything failed, the locale files are left unchanged and the preview is kept for review. Use the two separate steps below when you want to read the preview first.
 
 ## Apply translations
 
@@ -77,6 +77,6 @@ Review the preview first, then explicitly apply:
 node scripts/i18n/translator/index.cjs translate --apply
 ```
 
-Or from `web/`: `npm run i18n:apply`.
+Or from `frontend/`: `npm run i18n:apply`.
 
-This makes no translation API requests. It adds only missing values to `web/src/i18n/resources.ts`, never overwrites existing translations, and saves a timestamped backup in `scripts/i18n/reports/` (git-ignored).
+This makes no translation API requests. It adds only missing keys to every file in `frontend/src/i18n/locales/` (`en.json` plus the 22 translations) and never overwrites existing values. Every key is checked against every file first, so nothing is written unless all of them can be added. A copy of each changed file is saved in `scripts/i18n/reports/locales-backup-<timestamp>/` (git-ignored).

@@ -1,240 +1,118 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const typescriptPath = path.resolve(
-  __dirname,
-  "../../../web/node_modules/typescript"
-);
-const ts = require(typescriptPath);
+const { LANGUAGES } = require("./config.cjs");
+const {
+  NAMESPACE,
+  localeFile,
+  readLocale,
+  serializeLocale,
+} = require("../locales.cjs");
 
-function getPropertyName(name) {
-  if (
-    ts.isIdentifier(name) ||
-    ts.isStringLiteral(name) ||
-    ts.isNumericLiteral(name)
-  ) {
-    return name.text;
-  }
-  return undefined;
+// Backups go to the git-ignored reports folder so they never land next to source files.
+const backupRoot = path.resolve(__dirname, "../reports");
+
+// Key segments that would reach Object.prototype instead of creating a normal property.
+const UNSAFE_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
+
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function findProperty(objectNode, name) {
-  if (!ts.isObjectLiteralExpression(objectNode)) return undefined;
-
-  return objectNode.properties.find((property) => {
-    return (
-      ts.isPropertyAssignment(property) &&
-      getPropertyName(property.name) === name
-    );
-  });
-}
-
-function findResourcesObject(sourceFile) {
-  let resourcesNode;
-
-  function visit(node) {
-    if (ts.isVariableDeclaration(node)) {
-      if (
-        ts.isIdentifier(node.name) &&
-        node.name.text === "resources" &&
-        node.initializer &&
-        ts.isObjectLiteralExpression(node.initializer)
-      ) {
-        resourcesNode = node.initializer;
-      }
-    }
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
-  return resourcesNode;
-}
-
-function insertObjectProperty(source, objectNode, propertyName, valueSource) {
-  const closeBrace = objectNode.getEnd() - 1;
-  const lineStart = source.lastIndexOf("\n", closeBrace - 1) + 1;
-  const closeLinePrefix = source.slice(lineStart, closeBrace);
-  const closeIndent = /^\s*$/.test(closeLinePrefix) ? closeLinePrefix : "";
-  const childIndent = `${closeIndent}  `;
-
-  const edits = [];
-
-  if (objectNode.properties.length > 0) {
-    const lastProperty = objectNode.properties[objectNode.properties.length - 1];
-    const between = source.slice(lastProperty.getEnd(), closeBrace);
-
-    if (!/^\s*,/.test(between)) {
-      edits.push({ position: lastProperty.getEnd(), text: "," });
-    }
-  }
-
-  const propertyText = `${childIndent}${JSON.stringify(propertyName)}: ${valueSource},\n`;
-
-  if (closeIndent) {
-    edits.push({ position: lineStart, text: propertyText });
-  } else {
-    edits.push({
-      position: closeBrace,
-      text: `\n${propertyText}${closeIndent}`,
-    });
-  }
-
-  edits.sort((a, b) => b.position - a.position);
-
-  let updated = source;
-  for (const edit of edits) {
-    updated =
-      updated.slice(0, edit.position) +
-      edit.text +
-      updated.slice(edit.position);
-  }
-
-  return updated;
-}
-
-function makeNestedObject(parts, value) {
-  let result = JSON.stringify(value);
-
-  for (let index = parts.length - 1; index >= 0; index--) {
-    result = `{ ${JSON.stringify(parts[index])}: ${result} }`;
-  }
-
-  return result;
-}
-
-function addMissingResourceValue(source, language, dottedKey, value) {
-  const sourceFile = ts.createSourceFile(
-    "resources.ts",
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS
-  );
-
-  const resourcesNode = findResourcesObject(sourceFile);
-  if (!resourcesNode) {
-    throw new Error("Could not locate the resources object in resources.ts.");
-  }
-
-  const languageProperty = findProperty(resourcesNode, language);
-  if (!languageProperty || !ts.isObjectLiteralExpression(languageProperty.initializer)) {
-    throw new Error(`Language "${language}" is missing or is not an object in resources.ts.`);
-  }
-
-  const commonProperty = findProperty(languageProperty.initializer, "common");
-  if (!commonProperty || !ts.isObjectLiteralExpression(commonProperty.initializer)) {
-    throw new Error(`Language "${language}" does not contain a common object.`);
-  }
-
+// Adds one dotted key to a parsed locale under the common namespace. Never overwrites an existing value.
+function addMissingValue(locale, dottedKey, value) {
   const parts = dottedKey.split(".");
-  let currentObject = commonProperty.initializer;
-
-  for (let index = 0; index < parts.length; index++) {
-    const part = parts[index];
-    const existing = findProperty(currentObject, part);
-
-    if (index === parts.length - 1) {
-      if (existing) {
-        return { source, added: false, reason: "already-exists" };
-      }
-
-      const valueSource = JSON.stringify(value);
-      const updated = insertObjectProperty(
-        source,
-        currentObject,
-        part,
-        valueSource
-      );
-
-      return { source: updated, added: true };
-    }
-
-    if (existing) {
-      if (!ts.isObjectLiteralExpression(existing.initializer)) {
-        return {
-          source,
-          added: false,
-          reason: `path-conflict-at-${parts.slice(0, index + 1).join(".")}`,
-        };
-      }
-      currentObject = existing.initializer;
-      continue;
-    }
-
-    const nestedValue = makeNestedObject(parts.slice(index + 1), value);
-    const updated = insertObjectProperty(
-      source,
-      currentObject,
-      part,
-      nestedValue
-    );
-
-    return { source: updated, added: true };
+  if (parts.some((part) => UNSAFE_SEGMENTS.has(part))) {
+    return { added: false, reason: "unsafe-key" };
+  }
+  if (!isPlainObject(locale[NAMESPACE])) {
+    return { added: false, reason: `missing-${NAMESPACE}-namespace` };
   }
 
-  return { source, added: false, reason: "not-added" };
+  let node = locale[NAMESPACE];
+  for (let index = 0; index < parts.length - 1; index++) {
+    const part = parts[index];
+    if (!Object.hasOwn(node, part)) {
+      node[part] = {};
+    } else if (!isPlainObject(node[part])) {
+      return { added: false, reason: `path-conflict-at-${parts.slice(0, index + 1).join(".")}` };
+    }
+    node = node[part];
+  }
+
+  const leaf = parts[parts.length - 1];
+  if (Object.hasOwn(node, leaf)) {
+    return typeof node[leaf] === "string"
+      ? { added: false, reason: "already-exists" }
+      : { added: false, reason: `key-is-a-group-${dottedKey}` };
+  }
+
+  node[leaf] = value;
+  return { added: true };
 }
 
-function applyTranslations(resourceFile, report) {
-  const invalidItems = report.translations.filter(
-    (item) => item.status !== "valid"
-  );
-
-  if (invalidItems.length > 0 || !report.summary.readyToApply) {
+// Writes validated translations into every locale file. All checks run before any write,
+// so a failure leaves every file untouched.
+function applyTranslations(report) {
+  const items = Array.isArray(report?.translations) ? report.translations : [];
+  if (
+    !report?.summary?.readyToApply ||
+    items.length === 0 ||
+    items.some((item) => item.status !== "valid")
+  ) {
     throw new Error(
-      "Refusing to update resources.ts: one or more translations failed validation."
+      "Refusing to update the locale files: one or more translations failed validation."
     );
   }
 
-  let source = fs.readFileSync(resourceFile, "utf8");
+  const targetLanguages = Object.keys(LANGUAGES);
+  const locales = new Map();
+  for (const language of ["en", ...targetLanguages]) {
+    const locale = readLocale(language);
+    if (!locale) throw new Error(`Locale file not found: ${localeFile(language)}`);
+    locales.set(language, locale);
+  }
+
   const additions = [];
-
-  for (const item of report.translations) {
-    const allValues = {
-      en: item.sourceText,
-    };
-
-    for (const [language, translation] of Object.entries(item.translations)) {
-      if (translation.status !== "valid" || !translation.text) {
-        throw new Error(`Invalid translation for ${item.key} (${language}).`);
+  for (const item of items) {
+    const values = { en: item.sourceText };
+    for (const language of targetLanguages) {
+      const translation = item.translations?.[language];
+      if (translation?.status !== "valid" || !translation.text) {
+        throw new Error(`Invalid or missing ${language} translation for ${item.key}.`);
       }
-      allValues[language] = translation.text;
+      values[language] = translation.text;
     }
 
-    for (const [language, value] of Object.entries(allValues)) {
-      const result = addMissingResourceValue(
-        source,
-        language,
-        item.key,
-        value
-      );
-
-      source = result.source;
-
+    for (const [language, value] of Object.entries(values)) {
+      const result = addMissingValue(locales.get(language), item.key, value);
       if (result.added) {
         additions.push({ language, key: item.key });
-      } else if (result.reason && result.reason !== "already-exists") {
-        throw new Error(
-          `Could not add ${language}.common.${item.key}: ${result.reason}`
-        );
+      } else if (result.reason !== "already-exists") {
+        throw new Error(`Could not add ${language}.${NAMESPACE}.${item.key}: ${result.reason}`);
       }
     }
   }
 
-  // Backups go to the git-ignored reports folder so they never land next to source files.
-  const backupDir = path.resolve(__dirname, "../reports");
+  const changedLanguages = [...new Set(additions.map(({ language }) => language))];
+  if (changedLanguages.length === 0) {
+    return { added: 0, additions, files: [], backupDir: undefined };
+  }
+
+  const backupDir = path.join(backupRoot, `locales-backup-${Date.now()}`);
   fs.mkdirSync(backupDir, { recursive: true });
-  const backupFile = path.join(
-    backupDir,
-    `${path.basename(resourceFile)}.i18n-backup-${Date.now()}`
-  );
-  fs.copyFileSync(resourceFile, backupFile);
-  fs.writeFileSync(resourceFile, source, "utf8");
+  for (const language of changedLanguages) {
+    fs.copyFileSync(localeFile(language), path.join(backupDir, `${language}.json`));
+  }
+  for (const language of changedLanguages) {
+    fs.writeFileSync(localeFile(language), serializeLocale(locales.get(language)), "utf8");
+  }
 
   return {
-    backupFile,
     added: additions.length,
     additions,
+    files: changedLanguages.map(localeFile),
+    backupDir,
   };
 }
 

@@ -9,6 +9,7 @@ const { SarvamProvider } = require("./providers/sarvam.cjs");
 const { validateApprovedEntries } = require("./validator.cjs");
 const { translateEntries } = require("./translator.cjs");
 const { applyTranslations } = require("./resource-writer.cjs");
+const { localesDir, readLocale, flattenNamespace } = require("../locales.cjs");
 
 const repoRoot = path.resolve(__dirname, "../../..");
 const scannerFile = path.join(repoRoot, "scripts/i18n/scan-web-i18n.cjs");
@@ -18,7 +19,6 @@ const defaultOutput = path.join(
   repoRoot,
   "scripts/i18n/reports/translation-preview.json"
 );
-const resourceFile = path.join(repoRoot, "web/src/i18n/resources.ts");
 
 function getArgument(name, fallback) {
   const index = process.argv.indexOf(name);
@@ -56,58 +56,13 @@ function runScanner(baseRef) {
   return JSON.parse(fs.readFileSync(scanReportFile, "utf8"));
 }
 
-function getPropertyName(ts, name) {
-  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-    return name.text;
-  }
-  return undefined;
-}
-
-function findObjectProperty(ts, objectNode, wantedName) {
-  if (!objectNode || !ts.isObjectLiteralExpression(objectNode)) return undefined;
-  return objectNode.properties.find((property) =>
-    ts.isPropertyAssignment(property) &&
-    getPropertyName(ts, property.name) === wantedName
-  );
-}
-
-// Reads every English key under resources.en.common with its text, so new strings can reuse existing keys.
+// Reads every English key in en.json with its text, so new strings can reuse existing keys.
 function getExistingEnglishEntries() {
-  const tsPath = path.join(repoRoot, "web/node_modules/typescript");
-  if (!fs.existsSync(tsPath)) {
-    throw new Error("TypeScript dependency not found at web/node_modules/typescript.");
+  const english = readLocale("en");
+  if (!english) {
+    throw new Error(`English locale not found in ${path.relative(repoRoot, localesDir)}.`);
   }
-  const ts = require(tsPath);
-  const sourceText = fs.readFileSync(resourceFile, "utf8");
-  const source = ts.createSourceFile(resourceFile, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  let resourcesNode;
-
-  function visit(node) {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "resources") {
-      resourcesNode = node.initializer;
-    }
-    ts.forEachChild(node, visit);
-  }
-  visit(source);
-
-  const englishProperty = findObjectProperty(ts, resourcesNode, "en");
-  const commonProperty = findObjectProperty(ts, englishProperty?.initializer, "common");
-  const existing = new Map();
-
-  function flatten(node, prefix = []) {
-    if (!node || !ts.isObjectLiteralExpression(node)) return;
-    for (const property of node.properties) {
-      if (!ts.isPropertyAssignment(property)) continue;
-      const name = getPropertyName(ts, property.name);
-      if (!name) continue;
-      const next = [...prefix, name];
-      if (ts.isObjectLiteralExpression(property.initializer)) flatten(property.initializer, next);
-      else if (ts.isStringLiteralLike(property.initializer)) existing.set(next.join("."), property.initializer.text);
-      else existing.set(next.join("."), undefined);
-    }
-  }
-  flatten(commonProperty?.initializer);
-  return existing;
+  return flattenNamespace(english);
 }
 
 // Turns scanner findings into unique key/text entries, skipping text that already has an English key.
@@ -171,11 +126,15 @@ function writeGeneratedInput(entries, scanReport) {
   );
 }
 
-// Writes a validated translation report into resources.ts and prints what changed.
+// Writes a validated translation report into the locale files and prints what changed.
 function applyReport(report) {
-  const result = applyTranslations(resourceFile, report);
-  console.log(`\nApplied ${result.added} missing resource values to ${path.relative(repoRoot, resourceFile)}.`);
-  console.log(`Backup created: ${path.relative(repoRoot, result.backupFile)}`);
+  const result = applyTranslations(report);
+  if (result.added === 0) {
+    console.log("\nNothing to apply: every key already exists in the locale files.");
+    return;
+  }
+  console.log(`\nApplied ${result.added} missing values across ${result.files.length} locale files in ${path.relative(repoRoot, localesDir)}.`);
+  console.log(`Backup created: ${path.relative(repoRoot, result.backupDir)}`);
 }
 
 async function main() {
@@ -257,7 +216,7 @@ Environment:
   console.log(JSON.stringify(report.summary, null, 2));
   console.log(`Preview report: ${outputFile}`);
   if (!report.summary.readyToApply) {
-    console.log("Some translations failed or are invalid. Review the preview; resources.ts was not changed.");
+    console.log("Some translations failed or are invalid. Review the preview; the locale files were not changed.");
     process.exitCode = 2;
     return;
   }
@@ -267,7 +226,7 @@ Environment:
     return;
   }
 
-  console.log("Review the preview, then run translate --apply to update resources.ts.");
+  console.log("Review the preview, then run translate --apply to update the locale files.");
 }
 
 main().catch((error) => {
