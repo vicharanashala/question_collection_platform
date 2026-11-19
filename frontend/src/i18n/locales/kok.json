@@ -2242,7 +2242,7 @@
       "of2": "{{answered}} of {{required}}"
     },
     "anveshanPhaseGate": {
-      "verifiedAgricultureExpert": "तपासिल्लो शेतकी तज्ञ जावपाच्या दिशेन",
+      "towardsVerifiedAgricultureExpert": "तपासिल्लो शेतकी तज्ञ जावपाच्या दिशेन",
       "journeyComplete": "यात्रा पूर्ण",
       "journeyProgress": "यात्रेची उदरगत",
       "youReAlmostThere": "तुम्ही जवळपास पावलांत",

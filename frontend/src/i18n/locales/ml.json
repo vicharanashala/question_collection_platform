@@ -2242,7 +2242,7 @@
       "of2": "{{answered}} of {{required}}"
     },
     "anveshanPhaseGate": {
-      "verifiedAgricultureExpert": "പരിശോധിക്കപ്പെട്ട കാർഷിക വിദഗ്ദ്ധനാകാൻ",
+      "towardsVerifiedAgricultureExpert": "പരിശോധിക്കപ്പെട്ട കാർഷിക വിദഗ്ദ്ധനാകാൻ",
       "journeyComplete": "യാത്ര പൂർത്തിയായി",
       "journeyProgress": "യാത്രയുടെ പുരോഗതി",
       "youReAlmostThere": "നിങ്ങൾ ഏതാണ്ട് എത്തിക്കഴിഞ്ഞു",

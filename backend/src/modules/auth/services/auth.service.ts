@@ -34,7 +34,7 @@ import { AnveshanProgressService } from "../../admin/services/anveshan-progress.
 import { usernameKey } from "../../../shared/database/cache/cache.keys";
 import { INCLUDE_DELETED } from "../../../shared/database/abstractions/mongo-utils";
 import { CacheTTL } from "../../../config/cache-ttl.constants";
-import { isDevelopment } from "../../../config/environment";
+import { isDevelopment, isProduction } from "../../../config/environment";
 import {
   IUserRepository,
   IWalletRepository,
@@ -286,14 +286,15 @@ export class AuthService {
     try {
       await this.smsService.sendOtp(mobileNumber, otp);
     } catch (err) {
-      // Log the gateway detail server side and return a safe message to the client.
+      // Log the gateway detail server side. Outside production the detail is also
+      // returned so gateway setup issues can be diagnosed on staging.
       const reason = err instanceof Error ? err.message : String(err);
       this.logger.error(`OTP delivery failed for ${mobileNumber}: ${reason}`);
       throw new BadGatewayException({
         message:
           "We could not send the OTP to this number. Please check the number or try again later.",
         code: "OTP_DELIVERY_FAILED",
-        ...(isDevelopment() && { detail: reason }),
+        ...(!isProduction() && { detail: reason }),
       });
     }
 

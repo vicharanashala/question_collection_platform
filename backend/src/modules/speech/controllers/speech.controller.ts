@@ -25,7 +25,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Request } from 'express';
-import { ApiKeyGuard } from '@/shared/middleware/guards/api-key.guard';
+import { DevelopmentOnlyGuard } from '@/shared/middleware/guards/development-only.guard';
 import { Public } from '@/shared';
 import { Type } from 'class-transformer';
 
@@ -50,7 +50,7 @@ class SttDto {
 
 const TARGET_LANGUAGES = [
   'as-IN', 'bn-IN', 'brx-IN', 'doi-IN', 'gu-IN', 'hi-IN', 'kn-IN', 'ks-IN',
-  'kok-IN', 'mai-IN', 'ml-IN', 'mni-IN', 'mr-IN', 'ne-IN', 'or-IN', 'pa-IN',
+  'kok-IN', 'mai-IN', 'ml-IN', 'mni-IN', 'mr-IN', 'ne-IN', 'od-IN', 'pa-IN',
   'sa-IN', 'sat-IN', 'sd-IN', 'ta-IN', 'te-IN', 'ur-IN',
 ] as const;
 
@@ -95,7 +95,7 @@ class BulkTranslationItemDto {
 
 export class BulkTranslateDto {
   @IsArray()
-  @ArrayMaxSize (50)
+  @ArrayMaxSize(50)
   @ValidateNested({ each: true })
   @Type(() => BulkTranslationItemDto)
   items: BulkTranslationItemDto[];
@@ -218,13 +218,14 @@ export class SpeechController {
     );
   }
 
-  @Post('translate/internal')
+  // Translates up to 50 UI strings in one call for the local i18n CLI. Development only, no login needed.
+  @Post('translate/bulk')
   @Public()
-  @UseGuards(ApiKeyGuard)
+  @UseGuards(DevelopmentOnlyGuard)
   @HttpCode(HttpStatus.OK)
-async translateBulk(@Body() dto: BulkTranslateDto) {
+  async translateBulk(@Body() dto: BulkTranslateDto) {
     const sourceLanguage = dto.sourceLanguage ?? 'en-IN';
-    const items = dto.items ?? [];
+    const items = dto.items;
     const results = new Array(items.length);
     let nextIndex = 0;
     const concurrency = 5;

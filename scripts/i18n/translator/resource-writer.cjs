@@ -221,7 +221,13 @@ function applyTranslations(resourceFile, report) {
     }
   }
 
-  const backupFile = `${resourceFile}.i18n-backup-${Date.now()}`;
+  // Backups go to the git-ignored reports folder so they never land next to source files.
+  const backupDir = path.resolve(__dirname, "../reports");
+  fs.mkdirSync(backupDir, { recursive: true });
+  const backupFile = path.join(
+    backupDir,
+    `${path.basename(resourceFile)}.i18n-backup-${Date.now()}`
+  );
   fs.copyFileSync(resourceFile, backupFile);
   fs.writeFileSync(resourceFile, source, "utf8");
 

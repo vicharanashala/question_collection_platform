@@ -9,6 +9,11 @@ function isRetryable(error) {
   return error.status === 429 || error.status >= 500 || error.status === undefined || error.retryable === true;
 }
 
+// Errors caused by setup (bad URL, key or method) will fail for every request, so the run stops early.
+function isConfigurationError(error) {
+  return [401, 403, 404, 405].includes(error.status);
+}
+
 async function withRetry(operation, options) {
   let lastError;
   for (let attempt = 1; attempt <= options.maxRetries; attempt++) {
@@ -81,9 +86,12 @@ async function translateEntries(entries, provider, options = {}) {
             settings
           );
         } catch (batchError) {
+          if (isConfigurationError(batchError)) {
+            throw new Error(`Bulk translation endpoint rejected the request (HTTP ${batchError.status}): ${batchError.message}`);
+          }
           // If a batch fails as a whole, retry its items individually through the same bulk endpoint.
           // This isolates problematic items and preserves successful results from other batches.
-          return Promise.all(batch.items.map(async (item) => {
+          return mapWithConcurrency(batch.items, settings.requestConcurrency, async (item) => {
             try {
               const singleton = await withRetry(
                 () => provider.translateBatch([item], batch.targetLanguage, settings.sourceLanguage),
@@ -96,11 +104,11 @@ async function translateEntries(entries, provider, options = {}) {
             } catch (error) {
               return makeFailedResult(item, batch, error);
             }
-          }));
+          });
         }
 
         const byKey = new Map(responseItems.map((row) => [row.key, row]));
-        return Promise.all(batch.items.map(async (item) => {
+        return mapWithConcurrency(batch.items, settings.requestConcurrency, async (item) => {
           try {
             let row = byKey.get(item.key);
             if (!row || row.status === "failed" || row.error) {
@@ -117,7 +125,7 @@ async function translateEntries(entries, provider, options = {}) {
           } catch (error) {
             return makeFailedResult(item, batch, error);
           }
-        }));
+        });
       }
     );
 

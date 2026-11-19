@@ -2242,7 +2242,7 @@
       "of2": "{{answered}} of {{required}}"
     },
     "anveshanPhaseGate": {
-      "verifiedAgricultureExpert": "কনফার্ম তৌরবা লৌমীগী মপানৈ ওইনবগীদমক",
+      "towardsVerifiedAgricultureExpert": "কনফার্ম তৌরবা লৌমীগী মপানৈ ওইনবগীদমক",
       "journeyComplete": "খোঙচৎ লোইরে",
       "journeyProgress": "খোঙচৎ চংশিনবা",
       "youReAlmostThere": "অদোম নকশিন্নরক্লে",

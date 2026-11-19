@@ -776,3 +776,34 @@ Optional:
   console.error("i18n scanner failed:", error.message);
   process.exitCode = 1;
 }
+
+
+// ANNADATA I18N SCRIPTS — SETUP AND RUN
+
+// 1.  Copy the updated scripts/i18n/ folder into the repository root.
+
+// 2.  Open PowerShell at the repository root.
+
+// 3.  Optionally set the backend bulk API URL (backend must run with NODE_ENV=development):
+
+//     $env:I18N_BULK_TRANSLATE_URL="http://localhost:3000/api/v1/speech/translate/bulk"
+
+
+// 4.  Start the backend and ensure the bulk translation endpoint is
+//     available.
+
+// 5.  Run the scanner and translator with one command:
+
+//     node scripts/i18n/translator/index.cjs translate –base develop
+
+// 6.  Review the generated translation preview:
+
+//     scripts/i18n/reports/translation-preview.json
+
+// 7.  Apply the reviewed translations:
+
+//     node scripts/i18n/translator/index.cjs translate –apply
+
+// 8.  Verify the changes in:
+
+//     web/src/i18n/resources.ts

@@ -1088,6 +1088,8 @@
       "clearSearch": "Clear search",
       "categories": "Categories",
       "retry": "Try again",
+      "noResultsTitle": "No matching questions",
+      "noResultsSubtitle": "Try different words or clear the search",
       "raiseSupportTicket": "सपोर्ट टिकट सिर्जना गर्नुहोस्",
       "raiseSupportTicketHint": "हाम्रो सपोर्ट टोलीबाट मद्दत चाहिन्छ? एउटा टिकट सिर्जना गर्नुहोस् र हामी तपाईंलाई इमेलमार्फत जवाफ दिनेछौं।"
     },
