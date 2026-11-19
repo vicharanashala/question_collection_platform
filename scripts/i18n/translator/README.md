@@ -61,6 +61,14 @@ For 100 strings and 22 target languages at batch size 50, the normal path makes 
 
 It accepts up to 50 items per request and fans out to `SarvamService.translateText()` with concurrency 5. It returns `{ results: [{ key, status, translatedText, error? }] }`, with one result per key, including individual failures. Sarvam itself has no native bulk API; batching happens only between the CLI and the backend.
 
+## Translate and apply in one go
+
+```bash
+cd web && npm run i18n:translate:apply
+```
+
+Runs the full translate step, then applies straight away, but only when every translation passed validation. If anything failed, `resources.ts` is left unchanged and the preview is kept for review. Use the two separate steps below when you want to read the preview first.
+
 ## Apply translations
 
 Review the preview first, then explicitly apply:
@@ -68,5 +76,7 @@ Review the preview first, then explicitly apply:
 ```bash
 node scripts/i18n/translator/index.cjs translate --apply
 ```
+
+Or from `web/`: `npm run i18n:apply`.
 
 This makes no translation API requests. It adds only missing values to `web/src/i18n/resources.ts`, never overwrites existing translations, and saves a timestamped backup in `scripts/i18n/reports/` (git-ignored).

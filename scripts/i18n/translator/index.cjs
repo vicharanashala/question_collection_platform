@@ -171,6 +171,13 @@ function writeGeneratedInput(entries, scanReport) {
   );
 }
 
+// Writes a validated translation report into resources.ts and prints what changed.
+function applyReport(report) {
+  const result = applyTranslations(resourceFile, report);
+  console.log(`\nApplied ${result.added} missing resource values to ${path.relative(repoRoot, resourceFile)}.`);
+  console.log(`Backup created: ${path.relative(repoRoot, result.backupFile)}`);
+}
+
 async function main() {
   const command = process.argv[2];
   if (command !== "translate") {
@@ -178,6 +185,7 @@ async function main() {
 Usage:
   node scripts/i18n/translator/index.cjs translate [--base origin/develop]
   node scripts/i18n/translator/index.cjs translate --apply
+  node scripts/i18n/translator/index.cjs translate [--base origin/develop] --and-apply
 
 The normal translate command runs the scanner, generates approved-translations.json
 from high-confidence findings, and sends those entries to the backend translator.
@@ -192,15 +200,14 @@ Environment:
 
   const outputFile = path.resolve(repoRoot, getArgument("--out", defaultOutput));
   const shouldApply = hasFlag("--apply");
+  const shouldApplyAfterTranslate = hasFlag("--and-apply");
 
   if (shouldApply) {
     if (!fs.existsSync(outputFile)) {
       throw new Error(`Translation preview not found: ${outputFile}. Run translate first.`);
     }
     const report = JSON.parse(fs.readFileSync(outputFile, "utf8"));
-    const result = applyTranslations(resourceFile, report);
-    console.log(`Applied ${result.added} missing resource values.`);
-    console.log(`Backup created: ${result.backupFile}`);
+    applyReport(report);
     console.log("No translation API requests were made during apply.");
     return;
   }
@@ -249,9 +256,18 @@ Environment:
   console.log(`Planned bulk requests: ${report.summary.bulkRequests} (batch size: ${report.summary.batchSize})`);
   console.log(JSON.stringify(report.summary, null, 2));
   console.log(`Preview report: ${outputFile}`);
-  console.log("Review the preview, then run translate --apply to update resources.ts.");
+  if (!report.summary.readyToApply) {
+    console.log("Some translations failed or are invalid. Review the preview; resources.ts was not changed.");
+    process.exitCode = 2;
+    return;
+  }
 
-  if (!report.summary.readyToApply) process.exitCode = 2;
+  if (shouldApplyAfterTranslate) {
+    applyReport(report);
+    return;
+  }
+
+  console.log("Review the preview, then run translate --apply to update resources.ts.");
 }
 
 main().catch((error) => {
