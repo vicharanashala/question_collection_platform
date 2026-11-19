@@ -3,14 +3,7 @@ class SarvamProvider {
     const baseUrl = (options.baseUrl || process.env.I18N_API_BASE_URL || "http://localhost:3000/api/v1").replace(/\/+$/, "");
     this.bulkTranslateUrl = options.bulkTranslateUrl || process.env.I18N_BULK_TRANSLATE_URL ||
       `${baseUrl}/speech/translate/bulk`;
-    this.apiKey = options.apiKey || process.env.I18N_API_KEY || "";
     this.timeoutMs = options.timeoutMs || 60000;
-
-    if (!this.apiKey) {
-      throw new Error(
-        "Set I18N_API_KEY to the same value configured as ANVESHAN_ANNADATHA_AUTH_KEY in the backend."
-      );
-    }
   }
 
   async translateBatch(items, targetLanguage, sourceLanguage = "en-IN") {
@@ -22,7 +15,6 @@ class SarvamProvider {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
         },
         body: JSON.stringify({
           items: items.map(({ key, text }) => ({ key, text })),

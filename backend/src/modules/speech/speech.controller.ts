@@ -25,7 +25,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Request } from 'express';
-import { ApiKeyGuard } from '@/shared/middleware/guards/api-key.guard';
+import { DevelopmentOnlyGuard } from '@/shared/middleware/guards/development-only.guard';
 import { Public } from '@/shared';
 import { Type } from 'class-transformer';
 
@@ -218,10 +218,10 @@ export class SpeechController {
     );
   }
 
-  // Translates up to 50 UI strings in one call for the i18n CLI. Protected by API key, not JWT.
+  // Translates up to 50 UI strings in one call for the local i18n CLI. Development only, no login needed.
   @Post('translate/bulk')
   @Public()
-  @UseGuards(ApiKeyGuard)
+  @UseGuards(DevelopmentOnlyGuard)
   @HttpCode(HttpStatus.OK)
   async translateBulk(@Body() dto: BulkTranslateDto) {
     const sourceLanguage = dto.sourceLanguage ?? 'en-IN';

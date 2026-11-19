@@ -784,11 +784,10 @@ Optional:
 
 // 2.  Open PowerShell at the repository root.
 
-// 3.  Set the backend bulk API URL and API key:
+// 3.  Optionally set the backend bulk API URL (backend must run with NODE_ENV=development):
 
 //     $env:I18N_BULK_TRANSLATE_URL="http://localhost:3000/api/v1/speech/translate/bulk"
 
-//    $env:I18N_API_KEY=“YOUR_BACKEND_AUTH_KEY”
 
 // 4.  Start the backend and ensure the bulk translation endpoint is
 //     available.

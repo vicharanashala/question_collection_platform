@@ -183,8 +183,8 @@ The normal translate command runs the scanner, generates approved-translations.j
 from high-confidence findings, and sends those entries to the backend translator.
 
 Environment:
-  I18N_BULK_TRANSLATE_URL=http://localhost:3000/api/v1/speech/translate/bulk
-  I18N_API_KEY=<same value as backend ANVESHAN_ANNADATHA_AUTH_KEY>
+  I18N_BULK_TRANSLATE_URL=http://localhost:3000/api/v1/speech/translate/bulk (optional)
+  The backend must run locally with NODE_ENV=development.
 `);
     process.exitCode = 1;
     return;
