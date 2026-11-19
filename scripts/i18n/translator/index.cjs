@@ -71,7 +71,8 @@ function findObjectProperty(ts, objectNode, wantedName) {
   );
 }
 
-function getExistingEnglishKeys() {
+// Reads every English key under resources.en.common with its text, so new strings can reuse existing keys.
+function getExistingEnglishEntries() {
   const tsPath = path.join(repoRoot, "web/node_modules/typescript");
   if (!fs.existsSync(tsPath)) {
     throw new Error("TypeScript dependency not found at web/node_modules/typescript.");
@@ -91,7 +92,7 @@ function getExistingEnglishKeys() {
 
   const englishProperty = findObjectProperty(ts, resourcesNode, "en");
   const commonProperty = findObjectProperty(ts, englishProperty?.initializer, "common");
-  const existing = new Set();
+  const existing = new Map();
 
   function flatten(node, prefix = []) {
     if (!node || !ts.isObjectLiteralExpression(node)) return;
@@ -101,19 +102,25 @@ function getExistingEnglishKeys() {
       if (!name) continue;
       const next = [...prefix, name];
       if (ts.isObjectLiteralExpression(property.initializer)) flatten(property.initializer, next);
-      else existing.add(next.join("."));
+      else if (ts.isStringLiteralLike(property.initializer)) existing.set(next.join("."), property.initializer.text);
+      else existing.set(next.join("."), undefined);
     }
   }
   flatten(commonProperty?.initializer);
   return existing;
 }
 
+// Turns scanner findings into unique key/text entries, skipping text that already has an English key.
 function createGeneratedEntries(scanReport) {
   const findings = Array.isArray(scanReport.highConfidenceFindings)
     ? scanReport.highConfidenceFindings
     : [];
-  const existingKeys = getExistingEnglishKeys();
-  const usedKeys = new Set(existingKeys);
+  const existingEntries = getExistingEnglishEntries();
+  const usedKeys = new Set(existingEntries.keys());
+  const keyByText = new Map();
+  for (const [key, text] of existingEntries) {
+    if (typeof text === "string" && !keyByText.has(text)) keyByText.set(text, key);
+  }
   const byKey = new Map();
   const skipped = [];
 
@@ -126,13 +133,20 @@ function createGeneratedEntries(scanReport) {
       continue;
     }
 
+    const existingKey = keyByText.get(text);
+    if (existingKey) {
+      if (!byKey.has(existingKey)) {
+        skipped.push({ finding, reason: `Text already exists under key "${existingKey}". Reuse that key.` });
+      }
+      continue;
+    }
+
     // Keep generated keys unique and never replace an existing English key.
     let key = baseKey;
     let suffix = 2;
     while (usedKeys.has(key)) key = `${baseKey}${suffix++}`;
     usedKeys.add(key);
-
-    if ([...byKey.values()].some((entry) => entry.text === text)) continue;
+    keyByText.set(text, key);
     byKey.set(key, { key, text, source: { file: finding.file, line: finding.line } });
   }
 
@@ -162,14 +176,14 @@ async function main() {
   if (command !== "translate") {
     console.log(`
 Usage:
-  node scripts/i18n/translator/index.cjs translate [--base develop]
+  node scripts/i18n/translator/index.cjs translate [--base origin/develop]
   node scripts/i18n/translator/index.cjs translate --apply
 
 The normal translate command runs the scanner, generates approved-translations.json
 from high-confidence findings, and sends those entries to the backend translator.
 
 Environment:
-  I18N_TRANSLATE_URL=http://localhost:3000/api/v1/speech/translate/internal
+  I18N_BULK_TRANSLATE_URL=http://localhost:3000/api/v1/speech/translate/bulk
   I18N_API_KEY=<same value as backend ANVESHAN_ANNADATHA_AUTH_KEY>
 `);
     process.exitCode = 1;
@@ -204,7 +218,12 @@ Environment:
   console.log(`Eligible high-confidence strings: ${generatedEntries.length}`);
   console.log(`Ambiguous strings held for review: ${(scanReport.ambiguousFindings || []).length}`);
   console.log(`Dynamic keys held for review: ${(scanReport.dynamicKeys || []).length}`);
-  if (skipped.length) console.log(`Skipped malformed findings: ${skipped.length}`);
+  if (skipped.length) {
+    console.log(`Skipped findings: ${skipped.length}`);
+    for (const { finding, reason } of skipped) {
+      console.log(`  - ${finding.file ?? "unknown"}:${finding.line ?? "?"} ${reason}`);
+    }
+  }
 
   if (generatedEntries.length === 0) {
     console.log("No new high-confidence strings to translate. No API requests were made.");

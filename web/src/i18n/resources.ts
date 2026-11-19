@@ -25156,7 +25156,7 @@ const resources = {
         "of2": "{{answered}} of {{required}}"
       },
      "anveshanPhaseGate": {
-    "verifiedAgricultureExpert": "तपासिल्लो शेतकी तज्ञ जावपाच्या दिशेन",
+    "towardsVerifiedAgricultureExpert": "तपासिल्लो शेतकी तज्ञ जावपाच्या दिशेन",
     "journeyComplete": "यात्रा पूर्ण",
     "journeyProgress": "यात्रेची उदरगत",
     "youReAlmostThere": "तुम्ही जवळपास पावलांत",
@@ -27701,7 +27701,7 @@ const resources = {
         "of2": "{{answered}} of {{required}}"
       },
     "anveshanPhaseGate": {
-    "verifiedAgricultureExpert": "सत्यापित कृषि विशेषज्ञ बनबाक दिस",
+    "towardsVerifiedAgricultureExpert": "सत्यापित कृषि विशेषज्ञ बनबाक दिस",
     "journeyComplete": "यात्रा पूर्ण",
     "journeyProgress": "यात्राक प्रगति",
     "youReAlmostThere": "अहाँ लगभग पहुँचि गेल छी",
@@ -30246,7 +30246,7 @@ const resources = {
         "of2": "{{answered}} of {{required}}"
       },
       "anveshanPhaseGate": {
-    "verifiedAgricultureExpert": "പരിശോധിക്കപ്പെട്ട കാർഷിക വിദഗ്ദ്ധനാകാൻ",
+    "towardsVerifiedAgricultureExpert": "പരിശോധിക്കപ്പെട്ട കാർഷിക വിദഗ്ദ്ധനാകാൻ",
     "journeyComplete": "യാത്ര പൂർത്തിയായി",
     "journeyProgress": "യാത്രയുടെ പുരോഗതി",
     "youReAlmostThere": "നിങ്ങൾ ഏതാണ്ട് എത്തിക്കഴിഞ്ഞു",
@@ -32791,7 +32791,7 @@ const resources = {
         "of2": "{{answered}} of {{required}}"
       },
      "anveshanPhaseGate": {
-    "verifiedAgricultureExpert": "কনফার্ম তৌরবা লৌমীগী মপানৈ ওইনবগীদমক",
+    "towardsVerifiedAgricultureExpert": "কনফার্ম তৌরবা লৌমীগী মপানৈ ওইনবগীদমক",
     "journeyComplete": "খোঙচৎ লোইরে",
     "journeyProgress": "খোঙচৎ চংশিনবা",
     "youReAlmostThere": "অদোম নকশিন্নরক্লে",
@@ -36731,6 +36731,8 @@ const resources = {
         "clearSearch": "Clear search",
         "categories": "Categories",
         "retry": "Try again",
+        "noResultsTitle": "No matching questions",
+        "noResultsSubtitle": "Try different words or clear the search",
         "raiseSupportTicket": "सपोर्ट टिकट सिर्जना गर्नुहोस्",
         "raiseSupportTicketHint": "हाम्रो सपोर्ट टोलीबाट मद्दत चाहिन्छ? एउटा टिकट सिर्जना गर्नुहोस् र हामी तपाईंलाई इमेलमार्फत जवाफ दिनेछौं।",
       },

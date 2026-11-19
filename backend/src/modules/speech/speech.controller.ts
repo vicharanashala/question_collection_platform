@@ -95,7 +95,7 @@ class BulkTranslationItemDto {
 
 export class BulkTranslateDto {
   @IsArray()
-  @ArrayMaxSize (50)
+  @ArrayMaxSize(50)
   @ValidateNested({ each: true })
   @Type(() => BulkTranslationItemDto)
   items: BulkTranslationItemDto[];
@@ -218,13 +218,14 @@ export class SpeechController {
     );
   }
 
-  @Post('translate/internal')
+  // Translates up to 50 UI strings in one call for the i18n CLI. Protected by API key, not JWT.
+  @Post('translate/bulk')
   @Public()
   @UseGuards(ApiKeyGuard)
   @HttpCode(HttpStatus.OK)
-async translateBulk(@Body() dto: BulkTranslateDto) {
+  async translateBulk(@Body() dto: BulkTranslateDto) {
     const sourceLanguage = dto.sourceLanguage ?? 'en-IN';
-    const items = dto.items ?? [];
+    const items = dto.items;
     const results = new Array(items.length);
     let nextIndex = 0;
     const concurrency = 5;

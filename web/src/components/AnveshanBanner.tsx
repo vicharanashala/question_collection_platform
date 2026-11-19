@@ -66,22 +66,11 @@ interface AnveshanProgressBannerProps {
 type Translate = ReturnType<typeof useTranslation>["t"];
 
 // Short label for one unmet goal, such as "16 questions" or "1 weed".
-// function remainingLabel(key: MilestoneKey, count: number, t: Translate): string {
-//   if (key === "questions") {
-//     return t("anveshan.progressRemainingQuestions", { count });
-//   }
-//   return t(`anveshan.progressRemaining.${key}`, { count, defaultValue: `{{count}} ${key}` });
-// }
-
 function remainingLabel(key: MilestoneKey, count: number, t: Translate): string {
   if (key === "questions") {
     return t("anveshan.progressRemainingQuestions", { count });
   }
-
-  return t(`anveshan.progressRemaining.${key}`, {
-    count,
-    defaultValue: `{{count}} ${key}`,
-  });
+  return t(`anveshan.progressRemaining.${key}`, { count, defaultValue: `{{count}} ${key}` });
 }
 
 // Shows Anveshan users their milestone progress and what is left before answering unlocks.

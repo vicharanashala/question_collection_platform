@@ -1,12 +1,8 @@
 class SarvamProvider {
   constructor(options = {}) {
     const baseUrl = (options.baseUrl || process.env.I18N_API_BASE_URL || "http://localhost:3000/api/v1").replace(/\/+$/, "");
-    const explicitUrl = options.translateUrl || process.env.I18N_TRANSLATE_URL;
-
     this.bulkTranslateUrl = options.bulkTranslateUrl || process.env.I18N_BULK_TRANSLATE_URL ||
-      (explicitUrl
-        ? explicitUrl.replace(/\/translate(?:\/internal)?\/?$/, "/translate/bulk")
-        : `${baseUrl}/speech/translate/bulk`);
+      `${baseUrl}/speech/translate/bulk`;
     this.apiKey = options.apiKey || process.env.I18N_API_KEY || "";
     this.timeoutMs = options.timeoutMs || 60000;
 
