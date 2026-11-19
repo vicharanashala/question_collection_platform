@@ -13,7 +13,7 @@ const LANGUAGES = {
   mni: "mni-IN",
   mr: "mr-IN",
   ne: "ne-IN",
-  or: "or-IN",
+  or: "od-IN", // Sarvam uses od-IN for Odia, not the ISO or-IN
   pa: "pa-IN",
   sa: "sa-IN",
   sat: "sat-IN",
