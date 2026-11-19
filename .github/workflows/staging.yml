@@ -129,7 +129,7 @@ jobs:
             GDB_DUPLICATE_CHECK_ENABLED=${{ vars.GDB_DUPLICATE_CHECK_ENABLED_STAGING || 'false' }}
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             ANVESHAN_DB_URL=${{ secrets.ANVESHAN_DB_URL }}
-            ANVESHAN_ANNADATHA_AUTH_KEY=${{ secrets.ANVESHAN_ANNADATHA_AUTH_KEY }}
+            QC_API_AUTH_KEY=${{ secrets.QC_API_AUTH_KEY }}
             CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRES_IN=${{ vars.JWT_EXPIRES_IN }}
@@ -173,7 +173,7 @@ jobs:
             GEMMA_VERSION=${{ vars.GEMMA_VERSION }}
             GEMMA_MODEL=${{ vars.GEMMA_MODEL }}
             REVIEWER_URI=${{ secrets.STAGING_REVIEWER_URI }}
-            REVIEW_SYSTEM_AUTH_KEY=${{ secrets.REVIEW_SYSTEM_AUTH_KEY }}
+            REVIEW_SYSTEM_API_AUTH_KEY=${{ secrets.REVIEW_SYSTEM_API_AUTH_KEY }}
             GDB_PORT=${{ vars.GDB_PORT }}
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
