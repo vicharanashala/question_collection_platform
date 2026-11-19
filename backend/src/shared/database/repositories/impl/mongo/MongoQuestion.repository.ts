@@ -88,7 +88,7 @@ export class MongoQuestionRepository
     if (userIds.length === 0) return [];
     const rows = await this._model
       .aggregate<{ _id: string; questions: number; answers: number }>([
-        { $match: { userId: { $in: userIds } } },
+        { $match: { userId: { $in: userIds }, isDeleted: { $in: [true, false, null] }  } },
         {
           $group: {
             _id: '$userId',

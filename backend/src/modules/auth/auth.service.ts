@@ -31,8 +31,9 @@ import { RateLimitCounterService } from "../../shared/database/cache/rate-limit-
 import { AdminService } from "../admin/admin.service";
 import { AnveshanProgressService } from "../admin/anveshan-progress.service";
 import { usernameKey } from "../../shared/database/cache/cache.keys";
+import { INCLUDE_DELETED } from "../../shared/database/abstractions/mongo-utils";
 import { CacheTTL } from "../../config/cache-ttl.constants";
-import { isDevelopment } from "../../config/environment";
+import { isDevelopment, isProduction } from "../../config/environment";
 import {
   IUserRepository,
   IWalletRepository,
@@ -208,8 +209,17 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
 
     // Store hashed OTP in DB (upsert user record)
-    let user = await this.userRepo.findOne({ where: { mobileNumber } });
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     let isNewUser = false;
+
+    if (user?.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
 
     if (!user) {
       isNewUser = true;
@@ -280,14 +290,15 @@ export class AuthService {
     try {
       await this.smsService.sendOtp(mobileNumber, otp);
     } catch (err) {
-      // Log the gateway detail server side and return a safe message to the client.
+      // Log the gateway detail server side. Outside production the detail is also
+      // returned so gateway setup issues can be diagnosed on staging.
       const reason = err instanceof Error ? err.message : String(err);
       this.logger.error(`OTP delivery failed for ${mobileNumber}: ${reason}`);
       throw new BadGatewayException({
         message:
           "We could not send the OTP to this number. Please check the number or try again later.",
         code: "OTP_DELIVERY_FAILED",
-        ...(isDevelopment() && { detail: reason }),
+        ...(!isProduction() && { detail: reason }),
       });
     }
 
@@ -327,8 +338,7 @@ export class AuthService {
     const bypassOtpChecks =
       (this.configService.get<boolean>("app.otpDevBypass") ?? false) &&
       isDevelopment();
-    let user = await this.userRepo.findOne({ where: { mobileNumber } });
-    this.logger.debug(`The user is ${JSON.stringify(user)}`);
+    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
@@ -709,15 +719,15 @@ export class AuthService {
     // session must exist, be unexpired, and match this refresh token
     await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
 
-    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
+    const user = await this.userRepo.findOne({
+      where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
+    });
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
 
-    if (user.tokenVersion !== payload.tokenVersion) {
-      throw new UnauthorizedException("Session expired. Please login again.");
-    }
-
+    // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
     if (user.isDeleted) {
       throw new ForbiddenException({
         statusCode: 403,
@@ -725,6 +735,10 @@ export class AuthService {
         code: "ACCOUNT_DELETED",
         message: "This user is deleted. Please contact admin to restore.",
       });
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException("Session expired. Please login again.");
     }
 
     // Auto-reinstate: suspension period has expired
@@ -928,6 +942,15 @@ async logout(userId: string, sid: string): Promise<void> {
 
     await this.userRepo.save(user);
     return this.toPublicUser(user);
+  }
+
+  // Finds the active user for a mobile number, falling back to a deleted one.
+  private async findUserByMobileIncludingDeleted(
+    mobileNumber: string,
+  ): Promise<User | null> {
+    const activeUser = await this.userRepo.findOne({ where: { mobileNumber } });
+    if (activeUser) return activeUser;
+    return this.userRepo.findOne({ where: { mobileNumber, isDeleted: true } });
   }
 
   async findUserByMobile(mobileNumber: string): Promise<User | null> {

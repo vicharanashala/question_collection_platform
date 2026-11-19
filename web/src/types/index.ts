@@ -295,6 +295,25 @@ export interface WalletSummary {
   }
 }
 
+/** Filters the server applied when it worked out the wallet totals. */
+export interface WalletScopeFilters {
+  userId?: string
+  search?: string
+  state?: string
+  tester?: 'only' | 'exclude'
+  anveshanScope?: 'only' | 'exclude'
+}
+
+/** Totals across every wallet matching the filters, not just the loaded page. */
+export interface WalletTotals {
+  totalWallets: number
+  totalBalance: number
+  totalDistributed: number
+  totalWithdrawn: number
+  appliedFilters: WalletScopeFilters
+  isFiltered: boolean
+}
+
 export interface Transaction {
   id: string
   amount: number
@@ -334,16 +353,17 @@ export interface LeaderboardEntry {
   rank: number
   userId: string
   name: string
-  totalEarned: number
   totalQuestions: number
   medal: 'gold' | 'silver' | 'bronze' | null
   isCurrentUser: boolean
 }
 
 export interface LeaderboardResponse {
-  entries: LeaderboardEntry[]
-  userRank: number | null
-  total: number
+  entries: LeaderboardEntry[];
+  userRank: number | null;
+  userTotalQuestions: number;
+  totalApprovedQuestions: number;
+  total: number;
 }
 
 // ─── Analytics (Task 11) ────────────────────────────────────────────────────────

@@ -262,8 +262,11 @@ jobs:
             GDB_API_KEY=${{ secrets.GDB_API_KEY }}
             EMBED_PORT=${{ vars.EMBED_PORT }}
             USE_VM_PROXY=true
-            TAILSCALE_AUTHKEY=${{ secrets.TAILSCALE_AUTHKEY }}
             TS_HOSTNAME=annadatha-cloudrun-prod
             PROXY=${{ secrets.PROXY }}
             WEB_DIST_PATH=/app/web/dist
           env_vars_update_strategy: overwrite
+          # Ephemeral, reusable Tailscale key resolved by Cloud Run from Secret Manager at
+          # instance start. The runtime service account needs secretAccessor on it.
+          secrets: |
+            TAILSCALE_AUTHKEY=Tailscale_Auth_Key:latest

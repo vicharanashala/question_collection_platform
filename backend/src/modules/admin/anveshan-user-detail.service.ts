@@ -1,13 +1,14 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import {
   IAgriEntityRepository,
   IAnveshanAnswerRepository,
   IQuestionRepository,
   IUserRepository,
   REPOSITORY_TOKENS,
-} from '../../shared/database/repositories';
-import { AdminService } from './admin.service';
-import { AnveshanProgressService } from './anveshan-progress.service';
+} from "../../shared/database/repositories";
+import { AdminService } from "./admin.service";
+import { AnveshanProgressService } from "./anveshan-progress.service";
+import { Types } from "mongoose";
 
 const MAX_QUESTIONS = 500;
 
@@ -16,26 +17,55 @@ const MAX_QUESTIONS = 500;
 export class AnveshanUserDetailService {
   constructor(
     @Inject(REPOSITORY_TOKENS.User) private readonly userRepo: IUserRepository,
-    @Inject(REPOSITORY_TOKENS.Question) private readonly questionRepo: IQuestionRepository,
-    @Inject(REPOSITORY_TOKENS.AgriEntity) private readonly agriEntityRepo: IAgriEntityRepository,
-    @Inject(REPOSITORY_TOKENS.AnveshanAnswer) private readonly answerRepo: IAnveshanAnswerRepository,
+    @Inject(REPOSITORY_TOKENS.Question)
+    private readonly questionRepo: IQuestionRepository,
+    @Inject(REPOSITORY_TOKENS.AgriEntity)
+    private readonly agriEntityRepo: IAgriEntityRepository,
+    @Inject(REPOSITORY_TOKENS.AnveshanAnswer)
+    private readonly answerRepo: IAnveshanAnswerRepository,
     private readonly adminService: AdminService,
     private readonly progressService: AnveshanProgressService,
+    private readonly logger: Logger = new Logger(
+      AnveshanUserDetailService.name,
+    ),
   ) {}
 
   // Loads the detail view data, or throws when the user does not exist or is not an Anveshan user.
   async getDetail(userId: string) {
-    const account = await this.userRepo.findById(userId);
-    if (!account?.isAnveshanUser) throw new NotFoundException('Anveshan user not found');
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new NotFoundException("Anveshan user not found");
+    }
+    const account = await this.userRepo.findOne({
+      _id: userId,
+      isDeleted: { $in: [true, false, null] },
+    });
 
-    const [{ user }, progressById, questions, answers, entities] = await Promise.all([
-      this.adminService.getUserDetail(userId),
-      this.progressService.getProgressForUsers([userId]),
-      this.questionRepo.findAll({ userId }, { pagination: { page: 1, limit: MAX_QUESTIONS, sort: { submittedAt: -1 } } }),
-      this.answerRepo.findAll({ userId }),
-      this.agriEntityRepo.findOrderedBySubmission({ filter: { userId }, order: 'desc' }),
-    ]);
-    const answerByQuestion = new Map(answers.map((answer) => [answer.questionId, answer]));
+    if (!account?.isAnveshanUser)
+      throw new NotFoundException("Anveshan user not found");
+
+    const [{ user }, progressById, questions, answers, entities] =
+      await Promise.all([
+        this.adminService.getUserDetail(userId),
+        this.progressService.getProgressForUsers([userId]),
+        this.questionRepo.findAll(
+          { userId },
+          {
+            pagination: {
+              page: 1,
+              limit: MAX_QUESTIONS,
+              sort: { submittedAt: -1 },
+            },
+          },
+        ),
+        this.answerRepo.findAll({ userId }),
+        this.agriEntityRepo.findOrderedBySubmission({
+          filter: { userId },
+          order: "desc",
+        }),
+      ]);
+    const answerByQuestion = new Map(
+      answers.map((answer) => [answer.questionId, answer]),
+    );
 
     return {
       user: { ...user, isAnveshanUser: true },

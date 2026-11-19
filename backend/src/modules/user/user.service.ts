@@ -63,19 +63,27 @@ export class UserService {
   ) {}
 
   // Re-fetches the Anveshan candidate and overwrites name, state and district where they differ.
-  async refreshFromAnveshan(userId: string): Promise<{ user: User; updatedFields: string[] }> {
+  async refreshFromAnveshan(
+    userId: string,
+  ): Promise<{ user: User; updatedFields: string[] }> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException("User not found");
     }
     if (!user.isAnveshanUser) {
-      throw new ForbiddenException("Only Anveshan users can refresh data from Anveshan");
+      throw new ForbiddenException(
+        "Only Anveshan users can refresh data from Anveshan",
+      );
     }
 
     // Deleted candidates are excluded by the repository, so they count as not found.
-    const candidate = await this.anveshanCandidateRepo.findByPhone(user.mobileNumber);
+    const candidate = await this.anveshanCandidateRepo.findByPhone(
+      user.mobileNumber,
+    );
     if (!candidate) {
-      throw new NotFoundException("No active Anveshan record was found for this number");
+      throw new NotFoundException(
+        "No active Anveshan record was found for this number",
+      );
     }
 
     const incoming = {
@@ -114,14 +122,15 @@ export class UserService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user?.isAnveshanUser) return false;
 
-    const [questions, crop, weed, pest, disease, answerableQuestions] = await Promise.all([
-      this.questionRepo.countByUserId(userId),
-      this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
-      this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
-      this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
-      this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
-      findAnveshanAnswerableQuestions(this.questionRepo, userId),
-    ]);
+    const [questions, crop, weed, pest, disease, answerableQuestions] =
+      await Promise.all([
+        this.questionRepo.countByUserId(userId),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+        this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+        findAnveshanAnswerableQuestions(this.questionRepo, userId),
+      ]);
 
     return evaluateAnveshanProgress({
       questions,
@@ -150,45 +159,64 @@ export class UserService {
         isCompleted: false,
         requirements: {
           questions: { required: requiredQuestions, submitted: 0, met: false },
-          crop:      { required: 1,  submitted: 0, met: false },
-          pest:      { required: 1,  submitted: 0, met: false },
-          weed:      { required: 1,  submitted: 0, met: false },
-          disease:   { required: 1,  submitted: 0, met: false },
-          answerCreated: { required: ANVESHAN_REQUIRED_ANSWER_COUNT, submitted: 0, met: false },
+          crop: { required: 1, submitted: 0, met: false },
+          pest: { required: 1, submitted: 0, met: false },
+          weed: { required: 1, submitted: 0, met: false },
+          disease: { required: 1, submitted: 0, met: false },
+          answerCreated: {
+            required: ANVESHAN_REQUIRED_ANSWER_COUNT,
+            submitted: 0,
+            met: false,
+          },
         },
       };
     }
 
     // Run all counts in parallel for performance
-    const [questionCount, cropCount, pestCount, weedCount, diseaseCount, answerableQuestions] =
-      await Promise.all([
-        this.questionRepo.countByUserId(userId),
-        this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
-        this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
-        this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
-        this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
-        findAnveshanAnswerableQuestions(this.questionRepo, userId),
-      ]);
+    const [
+      questionCount,
+      cropCount,
+      pestCount,
+      weedCount,
+      diseaseCount,
+      answerableQuestions,
+    ] = await Promise.all([
+      this.questionRepo.countByUserId(userId),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.CROP }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.PEST }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.WEED }),
+      this.agriEntityRepo.count({ userId, type: AgriEntityType.DISEASE }),
+      findAnveshanAnswerableQuestions(this.questionRepo, userId),
+    ]);
     const answerCount = countAnveshanAnswers(answerableQuestions);
 
     const questionsMet = questionCount >= requiredQuestions;
-    const cropMet      = cropCount >= 1;
-    const pestMet      = pestCount >= 1;
-    const weedMet      = weedCount >= 1;
-    const diseaseMet   = diseaseCount >= 1;
-    const answersMet   = answerCount >= ANVESHAN_REQUIRED_ANSWER_COUNT;
+    const cropMet = cropCount >= 1;
+    const pestMet = pestCount >= 1;
+    const weedMet = weedCount >= 1;
+    const diseaseMet = diseaseCount >= 1;
+    const answersMet = answerCount >= ANVESHAN_REQUIRED_ANSWER_COUNT;
 
-    const isCompleted = questionsMet && cropMet && pestMet && weedMet && diseaseMet && answersMet;
+    const isCompleted =
+      questionsMet && cropMet && pestMet && weedMet && diseaseMet && answersMet;
 
     return {
       isCompleted,
       requirements: {
-        questions: { required: requiredQuestions, submitted: questionCount, met: questionsMet },
-        crop:      { required: 1,  submitted: cropCount,     met: cropMet },
-        pest:      { required: 1,  submitted: pestCount,     met: pestMet },
-        weed:      { required: 1,  submitted: weedCount,     met: weedMet },
-        disease:   { required: 1,  submitted: diseaseCount,  met: diseaseMet },
-        answerCreated: { required: ANVESHAN_REQUIRED_ANSWER_COUNT, submitted: answerCount, met: answersMet },
+        questions: {
+          required: requiredQuestions,
+          submitted: questionCount,
+          met: questionsMet,
+        },
+        crop: { required: 1, submitted: cropCount, met: cropMet },
+        pest: { required: 1, submitted: pestCount, met: pestMet },
+        weed: { required: 1, submitted: weedCount, met: weedMet },
+        disease: { required: 1, submitted: diseaseCount, met: diseaseMet },
+        answerCreated: {
+          required: ANVESHAN_REQUIRED_ANSWER_COUNT,
+          submitted: answerCount,
+          met: answersMet,
+        },
       },
     };
   }
@@ -276,6 +304,67 @@ export class UserService {
 
   // ─── Leaderboard ─────────────────────────────────────────────────────────────
 
+  // async getLeaderboard(
+  //   userId: string,
+  //   options: { limit?: number; offset?: number } = {},
+  // ): Promise<{
+  //   entries: Array<{
+  //     rank: number;
+  //     userId: string;
+  //     name: string;
+  //     totalEarned: number;
+  //     totalQuestions: number;
+  //     medal: string | null;
+  //     isCurrentUser: boolean;
+  //   }>;
+  //   userRank: number | null;
+  //   total: number;
+  // }> {
+  //   const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+
+  //   const offset = Math.max(0, options.offset ?? 0);
+
+  //   // Get ONLY the requested page from MongoDB
+  //   const { entries: rows, total } = await this.userRepo.getLeaderboard({
+  //     limit,
+  //     offset,
+  //   });
+
+  //   // Assign the GLOBAL rank, not page-relative rank
+  //   const ranked = rows.map((row, index) => ({
+  //     ...row,
+  //     rank: offset + index + 1,
+  //   }));
+
+  //   // TODO: calculate this properly in Step 3
+  //   const userRank = await this.userRepo.getLeaderboardRank({
+  //     userId,
+  //   });
+
+  //   const entries = ranked.map((row) => ({
+  //     rank: row.rank,
+  //     userId: row.id,
+  //     name: row.name,
+  //     totalEarned: row.totalEarned,
+  //     totalQuestions: row.totalQuestions,
+  //     medal:
+  //       row.rank === 1
+  //         ? "gold"
+  //         : row.rank === 2
+  //           ? "silver"
+  //           : row.rank === 3
+  //             ? "bronze"
+  //             : null,
+  //     isCurrentUser: row.id === userId,
+  //   }));
+
+  //   return {
+  //     entries,
+  //     userRank,
+  //     total,
+  //   };
+  // }
+
   async getLeaderboard(
     userId: string,
     options: { limit?: number; offset?: number } = {},
@@ -284,57 +373,51 @@ export class UserService {
       rank: number;
       userId: string;
       name: string;
-      totalEarned: number;
       totalQuestions: number;
       medal: string | null;
       isCurrentUser: boolean;
     }>;
     userRank: number | null;
+    userTotalQuestions: number;
     total: number;
+    totalApprovedQuestions: number;
   }> {
     const limit = Math.min(100, Math.max(1, options.limit ?? 20));
-
     const offset = Math.max(0, options.offset ?? 0);
 
-    // Get ONLY the requested page from MongoDB
-    const { entries: rows, total } = await this.userRepo.getLeaderboard({
-      limit,
-      offset,
+    // The list and the user's own rank are independent queries, so run them together.
+    // Neither is given state/category, so both are global and agree with each other.
+    const [{ entries: rows, total, totalApprovedQuestions }, me] = await Promise.all([
+      this.userRepo.getLeaderboard({ limit, offset }),
+      this.userRepo.getLeaderboardRank({ userId }),
+    ]);
+
+    const entries = rows.map((row, index) => {
+      const rank = offset + index + 1; // global rank, not page-relative
+      return {
+        rank,
+        userId: row.id,
+        name: row.name,
+        totalQuestions: row.totalQuestions,
+        medal:
+          row.totalQuestions > 0 && rank === 1
+            ? "gold"
+            : row.totalQuestions > 0 && rank === 2
+              ? "silver"
+              : row.totalQuestions > 0 && rank === 3
+                ? "bronze"
+                : null,
+        isCurrentUser: row.id === userId,
+      };
     });
-
-    // Assign the GLOBAL rank, not page-relative rank
-    const ranked = rows.map((row, index) => ({
-      ...row,
-      rank: offset + index + 1,
-    }));
-
-    // TODO: calculate this properly in Step 3
-    const userRank = await this.userRepo.getLeaderboardRank({
-      userId,
-    });
-
-    const entries = ranked.map((row) => ({
-      rank: row.rank,
-      userId: row.id,
-      name: row.name,
-      totalEarned: row.totalEarned,
-      totalQuestions: row.totalQuestions,
-      medal:
-        row.rank === 1
-          ? "gold"
-          : row.rank === 2
-            ? "silver"
-            : row.rank === 3
-              ? "bronze"
-              : null,
-      isCurrentUser: row.id === userId,
-    }));
 
     return {
-      entries,
-      userRank,
-      total,
-    };
+  entries,
+  userRank: me?.rank ?? null,
+  userTotalQuestions: me?.totalQuestions ?? 0, // still used by the app's "your position" card
+  total,
+  totalApprovedQuestions,
+};
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {

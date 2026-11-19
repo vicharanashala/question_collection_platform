@@ -18,18 +18,14 @@ export class User {
   @Prop({
     name: "mobileNumber",
     type: String,
-    unique: true,
-    index: true,
     default: null,
   })
   mobileNumber: string | null;
 
+  // Uniqueness is enforced by the partial index below, so only active users block a username.
   @Prop({
     name: "username",
     type: String,
-    unique: true,
-    sparse: true,
-    index: true,
   })
   username: string | null;
 
@@ -193,3 +189,27 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Only one active user per mobile number. Deleted users keep their number without blocking it.
+UserSchema.index(
+  { mobileNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      mobileNumber: { $type: 'string' },
+    },
+  },
+);
+
+// Only one active user per username. Deleted users keep their username without blocking it.
+UserSchema.index(
+  { username: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      username: { $type: 'string' },
+    },
+  },
+);

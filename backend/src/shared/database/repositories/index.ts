@@ -10,7 +10,7 @@ import { Provider } from '@nestjs/common';
 // ─── Repository Interfaces ─────────────────────────────────────────────────
 
 export { IUserRepository } from './IUser.repository';
-export { IWalletRepository } from './IWallet.repository';
+export { IWalletRepository, AdminWalletScope, AdminWalletRow, AdminWalletTotals } from './IWallet.repository';
 export { ITransactionRepository } from './ITransaction.repository';
 export { IWithdrawalRequestRepository } from './IWithdrawalRequest.repository';
 export { IUserPaymentDetailRepository } from './IUserPaymentDetail.repository';
