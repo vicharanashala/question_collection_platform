@@ -22,6 +22,7 @@ import { ANVESHAN_ANSWERS_ROUTE } from '@/constants/public'
 import { AnveshanFeedbackDialog } from '@/components/anveshan-answers/AnveshanFeedbackDialog'
 import { deferFeedback, isFeedbackDeferred } from '@/components/anveshan-answers/feedbackPrompt'
 import { useTranslation } from 'react-i18next'
+import { EmailLinkBanner } from '@/components/EmailLinkBanner'
 
 /**
  * Shell for the public-user app (role="user"). Visually distinct from the
@@ -112,6 +113,7 @@ export function PublicLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
+        <EmailLinkBanner hidden={location.pathname === '/home/profile'} />
         <VerificationBanner />
         <TesterBanner />
         <AnveshanProgressBanner

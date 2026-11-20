@@ -1208,6 +1208,26 @@ export class AuthService {
     return { message: "OTP sent successfully" };
   }
 
+  /**
+   * Sends a login OTP to the verified email already linked to a mobile account.
+   * The client only supplies the mobile number, so the email address remains private.
+   */
+  async requestEmailLoginFallback(
+    mobileNumber: string,
+  ): Promise<{ message: string }> {
+    const user = await this.userRepo.findOne({
+      where: { mobileNumber: this.normalizePhone(mobileNumber) },
+    });
+
+    if (!user?.email || !user.emailVerifiedAt) {
+      throw new BadRequestException(
+        "No verified email is linked to this mobile number",
+      );
+    }
+
+    return this.requestEmailOtp(user.email, EmailOtpPurpose.EMAIL_LOGIN);
+  }
+
   async verifyEmailOtp(
   email: string,
   otp: string,
@@ -1339,6 +1359,29 @@ export class AuthService {
     user: this.toPublicUser(user),
   };
 }
+
+  /** Complete an email fallback login without exposing the linked address. */
+  async verifyEmailLoginFallback(
+    mobileNumber: string,
+    otp: string,
+    meta?: RequestMeta,
+  ) {
+    const user = await this.userRepo.findOne({
+      where: { mobileNumber: this.normalizePhone(mobileNumber) },
+    });
+
+    if (!user?.email) {
+      throw new UnauthorizedException("Invalid or expired OTP");
+    }
+
+    return this.verifyEmailOtp(
+      user.email,
+      otp,
+      EmailOtpPurpose.EMAIL_LOGIN,
+      undefined,
+      meta,
+    );
+  }
 
 
   /**

@@ -788,6 +788,7 @@ export function PublicHomePage() {
         user={user}
         onConsentGiven={(updatedUser) => updateUser(updatedUser.user)}
       />
+
     </div>
   );
 }

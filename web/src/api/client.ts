@@ -60,6 +60,8 @@ const NO_SESSION_END = [
   "/auth/verify-otp",
   "/auth/sync-email",
   "/auth/verify-email-otp",
+  "/auth/request-email-login-fallback",
+  "/auth/verify-email-login-fallback",
   "/auth/refresh",
 ];
 // Passes a successful submission result through and tells progress screens to reload.
@@ -388,6 +390,24 @@ export const userApi = {
 };
 
 export const authApi = {
+  requestEmailLoginFallback: (mobileNumber: string) =>
+    request<{ message: string }>(
+      "/auth/request-email-login-fallback",
+      { method: "POST", body: JSON.stringify({ mobileNumber }) },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    ),
+
+  verifyEmailLoginFallback: (mobileNumber: string, otp: string) =>
+    request<{
+      tokens: { accessToken: string; refreshToken: string; expiresIn: number };
+      user: AuthUser;
+    }>(
+      "/auth/verify-email-login-fallback",
+      { method: "POST", body: JSON.stringify({ mobileNumber, otp }) },
+      false,
+    ),
+
   requestEmailOtp: (email: string, purpose: "EMAIL_SYNC" | "EMAIL_LOGIN" = "EMAIL_SYNC") =>
     request<{ message: string }>(
       "/auth/sync-email",

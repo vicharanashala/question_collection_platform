@@ -217,6 +217,20 @@ export class AuthController {
     return this.authService.requestEmailOtp(email, purpose, req.user?.id);
   }
 
+  /** Fallback for a failed or rate-limited mobile OTP: use the account's linked email. */
+  @Public()
+  @Post("request-email-login-fallback")
+  @HttpCode(HttpStatus.OK)
+  async requestEmailLoginFallback(
+    @Body("mobileNumber") mobileNumber: string,
+  ) {
+    if (!mobileNumber || !/^(?:\+91)?[6-9]\d{9}$/.test(mobileNumber)) {
+      throw new BadRequestException("Invalid mobile number");
+    }
+
+    return this.authService.requestEmailLoginFallback(mobileNumber);
+  }
+
   @Public()
   @Post("verify-email-otp")
   @HttpCode(HttpStatus.OK)
@@ -251,5 +265,23 @@ export class AuthController {
       req.user?.id,
       meta,
     );
+  }
+
+  @Public()
+  @Post("verify-email-login-fallback")
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailLoginFallback(
+    @Body("mobileNumber") mobileNumber: string,
+    @Body("otp") otp: string,
+    @ReqMeta() meta?: RequestMeta,
+  ) {
+    if (!mobileNumber || !/^(?:\+91)?[6-9]\d{9}$/.test(mobileNumber)) {
+      throw new BadRequestException("Invalid mobile number");
+    }
+    if (!otp || !/^\d{6}$/.test(otp)) {
+      throw new BadRequestException("Invalid OTP");
+    }
+
+    return this.authService.verifyEmailLoginFallback(mobileNumber, otp, meta);
   }
 }
