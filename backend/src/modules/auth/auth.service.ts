@@ -461,6 +461,10 @@ export class AuthService {
         if (!user.district?.trim() && anveshanCandidate.district) {
           updates.district = anveshanCandidate.district;
         }
+        if(!user.email?.trim() && anveshanCandidate.email){
+          updates.email = anveshanCandidate.email
+          updates.emailVerifiedAt = new Date();
+        }
 
         await this.userRepo.update(user._id, updates);
         user = { ...user, ...updates } as User;

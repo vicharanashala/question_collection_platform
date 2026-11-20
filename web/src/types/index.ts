@@ -64,6 +64,8 @@ export interface User {
   /** True when the user has an unexpired login session. Sent by the admin user list only. */
   isActive?: boolean;
   lastActivityAt?: string | null;
+  /** Admin-list-only flag; the address itself is never returned in the list. */
+  emailLinked?: boolean;
 }
 
 
