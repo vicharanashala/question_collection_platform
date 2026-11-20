@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { SmsBsnlBrpsService } from './sms-bsnl-brps.service';
+import { SmsDeliveryError, SmsFailureReason, classifySmsError } from './sms-delivery.error';
 
 /**
  * SMS Gateway abstraction supporting multiple providers.
@@ -59,7 +60,10 @@ export class SmsService {
     const apiKey = this.configService.get<string>('sms.apiKey');
 
     if (!apiKey) {
-      throw new Error('Fast2SMS API key not configured. Set FAST2SMS_API_KEY in environment.');
+      throw new SmsDeliveryError(
+        'Fast2SMS API key not configured. Set FAST2SMS_API_KEY in environment.',
+        SmsFailureReason.NOT_CONFIGURED,
+      );
     }
 
     const cleanNumber = mobileNumber.replace(/^\+?91 ?/, '').replace(/^0/, '');
@@ -96,7 +100,10 @@ export class SmsService {
     } catch (err: unknown) {
       const error = err as { response?: { data?: unknown }; message?: string };
       this.logger.error(`[Fast2SMS] Failed to send OTP to ${cleanNumber}: ${JSON.stringify(error.response?.data) || error.message}`);
-      throw new Error(`Fast2SMS API error: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`);
+      throw new SmsDeliveryError(
+        `Fast2SMS API error: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`,
+        classifySmsError(err),
+      );
     }
   }
 

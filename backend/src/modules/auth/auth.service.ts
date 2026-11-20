@@ -26,6 +26,7 @@ import {
 } from "../../shared/classes/enums";
 import { RequestOtpDto, VerifyOtpDto, RegisterDto } from "./dto";
 import { SmsService } from "./sms.service";
+import { SMS_FAILURE_INFO, classifySmsError } from "./sms-delivery.error";
 import { RedisService } from "../../shared/database/cache/redis.service";
 import { RateLimitCounterService } from "../../shared/database/cache/rate-limit-counter.service";
 import { AdminService } from "../admin/admin.service";
@@ -290,15 +291,13 @@ export class AuthService {
     try {
       await this.smsService.sendOtp(mobileNumber, otp);
     } catch (err) {
-      // Log the gateway detail server side. Outside production the detail is also
-      // returned so gateway setup issues can be diagnosed on staging.
-      const reason = err instanceof Error ? err.message : String(err);
-      this.logger.error(`OTP delivery failed for ${mobileNumber}: ${reason}`);
+      const gatewayResponse = err instanceof Error ? err.message : String(err);
+      this.logger.error(`OTP delivery failed for ${mobileNumber}: ${gatewayResponse}`);
       throw new BadGatewayException({
         message:
           "We could not send the OTP to this number. Please check the number or try again later.",
         code: "OTP_DELIVERY_FAILED",
-        ...(!isProduction() && { detail: reason }),
+        details: this.buildOtpDeliveryDetails(err, gatewayResponse),
       });
     }
 
@@ -312,6 +311,21 @@ export class AuthService {
     // );
 
     return { message: "OTP sent successfully" };
+  }
+
+  // Builds the error details for a failed OTP send. The reason, description and retry
+  // hint are always returned. Provider and raw gateway output are returned only outside
+  // production, because they can reveal gateway configuration.
+  private buildOtpDeliveryDetails(err: unknown, gatewayResponse: string) {
+    const reason = classifySmsError(err);
+    return {
+      reason,
+      ...SMS_FAILURE_INFO[reason],
+      ...(!isProduction() && {
+        provider: this.configService.get<string>("sms.provider") ?? "mock",
+        gatewayResponse,
+      }),
+    };
   }
 
   /**
