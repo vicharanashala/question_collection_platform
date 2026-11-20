@@ -10,6 +10,7 @@ import { MobileNav } from './MobileNav'
 import { Sidebar } from './Sidebar'
 import { StaffBottomNav } from './StaffBottomNav'
 import { useTranslation } from 'react-i18next'
+import { EmailLinkBanner } from '@/components/EmailLinkBanner'
 
 export function AppLayout() {
   const { t } = useTranslation()
@@ -54,6 +55,7 @@ export function AppLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header onOpenMobileNav={openMobileNav} />
+        <EmailLinkBanner hidden={location.pathname === '/profile'} />
         <VerificationBanner />
         <AnimatePresence initial={false}>
           {anveshanScope !== 'all' && (

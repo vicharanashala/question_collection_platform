@@ -19,8 +19,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { LinkEmailDialog } from '@/components/profile/LinkEmailDialog'
 import {
-  Phone, Leaf, Wallet, Calendar, Trophy, Medal,
+  Phone, Leaf, Wallet, Calendar, Trophy, Medal, Mail,
   CheckCircle2, Clock, Eye, AlertCircle, XCircle,
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
   ChevronRight, LogOut, Flag, ShieldCheck, X,
@@ -219,6 +220,7 @@ export function PublicProfilePage() {
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [refreshingAnveshan, setRefreshingAnveshan] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [linkEmailOpen, setLinkEmailOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
   const fetchStats = useCallback(async () => {
@@ -486,15 +488,23 @@ export function PublicProfilePage() {
 
           {/* Personal Info */}
           <AccountCard icon={Users} title={t('profile.personalInfo')} className="lg:flex-1 lg:basis-[320px]">
-            {(user.username != null || cat || user.gender || user.age != null) ? (
+            {(user.username != null || cat || user.gender || user.age != null || user.email) ? (
               <>
                 {user.username != null && <AccountRow icon={AtSign} label={t('profile.username')} value={`@${user.username}`} />}
                 {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(t, cat)} />}
                 {user.gender && <AccountRow icon={Users} label={t('profile.gender')} value={<span className="capitalize">{user.gender}</span>} />}
-                {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} isLast />}
+                {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} />}
+                {user.email && <AccountRow icon={Mail} label="Email" value={user.email} isLast />}
               </>
             ) : (
               <p className="px-4 py-3 text-xs text-text-tertiary">{t('publicProfilePage.noPersonalInfoSet')}</p>
+            )}
+            {!user.email && (
+              <div className="border-t border-border-subtle px-4 py-3">
+                <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => setLinkEmailOpen(true)}>
+                  <Mail className="h-3.5 w-3.5" /> Link email
+                </Button>
+              </div>
             )}
           </AccountCard>
 
@@ -672,6 +682,8 @@ export function PublicProfilePage() {
           </DialogPrimitive.Close>
         </DialogContent>
       </Dialog>
+
+      <LinkEmailDialog open={linkEmailOpen} onOpenChange={setLinkEmailOpen} onLinked={(email) => updateUser({ ...user, email })} />
     </div>
   )
 }
