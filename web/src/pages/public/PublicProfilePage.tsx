@@ -21,6 +21,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { LinkEmailDialog } from '@/components/profile/LinkEmailDialog'
 import { LinkEmailButton } from '@/components/profile/LinkEmailButton'
+import { VerifiedEmail } from '@/components/profile/VerifiedEmail'
 import {
   Phone, Leaf, Wallet, Calendar, Trophy, Medal, Mail,
   CheckCircle2, Clock, Eye, AlertCircle, XCircle,
@@ -470,7 +471,7 @@ export function PublicProfilePage() {
                 {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(t, cat)} />}
                 {user.gender && <AccountRow icon={Users} label={t('profile.gender')} value={<span className="capitalize">{user.gender}</span>} />}
                 {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} />}
-                {user.email && <AccountRow icon={Mail} label="Email" value={user.email} isLast />}
+                {user.email && <AccountRow icon={Mail} label="Email" value={<VerifiedEmail email={user.email} />} isLast />}
               </>
             ) : (
               <p className="px-4 py-3 text-xs text-text-tertiary">{t('publicProfilePage.noPersonalInfoSet')}</p>

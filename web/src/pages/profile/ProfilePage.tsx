@@ -49,6 +49,7 @@ import type {
 import { useTranslation } from 'react-i18next';
 import { LinkEmailDialog } from "@/components/profile/LinkEmailDialog";
 import { LinkEmailButton } from "@/components/profile/LinkEmailButton";
+import { VerifiedEmail } from "@/components/profile/VerifiedEmail";
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -767,7 +768,13 @@ export function ProfilePage() {
             <FieldRow
               icon={Mail}
               label="Email"
-              value={user.email || <LinkEmailButton onClick={() => setLinkEmailOpen(true)} />}
+              value={
+                user.email ? (
+                  <VerifiedEmail email={user.email} />
+                ) : (
+                  <LinkEmailButton onClick={() => setLinkEmailOpen(true)} />
+                )
+              }
             />
             <FieldRow icon={MapPin} label={t('profile.location')} value={locationStr} />
             <FieldRow
