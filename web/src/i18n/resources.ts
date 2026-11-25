@@ -2052,7 +2052,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "Get the code by email instead",
+        "useemailotpinstead": "Use email OTP instead?",
+        "ifanemailislinkedto": "If an email is linked to this account, we can send the sign-in code there instead.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -2327,7 +2330,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "Email",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -2546,7 +2550,27 @@ const resources = {
       },
       "distributionsPage": {
         "approvedQueue": "Approved Queue"
-      }
+      },
+      "emailLinkBanner": { "addabackupemail": "Add a backup email", 
+  "getsignincodesbyemail": "Get sign-in codes by email if SMS fails.",
+
+  "linkemail": "Link email",
+
+  "dismissbackupemailreminder": "Dismiss backup email reminder",
+},
+      "linkEmailDialog": { "step": "Step", 
+  "of2": "of 2",
+
+  "enterthe6digitcodesent": "Enter the 6-digit code sent to",
+
+  "emailaddress": "Email address",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "Verification code",
+
+  "didnotgetit": "Did not get it?",
+},
     }
   },
   "as": {
@@ -4574,7 +4598,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ইয়াৰ পৰিৱৰ্তে ইমেইলৰ জৰিয়তে ক’ডটো লওক।",
+        "useemailotpinstead": "ইমেইল OTP ব্যৱহাৰ কৰিব নেকি?",
+        "ifanemailislinkedto": "যদি এটা ইমেইল এই একাউণ্টৰ সৈতে সংযোগ কৰা আছে, তেন্তে আমি তাৰ পৰিৱৰ্তে ছাইন-ইন ক'ডটো তালৈ পঠিয়াব পাৰোঁ।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -4849,7 +4876,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ইমেইল",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -5091,7 +5119,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "এটা অতিৰিক্ত ইমেইল যোগ কৰক", 
+  "getsignincodesbyemail": "যদি এছএমএছ ব্যৰ্থ হয় তেন্তে ইমেইলৰ জৰিয়তে ছাইন-ইন ক'ড লাভ কৰক।",
+
+  "linkemail": "ইমেইল লিংক কৰক",
+
+  "dismissbackupemailreminder": "বেকআপ ইমেইলৰ সোঁৱৰণী বাতিল কৰক",
+},
+      "linkEmailDialog": { "step": "খোজ", 
+  "of2": "2 ৰ ভিতৰত",
+
+  "enterthe6digitcodesent": "প্ৰেৰণ কৰা 6টা সংখ্যাৰ ক'ডটো লিখক।",
+
+  "emailaddress": "ইমেইল ঠিকনা",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "প্ৰমাণীকৰণ ক'ড",
+
+  "didnotgetit": "নাপালে নেকি?",
+},
     }
   },
   "bn": {
@@ -7119,7 +7167,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "পরিবর্তে ইমেলের মাধ্যমে কোডটি নিন।",
+        "useemailotpinstead": "পরিবর্তে ইমেল ওটিপি ব্যবহার করবেন?",
+        "ifanemailislinkedto": "যদি এই অ্যাকাউন্টের সাথে একটি ইমেল লিঙ্ক করা থাকে, তাহলে আমরা সেখানে সাইন-ইন কোড পাঠাতে পারি।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -7394,7 +7445,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ইমেইল",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -7636,7 +7688,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "একটি ব্যাকআপ ইমেল যোগ করুন", 
+  "getsignincodesbyemail": "এস.এম.এস ব্যর্থ হলে ইমেলের মাধ্যমে সাইন-ইন কোড পান।",
+
+  "linkemail": "ইমেইল লিঙ্ক করুন",
+
+  "dismissbackupemailreminder": "ব্যাকআপ ইমেল অনুস্মারক বাতিল করুন",
+},
+      "linkEmailDialog": { "step": "ধাপ", 
+  "of2": "2 এর",
+
+  "enterthe6digitcodesent": "প্রেরিত 6-সংখ্যার কোডটি প্রবেশ করান।",
+
+  "emailaddress": "ইমেইল ঠিকানা",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "যাচাই কোড",
+
+  "didnotgetit": "পাচ্ছেনা?",
+},
     }
   },
   "brx": {
@@ -9664,7 +9736,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "बिनि सोलाय इमेइलनि गेजेरजों क'डखौ मोन।",
+        "useemailotpinstead": "बिनि सोलाय इमेल अ.टि.पि. बाहायगोन नामा?",
+        "ifanemailislinkedto": "जुदि मोनसे इमेइल बे एकाउन्टजों लिंक खालामनाय जादों, अब्ला जों बेनि सोलायै बैयाव साइन-इन क'डखौ दैथायहरनो हायो।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -9939,7 +10014,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "इमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -10181,7 +10257,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "मोनसे बेकआप इमेइल दाजाबदेर।", 
+  "getsignincodesbyemail": "एस.एम.एस. फेल जायोब्ला इमेइलजों साइन-इन क'डफोरखौ मोन।",
+
+  "linkemail": "इमेल लिंक खालाम।",
+
+  "dismissbackupemailreminder": "बेकआप इमेल गोसोखांहोग्राखौ होखार।",
+},
+      "linkEmailDialog": { "step": "आगान", 
+  "of2": "निफ्राय 2",
+
+  "enterthe6digitcodesent": "6-अजिमानि क'डखौ सोहर जायखौ दैथायहरदोंमोन।",
+
+  "emailaddress": "इमेल एड्रेस",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "फोरमान खालामनाय क'ड",
+
+  "didnotgetit": "मोनाखैमोन नामा?",
+},
     }
   },
   "doi": {
@@ -12209,7 +12305,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "एह्‌‌‌दे बजाए ईमेल राहें कोड हासल करो।",
+        "useemailotpinstead": "एह्‌‌‌दे बजाए ईमेल ओ.टी.पी. दा इस्तेमाल करना ऐ?",
+        "ifanemailislinkedto": "जेकर इस खाते कन्नै कोई ईमेल लिंक कीता गेदा ऐ, तां अस ओह्‌‌‌दे बजाए साइन-इन कोड उत्थै भेजी सकने आं।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -12484,7 +12583,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -12726,7 +12826,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "इक बैकअप ईमेल जोड़ो", 
+  "getsignincodesbyemail": "जेकर ऐस्स.ऐम्म.ऐस्स. विफल होई जंदा ऐ तां ईमेल राहें साइन-इन कोड हासल करो।",
+
+  "linkemail": "ईमेल लिंक करो",
+
+  "dismissbackupemailreminder": "बैकअप ईमेल रिमाइंडर गी रद्द करो।",
+},
+      "linkEmailDialog": { "step": "कदम", 
+  "of2": "2 दा",
+
+  "enterthe6digitcodesent": "भेजेआ गेदा 6-अंकें दा कोड दर्ज करो।",
+
+  "emailaddress": "ईमेल पता",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापन कोड",
+
+  "didnotgetit": "किश समझ नेईं आया?",
+},
     }
   },
   "gu": {
@@ -14754,7 +14874,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "તેના બદલે ઇમેઇલ દ્વારા કોડ મેળવો.",
+        "useemailotpinstead": "તેના બદલે ઇમેઇલ OTP વાપરવો?",
+        "ifanemailislinkedto": "જો કોઈ ઈમેલ આ ખાતા સાથે જોડાયેલું હોય, તો અમે તેના બદલે ત્યાં સાઇન-ઇન કોડ મોકલી શકીએ છીએ.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -15029,7 +15152,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ઈમેલ",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -15271,7 +15395,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "એક બેકઅપ ઇમેઇલ ઉમેરો", 
+  "getsignincodesbyemail": "જો એસ.એમ.એસ. નિષ્ફળ જાય તો ઈમેલ દ્વારા સાઈન-ઈન કોડ મેળવો.",
+
+  "linkemail": "ઈમેલ લિંક કરો",
+
+  "dismissbackupemailreminder": "બેકઅપ ઇમેઇલ રીમાઇન્ડર કાઢી નાખો",
+},
+      "linkEmailDialog": { "step": "પગલું", 
+  "of2": "2 ના",
+
+  "enterthe6digitcodesent": "મોકલવામાં આવેલો 6-અંકનો કોડ દાખલ કરો.",
+
+  "emailaddress": "ઈમેલ સરનામું",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ચકાસણી કોડ",
+
+  "didnotgetit": "શું તમને તે ન મળ્યું?",
+},
     }
   },
   "hi": {
@@ -17299,7 +17443,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "इसके बजाय ईमेल द्वारा कोड प्राप्त करें",
+        "useemailotpinstead": "क्या ईमेल ओटीपी का उपयोग करें?",
+        "ifanemailislinkedto": "अगर इस खाते से कोई ईमेल लिंक किया गया है, तो हम साइन-इन कोड वहाँ भेज सकते हैं।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -17574,7 +17721,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -17816,7 +17964,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एक बैकअप ईमेल जोड़ें", 
+  "getsignincodesbyemail": "एस.एम.एस. विफल होने पर ईमेल द्वारा साइन-इन कोड प्राप्त करें।",
+
+  "linkemail": "ईमेल लिंक करें",
+
+  "dismissbackupemailreminder": "बैकअप ईमेल रिमाइंडर रद्द करें",
+},
+      "linkEmailDialog": { "step": "चरण", 
+  "of2": "2 का",
+
+  "enterthe6digitcodesent": "भेजे गए 6 अंकों का कोड दर्ज करें",
+
+  "emailaddress": "ईमेल पता",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापन कोड",
+
+  "didnotgetit": "क्या आपको यह नहीं मिला?",
+},
     }
   },
   "kn": {
@@ -19845,7 +20013,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ಬದಲಿಗೆ ಇಮೇಲ್ ಮೂಲಕ ಕೋಡ್ ಪಡೆಯಿರಿ",
+        "useemailotpinstead": "ಇಮೇಲ್ OTP ಅನ್ನು ಬಳಸಬೇಕೆ?",
+        "ifanemailislinkedto": "ಒಂದು ಇಮೇಲ್ ಈ ಖಾತೆಗೆ ಲಿಂಕ್ ಆಗಿದ್ದರೆ, ನಾವು ಸೈನ್-ಇನ್ ಕೋಡ್ ಅನ್ನು ಅಲ್ಲಿಗೆ ಕಳುಹಿಸಬಹುದು.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -20120,7 +20291,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ಇಮೇಲ್",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -20362,7 +20534,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ಬ್ಯಾಕಪ್ ಇಮೇಲ್ ಸೇರಿಸಿ", 
+  "getsignincodesbyemail": "ಎಸ್.ಎಂ.ಎಸ್. ವಿಫಲವಾದರೆ ಇಮೇಲ್ ಮೂಲಕ ಸೈನ್-ಇನ್ ಕೋಡ್‌ಗಳನ್ನು ಪಡೆಯಿರಿ.",
+
+  "linkemail": "ಇಮೇಲ್ ಲಿಂಕ್ ಮಾಡಿ",
+
+  "dismissbackupemailreminder": "ಬ್ಯಾಕಪ್ ಇಮೇಲ್ ಜ್ಞಾಪನೆಯನ್ನು ರದ್ದುಮಾಡಿ",
+},
+      "linkEmailDialog": { "step": "ಹಂತ", 
+  "of2": "2 ರ",
+
+  "enterthe6digitcodesent": "ಕಳುಹಿಸಲಾದ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ.",
+
+  "emailaddress": "ಇಮೇಲ್ ವಿಳಾಸ",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ಪರಿಶೀಲನಾ ಕೋಡ್",
+
+  "didnotgetit": "ಅದು ಸಿಗಲಿಲ್ಲವೇ?",
+},
     }
   },
   "ks": {
@@ -22390,7 +22582,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "اَمہِ بجایہِ کٔرِو ای میٖل ذٔریعہٕ کوڈ حٲصِل۔",
+        "useemailotpinstead": "اَتھ بجایہ کٔرِو ای میل او ٹی پی اِستعمال؟",
+        "ifanemailislinkedto": "اگر کانٛہہ ای میل اَتھ اکاونٹس سۭتۍ جُڑِتھ چھُ، تیٚلہِ ہٮ۪کو اَسۍ سائن اِن کوڈ تَتھ سوزِتھ۔",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -22665,7 +22860,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ای میٖل کٔرِو۔",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -22907,7 +23103,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "اکھ بیک اپ ای میل شٲمِل کٔرِو۔", 
+  "getsignincodesbyemail": "ایم ایس ایم ناکام گژھنہٕ سۭتۍ کٔرِو ای میل ذٔریعہٕ سائن ان کوڈ حٲصِل۔",
+
+  "linkemail": "ای میل جوڈِو",
+
+  "dismissbackupemailreminder": "بیک اپ ای میٖل ریمائنڈر کٔرِو رَد۔",
+},
+      "linkEmailDialog": { "step": "قدم", 
+  "of2": "2 ہُنٛد",
+
+  "enterthe6digitcodesent": "6 ہن ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہندِیو ہ",
+
+  "emailaddress": "ای میل ایڈریس",
+
+  "nameexamplecom": "نام@مثال.کام",
+
+  "verificationcode": "تصدیقی کوڈ",
+
+  "didnotgetit": "میول نہٕ؟",
+},
     }
   },
   "kok": {
@@ -24937,7 +25153,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ताचे बदला ईमेल वरवीं कोड मेळोवचो.",
+        "useemailotpinstead": "ईमेल ओटीपी वापरचो काय?",
+        "ifanemailislinkedto": "ह्या खात्या कडेन ईमेल जोडिल्लो आसल्यार, आमी थंय साइन-इन कोड धाडपाक शकतात.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -25212,7 +25431,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -25454,7 +25674,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एक बॅकअप ईमेल जोडा.", 
+  "getsignincodesbyemail": "एस.एम.एस. अपेशी थारल्यार ईमेल वरवीं साइन-इन कोड मेळोवचें.",
+
+  "linkemail": "ईमेल लिंक करात",
+
+  "dismissbackupemailreminder": "बॅकअप ईमेल यादस्तीक रद्द कर.",
+},
+      "linkEmailDialog": { "step": "पावल", 
+  "of2": "2 च्या",
+
+  "enterthe6digitcodesent": "धाडिल्लो 6 अंकी कोड घाल.",
+
+  "emailaddress": "ईमेल पत्तो",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापन कोड",
+
+  "didnotgetit": "मेळ्ळेंना?",
+},
     }
   },
   "mai": {
@@ -27482,7 +27722,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ओकरा बदला ईमेल सँ कोड प्राप्त करू।",
+        "useemailotpinstead": "की ईमेल ओटीपीक उपयोग करी?",
+        "ifanemailislinkedto": "जँ कोनो ईमेल एहि खाता सँ जुड़ल अछि, तँ हम ओहि ठाम साइन-इन कोड पठा सकैत छी।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -27757,7 +28000,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -27999,7 +28243,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एकटा बैकअप ईमेल जोड़ू", 
+  "getsignincodesbyemail": "एसएमएस विफल भेला पर ईमेल द्वारा साइन-इन कोड प्राप्त करू।",
+
+  "linkemail": "ईमेल लिंक करू",
+
+  "dismissbackupemailreminder": "बैकअप ईमेल रिमाइंडर रद्द करू।",
+},
+      "linkEmailDialog": { "step": "चरण", 
+  "of2": "2 क",
+
+  "enterthe6digitcodesent": "भेजल गेल 6 अंकक कोड दर्ज करू।",
+
+  "emailaddress": "ईमेल पता",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापन कोड",
+
+  "didnotgetit": "नहि बुझलौं?",
+},
     }
   },
   "ml": {
@@ -30027,7 +30291,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ഇതിനുപകരം ഇമെയിൽ വഴി കോഡ് നേടുക.",
+        "useemailotpinstead": "ഇമെയിൽ ഒ.ടി.പി. ഉപയോഗിക്കണോ?",
+        "ifanemailislinkedto": "ഒരു ഇമെയിൽ ഈ അക്കൗണ്ടുമായി ലിങ്ക് ചെയ്തിട്ടുണ്ടെങ്കിൽ, സൈൻ-ഇൻ കോഡ് അവിടെ അയയ്ക്കാം.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -30302,7 +30569,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ഇമെയിൽ",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -30544,7 +30812,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ഒരു ബാക്കപ്പ് ഇമെയിൽ ചേർക്കുക", 
+  "getsignincodesbyemail": "എസ്.എം.എസ്. പരാജയപ്പെട്ടാൽ ഇമെയിൽ വഴി സൈൻ-ഇൻ കോഡുകൾ നേടുക.",
+
+  "linkemail": "ഇമെയിൽ ലിങ്ക് ചെയ്യുക",
+
+  "dismissbackupemailreminder": "ബാക്കപ്പ് ഇമെയിൽ ഓർമ്മപ്പെടുത്തൽ ഒഴിവാക്കുക",
+},
+      "linkEmailDialog": { "step": "ഘട്ടം", 
+  "of2": "2-ൽ",
+
+  "enterthe6digitcodesent": "അയച്ച 6 അക്ക കോഡ് നൽകുക.",
+
+  "emailaddress": "ഇമെയിൽ വിലാസം",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "പരിശോധനാ കോഡ്",
+
+  "didnotgetit": "കണ്ടെത്തിയില്ലേ?",
+},
     }
   },
   "mni": {
@@ -32572,7 +32860,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ꯃꯗꯨꯒꯤ ꯃꯍꯨꯠꯇ ꯏꯃꯦꯜꯒꯤ ꯈꯨꯠꯊꯥꯡꯗ ꯀꯣꯗ ꯑꯗꯨ ꯂꯧꯕꯤꯌꯨ꯫",
+        "useemailotpinstead": "ꯃꯍꯨꯠꯇ ꯏꯃꯦꯜ ꯑꯣ.ꯇꯤ.ꯄꯤ. ꯁꯤꯖꯤꯟꯅꯒꯗ꯭ꯔꯥ?",
+        "ifanemailislinkedto": "ꯀꯔꯤꯒꯨꯝꯕ ꯏꯃꯦꯜ ꯑꯃ ꯑꯦꯀꯥꯎꯟꯠ ꯑꯁꯤꯒ ꯂꯤꯡꯛ ꯇꯧꯔꯕꯗꯤ, ꯑꯩꯈꯣꯏꯅ ꯁꯥꯏꯟ-ꯏꯟ ꯀꯣꯗ ꯑꯗꯨ ꯃꯐꯝ ꯑꯗꯨꯗ ꯊꯥꯕ ꯌꯥꯏ꯫",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -32847,7 +33138,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ꯏꯃꯦꯜ",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -33089,7 +33381,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ꯕꯦꯛꯑꯞ ꯏꯃꯦꯜ ꯑꯃ ꯍꯥꯞꯆꯤꯟꯕꯤꯌꯨ꯫", 
+  "getsignincodesbyemail": "ꯑꯦꯁ.ꯑꯦꯝ.ꯑꯦꯁ. ꯐꯦꯜ ꯇꯧꯔꯕꯗꯤ ꯏꯃꯦꯜꯒꯤ ꯈꯨꯠꯊꯥꯡꯗ ꯁꯥꯏꯟ-ꯏꯟ ꯀꯣꯗꯁꯤꯡ ꯐꯪꯕꯤꯌꯨ꯫",
+
+  "linkemail": "ꯏꯃꯦꯜ ꯂꯤꯡꯛ ꯇꯧꯕꯤꯌꯨ",
+
+  "dismissbackupemailreminder": "ꯕꯦꯛꯑꯞ ꯏꯃꯦꯜ ꯔꯤꯃꯥꯏꯟꯗꯔ ꯂꯧꯊꯣꯛꯎ꯫",
+},
+      "linkEmailDialog": { "step": "ꯈꯣꯡꯊꯥꯡ", 
+  "of2": "2ꯒꯤ ꯑꯣꯏꯅ",
+
+  "enterthe6digitcodesent": "ꯊꯥꯔꯛꯄ ꯗꯤꯖꯤꯠ 6ꯀꯤ ꯀꯣꯗ ꯑꯗꯨ ꯍꯥꯞꯆꯤꯟꯕꯤꯌꯨ꯫",
+
+  "emailaddress": "ꯏꯃꯦꯜ ꯑꯦꯗ꯭ꯔꯦꯁ",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ꯆꯨꯝꯂꯕ꯭ꯔꯥ ꯍꯥꯏꯅ ꯌꯦꯡꯁꯤꯟꯕꯒꯤ ꯀꯣꯗ",
+
+  "didnotgetit": "ꯐꯪꯈꯤꯗ꯭ꯔꯥ?",
+},
     }
   },
   "mr": {
@@ -35119,7 +35431,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "त्याऐवजी ईमेलद्वारे कोड मिळवा.",
+        "useemailotpinstead": "ईमेल ओटीपी वापरायचा आहे का?",
+        "ifanemailislinkedto": "जर एखादे ईमेल या खात्याशी जोडलेले असेल, तर आम्ही त्याऐवजी साइन-इन कोड तिथे पाठवू शकतो.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -35396,7 +35711,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -35638,7 +35954,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एक बॅकअप ईमेल जोडा", 
+  "getsignincodesbyemail": "एसएमएस अयशस्वी झाल्यास ईमेलद्वारे साइन-इन कोड मिळवा.",
+
+  "linkemail": "ईमेल लिंक करा",
+
+  "dismissbackupemailreminder": "बॅकअप ईमेल रिमाइंडर रद्द करा.",
+},
+      "linkEmailDialog": { "step": "चरण", 
+  "of2": "2 पैकी",
+
+  "enterthe6digitcodesent": "तुम्हाला पाठवलेला 6 अंकी कोड टाका.",
+
+  "emailaddress": "ईमेल पत्ता",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापन कोड",
+
+  "didnotgetit": "मिळाले नाही का?",
+},
     }
   },
   "ne": {
@@ -37668,7 +38004,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "बरु इमेलबाट कोड प्राप्त गर्नुहोस्।",
+        "useemailotpinstead": "इमेल ओटीपी प्रयोग गर्ने?",
+        "ifanemailislinkedto": "यदि कुनै इमेल यो खातामा लिङ्क गरिएको छ भने, हामी त्यहाँ साइन-इन कोड पठाउन सक्छौं।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -37944,7 +38283,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "इमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -38186,7 +38526,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एउटा ब्याकअप इमेल थप्नुहोस्", 
+  "getsignincodesbyemail": "एसएमएस असफल भएमा इमेलद्वारा साइन-इन कोडहरू प्राप्त गर्नुहोस्।",
+
+  "linkemail": "इमेल लिङ्क गर्नुहोस्",
+
+  "dismissbackupemailreminder": "ब्याकअप इमेल रिमाइन्डर खारेज गर्नुहोस्।",
+},
+      "linkEmailDialog": { "step": "चरण", 
+  "of2": "को 2",
+
+  "enterthe6digitcodesent": "पठाइएको 6 अंकको कोड प्रविष्ट गर्नुहोस्।",
+
+  "emailaddress": "इमेल ठेगाना",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "प्रमाणीकरण कोड",
+
+  "didnotgetit": "के पाउनुभएन?",
+},
     }
   },
   "or": {
@@ -40215,7 +40575,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ଏହା ବଦଳରେ ଇମେଲ୍ ଦ୍ୱାରା କୋଡ୍ ପାଆନ୍ତୁ |",
+        "useemailotpinstead": "ବରଂ ଇମେଲ୍ OTP ବ୍ୟବହାର କରିବେ କି?",
+        "ifanemailislinkedto": "ଯଦି ଏହି ଆକାଉଣ୍ଟ ସହିତ ଏକ ଇମେଲ୍ ଲିଙ୍କ୍ ହୋଇଥାଏ, ତେବେ ଆମେ ସେଠାକୁ ସାଇନ୍-ଇନ୍ କୋଡ୍ ପଠାଇ ପାରିବା।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -40490,7 +40853,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ଇମେଲ୍",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -40732,7 +41096,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ଏକ ବ୍ୟାକଅପ୍ ଇମେଲ୍ ଯୋଡନ୍ତୁ", 
+  "getsignincodesbyemail": "ଯଦି SMS ବିଫଳ ହୁଏ, ତେବେ ଇମେଲ୍ ମାଧ୍ୟମରେ ସାଇନ୍-ଇନ୍ କୋଡ୍ ପାଆନ୍ତୁ।",
+
+  "linkemail": "ଇମେଲ୍ ଲିଙ୍କ୍ କରନ୍ତୁ",
+
+  "dismissbackupemailreminder": "ବ୍ୟାକଅପ୍ ଇମେଲ୍ ରିମାଇଣ୍ଡର୍ ବାତିଲ୍ କରନ୍ତୁ",
+},
+      "linkEmailDialog": { "step": "ପଦକ୍ଷେପ", 
+  "of2": "2 ର",
+
+  "enterthe6digitcodesent": "ପଠାଯାଇଥିବା 6-ଅଙ୍କ ବିଶିଷ୍ଟ କୋଡ୍ ଟିପନ୍ତୁ |",
+
+  "emailaddress": "ଇମେଲ୍ ଠିକଣା",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ଭେରିଫିକେସନ୍ କୋଡ୍",
+
+  "didnotgetit": "ପାଇଲେ ନାହିଁ କି?",
+},
     }
   },
   "pa": {
@@ -42761,7 +43145,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ਇਸ ਦੀ ਬਜਾਏ ਈਮੇਲ ਰਾਹੀਂ ਕੋਡ ਪ੍ਰਾਪਤ ਕਰੋ।",
+        "useemailotpinstead": "ਕੀ ਈਮੇਲ ਓ.ਟੀ.ਪੀ. ਦੀ ਵਰਤੋਂ ਕਰੀਏ?",
+        "ifanemailislinkedto": "ਜੇਕਰ ਇਸ ਖਾਤੇ ਨਾਲ ਕੋਈ ਈਮੇਲ ਲਿੰਕ ਕੀਤੀ ਗਈ ਹੈ, ਤਾਂ ਅਸੀਂ ਸਾਈਨ-ਇਨ ਕੋਡ ਉੱਥੇ ਭੇਜ ਸਕਦੇ ਹਾਂ।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -43036,7 +43423,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ਈਮੇਲ",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -43278,7 +43666,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ਇੱਕ ਬੈਕਅੱਪ ਈਮੇਲ ਸ਼ਾਮਲ ਕਰੋ", 
+  "getsignincodesbyemail": "ਜੇ ਐੱਸਐੱਮਐੱਸ ਅਸਫ਼ਲ ਹੋ ਜਾਂਦਾ ਹੈ ਤਾਂ ਈਮੇਲ ਦੁਆਰਾ ਸਾਈਨ-ਇਨ ਕੋਡ ਪ੍ਰਾਪਤ ਕਰੋ।",
+
+  "linkemail": "ਈਮੇਲ ਲਿੰਕ ਕਰੋ",
+
+  "dismissbackupemailreminder": "ਬੈਕਅੱਪ ਈਮੇਲ ਰੀਮਾਈਂਡਰ ਰੱਦ ਕਰੋ",
+},
+      "linkEmailDialog": { "step": "ਕਦਮ", 
+  "of2": "2 ਵਿੱਚੋਂ",
+
+  "enterthe6digitcodesent": "6-ਅੰਕਾਂ ਦਾ ਕੋਡ ਦਰਜ ਕਰੋ ਜੋ ਭੇਜਿਆ ਗਿਆ ਸੀ",
+
+  "emailaddress": "ਈਮੇਲ ਐਡਰੈੱਸ",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ਪੁਸ਼ਟੀਕਰਨ ਕੋਡ",
+
+  "didnotgetit": "ਕੀ ਇਹ ਨਹੀਂ ਮਿਲਿਆ?",
+},
     }
   },
   "sa": {
@@ -45316,7 +45724,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "तस्य स्थाने ई-पत्रद्वारा सङ्केतं प्राप्नु।",
+        "useemailotpinstead": "किं ई-पत्र-ओ.टी.पी. उपयुज्यते?",
+        "ifanemailislinkedto": "यदि कस्याश्चित् महिलायाः ई-पत्रं अस्मिन् खाते योज्यते, तर्हि वयं तत्रैव प्रवेश-कूटं प्रेषयितुं शक्नुमः।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -45591,7 +46002,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ई-पत्रम्",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -45833,7 +46245,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "एकं साहाय्यिकं विद्युत्सम्बन्धं योजय।", 
+  "getsignincodesbyemail": "एस्.एम्.एस्. विफलम् अभवत् चेत् ईमेल्-द्वारा साइन-इन्-कोड्स् प्राप्नुवन्तु।",
+
+  "linkemail": "ईमेल-सम्बन्धः",
+
+  "dismissbackupemailreminder": "पृष्ठप्रतिलिपि-ईमेल-स्मारकं निरस्यतु।",
+},
+      "linkEmailDialog": { "step": "सोपानम्", 
+  "of2": "द्वितयस्य",
+
+  "enterthe6digitcodesent": "प्रेषितं षड्-अङ्कीय-कूटं प्रविशतु।",
+
+  "emailaddress": "ईमेल पता",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "सत्यापनकूटः",
+
+  "didnotgetit": "न प्राप्तम्?",
+},
     }
   },
   "sat": {
@@ -47861,7 +48293,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "ᱵᱚᱫᱚᱞᱛᱮ ᱤᱢᱮᱞ ᱛᱟᱞᱟᱛᱮ ᱠᱳᱰ ᱧᱟᱢ ᱢᱮ ᱾",
+        "useemailotpinstead": "ᱤᱢᱮᱞ ᱳ ᱴᱤ ᱯᱤ ᱵᱮᱵᱷᱟᱨ ᱠᱟᱛᱮ ᱪᱮᱫ ?",
+        "ifanemailislinkedto": "ᱡᱩᱫᱤ ᱱᱚᱣᱟ ᱮᱠᱟᱣᱩᱱᱴ ᱥᱟᱶ ᱡᱚᱲᱟᱣ ᱢᱮᱱᱟᱜᱼᱟ ᱢᱤᱫᱴᱟᱝ ᱤᱢᱮᱞ, ᱮᱱᱠᱷᱟᱱ ᱟᱞᱮ ᱚᱸᱰᱮ ᱥᱟᱭᱤᱱᱼᱤᱱ ᱠᱳᱰ ᱵᱷᱮᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -48136,7 +48571,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ᱤᱢᱮᱞ",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -48378,7 +48814,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ᱢᱤᱫᱴᱟᱝ ᱵᱮᱠᱟᱯ ᱤᱢᱮᱞ ᱥᱮᱞᱮᱫ ᱢᱮ ᱾", 
+  "getsignincodesbyemail": "ᱮᱥ ᱮᱢ ᱮᱥ ᱵᱮᱨᱛᱷᱚ ᱞᱮᱱᱠᱷᱟᱱ ᱤᱢᱮᱞ ᱛᱟᱞᱟᱛᱮ ᱥᱟᱭᱤᱱᱼᱤᱱ ᱠᱳᱰ ᱧᱟᱢ ᱢᱮ ᱾",
+
+  "linkemail": "ᱤᱢᱮᱞ ᱞᱤᱝᱠ ᱢᱮ ᱾",
+
+  "dismissbackupemailreminder": "ᱵᱮᱠᱟᱯ ᱤᱢᱮᱞ ᱨᱤᱢᱟᱭᱱᱰᱟᱨ ᱵᱟᱹᱛᱤᱞ ᱢᱮ ᱾",
+},
+      "linkEmailDialog": { "step": "ᱯᱟᱹᱣᱲᱤ", 
+  "of2": "2 ᱨᱮᱱᱟᱜ",
+
+  "enterthe6digitcodesent": "6 ᱟᱠᱷᱚᱨ ᱨᱮᱭᱟᱜ ᱠᱳᱰ ᱵᱷᱮᱡᱟ ᱟᱠᱟᱱᱟ ᱚᱱᱟ ᱵᱚᱞᱚᱱ ᱢᱮ ᱾",
+
+  "emailaddress": "ᱤᱢᱮᱞ ᱮᱰᱨᱮᱥ",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ᱵᱤᱰᱟᱹᱣ ᱠᱳᱰ ᱫᱚ",
+
+  "didnotgetit": "ᱵᱟᱝ ᱮᱢ ᱧᱟᱢ ᱟᱠᱟᱫᱟ ?",
+},
     }
   },
   "sd": {
@@ -50406,7 +50862,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "इन जे बदरां ईमेल ज़रीए कोड हासिल करियो।",
+        "useemailotpinstead": "छा ईमेल ओ.टी.पी. इस्तेमाल कजे?",
+        "ifanemailislinkedto": "जेकॾहिं हिक ईमेल इन खाते सां जुड़ियल आहे, त असां उते साइन-इन कोड मोकले सघूं था।",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -50681,7 +51140,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ईमेल",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -50923,7 +51383,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "हिकु बैकअप ईमेल शामिल करियो।", 
+  "getsignincodesbyemail": "जेकॾहिं एसएमएस नाकामयाब थिए त ईमेल ज़रीए साइन-इन कोड हासिल करियो।",
+
+  "linkemail": "ईमेल लिंक करियो",
+
+  "dismissbackupemailreminder": "बैकअप ईमेल याददिहानी खे रद्द कयो।",
+},
+      "linkEmailDialog": { "step": "क़दम", 
+  "of2": "2 मां",
+
+  "enterthe6digitcodesent": "ॾिनल 6-हंदड़नि वारो कोड दाख़िल करियो।",
+
+  "emailaddress": "ईमेल एड्रेस",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "तस्दीक़ी कोड",
+
+  "didnotgetit": "छा न मिलियो?",
+},
     }
   },
   "ta": {
@@ -52951,7 +53431,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "அதற்கு பதிலாக மின்னஞ்சல் மூலம் குறியீட்டைப் பெறுங்கள்.",
+        "useemailotpinstead": "மின்னஞ்சல் OTP பயன்படுத்தவா?",
+        "ifanemailislinkedto": "இந்த கணக்குடன் ஒரு மின்னஞ்சல் இணைக்கப்பட்டிருந்தால், உள்நுழைவு குறியீட்டை அதற்கு பதிலாக அங்கு அனுப்பலாம்.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -53226,7 +53709,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "மின்னஞ்சல்",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -53468,7 +53952,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ஒரு காப்பு மின்னஞ்சலைச் சேர்க்கவும்", 
+  "getsignincodesbyemail": "SMS தோல்வியுற்றால், மின்னஞ்சல் மூலம் உள்நுழைவு குறியீடுகளைப் பெறுங்கள்.",
+
+  "linkemail": "இணைப்பு மின்னஞ்சல்",
+
+  "dismissbackupemailreminder": "காப்பு மின்னஞ்சல் நினைவூட்டலை நிராகரிக்கவும்.",
+},
+      "linkEmailDialog": { "step": "படி", 
+  "of2": "2 இல்",
+
+  "enterthe6digitcodesent": "அனுப்பப்பட்ட 6 இலக்கக் குறியீட்டை உள்ளிடவும்.",
+
+  "emailaddress": "மின்னஞ்சல் முகவரி",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "சரிபார்ப்புக் குறியீடு",
+
+  "didnotgetit": "புரியவில்லையா?",
+},
     }
   },
   "te": {
@@ -55498,7 +56002,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "బదులుగా ఇమెయిల్ ద్వారా కోడ్‌ను పొందండి.",
+        "useemailotpinstead": "బదులుగా ఇమెయిల్ OTPని ఉపయోగించాలా?",
+        "ifanemailislinkedto": "ఒకవేళ ఈ ఖాతాకు ఇమెయిల్ లింక్ చేయబడితే, మేము సైన్-ఇన్ కోడ్‌ను అక్కడికి పంపవచ్చు.",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -55773,7 +56280,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ఇమెయిల్",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -56015,7 +56523,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ఒక బ్యాకప్ ఇమెయిల్‌ను జోడించండి", 
+  "getsignincodesbyemail": "SMS విఫలమైతే ఇమెయిల్ ద్వారా సైన్-ఇన్ కోడ్‌లను పొందండి.",
+
+  "linkemail": "ఇమెయిల్ లింక్ చేయండి",
+
+  "dismissbackupemailreminder": "బ్యాకప్ ఇమెయిల్ రిమైండర్‌ను తీసివేయండి.",
+},
+      "linkEmailDialog": { "step": "దశ", 
+  "of2": "2 యొక్క",
+
+  "enterthe6digitcodesent": "పంపబడిన 6-అంకెల కోడ్‌ను నమోదు చేయండి.",
+
+  "emailaddress": "ఇమెయిల్ చిరునామా",
+
+  "nameexamplecom": "name@example.com",
+
+  "verificationcode": "ధృవీకరణ కోడ్",
+
+  "didnotgetit": "అర్థం కాలేదా?",
+},
     }
   },
   "ur": {
@@ -58043,7 +58571,10 @@ const resources = {
         "farmingQuestionsPlatform": "Farming Questions Platform",
         "signIn": "Sign in",
         "terms": "Terms",
-        "change": "Change"
+        "change": "Change",
+        "getthecodebyemailinstead": "اس کے بجائے ای میل کے ذریعے کوڈ حاصل کریں۔",
+        "useemailotpinstead": "کیا ای میل او ٹی پی استعمال کریں؟",
+        "ifanemailislinkedto": "اگر اس اکاؤنٹ سے کوئی ای میل منسلک ہے، تو ہم اس کے بجائے وہاں سائن ان کوڈ بھیج سکتے ہیں۔",
       },
       "adminDashboardPage": {
         "exportedForTheLast": "Exported {{dataType}} for the last {{days}} days",
@@ -58318,7 +58849,8 @@ const resources = {
         "pts": "{{min}}pts",
         "noPersonalInfoSet": "No personal info set.",
         "agricultureFocus": "Agriculture Focus",
-        "supportEmailNotConfigured": "Support email not configured."
+        "supportEmailNotConfigured": "Support email not configured.",
+        "email": "ای میل",
       },
       "publicWalletPage": {
         "reference": "Reference",
@@ -58560,7 +59092,27 @@ const resources = {
         "super_admin": "Super Admin"
       },
       "published": "Published",
-      "onHold": "On hold"
+      "onHold": "On hold",
+      "emailLinkBanner": { "addabackupemail": "ایک بیک اپ ای میل شامل کریں۔", 
+  "getsignincodesbyemail": "اگر ایس ایم ایس ناکام ہو جائے تو ای میل کے ذریعے سائن ان کوڈ حاصل کریں۔",
+
+  "linkemail": "ای میل لنک کریں",
+
+  "dismissbackupemailreminder": "بیک اپ ای میل یاد دہانی کو ختم کریں۔",
+},
+      "linkEmailDialog": { "step": "مرحلہ", 
+  "of2": "2 کا",
+
+  "enterthe6digitcodesent": "وہ 6 ہندسوں کا کوڈ درج کریں جو آپ کو بھیجا گیا تھا۔",
+
+  "emailaddress": "ای میل ایڈریس",
+
+  "nameexamplecom": "نام@مثال.کام",
+
+  "verificationcode": "تصدیقی کوڈ",
+
+  "didnotgetit": "سمجھ نہیں آئی؟",
+},
     }
   }
 };
