@@ -792,8 +792,8 @@ export function LoginPage() {
                 <div className="flex items-start gap-2">
                   <Sprout className="mt-0.5 h-4 w-4 shrink-0 text-primary dark:text-emerald-300" aria-hidden="true" />
                   <p className="leading-relaxed">
-                    Kindly reach the <strong>{ANVESHAN_TAGLINE}</strong> on the Anveshan platform. After that, your
-                    Anveshan email can receive sign-in codes.
+                    Your account needs to be in the <strong>{ANVESHAN_TAGLINE}</strong> on the Anveshan platform to
+                    receive sign-in codes by email.
                   </p>
                 </div>
                 <a

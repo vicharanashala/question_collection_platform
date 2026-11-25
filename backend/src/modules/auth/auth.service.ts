@@ -1230,7 +1230,7 @@ async logout(userId: string, sid: string): Promise<void> {
       error: "Bad Request",
       code: "ANVESHAN_PHASE_PENDING",
       message:
-        "Kindly reach the Ground Truth Module on the Anveshan platform to get sign-in codes by email.",
+        "Your account needs to be in the Ground Truth Module on the Anveshan platform to receive sign-in codes by email.",
       details: { currentPhase, requiredPhase: REQUIRED_ANVESHAN_PHASE },
     });
   }
