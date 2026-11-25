@@ -64,6 +64,8 @@ export interface User {
   /** True when the user has an unexpired login session. Sent by the admin user list only. */
   isActive?: boolean;
   lastActivityAt?: string | null;
+  /** Admin-list-only flag; the address itself is never returned in the list. */
+  emailLinked?: boolean;
 }
 
 
@@ -162,6 +164,8 @@ export interface AccountLockedInfo {
 export interface AuthUser {
   id: string;
   mobileNumber: string;
+  /** A verified address linked through the email OTP flow. */
+  email?: string | null;
   name: string;
   username?: string | null;
   role: UserRole;

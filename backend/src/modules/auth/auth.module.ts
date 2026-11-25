@@ -13,6 +13,7 @@ import { AdminModule } from '../admin/admin.module';
 import { CacheModule } from '../../shared/database/cache/cache.module';
 import { DbModule } from '../../shared/database/db.module';
 import { SessionModule } from '../session/session.module';
+import { EmailService } from './email.service';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { SessionModule } from '../session/session.module';
     SessionModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy, RegistrationAuthGuard],
+  providers: [AuthService, SmsService, SmsBsnlBrpsService, BrpsTokenService, JwtStrategy, RegistrationAuthGuard, EmailService],
   exports: [AuthService, JwtModule, PassportModule, RegistrationAuthGuard],
 })
 export class AuthModule {}

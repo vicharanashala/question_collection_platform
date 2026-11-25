@@ -1,6 +1,6 @@
 /**
  * Public Profile Page — redesigned to match the home page aesthetic:
- *   1. Hero card ─────────── emerald gradient, avatar, name, badges, tier progress chip
+ *   1. Hero card ─────────── cover band, overlapping avatar, name, badges, contact details
  *   2. Tier card ─────────── medal icon, approved count, progress bar, tier steps
  *   3. Stats row ─────────── 3 minimal tiles (Wallet / Questions / Member Since)
  *   4. Account section ───── Personal Info / Location / Education / Organization cards
@@ -19,8 +19,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { LinkEmailDialog } from '@/components/profile/LinkEmailDialog'
+import { LinkEmailButton } from '@/components/profile/LinkEmailButton'
+import { VerifiedEmail } from '@/components/profile/VerifiedEmail'
 import {
-  Phone, Leaf, Wallet, Calendar, Trophy, Medal,
+  Phone, Leaf, Wallet, Calendar, Trophy, Medal, Mail,
   CheckCircle2, Clock, Eye, AlertCircle, XCircle,
   AtSign, Tag, Users, MapPin, Building2, MapPinned, Home, School,
   ChevronRight, LogOut, Flag, ShieldCheck, X,
@@ -219,6 +222,7 @@ export function PublicProfilePage() {
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [refreshingAnveshan, setRefreshingAnveshan] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
+  const [linkEmailOpen, setLinkEmailOpen] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
   const fetchStats = useCallback(async () => {
@@ -285,111 +289,86 @@ export function PublicProfilePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-4 pb-20 sm:pb-6 lg:space-y-5 lg:pb-6">
 
-      {/* ── 1. Hero card ── */}
-      <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-800 via-emerald-900 to-emerald-950 shadow-lg">
-        {/* Background grid */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-        {/* Glow orbs */}
-        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
-        <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-emerald-400/10 blur-2xl" />
+      {/* ── 1. Hero card: an identity card with a cover band, so it reads differently from the home greeting ── */}
+      <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-sm">
+        <div className="relative h-20 overflow-hidden bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 sm:h-24">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 opacity-[0.15]"
+            style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '14px 14px' }}
+          />
+          <Sprout aria-hidden="true" className="absolute -right-5 -top-5 h-28 w-28 rotate-12 text-white/10 sm:h-36 sm:w-36" />
+        </div>
 
-        <div className="relative flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-4 sm:p-5 lg:p-6">
-          {/* Avatar */}
-          <div className="relative shrink-0 self-center sm:self-auto">
-            {status === 'verified' && (
-              <div className="absolute inset-0 rounded-full animate-pulse bg-emerald-400/30 blur-sm" />
-            )}
-            <div className={cn(
-              'relative flex h-16 w-16 items-center justify-center rounded-full text-xl font-extrabold sm:h-18 sm:w-18 lg:h-20 lg:w-20',
-              'bg-white/15 text-white ring-[3px] ring-white/25 backdrop-blur-sm',
-              status === 'verified' && 'ring-emerald-400/50',
-            )}>
-              {initials}
-            </div>
-            {status === 'verified' && (
-              <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-emerald-900 bg-emerald-400 text-emerald-950 shadow-lg">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              </span>
-            )}
-          </div>
-
-          {/* Info */}
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <h1 className="truncate text-2xl font-black text-white sm:text-3xl lg:text-4xl">
-              {user.name || em}
-            </h1>
-            {user.mobileNumber && (
-              <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-emerald-300/70 sm:justify-start sm:text-xs">
-                <Phone className="h-3.5 w-3.5" />
-                <span>{user.mobileNumber}</span>
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5 lg:px-6">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:gap-4">
+            {/* Avatar overlaps the cover band */}
+            <div className="relative -mt-10 shrink-0 sm:-mt-12">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-600 text-2xl font-extrabold text-white shadow-md ring-4 ring-surface sm:h-24 sm:w-24 sm:text-3xl">
+                {initials}
               </div>
-            )}
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              {cat && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-sm sm:text-xs">
-                  <Leaf className="h-3.5 w-3.5" />
-                  {categoryLabel(t, cat)}
-                </span>
-              )}
-              {statusCfg && (
-                <span className={cn('inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold', statusCfg.classes)}>
-                  <statusCfg.icon className="h-3 w-3" />
-                  {t(statusCfg.label)}
+              {status === 'verified' && (
+                <span
+                  title={t('status.verified')}
+                  className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-surface"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
               )}
             </div>
-            {user.state && (
-              <div className="mt-1.5 flex items-center justify-center gap-1.5 text-[11px] text-emerald-300/60 sm:justify-start sm:text-xs">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{user.state}{user.district ? ` > ${user.district}` : ''}</span>
-              </div>
-            )}
+
+            <div className="min-w-0 flex-1 text-center sm:pb-1 sm:text-left">
+              <h1 className="truncate text-xl font-extrabold text-text sm:text-2xl">{user.name || em}</h1>
+              {user.username != null && (
+                <p className="truncate text-xs text-text-secondary sm:text-sm">@{user.username}</p>
+              )}
+            </div>
 
             {isAnveshanUser && (
               <button
                 type="button"
                 onClick={handleRefreshAnveshan}
                 disabled={refreshingAnveshan}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20 disabled:opacity-60 sm:text-xs"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:bg-surface-variant disabled:opacity-60 sm:mb-1"
               >
-                <RefreshCw className={cn('h-3.5 w-3.5', refreshingAnveshan && 'animate-spin')} />
+                <RefreshCw className={cn('h-3.5 w-3.5', refreshingAnveshan && 'animate-spin')} aria-hidden="true" />
                 {refreshingAnveshan ? t('publicProfilePage.refreshing') : t('publicProfilePage.refreshFromAnveshan')}
               </button>
             )}
+          </div>
 
-            {/* Tier progress chip */}
-            {isAnveshanUser ? null : !nextTierIdx ? (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-300 sm:text-xs">
-                <Trophy className="h-3.5 w-3.5" />
-                {t('home.gold')} — highest rewards unlocked!
-              </div>
-            ) : (
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
-                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 transition-all duration-700"
-                    style={{ width: `${Math.round(progress * 100)}%` }}
-                  />
-                </div>
-                <span className="text-[10px] font-medium text-amber-300 sm:text-xs">
-                  {t('profile.toTier', { count: remaining, tier: t(`home.${TIER_DISPLAY[nextTierIdx].key}`) })}
+          {(cat || statusCfg) && (
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              {cat && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-variant px-2.5 py-1 text-[11px] font-semibold text-text sm:text-xs">
+                  <Leaf className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                  {categoryLabel(t, cat)}
                 </span>
-              </div>
-            )}
-          </div>
-
-          {/* Tier badge */}
-          {!isAnveshanUser && (
-          <div className="hidden sm:flex shrink-0 flex-col items-center gap-1">
-            <div className={cn('flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg', tierCfg.bgClass)}>
-              <Leaf className="h-7 w-7 text-white" />
+              )}
+              {statusCfg && (
+                <span className={cn('inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs', statusCfg.classes)}>
+                  <statusCfg.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t(statusCfg.label)}
+                </span>
+              )}
             </div>
-            <p className={cn('text-[10px] font-black uppercase tracking-widest sm:text-xs', tierCfg.textClass)}>
-              {t(`home.${tierCfg.key}`)}
-            </p>
-            <p className="text-[10px] text-emerald-400/60">{t('home.currentTier')}</p>
-          </div>
+          )}
+
+          {(user.mobileNumber || user.state) && (
+            <div className="mt-3 flex flex-col items-center gap-1.5 border-t border-border-subtle pt-3 text-xs text-text-secondary sm:flex-row sm:flex-wrap sm:gap-x-5">
+              {user.mobileNumber && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-text-tertiary" aria-hidden="true" />
+                  {user.mobileNumber}
+                </span>
+              )}
+              {user.state && (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-text-tertiary" aria-hidden="true" />
+                  <span className="truncate">{user.district ? `${user.district}, ` : ''}{user.state}</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -486,15 +465,24 @@ export function PublicProfilePage() {
 
           {/* Personal Info */}
           <AccountCard icon={Users} title={t('profile.personalInfo')} className="lg:flex-1 lg:basis-[320px]">
-            {(user.username != null || cat || user.gender || user.age != null) ? (
+            {(user.username != null || cat || user.gender || user.age != null || user.email) ? (
               <>
                 {user.username != null && <AccountRow icon={AtSign} label={t('profile.username')} value={`@${user.username}`} />}
                 {cat && <AccountRow icon={Tag} label={t('profile.category')} value={categoryLabel(t, cat)} />}
                 {user.gender && <AccountRow icon={Users} label={t('profile.gender')} value={<span className="capitalize">{user.gender}</span>} />}
-                {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} isLast />}
+                {user.age != null && <AccountRow icon={CalendarDays} label={t('profile.age')} value={`${user.age} ${t('profile.years')}`} />}
+                {user.email && <AccountRow icon={Mail} label="Email" value={<VerifiedEmail email={user.email} />} isLast />}
               </>
             ) : (
               <p className="px-4 py-3 text-xs text-text-tertiary">{t('publicProfilePage.noPersonalInfoSet')}</p>
+            )}
+            {!user.email && (
+              <AccountRow
+                icon={Mail}
+                label="Email"
+                value={<LinkEmailButton onClick={() => setLinkEmailOpen(true)} />}
+                isLast
+              />
             )}
           </AccountCard>
 
@@ -672,6 +660,8 @@ export function PublicProfilePage() {
           </DialogPrimitive.Close>
         </DialogContent>
       </Dialog>
+
+      <LinkEmailDialog open={linkEmailOpen} onOpenChange={setLinkEmailOpen} onLinked={(email) => updateUser({ email })} />
     </div>
   )
 }

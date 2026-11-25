@@ -55,7 +55,13 @@ import { anveshanProgressEmitter } from "@/events/anveshanProgressEvents";
 
 import { getAnveshanScope } from "@/lib/anveshanMode";
 import { getTesterScope } from "@/lib/testerMode";
-const NO_SESSION_END = ["/auth/send-otp", "/auth/verify-otp", "/auth/refresh"];
+const NO_SESSION_END = [
+  "/auth/send-otp",
+  "/auth/verify-otp",
+  "/auth/request-email-login-fallback",
+  "/auth/verify-email-login-fallback",
+  "/auth/refresh",
+];
 // Passes a successful submission result through and tells progress screens to reload.
 function notifyProgressChanged<T>(data: T): T {
   anveshanProgressEmitter.emit();
@@ -381,7 +387,59 @@ export const userApi = {
     ),
 };
 
+// Returned by verify-otp and by the email login fallback, which share one login flow.
+interface VerifyOtpResponse {
+  anveshanPhaseInfo: {
+    isAnveshanUser: true;
+    currentPhase: string;
+    requiredPhase: string;
+    eligible: boolean;
+    questionProgressPercent?: number;
+  };
+  tokens?: { accessToken: string; refreshToken: string; expiresIn: number };
+  user?: AuthUser;
+  requiresRegistration?: boolean;
+  tempToken?: string;
+  role?: string;
+}
+
 export const authApi = {
+  requestEmailLoginFallback: (mobileNumber: string) =>
+    request<{ message: string }>(
+      "/auth/request-email-login-fallback",
+      { method: "POST", body: JSON.stringify({ mobileNumber }) },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    ),
+
+  verifyEmailLoginFallback: (mobileNumber: string, otp: string) =>
+    request<VerifyOtpResponse>(
+      "/auth/verify-email-login-fallback",
+      { method: "POST", body: JSON.stringify({ mobileNumber, otp }) },
+      false,
+    ),
+
+  requestEmailOtp: (email: string) =>
+    request<{ message: string }>(
+      "/auth/sync-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+      false,
+      OTP_REQUEST_TIMEOUT_MS,
+    ),
+
+  verifyEmailOtp: (email: string, otp: string) =>
+    request<{ message: string }>(
+      "/auth/verify-email-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, otp }),
+      },
+      false,
+    ),
+
   requestOtp: (mobileNumber: string, isWeb = false) => {
     return request<{ message: string }>(
       "/auth/request-otp",
@@ -398,20 +456,7 @@ export const authApi = {
   },
 
   verifyOtp: (mobileNumber: string, otp: string) =>
-    request<{
-      anveshanPhaseInfo: {
-        isAnveshanUser: true;
-        currentPhase: string;
-        requiredPhase: string;
-        eligible: boolean;
-        questionProgressPercent?: number;
-      };
-      tokens?: { accessToken: string; refreshToken: string; expiresIn: number };
-      user?: AuthUser;
-      requiresRegistration?: boolean;
-      tempToken?: string;
-      role?: string;
-    }>(
+    request<VerifyOtpResponse>(
       "/auth/verify-otp",
       {
         method: "POST",

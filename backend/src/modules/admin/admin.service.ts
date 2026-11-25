@@ -504,6 +504,8 @@ async getUserStats(dto: ListUserStatsDto) {
       isAnveshanUser: !!u.isAnveshanUser,
       isTester: !!u.is_tester,
       isDeleted: !!u.isDeleted,  
+      // Expose only the linkage state to staff list views, not the email itself.
+      emailLinked: !!u.email && !!u.emailVerifiedAt,
     }));
 
     // Attach milestone progress for the Anveshan users on this page only.

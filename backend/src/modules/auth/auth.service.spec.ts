@@ -9,6 +9,10 @@ import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { RateLimitCounterService } from '../../shared/database/cache/rate-limit-counter.service';
 import { AdminService } from '../admin/admin.service';
+import { AnveshanProgressService } from '../admin/anveshan-progress.service';
+import { SessionService } from '../session/session.service';
+import { EmailService } from './email.service';
+import { UserAccountLockedException } from '../../shared/classes/exceptions/user-status.exception';
 // import { User, Wallet, AuditLog } from '../../shared/database/entities';
 import { REPOSITORY_TOKENS } from '../../shared/database/repositories';
 import {
@@ -16,6 +20,7 @@ import {
   VerificationStatus,
   UserRole,
   ActorType,
+  EmailOtpPurpose,
 } from '../../shared/classes/enums';
 
 import { User } from '@/shared/database/mongodb/schemas/user.schema';
@@ -586,6 +591,265 @@ describe('AuthService', () => {
       expect(tokens).toHaveProperty('accessToken', 'access-token');
       expect(tokens).toHaveProperty('refreshToken', 'refresh-token');
       expect(tokens).toHaveProperty('expiresIn', 900);
+    });
+  });
+});
+
+// ─── Email OTP ───────────────────────────────────────────────────────────────
+
+// Separate setup with every AuthService dependency, so these tests do not depend on
+// the provider list above.
+describe('AuthService email OTP', () => {
+  const otp = '123456';
+  const email = 'farmer@example.com';
+
+  let service: AuthService;
+  let userRepo: {
+    findOne: jest.Mock;
+    update: jest.Mock;
+    save: jest.Mock;
+    increment: jest.Mock;
+  };
+  let emailService: { sendSyncEmailToUser: jest.Mock };
+  let anveshanRepo: { findByPhone: jest.Mock };
+
+  // A registered user with a pending email OTP for the given purpose.
+  const makeUserWithEmailOtp = (
+    purpose: EmailOtpPurpose,
+    overrides: Partial<User> = {},
+  ): User =>
+    ({
+      _id: new Types.ObjectId(),
+      mobileNumber: '9876543210',
+      name: 'Ramesh Kumar',
+      role: UserRole.USER,
+      verificationStatus: VerificationStatus.VERIFIED,
+      isDeleted: false,
+      email: purpose === EmailOtpPurpose.EMAIL_LOGIN ? email : null,
+      emailVerifiedAt:
+        purpose === EmailOtpPurpose.EMAIL_LOGIN ? new Date() : null,
+      emailOtpHash: bcrypt.hashSync(otp, 4),
+      emailOtpExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      emailOtpTarget: email,
+      emailOtpPurpose: purpose,
+      emailOtpAttempts: 0,
+      ...overrides,
+    }) as User;
+
+  // The repository returns the user, then the attempt count once it is raised, then any extra lookups.
+  const mockLookups = (
+    user: User,
+    attempt: number,
+    ...rest: (User | null)[]
+  ) => {
+    userRepo.findOne
+      .mockResolvedValueOnce(user)
+      .mockResolvedValueOnce({ ...user, emailOtpAttempts: attempt });
+    for (const value of rest) userRepo.findOne.mockResolvedValueOnce(value);
+  };
+
+  beforeEach(async () => {
+    userRepo = {
+      findOne: jest.fn(),
+      update: jest.fn(),
+      save: jest.fn(),
+      increment: jest.fn(),
+    };
+    emailService = { sendSyncEmailToUser: jest.fn() };
+    anveshanRepo = { findByPhone: jest.fn().mockResolvedValue(null) };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: REPOSITORY_TOKENS.User, useValue: userRepo },
+        {
+          provide: REPOSITORY_TOKENS.Wallet,
+          useValue: { count: jest.fn().mockResolvedValue(1) },
+        },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: mockAuditRepo },
+        {
+          provide: REPOSITORY_TOKENS.Candidate,
+          useValue: anveshanRepo,
+        },
+        {
+          provide: JwtService,
+          useValue: { sign: jest.fn().mockReturnValue('signed-token') },
+        },
+        // Turns off the OTP rate limits and the OTP dev bypass.
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(false) },
+        },
+        { provide: SmsService, useFactory: mockSmsService },
+        { provide: RedisService, useFactory: mockRedisService },
+        {
+          provide: RateLimitCounterService,
+          useFactory: mockRateLimitCounterService,
+        },
+        { provide: AdminService, useFactory: mockAdminService },
+        {
+          provide: AnveshanProgressService,
+          useValue: { getProgressForUsers: jest.fn() },
+        },
+        { provide: SessionService, useValue: { create: jest.fn() } },
+        { provide: EmailService, useValue: emailService },
+      ],
+    }).compile();
+
+    service = module.get<AuthService>(AuthService);
+  });
+
+  describe('verifyEmailLoginFallback', () => {
+    it('signs in and clears the used OTP so it cannot be replayed', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN);
+      mockLookups(user, 1);
+
+      const result = await service.verifyEmailLoginFallback('9876543210', otp);
+
+      expect(result).toHaveProperty('tokens.accessToken', 'signed-token');
+      expect(userRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          emailOtpHash: null,
+          emailOtpTarget: null,
+          emailOtpPurpose: null,
+        }),
+      );
+    });
+
+    it('rejects a banned account before checking the OTP', async () => {
+      userRepo.findOne.mockResolvedValueOnce(
+        makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+          verificationStatus: VerificationStatus.BANNED,
+        }),
+      );
+
+      await expect(
+        service.verifyEmailLoginFallback('9876543210', otp),
+      ).rejects.toThrow(UserAccountLockedException);
+      expect(userRepo.increment).not.toHaveBeenCalled();
+    });
+
+    it('rejects an OTP that was sent to link an email', async () => {
+      userRepo.findOne.mockResolvedValueOnce(
+        makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_SYNC, { email }),
+      );
+
+      await expect(
+        service.verifyEmailLoginFallback('9876543210', otp),
+      ).rejects.toThrow('Invalid or expired OTP');
+    });
+
+    it('clears the OTP after the last allowed wrong attempt', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN);
+      mockLookups(user, 5);
+
+      await expect(
+        service.verifyEmailLoginFallback('9876543210', '000000'),
+      ).rejects.toThrow('Maximum OTP attempts reached');
+      expect(userRepo.update).toHaveBeenCalledWith(
+        user._id,
+        expect.objectContaining({ emailOtpHash: null }),
+      );
+    });
+  });
+
+  describe('requestEmailLoginFallback', () => {
+    it('sends nothing and gives the same reply when no verified email is linked', async () => {
+      userRepo.findOne.mockResolvedValueOnce(
+        makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+          email: null,
+          emailVerifiedAt: null,
+        }),
+      );
+
+      const result = await service.requestEmailLoginFallback('9876543210');
+
+      expect(result.message).toMatch(/^If a verified email is linked/);
+      expect(emailService.sendSyncEmailToUser).not.toHaveBeenCalled();
+    });
+
+    it('uses the Anveshan email when the first SMS failed before it was copied', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+        email: null,
+        emailVerifiedAt: null,
+      });
+      userRepo.findOne.mockResolvedValueOnce(user).mockResolvedValueOnce(null);
+      anveshanRepo.findByPhone.mockResolvedValue({
+        email: ' Farmer@Example.com ',
+        current_phase: 'module',
+      });
+
+      await service.requestEmailLoginFallback('9876543210');
+
+      expect(userRepo.update).toHaveBeenCalledWith(user._id, {
+        email,
+        emailVerifiedAt: expect.any(Date),
+      });
+      expect(emailService.sendSyncEmailToUser).toHaveBeenCalledWith(
+        email,
+        'Your AnnaDatha sign-in code',
+        expect.any(String),
+        expect.any(String),
+      );
+    });
+
+    it('emails a login OTP to the linked address', async () => {
+      userRepo.findOne.mockResolvedValueOnce(
+        makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN),
+      );
+
+      await service.requestEmailLoginFallback('9876543210');
+
+      expect(userRepo.update).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          emailOtpTarget: email,
+          emailOtpPurpose: EmailOtpPurpose.EMAIL_LOGIN,
+        }),
+      );
+      expect(emailService.sendSyncEmailToUser).toHaveBeenCalledWith(
+        email,
+        'Your AnnaDatha sign-in code',
+        expect.stringMatching(/Your code: \d{6}/),
+        expect.stringMatching(/cid:annam-logo[\s\S]*>\d{6}</),
+      );
+    });
+  });
+
+  describe('email linking', () => {
+    it('rejects an email that another account already uses', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_SYNC);
+      userRepo.findOne
+        .mockResolvedValueOnce(user)
+        .mockResolvedValueOnce({ ...user, _id: new Types.ObjectId() });
+
+      await expect(
+        service.requestEmailOtp(user._id.toString(), email),
+      ).rejects.toThrow(
+        'This email is already associated with another account',
+      );
+      expect(emailService.sendSyncEmailToUser).not.toHaveBeenCalled();
+    });
+
+    it('answers a wrong code with 400 so the web client keeps the session', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_SYNC);
+      mockLookups(user, 1);
+
+      await expect(
+        service.verifyEmailOtp(user._id.toString(), email, '000000'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('links the email once the code matches', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_SYNC);
+      mockLookups(user, 1, null);
+
+      await service.verifyEmailOtp(user._id.toString(), email, otp);
+
+      expect(userRepo.update).toHaveBeenLastCalledWith(user._id, {
+        email,
+        emailVerifiedAt: expect.any(Date),
+      });
     });
   });
 });

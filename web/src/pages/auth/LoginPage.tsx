@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +24,7 @@ import {
   Sprout,
   Camera,
   Award,
+  Mail,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -190,7 +192,8 @@ function StepMobile({
 // ─── Step 2: OTP ───────────────────────────────────────────────────────────
 
 function StepOtp({
-  mobile,
+  identifier,
+  method,
   otp,
   setOtp,
   loading,
@@ -198,8 +201,10 @@ function StepOtp({
   onSubmit,
   onBack,
   onResend,
+  onUseEmail,
 }: {
-  mobile: string;
+  identifier: string;
+  method: "phone" | "email";
   otp: string;
   setOtp: (v: string) => void;
   loading: boolean;
@@ -207,6 +212,7 @@ function StepOtp({
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
   onResend: () => void;
+  onUseEmail?: () => void;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -230,11 +236,11 @@ function StepOtp({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Mobile badge */}
+      {/* Delivery address badge */}
       <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 py-2.5">
-        <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
-        <span className="text-xs font-medium text-[hsl(var(--text))] flex-1">
-          +91 {mobile}
+        {method === "phone" ? <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" /> : <Mail className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />}
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[hsl(var(--text))]">
+          {method === "phone" ? `+91 ${identifier}` : identifier}
         </span>
         <button
           type="button"
@@ -320,11 +326,41 @@ function StepOtp({
             : t('loginPage.didnReceiveItResend')}
         </button>
       </div>
+
+      {/* SMS can be accepted by the gateway and still never arrive, so the email code is always offered. */}
+      {onUseEmail && (
+        <div className="flex items-center justify-center border-t border-[hsl(var(--border-subtle))] pt-3">
+          <button
+            type="button"
+            onClick={onUseEmail}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--primary))] hover:underline disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+          >
+            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+            Get the code by email instead
+          </button>
+        </div>
+      )}
     </form>
   );
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────
+
+// Mobile OTP failures that an email OTP can work around: SMS delivery that failed
+// or timed out, and the per-number OTP request limit.
+const EMAIL_FALLBACK_ERROR_CODES = new Set(["OTP_DELIVERY_FAILED", "OTP_RATE_LIMITED"]);
+const EMAIL_FALLBACK_STATUSES = new Set([408, 429]);
+
+// Returns true when the email login fallback is worth offering for an OTP request error.
+function canUseEmailFallback(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const { status, data } = err as { status?: number; data?: { code?: string } };
+  return (
+    (status !== undefined && EMAIL_FALLBACK_STATUSES.has(status)) ||
+    (data?.code !== undefined && EMAIL_FALLBACK_ERROR_CODES.has(data.code))
+  );
+}
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -336,12 +372,15 @@ export function LoginPage() {
   const { theme, toggleTheme } = useTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [otpDelivery, setOtpDelivery] = useState<"phone" | "email">("phone");
   const location = useLocation();
   // "Check again" on the Anveshan phase gate returns here with the number filled in.
   const prefilledMobile = (location.state as { mobileNumber?: string } | null)?.mobileNumber ?? "";
   const [mobile, setMobile] = useState(prefilledMobile);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailFallbackOpen, setEmailFallbackOpen] = useState(false);
+  const [emailFallbackLoading, setEmailFallbackLoading] = useState(false);
   const countdown = useCountdown();
   const [legalDoc, setLegalDoc] = useState<"terms" | "privacy" | null>(null);
 
@@ -355,13 +394,32 @@ export function LoginPage() {
     setLoading(true);
     try {
       await authApi.requestOtp(cleaned, false);
+      setOtpDelivery("phone");
       setStep(2);
       countdown.start();
       toast.success(t('loginPage.otpSentToYour'));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to send OTP"));
+      if (canUseEmailFallback(err)) setEmailFallbackOpen(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleEmailFallback() {
+    setEmailFallbackLoading(true);
+    try {
+      await authApi.requestEmailLoginFallback(mobile);
+      setEmailFallbackOpen(false);
+      setOtpDelivery("email");
+      setOtp("");
+      setStep(2);
+      countdown.start();
+      toast.success("If a verified email is linked to this account, we've sent the OTP there.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Unable to send an email OTP"));
+    } finally {
+      setEmailFallbackLoading(false);
     }
   }
 
@@ -419,7 +477,11 @@ export function LoginPage() {
   }
   setLoading(true);
   try {
-    const res = await authApi.verifyOtp(mobile, cleaned);
+    // An email OTP from the fallback signs in through the same flow as an SMS OTP.
+    const res =
+      otpDelivery === "email"
+        ? await authApi.verifyEmailLoginFallback(mobile, cleaned)
+        : await authApi.verifyOtp(mobile, cleaned);
 
     if ("requiresRegistration" in res && res.requiresRegistration) {
       if (res.tempToken) {
@@ -477,7 +539,11 @@ export function LoginPage() {
     setOtp("");
     setLoading(true);
     try {
-      await authApi.requestOtp(mobile, false);
+      if (otpDelivery === "email") {
+        await authApi.requestEmailLoginFallback(mobile);
+      } else {
+        await authApi.requestOtp(mobile, false);
+      }
       countdown.start();
       toast.success(t('loginPage.newOtpSent'));
     } catch (err) {
@@ -490,6 +556,7 @@ export function LoginPage() {
   function handleBack() {
     setStep(1);
     setOtp("");
+    setOtpDelivery("phone");
     countdown.stop();
   }
 
@@ -579,7 +646,7 @@ export function LoginPage() {
                 <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
                   {step === 1
                     ? t('loginPhone.signInDesc')
-                    : `OTP sent to +91 ${mobile}`}
+                    : `OTP sent to ${otpDelivery === "phone" ? `+91 ${mobile}` : "your linked email"}`}
                 </p>
               </div>
 
@@ -601,7 +668,8 @@ export function LoginPage() {
                     />
                   ) : (
                     <StepOtp
-                      mobile={mobile}
+                      identifier={otpDelivery === "phone" ? mobile : "your linked email"}
+                      method={otpDelivery}
                       otp={otp}
                       setOtp={setOtp}
                       loading={loading}
@@ -609,6 +677,7 @@ export function LoginPage() {
                       onSubmit={handleVerifyOtp}
                       onBack={handleBack}
                       onResend={handleResend}
+                      onUseEmail={otpDelivery === "phone" ? () => setEmailFallbackOpen(true) : undefined}
                     />
                   )}
                 </motion.div>
@@ -640,6 +709,25 @@ export function LoginPage() {
         open={legalDoc !== null}
         onOpenChange={(open) => !open && setLegalDoc(null)}
       />
+
+      <Dialog open={emailFallbackOpen} onOpenChange={setEmailFallbackOpen}>
+        <DialogContent className="space-y-5 p-5 sm:max-w-md sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-primary" /> Use email OTP instead?
+            </DialogTitle>
+            <DialogDescription>
+              If an email is linked to this account, we can send the sign-in code there instead.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setEmailFallbackOpen(false)} disabled={emailFallbackLoading}>Cancel</Button>
+            <Button onClick={() => void handleEmailFallback()} disabled={emailFallbackLoading}>
+              {emailFallbackLoading ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Sending...</> : "Send email OTP"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

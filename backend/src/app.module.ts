@@ -16,6 +16,7 @@ import {
   embedConfig,
   answerScoringConfig,
   anveshanDbConfig,
+  emailConfig,
 } from './config/configuration';
 import { paymentConfig } from './config/payment.config';
 import { sarvamConfig } from './config/sarvam.config';
@@ -54,7 +55,7 @@ import { SessionModule } from './modules/session/session.module';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [dbConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, embedConfig, answerScoringConfig, sarvamConfig, lgdConfig, paymentConfig, anveshanDbConfig],
+      load: [dbConfig, jwtConfig, redisConfig, smsConfig, appConfig, questionConfig, gcpStorageConfig, llmConfig, gdbConfig, embedConfig, answerScoringConfig, sarvamConfig, lgdConfig, paymentConfig, anveshanDbConfig, emailConfig],
       envFilePath: ['.env'],
     }),
  

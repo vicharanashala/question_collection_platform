@@ -35,6 +35,7 @@ import {
   MapPinned,
   Lock,
   User,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AuthUser } from "@/types";
@@ -46,6 +47,9 @@ import type {
   LgdKvk,
 } from "@/api/client";
 import { useTranslation } from 'react-i18next';
+import { LinkEmailDialog } from "@/components/profile/LinkEmailDialog";
+import { LinkEmailButton } from "@/components/profile/LinkEmailButton";
+import { VerifiedEmail } from "@/components/profile/VerifiedEmail";
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -132,7 +136,7 @@ function FieldRow({
 }: {
   icon: React.ElementType;
   label: string;
-  value: string | null;
+  value: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
@@ -666,6 +670,7 @@ export function ProfilePage() {
   const { user, updateUser } = useAuth();
   const { setLanguage } = useLanguage();
   const [editOpen, setEditOpen] = useState(false);
+  const [linkEmailOpen, setLinkEmailOpen] = useState(false);
 
   if (!user) return null;
 
@@ -760,6 +765,17 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow icon={Phone} label={t('anveshan.detailMobile')} value={user.mobileNumber} />
+            <FieldRow
+              icon={Mail}
+              label="Email"
+              value={
+                user.email ? (
+                  <VerifiedEmail email={user.email} />
+                ) : (
+                  <LinkEmailButton onClick={() => setLinkEmailOpen(true)} />
+                )
+              }
+            />
             <FieldRow icon={MapPin} label={t('profile.location')} value={locationStr} />
             <FieldRow
               icon={Calendar}
@@ -1046,6 +1062,7 @@ export function ProfilePage() {
         onClose={() => setEditOpen(false)}
         onSaved={handleSaved}
       />
+      <LinkEmailDialog open={linkEmailOpen} onOpenChange={setLinkEmailOpen} onLinked={(email) => updateUser({ email })} />
     </div>
   );
 }
