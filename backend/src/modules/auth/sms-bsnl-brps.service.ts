@@ -2,6 +2,7 @@ import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { HttpStatusCode } from 'axios';
 import { BrpsTokenService } from './brps-token.service';
+import { SmsDeliveryError, SmsFailureReason, classifySmsError } from './sms-delivery.error';
 
 /**
  * BSNL Retail Push SMS (BRPS) implementation.
@@ -60,7 +61,7 @@ export class SmsBsnlBrpsService {
       // Rethrow a plain error so the raw axios object (which includes the bearer token) is never logged.
       const detail = this.describeError(err);
       this.logger.error(`[BRPS] Failed to send OTP to ${cleanNumber}: ${detail}`);
-      throw new Error(`BRPS send failed: ${detail}`);
+      throw new SmsDeliveryError(`BRPS send failed: ${detail}`, classifySmsError(err));
     }
   }
 
@@ -104,7 +105,7 @@ export class SmsBsnlBrpsService {
     const data = response.data as { Error: string | null; Message_Id?: string };
 
     if (data.Error) {
-      throw new Error(`BRPS API error: ${data.Error}`);
+      throw new SmsDeliveryError(`BRPS API error: ${data.Error}`, SmsFailureReason.REJECTED);
     }
 
     this.logger.log(

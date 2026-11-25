@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { SmsDeliveryError, SmsFailureReason, classifySmsError } from './sms-delivery.error';
 
 @Injectable()
 export class BrpsTokenService {
@@ -28,7 +29,7 @@ export class BrpsTokenService {
     }
     await this.refreshInFlight;
     if (!this.token) {
-      throw new Error('BRPS token refresh returned no token');
+      throw new SmsDeliveryError('BRPS token refresh returned no token', SmsFailureReason.AUTH_FAILED);
     }
     return this.token;
   }
@@ -53,6 +54,20 @@ export class BrpsTokenService {
     const password = this.configService.get<string>('sms.password') ?? '';
     const tokenId = this.configService.get<string>('sms.tokenId') ?? '1';
     const ipWhitelist = this.configService.get<string>('sms.ipWhitelist') ?? '';
+
+    // Fail with a clear message instead of an opaque BRPS rejection when credentials are not set.
+    const missing = [
+      ['BRPS_SERVICE_ID', serviceId],
+      ['BRPS_USERNAME', username],
+      ['BRPS_PASSWORD', password],
+    ]
+      .filter(([, value]) => !value)
+      .map(([name]) => name);
+    if (missing.length > 0) {
+      const message = `BSNL SMS credentials not configured. Missing env vars: ${missing.join(', ')}`;
+      this.logger.error(`[BRPS] ${message}`);
+      throw new SmsDeliveryError(message, SmsFailureReason.NOT_CONFIGURED);
+    }
 
     const body: Record<string, unknown> = {
       Service_Id: serviceId,
@@ -84,8 +99,11 @@ export class BrpsTokenService {
       this.logger.error(
         `[BRPS] Token refresh failed: ${JSON.stringify(error.response?.data) || error.message}`,
       );
-      throw new Error(
+      // A rejected token request means the credentials are wrong, so treat 4xx as an auth failure.
+      const reason = classifySmsError(err);
+      throw new SmsDeliveryError(
         `BRPS token refresh failed: ${error.response?.data ? JSON.stringify(error.response.data) : error.message}`,
+        reason === SmsFailureReason.REJECTED ? SmsFailureReason.AUTH_FAILED : reason,
       );
     }
   }
