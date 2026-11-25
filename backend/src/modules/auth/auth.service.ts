@@ -141,10 +141,24 @@ const CLEARED_EMAIL_OTP = {
 const EMAIL_TAKEN_MESSAGE =
   "This email is already associated with another account";
 
-// The same reply is sent whether or not a verified email is linked, so the
-// login fallback cannot be used to find out which accounts have one.
-const EMAIL_FALLBACK_MESSAGE =
-  "If a verified email is linked to this account, an OTP has been sent to it.";
+// Most characters hidden in a masked email, so the mask does not reveal the exact length.
+const MAX_MASKED_CHARACTERS = 6;
+
+/**
+ * Hides most of an email's name part for showing before sign-in, keeping the first two
+ * characters, the last one and the domain: abiramk0107@gmail.com becomes ab******7@gmail.com.
+ */
+export function maskEmail(email: string): string {
+  const [name, domain] = email.split("@");
+  if (!name || !domain) return email;
+  const start = name.slice(0, name.length > 2 ? 2 : 1);
+  const end = name.length > 3 ? name.slice(-1) : "";
+  const hidden = Math.min(
+    Math.max(name.length - start.length - end.length, 1),
+    MAX_MASKED_CHARACTERS,
+  );
+  return `${start}${"*".repeat(hidden)}${end}@${domain}`;
+}
 
 @Injectable()
 export class AuthService {
@@ -1163,15 +1177,16 @@ async logout(userId: string, sid: string): Promise<void> {
 
   /**
    * Sends a login OTP to the verified email linked to a mobile number, for when the
-   * mobile OTP cannot be delivered. Locked accounts get the same errors as requestOtp.
+   * mobile OTP cannot be delivered, and returns the address masked so the user knows
+   * where to look. Locked accounts get the same errors as requestOtp.
    */
   async requestEmailLoginFallback(
     rawMobile: string,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; maskedEmail: string }> {
     const mobileNumber = this.normalizePhone(rawMobile);
     const user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
-      return { message: EMAIL_FALLBACK_MESSAGE };
+      throw this.emailNotLinked();
     }
     await this.assertUserCanLogin(user);
 
@@ -1189,10 +1204,22 @@ async logout(userId: string, sid: string): Promise<void> {
       }
     }
 
-    if (user.email && user.emailVerifiedAt) {
-      await this.sendEmailOtp(user, user.email, EmailOtpPurpose.EMAIL_LOGIN);
+    if (!user.email || !user.emailVerifiedAt) {
+      throw this.emailNotLinked();
     }
-    return { message: EMAIL_FALLBACK_MESSAGE };
+    await this.sendEmailOtp(user, user.email, EmailOtpPurpose.EMAIL_LOGIN);
+    const maskedEmail = maskEmail(user.email);
+    return { message: `OTP sent to ${maskedEmail}`, maskedEmail };
+  }
+
+  /** Error for a login fallback on an account with no verified email. Its code lets the web app explain it. */
+  private emailNotLinked(): BadRequestException {
+    return new BadRequestException({
+      statusCode: 400,
+      error: "Bad Request",
+      code: "EMAIL_NOT_LINKED",
+      message: "No email is linked with this account.",
+    });
   }
 
   /** Signs in with an email OTP from the login fallback. Returns the same result as verifyOtp. */

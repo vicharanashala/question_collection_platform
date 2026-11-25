@@ -25,6 +25,7 @@ import {
   Camera,
   Award,
   Mail,
+  AlertCircle,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -289,7 +290,9 @@ function StepOtp({
           className="sr-only"
           maxLength={6}
         />
-        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">{t('loginPage.enterTheDigitCode')}</p>
+        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">
+          {method === "email" ? "Enter the 6-digit code sent to your email" : t('loginPage.enterTheDigitCode')}
+        </p>
       </div>
 
       <Button
@@ -381,6 +384,9 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [emailFallbackOpen, setEmailFallbackOpen] = useState(false);
   const [emailFallbackLoading, setEmailFallbackLoading] = useState(false);
+  // Masked address from the server, shown on the code screen.
+  const [linkedEmail, setLinkedEmail] = useState("");
+  const [emailFallbackError, setEmailFallbackError] = useState("");
   const countdown = useCountdown();
   const [legalDoc, setLegalDoc] = useState<"terms" | "privacy" | null>(null);
 
@@ -408,16 +414,24 @@ export function LoginPage() {
 
   async function handleEmailFallback() {
     setEmailFallbackLoading(true);
+    setEmailFallbackError("");
     try {
-      await authApi.requestEmailLoginFallback(mobile);
+      const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
+      setLinkedEmail(maskedEmail ?? "your linked email");
       setEmailFallbackOpen(false);
       setOtpDelivery("email");
       setOtp("");
       setStep(2);
       countdown.start();
-      toast.success("If a verified email is linked to this account, we've sent the OTP there.");
+      toast.success(`OTP sent to ${maskedEmail ?? "your linked email"}`);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Unable to send an email OTP"));
+      // Accounts without a linked email get the reason inside the dialog instead of a toast.
+      const code = (err as { data?: { code?: string } })?.data?.code;
+      if (code === "EMAIL_NOT_LINKED") {
+        setEmailFallbackError(getErrorMessage(err, "No email is linked with this account."));
+      } else {
+        toast.error(getErrorMessage(err, "Unable to send an email OTP"));
+      }
     } finally {
       setEmailFallbackLoading(false);
     }
@@ -540,7 +554,8 @@ export function LoginPage() {
     setLoading(true);
     try {
       if (otpDelivery === "email") {
-        await authApi.requestEmailLoginFallback(mobile);
+        const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
+        setLinkedEmail(maskedEmail ?? "your linked email");
       } else {
         await authApi.requestOtp(mobile, false);
       }
@@ -646,7 +661,7 @@ export function LoginPage() {
                 <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
                   {step === 1
                     ? t('loginPhone.signInDesc')
-                    : `OTP sent to ${otpDelivery === "phone" ? `+91 ${mobile}` : "your linked email"}`}
+                    : `OTP sent to ${otpDelivery === "phone" ? `+91 ${mobile}` : linkedEmail}`}
                 </p>
               </div>
 
@@ -668,7 +683,7 @@ export function LoginPage() {
                     />
                   ) : (
                     <StepOtp
-                      identifier={otpDelivery === "phone" ? mobile : "your linked email"}
+                      identifier={otpDelivery === "phone" ? mobile : linkedEmail}
                       method={otpDelivery}
                       otp={otp}
                       setOtp={setOtp}
@@ -710,7 +725,13 @@ export function LoginPage() {
         onOpenChange={(open) => !open && setLegalDoc(null)}
       />
 
-      <Dialog open={emailFallbackOpen} onOpenChange={setEmailFallbackOpen}>
+      <Dialog
+        open={emailFallbackOpen}
+        onOpenChange={(open) => {
+          setEmailFallbackOpen(open);
+          if (!open) setEmailFallbackError("");
+        }}
+      >
         <DialogContent className="space-y-5 p-5 sm:max-w-md sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -720,9 +741,18 @@ export function LoginPage() {
               If an email is linked to this account, we can send the sign-in code there instead.
             </DialogDescription>
           </DialogHeader>
+          {emailFallbackError && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{emailFallbackError} You can link one from your profile after you sign in.</span>
+            </div>
+          )}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setEmailFallbackOpen(false)} disabled={emailFallbackLoading}>Cancel</Button>
-            <Button onClick={() => void handleEmailFallback()} disabled={emailFallbackLoading}>
+            <Button onClick={() => void handleEmailFallback()} disabled={emailFallbackLoading || !!emailFallbackError}>
               {emailFallbackLoading ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Sending...</> : "Send email OTP"}
             </Button>
           </DialogFooter>

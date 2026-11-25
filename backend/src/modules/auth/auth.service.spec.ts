@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { AuthService } from './auth.service';
+import { AuthService, maskEmail } from './auth.service';
 import { SmsService } from './sms.service';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { RateLimitCounterService } from '../../shared/database/cache/rate-limit-counter.service';
@@ -754,7 +754,7 @@ describe('AuthService email OTP', () => {
   });
 
   describe('requestEmailLoginFallback', () => {
-    it('sends nothing and gives the same reply when no verified email is linked', async () => {
+    it('says no email is linked and sends nothing when the account has none', async () => {
       userRepo.findOne.mockResolvedValueOnce(
         makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
           email: null,
@@ -762,9 +762,9 @@ describe('AuthService email OTP', () => {
         }),
       );
 
-      const result = await service.requestEmailLoginFallback('9876543210');
-
-      expect(result.message).toMatch(/^If a verified email is linked/);
+      await expect(
+        service.requestEmailLoginFallback('9876543210'),
+      ).rejects.toThrow('No email is linked with this account.');
       expect(emailService.sendSyncEmailToUser).not.toHaveBeenCalled();
     });
 
@@ -798,7 +798,9 @@ describe('AuthService email OTP', () => {
         makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN),
       );
 
-      await service.requestEmailLoginFallback('9876543210');
+      const result = await service.requestEmailLoginFallback('9876543210');
+
+      expect(result.maskedEmail).toBe('fa***r@example.com');
 
       expect(userRepo.update).toHaveBeenCalledWith(
         expect.anything(),
@@ -851,5 +853,16 @@ describe('AuthService email OTP', () => {
         emailVerifiedAt: expect.any(Date),
       });
     });
+  });
+});
+
+describe('maskEmail', () => {
+  it.each([
+    ['abiramk0107@gmail.com', 'ab******7@gmail.com'],
+    ['raju@annam.ai', 'ra*u@annam.ai'],
+    ['abc@x.in', 'ab*@x.in'],
+    ['a@x.in', 'a*@x.in'],
+  ])('masks %s as %s', (email, masked) => {
+    expect(maskEmail(email)).toBe(masked);
   });
 });

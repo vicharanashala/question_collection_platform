@@ -405,7 +405,7 @@ interface VerifyOtpResponse {
 
 export const authApi = {
   requestEmailLoginFallback: (mobileNumber: string) =>
-    request<{ message: string }>(
+    request<{ message: string; maskedEmail: string }>(
       "/auth/request-email-login-fallback",
       { method: "POST", body: JSON.stringify({ mobileNumber }) },
       false,
