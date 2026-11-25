@@ -671,7 +671,6 @@ describe('AuthService email OTP', () => {
           provide: REPOSITORY_TOKENS.Candidate,
           useValue: anveshanRepo,
         },
-        },
         {
           provide: JwtService,
           useValue: { sign: jest.fn().mockReturnValue('signed-token') },
