@@ -793,6 +793,24 @@ describe('AuthService email OTP', () => {
       );
     });
 
+    it('previews the masked email without linking it or sending a code', async () => {
+      const user = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+        email: null,
+        emailVerifiedAt: null,
+      });
+      userRepo.findOne.mockResolvedValueOnce(user).mockResolvedValueOnce(null);
+      anveshanRepo.findByPhone.mockResolvedValue({
+        email: 'farmer@example.com',
+        current_phase: 'module',
+      });
+
+      await expect(
+        service.previewEmailLoginFallback('9876543210'),
+      ).resolves.toEqual({ maskedEmail: 'fa***r@example.com' });
+      expect(userRepo.update).not.toHaveBeenCalled();
+      expect(emailService.sendSyncEmailToUser).not.toHaveBeenCalled();
+    });
+
     it('asks an Anveshan candidate before the Ground Truth Module to finish it first', async () => {
       userRepo.findOne.mockResolvedValueOnce(
         makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {

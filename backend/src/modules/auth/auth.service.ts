@@ -1175,6 +1175,14 @@ async logout(userId: string, sid: string): Promise<void> {
     return { message: "Email verified and synced successfully" };
   }
 
+  // Returns the masked email a login code would go to, so the user can check it before sending.
+  async previewEmailLoginFallback(
+    rawMobile: string,
+  ): Promise<{ maskedEmail: string }> {
+    const { email } = await this.resolveEmailLoginFallback(rawMobile);
+    return { maskedEmail: maskEmail(email) };
+  }
+
   /**
    * Sends a login OTP to the verified email linked to a mobile number, for when the
    * mobile OTP cannot be delivered, and returns the address masked so the user knows
@@ -1183,6 +1191,26 @@ async logout(userId: string, sid: string): Promise<void> {
   async requestEmailLoginFallback(
     rawMobile: string,
   ): Promise<{ message: string; maskedEmail: string }> {
+    const { user, email, fromAnveshan } =
+      await this.resolveEmailLoginFallback(rawMobile);
+
+    // An Anveshan user whose first SMS failed has not had the Anveshan email copied
+    // yet, because that normally happens at login. Copy it now so the code can be sent.
+    if (fromAnveshan) {
+      const linked = { email, emailVerifiedAt: new Date() };
+      await this.userRepo.update(user._id, linked);
+      Object.assign(user, linked);
+    }
+
+    await this.sendEmailOtp(user, email, EmailOtpPurpose.EMAIL_LOGIN);
+    const maskedEmail = maskEmail(email);
+    return { message: `OTP sent to ${maskedEmail}`, maskedEmail };
+  }
+
+  // Finds the email a login code can be sent to for a mobile number, without changing anything.
+  private async resolveEmailLoginFallback(
+    rawMobile: string,
+  ): Promise<{ user: User; email: string; fromAnveshan: boolean }> {
     const mobileNumber = this.normalizePhone(rawMobile);
     const user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
@@ -1190,35 +1218,27 @@ async logout(userId: string, sid: string): Promise<void> {
     }
     await this.assertUserCanLogin(user);
 
-    // An Anveshan user whose first SMS failed has not had the Anveshan email copied
-    // yet, because that normally happens at login. Copy it now so the code can be sent.
-    if (!user.email) {
-      const candidate = await this.anveshanRepo.findByPhone(mobileNumber);
-      // An Anveshan candidate whose email can only be used after the Ground Truth Module
-      // is told to finish it, instead of being told that no email is linked.
-      if (
-        candidate?.email?.trim() &&
-        candidate.current_phase !== REQUIRED_ANVESHAN_PHASE
-      ) {
-        throw this.anveshanPhasePending(candidate.current_phase);
+    if (user.email) {
+      if (!user.emailVerifiedAt) {
+        throw this.emailNotLinked();
       }
-      const anveshanEmail = await this.findAnveshanEmailToLink(
-        user,
-        candidate,
-      );
-      if (anveshanEmail) {
-        const linked = { email: anveshanEmail, emailVerifiedAt: new Date() };
-        await this.userRepo.update(user._id, linked);
-        Object.assign(user, linked);
-      }
+      return { user, email: user.email, fromAnveshan: false };
     }
 
-    if (!user.email || !user.emailVerifiedAt) {
+    const candidate = await this.anveshanRepo.findByPhone(mobileNumber);
+    // An Anveshan candidate whose email can only be used after the Ground Truth Module
+    // is told to finish it, instead of being told that no email is linked.
+    if (
+      candidate?.email?.trim() &&
+      candidate.current_phase !== REQUIRED_ANVESHAN_PHASE
+    ) {
+      throw this.anveshanPhasePending(candidate.current_phase);
+    }
+    const anveshanEmail = await this.findAnveshanEmailToLink(user, candidate);
+    if (!anveshanEmail) {
       throw this.emailNotLinked();
     }
-    await this.sendEmailOtp(user, user.email, EmailOtpPurpose.EMAIL_LOGIN);
-    const maskedEmail = maskEmail(user.email);
-    return { message: `OTP sent to ${maskedEmail}`, maskedEmail };
+    return { user, email: anveshanEmail, fromAnveshan: true };
   }
 
   /** Error for an Anveshan candidate who has not reached the phase where their email is used. */

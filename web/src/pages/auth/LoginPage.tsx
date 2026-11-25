@@ -388,6 +388,9 @@ export function LoginPage() {
   // Masked address from the server, shown on the code screen.
   const [linkedEmail, setLinkedEmail] = useState("");
   const [emailFallbackError, setEmailFallbackError] = useState("");
+  // Masked address the dialog offers to send the code to, looked up when it opens.
+  const [fallbackEmail, setFallbackEmail] = useState("");
+  const [fallbackEmailLoading, setFallbackEmailLoading] = useState(false);
   // Anveshan candidate whose email is only used after the Ground Truth Module.
   const [anveshanPhasePending, setAnveshanPhasePending] = useState(false);
   const sendEmailCodeRef = useRef<HTMLButtonElement>(null);
@@ -425,6 +428,43 @@ export function LoginPage() {
     if (step === 1) void handleSendOtp();
   }
 
+  // Shows why the email option is unavailable inside the dialog, or as a toast for other errors.
+  function showEmailFallbackError(err: unknown, fallbackMessage: string) {
+    const code = (err as { data?: { code?: string } })?.data?.code;
+    if (code === "EMAIL_NOT_LINKED") {
+      setEmailFallbackError(getErrorMessage(err, "No email is linked with this account."));
+    } else if (code === "ANVESHAN_PHASE_PENDING") {
+      setAnveshanPhasePending(true);
+    } else {
+      toast.error(getErrorMessage(err, fallbackMessage));
+    }
+  }
+
+  // Looks up the masked linked email each time the dialog opens, before any code is sent.
+  useEffect(() => {
+    if (!emailFallbackOpen) return;
+    let cancelled = false;
+    setFallbackEmail("");
+    setEmailFallbackError("");
+    setAnveshanPhasePending(false);
+    setFallbackEmailLoading(true);
+    authApi
+      .previewEmailLoginFallback(mobile)
+      .then(({ maskedEmail }) => {
+        if (!cancelled) setFallbackEmail(maskedEmail);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) showEmailFallbackError(err, "Unable to check the linked email");
+      })
+      .finally(() => {
+        if (!cancelled) setFallbackEmailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Runs only when the dialog opens; the number cannot change while it is open.
+  }, [emailFallbackOpen]);
+
   async function handleEmailFallback() {
     setEmailFallbackLoading(true);
     setEmailFallbackError("");
@@ -439,15 +479,7 @@ export function LoginPage() {
       countdown.start();
       toast.success(`OTP sent to ${maskedEmail ?? "your linked email"}`);
     } catch (err) {
-      // Accounts without a linked email get the reason inside the dialog instead of a toast.
-      const code = (err as { data?: { code?: string } })?.data?.code;
-      if (code === "EMAIL_NOT_LINKED") {
-        setEmailFallbackError(getErrorMessage(err, "No email is linked with this account."));
-      } else if (code === "ANVESHAN_PHASE_PENDING") {
-        setAnveshanPhasePending(true);
-      } else {
-        toast.error(getErrorMessage(err, "Unable to send an email OTP"));
-      }
+      showEmailFallbackError(err, "Unable to send an email OTP");
     } finally {
       setEmailFallbackLoading(false);
     }
@@ -775,6 +807,24 @@ export function LoginPage() {
                 We can send the sign-in code to the email linked to this account instead.
               </DialogDescription>
             </DialogHeader>
+            {fallbackEmailLoading && (
+              <div
+                role="status"
+                className="mx-auto mt-5 flex h-11 max-w-xs items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-variant/40 text-sm text-text-secondary"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Checking linked email
+              </div>
+            )}
+            {!fallbackEmailLoading && fallbackEmail && (
+              <div className="mx-auto mt-5 flex max-w-xs items-center gap-3 rounded-lg border border-border-subtle bg-surface-variant/40 px-3 py-2.5">
+                <Mail className="h-4 w-4 shrink-0 text-primary dark:text-emerald-300" aria-hidden="true" />
+                <div className="min-w-0 text-left">
+                  <p className="text-xs text-text-tertiary">Code will be sent to</p>
+                  <p className="truncate text-sm font-medium text-text">{fallbackEmail}</p>
+                </div>
+              </div>
+            )}
             {emailFallbackError && (
               <div
                 role="alert"
@@ -818,7 +868,9 @@ export function LoginPage() {
               ref={sendEmailCodeRef}
               className="h-10 min-w-44"
               onClick={() => void handleEmailFallback()}
-              disabled={emailFallbackLoading || !!emailFallbackError || anveshanPhasePending}
+              disabled={
+                emailFallbackLoading || fallbackEmailLoading || !fallbackEmail || !!emailFallbackError || anveshanPhasePending
+              }
             >
               {emailFallbackLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

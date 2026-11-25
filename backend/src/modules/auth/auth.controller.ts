@@ -223,6 +223,18 @@ async logout(@Req() req: AuthenticatedRequest) {
   }
 
   /**
+   * POST /auth/preview-email-login-fallback
+   * Returns the masked email a login code would be sent to, without sending one.
+   */
+  @Public()
+  @Post('preview-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async previewEmailLoginFallback(@Body() dto: EmailLoginFallbackDto) {
+    return this.authService.previewEmailLoginFallback(dto.mobileNumber);
+  }
+
+  /**
    * POST /auth/request-email-login-fallback
    * Sends a login OTP to the verified email linked to a mobile number, for when
    * the mobile OTP cannot be delivered.
