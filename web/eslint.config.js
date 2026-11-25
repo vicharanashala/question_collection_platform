@@ -17,7 +17,7 @@ const customPlugin = {
 }
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'dist/', 'vite.config.ts'] },
+  { ignores: ['node_modules/', 'dist/', 'vite.config.ts', 'vite-plugins/'] },
 
   // Base JS recommended
   js.configs.recommended,
