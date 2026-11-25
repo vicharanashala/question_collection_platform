@@ -793,6 +793,27 @@ describe('AuthService email OTP', () => {
       );
     });
 
+    it('asks an Anveshan candidate before the Ground Truth Module to finish it first', async () => {
+      userRepo.findOne.mockResolvedValueOnce(
+        makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+          email: null,
+          emailVerifiedAt: null,
+        }),
+      );
+      anveshanRepo.findByPhone.mockResolvedValue({
+        email: 'farmer@example.com',
+        current_phase: 'summary',
+      });
+
+      await expect(
+        service.requestEmailLoginFallback('9876543210'),
+      ).rejects.toMatchObject({
+        response: expect.objectContaining({ code: 'ANVESHAN_PHASE_PENDING' }),
+      });
+      expect(userRepo.update).not.toHaveBeenCalled();
+      expect(emailService.sendSyncEmailToUser).not.toHaveBeenCalled();
+    });
+
     it('emails a login OTP to the linked address', async () => {
       userRepo.findOne.mockResolvedValueOnce(
         makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN),

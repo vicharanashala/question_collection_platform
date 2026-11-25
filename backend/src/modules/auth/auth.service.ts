@@ -1193,9 +1193,18 @@ async logout(userId: string, sid: string): Promise<void> {
     // An Anveshan user whose first SMS failed has not had the Anveshan email copied
     // yet, because that normally happens at login. Copy it now so the code can be sent.
     if (!user.email) {
+      const candidate = await this.anveshanRepo.findByPhone(mobileNumber);
+      // An Anveshan candidate whose email can only be used after the Ground Truth Module
+      // is told to finish it, instead of being told that no email is linked.
+      if (
+        candidate?.email?.trim() &&
+        candidate.current_phase !== REQUIRED_ANVESHAN_PHASE
+      ) {
+        throw this.anveshanPhasePending(candidate.current_phase);
+      }
       const anveshanEmail = await this.findAnveshanEmailToLink(
         user,
-        await this.anveshanRepo.findByPhone(mobileNumber),
+        candidate,
       );
       if (anveshanEmail) {
         const linked = { email: anveshanEmail, emailVerifiedAt: new Date() };
@@ -1210,6 +1219,20 @@ async logout(userId: string, sid: string): Promise<void> {
     await this.sendEmailOtp(user, user.email, EmailOtpPurpose.EMAIL_LOGIN);
     const maskedEmail = maskEmail(user.email);
     return { message: `OTP sent to ${maskedEmail}`, maskedEmail };
+  }
+
+  /** Error for an Anveshan candidate who has not reached the phase where their email is used. */
+  private anveshanPhasePending(
+    currentPhase: string | null,
+  ): BadRequestException {
+    return new BadRequestException({
+      statusCode: 400,
+      error: "Bad Request",
+      code: "ANVESHAN_PHASE_PENDING",
+      message:
+        "Kindly reach the Ground Truth Module on the Anveshan platform to get sign-in codes by email.",
+      details: { currentPhase, requiredPhase: REQUIRED_ANVESHAN_PHASE },
+    });
   }
 
   /** Error for a login fallback on an account with no verified email. Its code lets the web app explain it. */

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ANVESHAN_TAGLINE } from "@/constants/public";
+import { ANVESHAN_PLATFORM_URL, ANVESHAN_TAGLINE } from "@/constants/public";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage, setRegistrationToken } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +26,7 @@ import {
   Award,
   Mail,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -387,6 +388,8 @@ export function LoginPage() {
   // Masked address from the server, shown on the code screen.
   const [linkedEmail, setLinkedEmail] = useState("");
   const [emailFallbackError, setEmailFallbackError] = useState("");
+  // Anveshan candidate whose email is only used after the Ground Truth Module.
+  const [anveshanPhasePending, setAnveshanPhasePending] = useState(false);
   const sendEmailCodeRef = useRef<HTMLButtonElement>(null);
   const countdown = useCountdown();
   const [legalDoc, setLegalDoc] = useState<"terms" | "privacy" | null>(null);
@@ -418,12 +421,14 @@ export function LoginPage() {
   function handleContinueWithPhone() {
     setEmailFallbackOpen(false);
     setEmailFallbackError("");
+    setAnveshanPhasePending(false);
     if (step === 1) void handleSendOtp();
   }
 
   async function handleEmailFallback() {
     setEmailFallbackLoading(true);
     setEmailFallbackError("");
+    setAnveshanPhasePending(false);
     try {
       const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
       setLinkedEmail(maskedEmail ?? "your linked email");
@@ -438,6 +443,8 @@ export function LoginPage() {
       const code = (err as { data?: { code?: string } })?.data?.code;
       if (code === "EMAIL_NOT_LINKED") {
         setEmailFallbackError(getErrorMessage(err, "No email is linked with this account."));
+      } else if (code === "ANVESHAN_PHASE_PENDING") {
+        setAnveshanPhasePending(true);
       } else {
         toast.error(getErrorMessage(err, "Unable to send an email OTP"));
       }
@@ -738,7 +745,10 @@ export function LoginPage() {
         open={emailFallbackOpen}
         onOpenChange={(open) => {
           setEmailFallbackOpen(open);
-          if (!open) setEmailFallbackError("");
+          if (!open) {
+            setEmailFallbackError("");
+            setAnveshanPhasePending(false);
+          }
         }}
       >
         <DialogContent
@@ -774,6 +784,30 @@ export function LoginPage() {
                 <span>{emailFallbackError} You can link one from your profile after you sign in.</span>
               </div>
             )}
+            {anveshanPhasePending && (
+              <div
+                role="alert"
+                className="mt-5 rounded-lg border border-primary/25 bg-primary/5 px-3 py-3 text-sm text-text dark:border-emerald-400/30"
+              >
+                <div className="flex items-start gap-2">
+                  <Sprout className="mt-0.5 h-4 w-4 shrink-0 text-primary dark:text-emerald-300" aria-hidden="true" />
+                  <p className="leading-relaxed">
+                    Kindly reach the <strong>{ANVESHAN_TAGLINE}</strong> on the Anveshan platform. After that, your
+                    Anveshan email can receive sign-in codes.
+                  </p>
+                </div>
+                <a
+                  href={ANVESHAN_PLATFORM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-6 mt-3 inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  Go to Anveshan
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              </div>
+            )}
           </div>
           <div className="flex flex-col-reverse gap-2 border-t border-border-subtle bg-surface-variant/40 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
             <Button variant="outline" className="h-10" onClick={handleContinueWithPhone} disabled={emailFallbackLoading}>
@@ -784,7 +818,7 @@ export function LoginPage() {
               ref={sendEmailCodeRef}
               className="h-10 min-w-44"
               onClick={() => void handleEmailFallback()}
-              disabled={emailFallbackLoading || !!emailFallbackError}
+              disabled={emailFallbackLoading || !!emailFallbackError || anveshanPhasePending}
             >
               {emailFallbackLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
