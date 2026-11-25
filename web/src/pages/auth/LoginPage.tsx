@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -387,11 +387,12 @@ export function LoginPage() {
   // Masked address from the server, shown on the code screen.
   const [linkedEmail, setLinkedEmail] = useState("");
   const [emailFallbackError, setEmailFallbackError] = useState("");
+  const sendEmailCodeRef = useRef<HTMLButtonElement>(null);
   const countdown = useCountdown();
   const [legalDoc, setLegalDoc] = useState<"terms" | "privacy" | null>(null);
 
-  async function handleSendOtp(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSendOtp(e?: React.FormEvent) {
+    e?.preventDefault();
     const cleaned = mobile.replace(/\D/g, "").slice(0, 10);
     if (!/^[6-9]\d{9}$/.test(cleaned)) {
       toast.error(t('loginPage.mobileNumberMustBe'));
@@ -410,6 +411,14 @@ export function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Leaves the email option: tries the SMS again from the first screen, or returns to the
+  // SMS code screen when a code was already sent.
+  function handleContinueWithPhone() {
+    setEmailFallbackOpen(false);
+    setEmailFallbackError("");
+    if (step === 1) void handleSendOtp();
   }
 
   async function handleEmailFallback() {
@@ -732,30 +741,59 @@ export function LoginPage() {
           if (!open) setEmailFallbackError("");
         }}
       >
-        <DialogContent className="space-y-5 p-5 sm:max-w-md sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-primary" /> Use email OTP instead?
-            </DialogTitle>
-            <DialogDescription>
-              If an email is linked to this account, we can send the sign-in code there instead.
-            </DialogDescription>
-          </DialogHeader>
-          {emailFallbackError && (
-            <div
-              role="alert"
-              className="flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200"
-            >
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{emailFallbackError} You can link one from your profile after you sign in.</span>
-            </div>
-          )}
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setEmailFallbackOpen(false)} disabled={emailFallbackLoading}>Cancel</Button>
-            <Button onClick={() => void handleEmailFallback()} disabled={emailFallbackLoading || !!emailFallbackError}>
-              {emailFallbackLoading ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Sending...</> : "Send email OTP"}
+        <DialogContent
+          className="gap-0 overflow-hidden p-0 sm:max-w-md"
+          // Focus the main action, so Enter sends the email code.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            sendEmailCodeRef.current?.focus();
+          }}
+        >
+          <div className="px-5 pb-6 pt-7 sm:px-6">
+            <DialogHeader className="items-center space-y-1 text-center">
+              <span
+                aria-hidden="true"
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5 dark:text-emerald-300"
+              >
+                <Mail className="h-5 w-5" />
+              </span>
+              <DialogTitle className="text-lg sm:text-xl">Get your code by email</DialogTitle>
+              <DialogDescription className="max-w-sm text-sm leading-relaxed">
+                {step === 1
+                  ? `We could not send an SMS to +91 ${mobile} right now. `
+                  : "SMS not arriving? "}
+                We can send the sign-in code to the email linked to this account instead.
+              </DialogDescription>
+            </DialogHeader>
+            {emailFallbackError && (
+              <div
+                role="alert"
+                className="mt-5 flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{emailFallbackError} You can link one from your profile after you sign in.</span>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col-reverse gap-2 border-t border-border-subtle bg-surface-variant/40 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <Button variant="outline" className="h-10" onClick={handleContinueWithPhone} disabled={emailFallbackLoading}>
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+              Continue with phone
             </Button>
-          </DialogFooter>
+            <Button
+              ref={sendEmailCodeRef}
+              className="h-10 min-w-44"
+              onClick={() => void handleEmailFallback()}
+              disabled={emailFallbackLoading || !!emailFallbackError}
+            >
+              {emailFallbackLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Mail className="h-4 w-4" aria-hidden="true" />
+              )}
+              {emailFallbackLoading ? "Sending code" : "Send code to email"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
