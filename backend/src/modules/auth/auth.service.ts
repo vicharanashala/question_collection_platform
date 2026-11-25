@@ -23,6 +23,7 @@ import {
   UserRole,
   AuditAction,
   ActorType,
+  EmailOtpPurpose,
 } from "../../shared/classes/enums";
 import { RequestOtpDto, VerifyOtpDto, RegisterDto } from "./dto";
 import { SmsService } from "./sms.service";
@@ -42,11 +43,10 @@ import {
 } from "../../shared/database/repositories";
 import { REPOSITORY_TOKENS } from "../../shared/database/repositories";
 import { User } from "@/shared/database/mongodb/schemas/user.schema";
+import { Candidate } from "@/shared/database/mongodb/schemas/anveshan.schema";
 import { SessionMeta, SessionService } from "../session/session.service";
 import { RequestMeta } from "@/shared/middleware/decorators/request-meta.decorator";
 import { EmailService } from "./email.service";
-import { Types } from "mongoose";
-import { EmailOtpPurpose } from "./auth.controller";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -72,6 +72,17 @@ export interface AuthResponse {
   user: PublicUser;
   anveshanPhaseInfo?: AnveshanPhaseInfo;
 }
+
+/** Returned instead of tokens when the user still has to finish registration. */
+export interface RegistrationRequired {
+  requiresRegistration: true;
+  tempToken: string;
+  role: UserRole;
+  anveshanPhaseInfo?: AnveshanPhaseInfo;
+}
+
+/** Result of an accepted login OTP, whether it was sent by SMS or by email. */
+export type LoginResult = AuthResponse | RegistrationRequired;
 
 export interface PublicUser {
   id: string;
@@ -113,12 +124,38 @@ export interface PublicUser {
   isTester: boolean;
 }
 
+// Anveshan candidates get their profile and email copied once they reach this phase.
+const REQUIRED_ANVESHAN_PHASE = "module";
+
+/** Clears a pending email OTP once it is accepted or its attempts run out. */
+const CLEARED_EMAIL_OTP = {
+  emailOtpHash: null,
+  emailOtpExpiresAt: null,
+  emailOtpTarget: null,
+  emailOtpPurpose: null,
+  emailOtpAttempts: 0,
+} satisfies Partial<User>;
+
+const EMAIL_OTP_SUBJECTS: Record<EmailOtpPurpose, string> = {
+  [EmailOtpPurpose.EMAIL_SYNC]: "Email Verification OTP",
+  [EmailOtpPurpose.EMAIL_LOGIN]: "Login OTP",
+};
+
+const EMAIL_TAKEN_MESSAGE =
+  "This email is already associated with another account";
+
+// The same reply is sent whether or not a verified email is linked, so the
+// login fallback cannot be used to find out which accounts have one.
+const EMAIL_FALLBACK_MESSAGE =
+  "If a verified email is linked to this account, an OTP has been sent to it.";
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly otpExpiryMinutes = 5;
   private readonly otpMaxRequestsPerWindow = 10; // per 15-minute window
   private readonly otpRateLimitWindowSeconds = 15 * 60;
+  private readonly emailOtpMaxAttempts = 5;
 
   constructor(
     @Inject(REPOSITORY_TOKENS.User)
@@ -151,6 +188,16 @@ export class AuthService {
    */
   normalizePhone(mobile: string): string {
     return mobile.replace(/^\+91 ?/, "").replace(/^0/, "");
+  }
+
+  /** Error for too many OTP requests. Its code lets the web app offer the email fallback. */
+  private tooManyOtpRequests(): BadRequestException {
+    return new BadRequestException({
+      statusCode: 400,
+      error: "Bad Request",
+      code: "OTP_RATE_LIMITED",
+      message: "Too many OTP requests. Please try again after 15 minutes.",
+    });
   }
 
   // ─── OTP Flow ───────────────────────────────────────────────────────────────
@@ -197,9 +244,7 @@ export class AuthService {
     if (otpRateLimitEnabled) {
       const current = await this.rateLimitCounter.peek(rateLimitKey);
       if (current !== null && current.count >= this.otpMaxRequestsPerWindow) {
-        throw new BadRequestException(
-          "Too many OTP requests. Please try again after 15 minutes.",
-        );
+        throw this.tooManyOtpRequests();
       }
     }
 
@@ -326,26 +371,57 @@ export class AuthService {
   async verifyOtp(
     rawMobile: string,
     dto: VerifyOtpDto,
-    meta?: RequestMeta,
-  ): Promise<
-    | AuthResponse
-    | {
-        requiresRegistration: true;
-        tempToken: string;
-        role: UserRole;
-        anveshanPhaseInfo?: AnveshanPhaseInfo;
-      }
-  > {
+    meta?: RequestMeta
+  ): Promise<LoginResult> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     // Opt-in local shortcut for developing without a live SMS gateway. main.ts refuses
     // to boot if this is ever enabled in production.
     const bypassOtpChecks =
       (this.configService.get<boolean>("app.otpDevBypass") ?? false) &&
       isDevelopment();
-    let user = await this.findUserByMobileIncludingDeleted(mobileNumber);
+    const user = await this.findUserByMobileIncludingDeleted(mobileNumber);
     if (!user) {
       throw new UnauthorizedException("User not found");
     }
+    await this.assertUserCanLogin(user);
+
+    if (!bypassOtpChecks && (!user.otpHash || !user.otpExpiresAt)) {
+      throw new UnauthorizedException("No OTP was requested for this number");
+    }
+
+    if (!bypassOtpChecks) {
+      if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+        throw new UnauthorizedException(
+          "OTP has expired. Please request a new one.",
+        );
+      }
+
+      const isValidOtp = user.otpHash
+        ? await bcrypt.compare(dto.otp, user.otpHash)
+        : false;
+      if (!isValidOtp) {
+        throw new UnauthorizedException("Invalid OTP");
+      }
+
+      // Clear OTP after successful verification
+      user.otpHash = null;
+      user.otpExpiresAt = null;
+      await this.userRepo.save(user);
+    }
+
+    // await this.logAudit(
+    //   ActorType.USER,
+    //   user.id,
+    //   AuditAction.OTP_VERIFIED,
+    //   "User",
+    //   user.id,
+    // );
+
+    return this.completeLogin(user, mobileNumber, meta);
+  }
+
+  /** Rejects deleted, suspended and banned accounts, and lifts a suspension that has expired. */
+  private async assertUserCanLogin(user: User): Promise<void> {
     if (user.isDeleted) {
       throw new ForbiddenException({
         statusCode: 403,
@@ -389,41 +465,17 @@ export class AuthService {
         bannedAt: user.bannedAt,
       });
     }
+  }
 
-    if (!bypassOtpChecks && (!user.otpHash || !user.otpExpiresAt)) {
-      throw new UnauthorizedException("No OTP was requested for this number");
-    }
-
-    if (!bypassOtpChecks) {
-      if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
-        throw new UnauthorizedException(
-          "OTP has expired. Please request a new one.",
-        );
-      }
-
-      const isValidOtp = user.otpHash
-        ? await bcrypt.compare(dto.otp, user.otpHash)
-        : false;
-      if (!isValidOtp) {
-        throw new UnauthorizedException("Invalid OTP");
-      }
-
-      // Clear OTP after successful verification
-      user.otpHash = null;
-      user.otpExpiresAt = null;
-      await this.userRepo.save(user);
-    }
-
-    // await this.logAudit(
-    //   ActorType.USER,
-    //   user.id,
-    //   AuditAction.OTP_VERIFIED,
-    //   "User",
-    //   user.id,
-    // );
-
-    const REQUIRED_ANVESHAN_PHASE = "module";
-
+  /**
+   * Finishes a login once the OTP is accepted: applies the Anveshan status, returns a
+   * registration token to users who have not registered, and otherwise issues tokens.
+   */
+  private async completeLogin(
+    user: User,
+    mobileNumber: string,
+    meta?: RequestMeta,
+  ): Promise<LoginResult> {
     const anveshanCandidate = await this.anveshanRepo.findByPhone(mobileNumber);
     let anveshanPhaseInfo: AnveshanPhaseInfo | undefined;
 
@@ -461,8 +513,12 @@ export class AuthService {
         if (!user.district?.trim() && anveshanCandidate.district) {
           updates.district = anveshanCandidate.district;
         }
-        if(!user.email?.trim() && anveshanCandidate.email){
-          updates.email = anveshanCandidate.email
+        const anveshanEmail = await this.findAnveshanEmailToLink(
+          user,
+          anveshanCandidate,
+        );
+        if (anveshanEmail) {
+          updates.email = anveshanEmail;
           updates.emailVerifiedAt = new Date();
         }
 
@@ -523,11 +579,7 @@ export class AuthService {
    * Complete registration for a new user (after OTP verification).
    * Creates user wallet and returns auth tokens.
    */
-  async register(
-    dto: RegisterDto,
-    userId: string,
-    meta?: RequestMeta,
-  ): Promise<AuthResponse> {
+  async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
     const isDev = isDevelopment();
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
@@ -684,7 +736,7 @@ export class AuthService {
   async issueTokens(user: User, meta?: SessionMeta): Promise<AuthTokens> {
     // NOTE: tokenVersion is NOT incremented here. Each login creates a new session
     // that replaces the user's previous one, so only one device stays logged in.
-    const sid = randomUUID();
+    const sid = randomUUID()
     const tokenVersion = user.tokenVersion;
     const base = {
       sub: user._id.toString(),
@@ -694,14 +746,8 @@ export class AuthService {
       sid,
     };
 
-    const accessToken = this.jwtService.sign(
-      { ...base, type: "access" },
-      { expiresIn: "15m" },
-    );
-    const refreshToken = this.jwtService.sign(
-      { ...base, type: "refresh" },
-      { expiresIn: "7d" },
-    );
+    const accessToken = this.jwtService.sign({ ...base, type: 'access' }, { expiresIn: '15m' });
+    const refreshToken = this.jwtService.sign({ ...base, type: 'refresh' }, { expiresIn: '7d' });
 
     await this.sessionService.create({
       sessionId: sid,
@@ -719,138 +765,130 @@ export class AuthService {
    * Also validates tokenVersion to reject tokens invalidated by logout.
    */
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    try {
-      const payload = this.jwtService.verify<{
-        sub: string;
-        mobileNumber: string;
-        role: UserRole;
-        tokenVersion: number;
-        sid?: string;
-        type?: string;
-      }>(refreshToken);
+  try {
+    const payload = this.jwtService.verify<{
+      sub: string;
+      mobileNumber: string;
+      role: UserRole;
+      tokenVersion: number;
+      sid?: string;
+      type?: string;
+    }>(refreshToken);
 
-      // reject access tokens, registration tokens, and old tokens that have no sid
-      if (payload.type !== "refresh" || !payload.sid) {
-        throw new UnauthorizedException("Invalid refresh token");
-      }
-
-      // session must exist, be unexpired, and match this refresh token
-      await this.sessionService.validateRefresh(
-        payload.sid,
-        payload.sub,
-        refreshToken,
-      );
-
-      // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
-      const user = await this.userRepo.findOne({
-        where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
-      });
-      if (!user) {
-        throw new UnauthorizedException("User not found");
-      }
-
-      // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
-      if (user.isDeleted) {
-        throw new ForbiddenException({
-          statusCode: 403,
-          error: "Forbidden",
-          code: "ACCOUNT_DELETED",
-          message: "This user is deleted. Please contact admin to restore.",
-        });
-      }
-
-      if (user.tokenVersion !== payload.tokenVersion) {
-        throw new UnauthorizedException("Session expired. Please login again.");
-      }
-
-      // Auto-reinstate: suspension period has expired
-      if (
-        user.verificationStatus === VerificationStatus.SUSPENDED &&
-        user.suspendedUntil &&
-        new Date() > new Date(user.suspendedUntil)
-      ) {
-        await this.userRepo.update(user._id, {
-          verificationStatus: VerificationStatus.VERIFIED,
-          suspendedAt: null,
-          suspendedUntil: null,
-          suspendedReason: null,
-        });
-        user.verificationStatus = VerificationStatus.VERIFIED;
-      }
-
-      // Block suspended or banned users from refreshing a session
-      if (user.verificationStatus === VerificationStatus.SUSPENDED) {
-        throw new UserAccountLockedException({
-          status: VerificationStatus.SUSPENDED,
-          reason: user.suspendedReason,
-          suspendedAt: user.suspendedAt,
-          suspendedUntil: user.suspendedUntil,
-          bannedAt: null,
-        });
-      }
-      if (user.verificationStatus === VerificationStatus.BANNED) {
-        throw new UserAccountLockedException({
-          status: VerificationStatus.BANNED,
-          reason: user.bannedReason,
-          suspendedAt: null,
-          suspendedUntil: null,
-          bannedAt: user.bannedAt,
-        });
-      }
-
-      // Same session, same refresh token: only a new access token is issued
-      const accessToken = this.jwtService.sign(
-        {
-          sub: user._id.toString(),
-          mobileNumber: user.mobileNumber,
-          role: user.role,
-          tokenVersion: user.tokenVersion,
-          sid: payload.sid,
-          type: "access",
-        },
-        { expiresIn: "15m" },
-      );
-
-      user.lastLoginAt = new Date();
-      await this.userRepo.save(user);
-
-      return { accessToken, refreshToken, expiresIn: 15 * 60 };
-    } catch (err) {
-      // Rethrow every HttpException (401 with SESSION_REVOKED, 503, account locked)
-      if (err instanceof HttpException) throw err;
-      throw new UnauthorizedException("Invalid or expired refresh token");
+    // reject access tokens, registration tokens, and old tokens that have no sid
+    if (payload.type !== "refresh" || !payload.sid) {
+      throw new UnauthorizedException("Invalid refresh token");
     }
+
+    // session must exist, be unexpired, and match this refresh token
+    await this.sessionService.validateRefresh(payload.sid, payload.sub, refreshToken);
+
+    // Deleted users are included so they get the ACCOUNT_DELETED response instead of "User not found".
+    const user = await this.userRepo.findOne({
+      where: { id: payload.sub, isDeleted: INCLUDE_DELETED },
+    });
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    // Checked before tokenVersion, because deleting a user also bumps tokenVersion.
+    if (user.isDeleted) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        error: "Forbidden",
+        code: "ACCOUNT_DELETED",
+        message: "This user is deleted. Please contact admin to restore.",
+      });
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException("Session expired. Please login again.");
+    }
+
+    // Auto-reinstate: suspension period has expired
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED &&
+      user.suspendedUntil &&
+      new Date() > new Date(user.suspendedUntil)
+    ) {
+      await this.userRepo.update(user._id, {
+        verificationStatus: VerificationStatus.VERIFIED,
+        suspendedAt: null,
+        suspendedUntil: null,
+        suspendedReason: null,
+      });
+      user.verificationStatus = VerificationStatus.VERIFIED;
+    }
+
+    // Block suspended or banned users from refreshing a session
+    if (user.verificationStatus === VerificationStatus.SUSPENDED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.SUSPENDED,
+        reason: user.suspendedReason,
+        suspendedAt: user.suspendedAt,
+        suspendedUntil: user.suspendedUntil,
+        bannedAt: null,
+      });
+    }
+    if (user.verificationStatus === VerificationStatus.BANNED) {
+      throw new UserAccountLockedException({
+        status: VerificationStatus.BANNED,
+        reason: user.bannedReason,
+        suspendedAt: null,
+        suspendedUntil: null,
+        bannedAt: user.bannedAt,
+      });
+    }
+
+    // Same session, same refresh token: only a new access token is issued
+    const accessToken = this.jwtService.sign(
+      {
+        sub: user._id.toString(),
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        tokenVersion: user.tokenVersion,
+        sid: payload.sid,
+        type: "access",
+      },
+      { expiresIn: "15m" },
+    );
+
+    user.lastLoginAt = new Date();
+    await this.userRepo.save(user);
+
+    return { accessToken, refreshToken, expiresIn: 15 * 60 };
+  } catch (err) {
+    // Rethrow every HttpException (401 with SESSION_REVOKED, 503, account locked)
+    if (err instanceof HttpException) throw err;
+    throw new UnauthorizedException("Invalid or expired refresh token");
   }
+}
 
   /**
    * Validate a JWT access token and return the user.
    */
   async validateToken(token: string): Promise<User> {
-    try {
-      const payload = this.jwtService.verify<{
-        sub: string;
-        sid?: string;
-        type?: string;
-      }>(token);
-      if (payload.type !== "access" || !payload.sid) {
-        throw new UnauthorizedException("Invalid access token");
-      }
-      await this.sessionService.validateAccess(payload.sid, payload.sub);
-
-      const user = await this.userRepo.findOne({ where: { id: payload.sub } });
-      if (!user) throw new UnauthorizedException("User not found");
-      return user;
-    } catch (err) {
-      if (err instanceof HttpException) throw err;
-      throw new UnauthorizedException("Invalid or expired access token");
+  try {
+    const payload = this.jwtService.verify<{ sub: string; sid?: string; type?: string }>(token);
+    if (payload.type !== "access" || !payload.sid) {
+      throw new UnauthorizedException("Invalid access token");
     }
-  }
+    await this.sessionService.validateAccess(payload.sid, payload.sub);
 
-  async logout(userId: string, sid: string): Promise<void> {
-    // Deletes only if sid is still the user's current session, so a stale
-    // device can't log out a newer login. Idempotent: 0 deleted is fine.
-    await this.sessionService.revoke(sid, userId);
+    const user = await this.userRepo.findOne({ where: { id: payload.sub } });
+    if (!user) throw new UnauthorizedException("User not found");
+    return user;
+  } catch (err) {
+    if (err instanceof HttpException) throw err;
+    throw new UnauthorizedException("Invalid or expired access token");
   }
+}
+
+async logout(userId: string, sid: string): Promise<void> {
+  // Deletes only if sid is still the user's current session, so a stale
+  // device can't log out a newer login. Idempotent: 0 deleted is fine.
+  await this.sessionService.revoke(sid, userId);
+}
 
   /**
    * Increment tokenVersion to invalidate all existing sessions for a user.
@@ -1065,328 +1103,273 @@ export class AuthService {
     return candidates.slice(0, limit);
   }
 
+  // ─── Email OTP ──────────────────────────────────────────────────────────────
+
+  /** Sends an OTP to an email address the signed-in user wants to link. */
   async requestEmailOtp(
+    userId: string,
+    rawEmail: string,
+  ): Promise<{ message: string }> {
+    const email = rawEmail.trim().toLowerCase();
+    const user = await this.findUserForEmailLink(userId);
+    if (await this.isEmailTaken(email, userId)) {
+      throw new BadRequestException(EMAIL_TAKEN_MESSAGE);
+    }
+
+    await this.sendEmailOtp(user, email, EmailOtpPurpose.EMAIL_SYNC);
+    return { message: "OTP sent successfully" };
+  }
+
+  /** Links the email address to the signed-in user once its OTP is confirmed. */
+  async verifyEmailOtp(
+    userId: string,
+    rawEmail: string,
+    otp: string,
+  ): Promise<{ message: string }> {
+    const email = rawEmail.trim().toLowerCase();
+    const user = await this.findUserForEmailLink(userId);
+
+    // A wrong code is a 400, not a 401, so the web client does not treat it as an expired session.
+    const rejection = await this.consumeEmailOtp(
+      user,
+      otp,
+      EmailOtpPurpose.EMAIL_SYNC,
+      email,
+    );
+    if (rejection) {
+      throw new BadRequestException(rejection);
+    }
+    if (await this.isEmailTaken(email, userId)) {
+      throw new BadRequestException(EMAIL_TAKEN_MESSAGE);
+    }
+
+    await this.userRepo.update(user._id, {
+      email,
+      emailVerifiedAt: new Date(),
+    });
+    return { message: "Email verified and synced successfully" };
+  }
+
+  /**
+   * Sends a login OTP to the verified email linked to a mobile number, for when the
+   * mobile OTP cannot be delivered. Locked accounts get the same errors as requestOtp.
+   */
+  async requestEmailLoginFallback(
+    rawMobile: string,
+  ): Promise<{ message: string }> {
+    const mobileNumber = this.normalizePhone(rawMobile);
+    const user = await this.findUserByMobileIncludingDeleted(mobileNumber);
+    if (!user) {
+      return { message: EMAIL_FALLBACK_MESSAGE };
+    }
+    await this.assertUserCanLogin(user);
+
+    // An Anveshan user whose first SMS failed has not had the Anveshan email copied
+    // yet, because that normally happens at login. Copy it now so the code can be sent.
+    if (!user.email) {
+      const anveshanEmail = await this.findAnveshanEmailToLink(
+        user,
+        await this.anveshanRepo.findByPhone(mobileNumber),
+      );
+      if (anveshanEmail) {
+        const linked = { email: anveshanEmail, emailVerifiedAt: new Date() };
+        await this.userRepo.update(user._id, linked);
+        Object.assign(user, linked);
+      }
+    }
+
+    if (user.email && user.emailVerifiedAt) {
+      await this.sendEmailOtp(user, user.email, EmailOtpPurpose.EMAIL_LOGIN);
+    }
+    return { message: EMAIL_FALLBACK_MESSAGE };
+  }
+
+  /** Signs in with an email OTP from the login fallback. Returns the same result as verifyOtp. */
+  async verifyEmailLoginFallback(
+    rawMobile: string,
+    otp: string,
+    meta?: RequestMeta,
+  ): Promise<LoginResult> {
+    const mobileNumber = this.normalizePhone(rawMobile);
+    const user = await this.findUserByMobileIncludingDeleted(mobileNumber);
+    if (!user?.email) {
+      throw new UnauthorizedException("Invalid or expired OTP");
+    }
+    await this.assertUserCanLogin(user);
+
+    const rejection = await this.consumeEmailOtp(
+      user,
+      otp,
+      EmailOtpPurpose.EMAIL_LOGIN,
+      user.email,
+    );
+    if (rejection) {
+      throw new UnauthorizedException(rejection);
+    }
+    return this.completeLogin(user, mobileNumber, meta);
+  }
+
+  /** Loads the signed-in user for email linking. Each account can link one email. */
+  private async findUserForEmailLink(userId: string): Promise<User> {
+    const user = await this.userRepo.findOne({ where: { _id: userId } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    if (user.email) {
+      throw new BadRequestException(
+        "An email address is already linked to this account",
+      );
+    }
+    return user;
+  }
+
+  /**
+   * Returns the email from an Anveshan record that has reached the required phase, when
+   * the account has no email yet and no other active account uses it. Anveshan
+   * addresses are treated as verified.
+   */
+  private async findAnveshanEmailToLink(
+    user: User,
+    candidate: Candidate | null,
+  ): Promise<string | null> {
+    const email = candidate?.email?.trim().toLowerCase();
+    if (
+      user.email ||
+      !email ||
+      candidate?.current_phase !== REQUIRED_ANVESHAN_PHASE
+    ) {
+      return null;
+    }
+    return (await this.isEmailTaken(email, user._id.toString())) ? null : email;
+  }
+
+  /** True when another active account uses this email. Deleted accounts do not block it. */
+  private async isEmailTaken(email: string, userId: string): Promise<boolean> {
+    const owner = await this.userRepo.findOne({ where: { email } });
+    return !!owner && owner._id.toString() !== userId;
+  }
+
+  /** Applies the email OTP rate limits, stores a new OTP for the purpose and emails it. */
+  private async sendEmailOtp(
+    user: User,
     email: string,
     purpose: EmailOtpPurpose,
-    userId?: string,
-  ): Promise<{ message: string }> {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    let user: User | null = null;
-
-    // EMAIL_SYNC requires an authenticated user
-    if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
-      if (!userId) {
-        throw new UnauthorizedException(
-          "Authentication required to sync email",
-        );
-      }
-
-      user = await this.userRepo.findOne({
-        where: { _id: new Types.ObjectId(userId) },
-      });
-
-      if (!user) {
-        throw new NotFoundException("User not found");
-      }
-
-      if (user.email) {
-        throw new BadRequestException(
-          "An email address is already linked to this account",
-        );
-      }
-
-      // Prevent syncing an email already associated with another user
-      const existingUser = await this.userRepo.findOne({
-        where: { email: normalizedEmail },
-      });
-
-      if (existingUser && existingUser._id.toString() !== userId) {
-        throw new BadRequestException(
-          "This email is already associated with another account",
-        );
-      }
-    }
-
-    // EMAIL_LOGIN finds the account using its registered email
-    else if (purpose === EmailOtpPurpose.EMAIL_LOGIN) {
-      user = await this.userRepo.findOne({
-        where: { email: normalizedEmail },
-      });
-
-      // Avoid revealing whether an email exists
-      if (!user) {
-        return {
-          message: "If the email is registered, an OTP will be sent.",
-        };
-      }
-
-      if (!user.emailVerifiedAt) {
-        return {
-          message: "If the email is registered, an OTP will be sent.",
-        };
-      }
-    } else {
-      throw new BadRequestException("Invalid email OTP purpose");
-    }
-
-    // Email OTP rate limiting
-    const emailRateLimitKey = `email_otp_rl:${normalizedEmail}`;
-    const userRateLimitKey = `email_otp_user_rl:${user._id.toString()}`;
-
+  ): Promise<void> {
+    const userId = user._id.toString();
+    const rateLimitKeys = [
+      `email_otp_rl:${email}`,
+      `email_otp_user_rl:${userId}`,
+    ];
     const otpRateLimitEnabled =
       this.configService.get<boolean>("app.otpRateLimit") ?? true;
-
     if (otpRateLimitEnabled) {
-      const [emailLimit, userLimit] = await Promise.all([
-        this.rateLimitCounter.peek(emailRateLimitKey),
-        this.rateLimitCounter.peek(userRateLimitKey),
-      ]);
-
+      const counters = await Promise.all(
+        rateLimitKeys.map((key) => this.rateLimitCounter.peek(key)),
+      );
       if (
-        (emailLimit && emailLimit.count >= this.otpMaxRequestsPerWindow) ||
-        (userLimit && userLimit.count >= this.otpMaxRequestsPerWindow)
+        counters.some(
+          (counter) =>
+            counter !== null && counter.count >= this.otpMaxRequestsPerWindow,
+        )
       ) {
-        throw new BadRequestException(
-          "Too many OTP requests. Please try again after 15 minutes.",
-        );
+        throw this.tooManyOtpRequests();
       }
     }
 
-    // Generate OTP
     const otp = randomInt(100000, 999999).toString();
-    const otpHash = await bcrypt.hash(otp, 12);
-
-    const expiresAt = new Date(Date.now() + this.otpExpiryMinutes * 60 * 1000);
-
-    const body = `Your OTP is ${otp}. It will expire in ${this.otpExpiryMinutes} minutes.`;
-
+    // The OTP is a credential, so only local development may log it.
     if (isDevelopment()) {
-      this.logger.debug(`[OTP] ${otp} for email=${normalizedEmail}`);
+      this.logger.debug(`[OTP] ${otp} for email=${email}`);
     }
-
-    // Store email-specific OTP fields
     await this.userRepo.update(user._id, {
-      emailOtpHash: otpHash,
-      emailOtpExpiresAt: expiresAt,
-      emailOtpTarget: normalizedEmail,
+      emailOtpHash: await bcrypt.hash(otp, 12),
+      emailOtpExpiresAt: new Date(
+        Date.now() + this.otpExpiryMinutes * 60 * 1000,
+      ),
+      emailOtpTarget: email,
       emailOtpPurpose: purpose,
       emailOtpAttempts: 0,
     });
 
-    // Increment both rate-limit counters
     if (otpRateLimitEnabled) {
-      await Promise.all([
-        this.rateLimitCounter.hit(
-          emailRateLimitKey,
-          this.otpRateLimitWindowSeconds,
+      await Promise.all(
+        rateLimitKeys.map((key) =>
+          this.rateLimitCounter.hit(key, this.otpRateLimitWindowSeconds),
         ),
-        this.rateLimitCounter.hit(
-          userRateLimitKey,
-          this.otpRateLimitWindowSeconds,
-        ),
-      ]);
+      );
     }
 
-    // Send OTP
     try {
       await this.emailService.sendSyncEmailToUser(
-        normalizedEmail,
-        "Email Verification OTP",
-        body,
+        email,
+        EMAIL_OTP_SUBJECTS[purpose],
+        `Your OTP is ${otp}. It will expire in ${this.otpExpiryMinutes} minutes.`,
       );
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
-
       this.logger.error(
-        `Email OTP delivery failed for ${normalizedEmail}: ${reason}`,
+        `Email OTP delivery failed for user ${userId}: ${reason}`,
       );
-
       throw new BadGatewayException({
         message: "We could not send the OTP. Please try again later.",
         code: "EMAIL_OTP_DELIVERY_FAILED",
         ...(isDevelopment() && { detail: reason }),
       });
     }
-
-    return { message: "OTP sent successfully" };
   }
 
   /**
-   * Sends a login OTP to the verified email already linked to a mobile account.
-   * The client only supplies the mobile number, so the email address remains private.
+   * Checks an OTP against the user's pending email OTP for this purpose and address.
+   * The pending OTP is cleared once it is accepted or its attempts run out.
+   * Returns why the OTP was rejected, or null when it is accepted.
    */
-  async requestEmailLoginFallback(
-    mobileNumber: string,
-  ): Promise<{ message: string }> {
-    const user = await this.userRepo.findOne({
-      where: { mobileNumber: this.normalizePhone(mobileNumber) },
-    });
-
-    if (!user?.email || !user.emailVerifiedAt) {
-      throw new BadRequestException(
-        "No verified email is linked to this mobile number",
-      );
-    }
-
-    return this.requestEmailOtp(user.email, EmailOtpPurpose.EMAIL_LOGIN);
-  }
-
-  async verifyEmailOtp(
-  email: string,
-  otp: string,
-  purpose: EmailOtpPurpose,
-  userId?: string,
-  meta?: RequestMeta,
-) {
-  const normalizedEmail = email.trim().toLowerCase();
-
-  let user: User | null = null;
-
-  if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
-    if (!userId) {
-      throw new UnauthorizedException("Authentication required");
-    }
-
-    user = await this.userRepo.findOne({
-      where: { _id: new Types.ObjectId(userId) },
-    });
-  } else if (purpose === EmailOtpPurpose.EMAIL_LOGIN) {
-    user = await this.userRepo.findOne({
-      where: { email: normalizedEmail },
-    });
-  } else {
-    throw new BadRequestException("Invalid email OTP purpose");
-  }
-
-  if (!user) {
-    throw new UnauthorizedException("Invalid or expired OTP");
-  }
-
-  // Validate OTP target and purpose
-  if (
-    user.emailOtpTarget !== normalizedEmail ||
-    user.emailOtpPurpose !== purpose ||
-    !user.emailOtpHash ||
-    !user.emailOtpExpiresAt
-  ) {
-    throw new UnauthorizedException("Invalid or expired OTP");
-  }
-
-  // Check expiry
-  if (new Date() > new Date(user.emailOtpExpiresAt)) {
-    throw new UnauthorizedException(
-      "OTP has expired. Please request a new one.",
-    );
-  }
-
-  // Verify OTP
-  const isValidOtp = await bcrypt.compare(
-    otp,
-    user.emailOtpHash,
-  );
-
-  if (!isValidOtp) {
-    const attempts = (user.emailOtpAttempts ?? 0) + 1;
-
-    await this.userRepo.update(user._id, {
-      emailOtpAttempts: attempts,
-      ...(attempts >= 5 && {
-        emailOtpHash: null,
-        emailOtpExpiresAt: null,
-        emailOtpTarget: null,
-        emailOtpPurpose: null,
-        emailOtpAttempts: 0,
-      }),
-    });
-
-    throw new UnauthorizedException(
-      attempts >= 5
-        ? "Maximum OTP attempts reached. Please request a new OTP."
-        : "Invalid OTP",
-    );
-  }
-
-  // EMAIL_SYNC: Attach verified email to current user
-  if (purpose === EmailOtpPurpose.EMAIL_SYNC) {
-    if (user.email) {
-      throw new BadRequestException(
-        "An email address is already linked to this account",
-      );
-    }
-
-    const existingUser = await this.userRepo.findOne({
-      where: { email: normalizedEmail },
-    });
-
-    if (
-      existingUser &&
-      existingUser._id.toString() !== user._id.toString()
-    ) {
-      throw new BadRequestException(
-        "This email is already associated with another account",
-      );
-    }
-
-    await this.userRepo.update(user._id, {
-      email: normalizedEmail,
-      emailVerifiedAt: new Date(),
-      emailOtpHash: null,
-      emailOtpExpiresAt: null,
-      emailOtpTarget: null,
-      emailOtpPurpose: null,
-      emailOtpAttempts: 0,
-    });
-
-    return {
-      message: "Email verified and synced successfully",
-    };
-  }
-
-  // EMAIL_LOGIN: Consume OTP without modifying email
-  await this.userRepo.update(user._id, {
-    emailOtpHash: null,
-    emailOtpExpiresAt: null,
-    emailOtpTarget: null,
-    emailOtpPurpose: null,
-    emailOtpAttempts: 0,
-  });
-
-  // Reuse your existing token-generation flow
-  user.lastLoginAt = new Date();
-  await this.userRepo.save(user);
-
-  const tokens = await this.issueTokens(user, meta);
-
-  return {
-    tokens,
-    user: this.toPublicUser(user),
-  };
-}
-
-  /** Complete an email fallback login without exposing the linked address. */
-  async verifyEmailLoginFallback(
-    mobileNumber: string,
+  private async consumeEmailOtp(
+    user: User,
     otp: string,
-    meta?: RequestMeta,
-  ) {
-    const user = await this.userRepo.findOne({
-      where: { mobileNumber: this.normalizePhone(mobileNumber) },
-    });
-
-    if (!user?.email) {
-      throw new UnauthorizedException("Invalid or expired OTP");
+    purpose: EmailOtpPurpose,
+    email: string,
+  ): Promise<string | null> {
+    const { emailOtpHash, emailOtpExpiresAt } = user;
+    if (
+      !emailOtpHash ||
+      !emailOtpExpiresAt ||
+      user.emailOtpPurpose !== purpose ||
+      user.emailOtpTarget !== email
+    ) {
+      return "Invalid or expired OTP";
+    }
+    if (new Date() > new Date(emailOtpExpiresAt)) {
+      return "OTP has expired. Please request a new one.";
     }
 
-    return this.verifyEmailOtp(
-      user.email,
-      otp,
-      EmailOtpPurpose.EMAIL_LOGIN,
-      undefined,
-      meta,
-    );
+    const attempt = await this.recordEmailOtpAttempt(user);
+    const accepted =
+      attempt <= this.emailOtpMaxAttempts &&
+      (await bcrypt.compare(otp, emailOtpHash));
+    if (accepted || attempt >= this.emailOtpMaxAttempts) {
+      await this.userRepo.update(user._id, CLEARED_EMAIL_OTP);
+      // Keep the loaded user in step, so a later save() cannot restore the used OTP.
+      Object.assign(user, CLEARED_EMAIL_OTP);
+    }
+    if (accepted) return null;
+    return attempt >= this.emailOtpMaxAttempts
+      ? "Maximum OTP attempts reached. Please request a new OTP."
+      : "Invalid OTP";
   }
 
+  /**
+   * Counts one email OTP attempt and returns the new total. The count is raised in the
+   * database before the OTP is compared, so parallel guesses cannot get past the limit.
+   */
+  private async recordEmailOtpAttempt(user: User): Promise<number> {
+    await this.userRepo.increment(
+      { id: user._id.toString() },
+      "emailOtpAttempts",
+      1,
+    );
+    const counted = await this.userRepo.findOne({ where: { _id: user._id } });
+    return counted?.emailOtpAttempts ?? Number.POSITIVE_INFINITY;
+  }
 
   /**
    * Write a username→userId mapping to Redis.

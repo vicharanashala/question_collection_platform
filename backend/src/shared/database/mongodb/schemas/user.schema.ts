@@ -4,8 +4,8 @@ import {
   VerificationStatus,
   UserCategory,
   UserRole,
+  EmailOtpPurpose,
 } from "../../../classes/enums";
-import { EmailOtpPurpose } from "@/modules/auth/auth.controller";
 
 export type UserDocument = User & Document;
 
@@ -233,7 +233,7 @@ UserSchema.index(
     unique: true,
     partialFilterExpression: {
       isDeleted: false,
-      mobileNumber: { $type: "string" },
+      mobileNumber: { $type: 'string' },
     },
   },
 );
@@ -245,7 +245,19 @@ UserSchema.index(
     unique: true,
     partialFilterExpression: {
       isDeleted: false,
-      username: { $type: "string" },
+      username: { $type: 'string' },
+    },
+  },
+);
+
+// Only one active user per email. Deleted users keep their email without blocking it.
+UserSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+      email: { $type: 'string' },
     },
   },
 );

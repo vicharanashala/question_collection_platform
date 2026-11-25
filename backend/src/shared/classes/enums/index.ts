@@ -256,3 +256,9 @@ export enum AgriEntityStatus {
   APPROVED = "approved",
   REJECTED = "rejected",
 }
+
+/** Why an email OTP was sent, so a code sent for one flow cannot be used in another. */
+export enum EmailOtpPurpose {
+  EMAIL_SYNC = "EMAIL_SYNC",
+  EMAIL_LOGIN = "EMAIL_LOGIN",
+}

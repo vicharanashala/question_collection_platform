@@ -113,7 +113,7 @@ export function PublicLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <PublicHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
-        <EmailLinkBanner hidden={location.pathname === '/home/profile'} />
+        <EmailLinkBanner />
         <VerificationBanner />
         <TesterBanner />
         <AnveshanProgressBanner

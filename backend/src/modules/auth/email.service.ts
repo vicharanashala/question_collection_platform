@@ -1,49 +1,44 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import nodemailer from "nodemailer";
+import { createTransport, type Transporter } from "nodemailer";
+
+// Zoho Mail SMTP over SSL.
+const ZOHO_SSL_PORT = 465;
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  constructor(private readonly configService: ConfigService) {}
+  private readonly transporter: Transporter;
+  private readonly sender: string;
 
+  // Builds one Zoho SMTP transporter from the email config and reuses it for every message.
+  constructor(configService: ConfigService) {
+    this.sender = configService.getOrThrow<string>("email.user");
+    if (!this.sender) {
+      this.logger.warn("EMAIL_USER is not set, so email OTPs cannot be sent.");
+    }
+    this.transporter = createTransport({
+      host: configService.getOrThrow<string>("email.host"),
+      port: ZOHO_SSL_PORT,
+      secure: true,
+      auth: {
+        user: this.sender,
+        pass: configService.getOrThrow<string>("email.password"),
+      },
+    });
+  }
+
+  // Sends a plain-text email. Delivery errors go to the caller, which logs them.
   async sendSyncEmailToUser(
     email: string,
     subject: string,
     body: string,
   ): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host:
-        this.configService.get<string>("email.host") || process.env.EMAIL_HOST,
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user:
-          this.configService.get<string>("email.user") ||
-          process.env.EMAIL_USER,
-        pass:
-          this.configService.get<string>("email.password") ||
-          process.env.EMAIL_PASSWORD,
-      },
+    await this.transporter.sendMail({
+      from: `AnnaDatha <${this.sender}>`,
+      to: email,
+      subject,
+      text: body,
     });
-
-    try {
-      await transporter.verify();
-      console.log("Server is ready to take our messages");
-    } catch (err) {
-      console.error("Verification failed:", err);
-    }
-
-    try {
-      await transporter.sendMail({
-        from: `AnnaDatha <${this.configService.get<string>("email.user") || process.env.EMAIL_USER}>`,
-        to: email,
-        subject: subject,
-        text: body,
-      });
-      console.log("Email sent successfully");
-    } catch (err) {
-      console.error("Error sending email:", err);
-      throw new Error("Failed to send email");
-    }
   }
 }

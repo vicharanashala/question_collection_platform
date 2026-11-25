@@ -154,7 +154,7 @@ export const anveshanDbConfig = registerAs("anveshanDb", () => ({
 }));
 
 export const emailConfig = registerAs("email", () => ({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  host: process.env.EMAIL_HOST || "smtp.zoho.in",
   user: process.env.EMAIL_USER || "",
   password: process.env.EMAIL_PASSWORD || "",
 }));

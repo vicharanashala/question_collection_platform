@@ -48,6 +48,7 @@ import type {
 } from "@/api/client";
 import { useTranslation } from 'react-i18next';
 import { LinkEmailDialog } from "@/components/profile/LinkEmailDialog";
+import { LinkEmailButton } from "@/components/profile/LinkEmailButton";
 
 const LANGUAGES = [
   { value: "en", label: "English" },
@@ -134,7 +135,7 @@ function FieldRow({
 }: {
   icon: React.ElementType;
   label: string;
-  value: string | null;
+  value: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between text-xs sm:text-xs sm:text-sm">
@@ -763,16 +764,11 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <FieldRow icon={Phone} label={t('anveshan.detailMobile')} value={user.mobileNumber} />
-            {user.email ? (
-              <FieldRow icon={Mail} label="Email" value={user.email} />
-            ) : (
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-text-tertiary">
-                  <Mail className="h-4 w-4" /> Email
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setLinkEmailOpen(true)}>Link email</Button>
-              </div>
-            )}
+            <FieldRow
+              icon={Mail}
+              label="Email"
+              value={user.email || <LinkEmailButton onClick={() => setLinkEmailOpen(true)} />}
+            />
             <FieldRow icon={MapPin} label={t('profile.location')} value={locationStr} />
             <FieldRow
               icon={Calendar}
@@ -1059,7 +1055,7 @@ export function ProfilePage() {
         onClose={() => setEditOpen(false)}
         onSaved={handleSaved}
       />
-      <LinkEmailDialog open={linkEmailOpen} onOpenChange={setLinkEmailOpen} onLinked={(email) => updateUser({ ...user, email })} />
+      <LinkEmailDialog open={linkEmailOpen} onOpenChange={setLinkEmailOpen} onLinked={(email) => updateUser({ email })} />
     </div>
   );
 }

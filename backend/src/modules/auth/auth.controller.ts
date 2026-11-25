@@ -12,31 +12,33 @@ import {
   UnauthorizedException,
   BadRequestException,
   BadGatewayException,
-} from "@nestjs/common";
-import { Throttle } from "@nestjs/throttler";
-import { AuthService, AuthResponse } from "./auth.service";
-import { RequestOtpDto, VerifyOtpDto, RegisterDto, UpdateMeDto } from "./dto";
-import { Public } from "../../shared/middleware/decorators/public.decorator";
-import { JwtAuthGuard } from "../../shared/middleware/guards/jwt-auth.guard";
-import { Request } from "express";
-import axios from "axios";
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { AuthService, AuthResponse } from './auth.service';
 import {
-  ReqMeta,
-  RequestMeta,
-} from "@/shared/middleware/decorators/request-meta.decorator";
-import { RegistrationAuthGuard } from "@/shared/middleware/guards/registration-auth.guard";
-import { OptionalJwtAuthGuard } from "@/shared/middleware/guards/optional-jwt.guard";
+  RequestOtpDto,
+  VerifyOtpDto,
+  RegisterDto,
+  UpdateMeDto,
+  RequestEmailOtpDto,
+  VerifyEmailOtpDto,
+  EmailLoginFallbackDto,
+} from './dto';
+import { Public } from '../../shared/middleware/decorators/public.decorator';
+import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
+import { Request } from 'express';
+import axios from "axios";
+import { ReqMeta, RequestMeta } from '@/shared/middleware/decorators/request-meta.decorator';
+import { RegistrationAuthGuard } from '@/shared/middleware/guards/registration-auth.guard';
 
 interface AuthenticatedRequest extends Request {
-  user: { id: string; mobileNumber: string; role: string; sid: string };
+  user: { id: string; mobileNumber: string; role: string, sid:string };
 }
 
-export enum EmailOtpPurpose {
-  EMAIL_SYNC = "EMAIL_SYNC",
-  EMAIL_LOGIN = "EMAIL_LOGIN",
-}
+// Same limit as the mobile OTP request: 10 calls per 15 minutes.
+const EMAIL_OTP_THROTTLE = { default: { limit: 10, ttl: 900_000 } };
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -45,7 +47,7 @@ export class AuthController {
    * Rate-limited: 3 OTP requests per 15-minute window per mobile number.
    */
   @Public()
-  @Post("request-otp")
+  @Post('request-otp')
   @Throttle({ default: { limit: 10, ttl: 900_000 } }) // 10 per 15 min
   @HttpCode(HttpStatus.OK)
   async requestOtp(@Body() dto: RequestOtpDto) {
@@ -58,9 +60,9 @@ export class AuthController {
    * who still need to complete registration.
    */
   @Public()
-  @Post("verify-otp")
+  @Post('verify-otp')
   @HttpCode(HttpStatus.OK)
-  async verifyOtp(@Body() dto: VerifyOtpDto, @ReqMeta() meta?: RequestMeta) {
+  async verifyOtp(@Body() dto: VerifyOtpDto, @ReqMeta() meta?:RequestMeta) {
     return this.authService.verifyOtp(dto.mobileNumber, dto, meta);
   }
 
@@ -72,26 +74,26 @@ export class AuthController {
   // Public so the global JWT guard skips it; RegistrationAuthGuard checks the registration token.
   @Public()
   @UseGuards(RegistrationAuthGuard)
-  @Post("register")
-  @HttpCode(HttpStatus.CREATED)
-  async register(
-    @Body() dto: RegisterDto,
-    @Req() req: { user: { id: string } },
-    @ReqMeta() meta?: RequestMeta,
-  ) {
-    return this.authService.register(dto, req.user.id, meta);
-  }
+@Post('register')
+@HttpCode(HttpStatus.CREATED)
+async register(
+  @Body() dto: RegisterDto,
+  @Req() req: { user: { id: string } },
+  @ReqMeta() meta?: RequestMeta,
+) {
+  return this.authService.register(dto, req.user.id, meta);
+}
 
   /**
    * POST /auth/refresh
    * Exchange a valid refresh token for a new access token.
    */
   @Public()
-  @Post("refresh")
+  @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body("refreshToken") refreshToken: string) {
+  async refresh(@Body('refreshToken') refreshToken: string) {
     if (!refreshToken) {
-      throw new BadRequestException("refreshToken is required");
+      throw new BadRequestException('refreshToken is required');
     }
     return this.authService.refreshTokens(refreshToken);
   }
@@ -101,7 +103,7 @@ export class AuthController {
    * Return the authenticated user's public profile.
    */
   @UseGuards(JwtAuthGuard)
-  @Get("me")
+  @Get('me')
   @HttpCode(HttpStatus.OK)
   async me(@Req() req: AuthenticatedRequest) {
     const user = await this.authService.getProfile(req.user.id);
@@ -113,9 +115,12 @@ export class AuthController {
    * Update the authenticated user's own profile (name, languagePreference).
    */
   @UseGuards(JwtAuthGuard)
-  @Patch("me")
+  @Patch('me')
   @HttpCode(HttpStatus.OK)
-  async updateMe(@Req() req: AuthenticatedRequest, @Body() dto: UpdateMeDto) {
+  async updateMe(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateMeDto,
+  ) {
     const user = await this.authService.updateMe(req.user.id, dto);
     return { user };
   }
@@ -126,12 +131,12 @@ export class AuthController {
    * All previously issued tokens become invalid instantly.
    */
   @UseGuards(JwtAuthGuard)
-  @Post("logout")
-  @HttpCode(HttpStatus.OK)
-  async logout(@Req() req: AuthenticatedRequest) {
-    await this.authService.logout(req.user.id, req.user.sid);
-    return { message: "Logged out successfully" };
-  }
+@Post('logout')
+@HttpCode(HttpStatus.OK)
+async logout(@Req() req: AuthenticatedRequest) {
+  await this.authService.logout(req.user.id, req.user.sid);
+  return { message: 'Logged out successfully' };
+}
 
   /**
    * GET /auth/check-username?username=rakesh42
@@ -139,11 +144,11 @@ export class AuthController {
    * Redis-first for fast lookups; DB fallback on cache miss.
    */
   @Public()
-  @Get("check-username")
+  @Get('check-username')
   @HttpCode(HttpStatus.OK)
-  async checkUsername(@Query("username") username: string) {
+  async checkUsername(@Query('username') username: string) {
     if (!username || username.trim().length < 3) {
-      throw new BadRequestException("Username must be at least 3 characters");
+      throw new BadRequestException('Username must be at least 3 characters');
     }
     return this.authService.checkUsername(username);
   }
@@ -153,135 +158,100 @@ export class AuthController {
    * Returns suggested available usernames based on the given base string.
    */
   @Public()
-  @Get("suggest-usernames")
+  @Get('suggest-usernames')
   @HttpCode(HttpStatus.OK)
   async suggestUsernames(
-    @Query("base") base: string,
-    @Query("limit") limit = "5",
+    @Query('base') base: string,
+    @Query('limit') limit = '5',
   ) {
     if (!base || base.trim().length < 2) {
-      throw new BadRequestException(
-        "Base username must be at least 2 characters",
-      );
+      throw new BadRequestException('Base username must be at least 2 characters');
     }
     const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 5, 1), 10);
-    const suggestions = await this.authService.suggestUsernames(
-      base,
-      parsedLimit,
-    );
+    const suggestions = await this.authService.suggestUsernames(base, parsedLimit);
     return { suggestions };
   }
 
   @Public()
-  @Get("get-crops")
+  @Get('get-crops')
   @HttpCode(HttpStatus.OK)
-  async getCrops() {
-    try {
-      const resposne = await axios.get(
-        `${process.env.REVIEWER_URI}/crops/get-all-crops-client`,
-        {
-          headers: {
-            "x-internal-api-key": process.env.REVIEW_SYSTEM_AUTH_KEY,
-          },
+  async getCrops(){
+    try{
+          const resposne = await axios.get(`${process.env.REVIEWER_URI}/crops/get-all-crops-client`, 
+      {
+        headers:{
+          'x-internal-api-key':process.env.REVIEW_SYSTEM_AUTH_KEY
         },
-      );
-      return resposne.data;
-    } catch (err) {
+      }
+    )
+    return resposne.data
+    }catch(err){
       console.error("Something went wrong", err);
       // Surface upstream failures instead of replying 200 with an empty body.
-      throw new BadGatewayException("Unable to fetch crops");
+      throw new BadGatewayException('Unable to fetch crops');
     }
   }
 
-  @Public()
-  @Post("sync-email")
+  /**
+   * POST /auth/sync-email
+   * Sends an OTP to an email address the signed-in user wants to link.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('sync-email')
+  @Throttle(EMAIL_OTP_THROTTLE)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(OptionalJwtAuthGuard)
   async syncEmail(
     @Req() req: AuthenticatedRequest,
-    @Body("email") email: string,
-    @Body("purpose") purpose: EmailOtpPurpose,
+    @Body() dto: RequestEmailOtpDto,
   ) {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new BadRequestException("Invalid email address");
-    }
-
-    if (!Object.values(EmailOtpPurpose).includes(purpose)) {
-      throw new BadRequestException("Invalid OTP purpose");
-    }
-
-    if (purpose === EmailOtpPurpose.EMAIL_SYNC && !req.user?.id) {
-      throw new UnauthorizedException("Authentication required to sync email");
-    }
-
-    return this.authService.requestEmailOtp(email, purpose, req.user?.id);
+    return this.authService.requestEmailOtp(req.user.id, dto.email);
   }
 
-  /** Fallback for a failed or rate-limited mobile OTP: use the account's linked email. */
-  @Public()
-  @Post("request-email-login-fallback")
+  /**
+   * POST /auth/verify-email-otp
+   * Links the email address once the signed-in user confirms its OTP.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('verify-email-otp')
+  @Throttle(EMAIL_OTP_THROTTLE)
   @HttpCode(HttpStatus.OK)
-  async requestEmailLoginFallback(
-    @Body("mobileNumber") mobileNumber: string,
-  ) {
-    if (!mobileNumber || !/^(?:\+91)?[6-9]\d{9}$/.test(mobileNumber)) {
-      throw new BadRequestException("Invalid mobile number");
-    }
-
-    return this.authService.requestEmailLoginFallback(mobileNumber);
-  }
-
-  @Public()
-  @Post("verify-email-otp")
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(OptionalJwtAuthGuard)
   async verifyEmailOtp(
     @Req() req: AuthenticatedRequest,
-    @Body("email") email: string,
-    @Body("otp") otp: string,
-    @Body("purpose") purpose: EmailOtpPurpose,
+    @Body() dto: VerifyEmailOtpDto,
+  ) {
+    return this.authService.verifyEmailOtp(req.user.id, dto.email, dto.otp);
+  }
+
+  /**
+   * POST /auth/request-email-login-fallback
+   * Sends a login OTP to the verified email linked to a mobile number, for when
+   * the mobile OTP cannot be delivered.
+   */
+  @Public()
+  @Post('request-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async requestEmailLoginFallback(@Body() dto: EmailLoginFallbackDto) {
+    return this.authService.requestEmailLoginFallback(dto.mobileNumber);
+  }
+
+  /**
+   * POST /auth/verify-email-login-fallback
+   * Signs in with the email OTP. The response has the same shape as verify-otp.
+   */
+  @Public()
+  @Post('verify-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailLoginFallback(
+    @Body() dto: VerifyOtpDto,
     @ReqMeta() meta?: RequestMeta,
   ) {
-    if (!otp || !/^\d{6}$/.test(otp)) {
-      throw new BadRequestException("Invalid OTP");
-    }
-
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new BadRequestException("Invalid email address");
-    }
-
-    if (!Object.values(EmailOtpPurpose).includes(purpose)) {
-      throw new BadRequestException("Invalid OTP purpose");
-    }
-
-    if (purpose === EmailOtpPurpose.EMAIL_SYNC && !req.user?.id) {
-      throw new UnauthorizedException("Authentication required to sync email");
-    }
-
-    return this.authService.verifyEmailOtp(
-      email,
-      otp,
-      purpose,
-      req.user?.id,
+    return this.authService.verifyEmailLoginFallback(
+      dto.mobileNumber,
+      dto.otp,
       meta,
     );
   }
-
-  @Public()
-  @Post("verify-email-login-fallback")
-  @HttpCode(HttpStatus.OK)
-  async verifyEmailLoginFallback(
-    @Body("mobileNumber") mobileNumber: string,
-    @Body("otp") otp: string,
-    @ReqMeta() meta?: RequestMeta,
-  ) {
-    if (!mobileNumber || !/^(?:\+91)?[6-9]\d{9}$/.test(mobileNumber)) {
-      throw new BadRequestException("Invalid mobile number");
-    }
-    if (!otp || !/^\d{6}$/.test(otp)) {
-      throw new BadRequestException("Invalid OTP");
-    }
-
-    return this.authService.verifyEmailLoginFallback(mobileNumber, otp, meta);
-  }
 }
+

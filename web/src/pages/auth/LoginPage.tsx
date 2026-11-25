@@ -201,6 +201,7 @@ function StepOtp({
   onSubmit,
   onBack,
   onResend,
+  onUseEmail,
 }: {
   identifier: string;
   method: "phone" | "email";
@@ -211,6 +212,7 @@ function StepOtp({
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
   onResend: () => void;
+  onUseEmail?: () => void;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -324,11 +326,41 @@ function StepOtp({
             : t('loginPage.didnReceiveItResend')}
         </button>
       </div>
+
+      {/* SMS can be accepted by the gateway and still never arrive, so the email code is always offered. */}
+      {onUseEmail && (
+        <div className="flex items-center justify-center border-t border-[hsl(var(--border-subtle))] pt-3">
+          <button
+            type="button"
+            onClick={onUseEmail}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--primary))] hover:underline disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+          >
+            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+            Get the code by email instead
+          </button>
+        </div>
+      )}
     </form>
   );
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────
+
+// Mobile OTP failures that an email OTP can work around: SMS delivery that failed
+// or timed out, and the per-number OTP request limit.
+const EMAIL_FALLBACK_ERROR_CODES = new Set(["OTP_DELIVERY_FAILED", "OTP_RATE_LIMITED"]);
+const EMAIL_FALLBACK_STATUSES = new Set([408, 429]);
+
+// Returns true when the email login fallback is worth offering for an OTP request error.
+function canUseEmailFallback(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const { status, data } = err as { status?: number; data?: { code?: string } };
+  return (
+    (status !== undefined && EMAIL_FALLBACK_STATUSES.has(status)) ||
+    (data?.code !== undefined && EMAIL_FALLBACK_ERROR_CODES.has(data.code))
+  );
+}
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -368,7 +400,7 @@ export function LoginPage() {
       toast.success(t('loginPage.otpSentToYour'));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to send OTP"));
-      setEmailFallbackOpen(true);
+      if (canUseEmailFallback(err)) setEmailFallbackOpen(true);
     } finally {
       setLoading(false);
     }
@@ -383,7 +415,7 @@ export function LoginPage() {
       setOtp("");
       setStep(2);
       countdown.start();
-      toast.success("OTP sent to your linked email");
+      toast.success("If a verified email is linked to this account, we've sent the OTP there.");
     } catch (err) {
       toast.error(getErrorMessage(err, "Unable to send an email OTP"));
     } finally {
@@ -445,7 +477,11 @@ export function LoginPage() {
   }
   setLoading(true);
   try {
-    const res = await authApi.verifyOtp(mobile, cleaned);
+    // An email OTP from the fallback signs in through the same flow as an SMS OTP.
+    const res =
+      otpDelivery === "email"
+        ? await authApi.verifyEmailLoginFallback(mobile, cleaned)
+        : await authApi.verifyOtp(mobile, cleaned);
 
     if ("requiresRegistration" in res && res.requiresRegistration) {
       if (res.tempToken) {
@@ -497,30 +533,6 @@ export function LoginPage() {
     setLoading(false);
   }
 }
-
-  async function handleVerifyEmailFallback(e: React.FormEvent) {
-    e.preventDefault();
-    const cleaned = otp.replace(/\D/g, "").slice(0, 6);
-    if (cleaned.length !== 6) {
-      toast.error(t('loginPage.enterTheDigitOtp'));
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await authApi.verifyEmailLoginFallback(mobile, cleaned);
-      login(
-        { accessToken: res.tokens.accessToken, refreshToken: res.tokens.refreshToken },
-        { ...res.user, token: res.tokens.accessToken },
-      );
-      toast.success(t('loginPage.welcomeBack'));
-      navigate(res.user.role === "user" ? "/home" : "/dashboard", { replace: true });
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Invalid OTP"));
-      setOtp("");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleResend() {
     if (countdown.active) return;
@@ -662,9 +674,10 @@ export function LoginPage() {
                       setOtp={setOtp}
                       loading={loading}
                       countdown={countdown}
-                      onSubmit={otpDelivery === "phone" ? handleVerifyOtp : handleVerifyEmailFallback}
+                      onSubmit={handleVerifyOtp}
                       onBack={handleBack}
                       onResend={handleResend}
+                      onUseEmail={otpDelivery === "phone" ? () => setEmailFallbackOpen(true) : undefined}
                     />
                   )}
                 </motion.div>
@@ -704,7 +717,7 @@ export function LoginPage() {
               <Mail className="h-4 w-4 text-primary" /> Use email OTP instead?
             </DialogTitle>
             <DialogDescription>
-              We could not send a mobile OTP. If you have already linked and verified an email for this account, we can send the code there instead.
+              If an email is linked to this account, we can send the sign-in code there instead.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">

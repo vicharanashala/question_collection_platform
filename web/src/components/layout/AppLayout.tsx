@@ -55,7 +55,7 @@ export function AppLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header onOpenMobileNav={openMobileNav} />
-        <EmailLinkBanner hidden={location.pathname === '/profile'} />
+        <EmailLinkBanner />
         <VerificationBanner />
         <AnimatePresence initial={false}>
           {anveshanScope !== 'all' && (
