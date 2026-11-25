@@ -47,6 +47,7 @@ import { Candidate } from "@/shared/database/mongodb/schemas/anveshan.schema";
 import { SessionMeta, SessionService } from "../session/session.service";
 import { RequestMeta } from "@/shared/middleware/decorators/request-meta.decorator";
 import { EmailService } from "./email.service";
+import { buildOtpEmail } from "./templates/otp-email.template";
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -135,11 +136,6 @@ const CLEARED_EMAIL_OTP = {
   emailOtpPurpose: null,
   emailOtpAttempts: 0,
 } satisfies Partial<User>;
-
-const EMAIL_OTP_SUBJECTS: Record<EmailOtpPurpose, string> = {
-  [EmailOtpPurpose.EMAIL_SYNC]: "Email Verification OTP",
-  [EmailOtpPurpose.EMAIL_LOGIN]: "Login OTP",
-};
 
 const EMAIL_TAKEN_MESSAGE =
   "This email is already associated with another account";
@@ -1300,10 +1296,12 @@ async logout(userId: string, sid: string): Promise<void> {
     }
 
     try {
+      const message = buildOtpEmail(otp, purpose, this.otpExpiryMinutes);
       await this.emailService.sendSyncEmailToUser(
         email,
-        EMAIL_OTP_SUBJECTS[purpose],
-        `Your OTP is ${otp}. It will expire in ${this.otpExpiryMinutes} minutes.`,
+        message.subject,
+        message.text,
+        message.html,
       );
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);

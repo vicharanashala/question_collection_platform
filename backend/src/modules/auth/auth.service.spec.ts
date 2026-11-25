@@ -787,7 +787,8 @@ describe('AuthService email OTP', () => {
       });
       expect(emailService.sendSyncEmailToUser).toHaveBeenCalledWith(
         email,
-        'Login OTP',
+        'Your AnnaDatha sign-in code',
+        expect.any(String),
         expect.any(String),
       );
     });
@@ -808,8 +809,9 @@ describe('AuthService email OTP', () => {
       );
       expect(emailService.sendSyncEmailToUser).toHaveBeenCalledWith(
         email,
-        'Login OTP',
-        expect.stringMatching(/Your OTP is \d{6}\./),
+        'Your AnnaDatha sign-in code',
+        expect.stringMatching(/Your code: \d{6}/),
+        expect.stringMatching(/cid:annam-logo[\s\S]*>\d{6}</),
       );
     });
   });
