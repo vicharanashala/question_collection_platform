@@ -10,6 +10,9 @@ import { Toaster } from '@/components/ui/sonner'
 import '@/i18n'
 import './index.css'
 
+// Development only: warns when changed files still have text to translate.
+if (import.meta.env.DEV) void import('@/lib/i18nPendingNotice')
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, type KeyboardEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ANVESHAN_TAGLINE } from "@/constants/public";
+import { ANVESHAN_PLATFORM_URL, ANVESHAN_TAGLINE } from "@/constants/public";
 import { motion, AnimatePresence } from "framer-motion";
 import { authApi, getErrorMessage, setRegistrationToken } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +24,9 @@ import {
   Sprout,
   Camera,
   Award,
+  Mail,
+  AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalDocumentModal } from "@/components/ui/legal-document-modal";
@@ -190,7 +194,8 @@ function StepMobile({
 // ─── Step 2: OTP ───────────────────────────────────────────────────────────
 
 function StepOtp({
-  mobile,
+  identifier,
+  method,
   otp,
   setOtp,
   loading,
@@ -198,8 +203,10 @@ function StepOtp({
   onSubmit,
   onBack,
   onResend,
+  onUseEmail,
 }: {
-  mobile: string;
+  identifier: string;
+  method: "phone" | "email";
   otp: string;
   setOtp: (v: string) => void;
   loading: boolean;
@@ -207,6 +214,7 @@ function StepOtp({
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
   onResend: () => void;
+  onUseEmail?: () => void;
 }) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -230,11 +238,11 @@ function StepOtp({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Mobile badge */}
+      {/* Delivery address badge */}
       <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border-subtle))] bg-[hsl(var(--surface-variant))] px-3 py-2.5">
-        <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
-        <span className="text-xs font-medium text-[hsl(var(--text))] flex-1">
-          +91 {mobile}
+        {method === "phone" ? <Smartphone className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" /> : <Mail className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />}
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[hsl(var(--text))]">
+          {method === "phone" ? `+91 ${identifier}` : identifier}
         </span>
         <button
           type="button"
@@ -283,7 +291,9 @@ function StepOtp({
           className="sr-only"
           maxLength={6}
         />
-        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">{t('loginPage.enterTheDigitCode')}</p>
+        <p className="text-[11px] text-[hsl(var(--text-tertiary))] text-center">
+          {method === "email" ? "Enter the 6-digit code sent to your email" : t('loginPage.enterTheDigitCode')}
+        </p>
       </div>
 
       <Button
@@ -320,11 +330,41 @@ function StepOtp({
             : t('loginPage.didnReceiveItResend')}
         </button>
       </div>
+
+      {/* SMS can be accepted by the gateway and still never arrive, so the email code is always offered. */}
+      {onUseEmail && (
+        <div className="flex items-center justify-center border-t border-[hsl(var(--border-subtle))] pt-3">
+          <button
+            type="button"
+            onClick={onUseEmail}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--primary))] hover:underline disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+          >
+            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+            Get the code by email instead
+          </button>
+        </div>
+      )}
     </form>
   );
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────
+
+// Mobile OTP failures that an email OTP can work around: SMS delivery that failed
+// or timed out, and the per-number OTP request limit.
+const EMAIL_FALLBACK_ERROR_CODES = new Set(["OTP_DELIVERY_FAILED", "OTP_RATE_LIMITED"]);
+const EMAIL_FALLBACK_STATUSES = new Set([408, 429]);
+
+// Returns true when the email login fallback is worth offering for an OTP request error.
+function canUseEmailFallback(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const { status, data } = err as { status?: number; data?: { code?: string } };
+  return (
+    (status !== undefined && EMAIL_FALLBACK_STATUSES.has(status)) ||
+    (data?.code !== undefined && EMAIL_FALLBACK_ERROR_CODES.has(data.code))
+  );
+}
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -336,17 +376,29 @@ export function LoginPage() {
   const { theme, toggleTheme } = useTheme();
 
   const [step, setStep] = useState<1 | 2>(1);
+  const [otpDelivery, setOtpDelivery] = useState<"phone" | "email">("phone");
   const location = useLocation();
   // "Check again" on the Anveshan phase gate returns here with the number filled in.
   const prefilledMobile = (location.state as { mobileNumber?: string } | null)?.mobileNumber ?? "";
   const [mobile, setMobile] = useState(prefilledMobile);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailFallbackOpen, setEmailFallbackOpen] = useState(false);
+  const [emailFallbackLoading, setEmailFallbackLoading] = useState(false);
+  // Masked address from the server, shown on the code screen.
+  const [linkedEmail, setLinkedEmail] = useState("");
+  const [emailFallbackError, setEmailFallbackError] = useState("");
+  // Masked address the dialog offers to send the code to, looked up when it opens.
+  const [fallbackEmail, setFallbackEmail] = useState("");
+  const [fallbackEmailLoading, setFallbackEmailLoading] = useState(false);
+  // Anveshan candidate whose email is only used after the Ground Truth Module.
+  const [anveshanPhasePending, setAnveshanPhasePending] = useState(false);
+  const sendEmailCodeRef = useRef<HTMLButtonElement>(null);
   const countdown = useCountdown();
   const [legalDoc, setLegalDoc] = useState<"terms" | "privacy" | null>(null);
 
-  async function handleSendOtp(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSendOtp(e?: React.FormEvent) {
+    e?.preventDefault();
     const cleaned = mobile.replace(/\D/g, "").slice(0, 10);
     if (!/^[6-9]\d{9}$/.test(cleaned)) {
       toast.error(t('loginPage.mobileNumberMustBe'));
@@ -355,13 +407,81 @@ export function LoginPage() {
     setLoading(true);
     try {
       await authApi.requestOtp(cleaned, false);
+      setOtpDelivery("phone");
       setStep(2);
       countdown.start();
       toast.success(t('loginPage.otpSentToYour'));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to send OTP"));
+      if (canUseEmailFallback(err)) setEmailFallbackOpen(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Leaves the email option: tries the SMS again from the first screen, or returns to the
+  // SMS code screen when a code was already sent.
+  function handleContinueWithPhone() {
+    setEmailFallbackOpen(false);
+    setEmailFallbackError("");
+    setAnveshanPhasePending(false);
+    if (step === 1) void handleSendOtp();
+  }
+
+  // Shows why the email option is unavailable inside the dialog, or as a toast for other errors.
+  function showEmailFallbackError(err: unknown, fallbackMessage: string) {
+    const code = (err as { data?: { code?: string } })?.data?.code;
+    if (code === "EMAIL_NOT_LINKED") {
+      setEmailFallbackError(getErrorMessage(err, "No email is linked with this account."));
+    } else if (code === "ANVESHAN_PHASE_PENDING") {
+      setAnveshanPhasePending(true);
+    } else {
+      toast.error(getErrorMessage(err, fallbackMessage));
+    }
+  }
+
+  // Looks up the masked linked email each time the dialog opens, before any code is sent.
+  useEffect(() => {
+    if (!emailFallbackOpen) return;
+    let cancelled = false;
+    setFallbackEmail("");
+    setEmailFallbackError("");
+    setAnveshanPhasePending(false);
+    setFallbackEmailLoading(true);
+    authApi
+      .previewEmailLoginFallback(mobile)
+      .then(({ maskedEmail }) => {
+        if (!cancelled) setFallbackEmail(maskedEmail);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) showEmailFallbackError(err, "Unable to check the linked email");
+      })
+      .finally(() => {
+        if (!cancelled) setFallbackEmailLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Runs only when the dialog opens; the number cannot change while it is open.
+  }, [emailFallbackOpen]);
+
+  async function handleEmailFallback() {
+    setEmailFallbackLoading(true);
+    setEmailFallbackError("");
+    setAnveshanPhasePending(false);
+    try {
+      const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
+      setLinkedEmail(maskedEmail ?? "your linked email");
+      setEmailFallbackOpen(false);
+      setOtpDelivery("email");
+      setOtp("");
+      setStep(2);
+      countdown.start();
+      toast.success(`OTP sent to ${maskedEmail ?? "your linked email"}`);
+    } catch (err) {
+      showEmailFallbackError(err, "Unable to send an email OTP");
+    } finally {
+      setEmailFallbackLoading(false);
     }
   }
 
@@ -419,7 +539,11 @@ export function LoginPage() {
   }
   setLoading(true);
   try {
-    const res = await authApi.verifyOtp(mobile, cleaned);
+    // An email OTP from the fallback signs in through the same flow as an SMS OTP.
+    const res =
+      otpDelivery === "email"
+        ? await authApi.verifyEmailLoginFallback(mobile, cleaned)
+        : await authApi.verifyOtp(mobile, cleaned);
 
     if ("requiresRegistration" in res && res.requiresRegistration) {
       if (res.tempToken) {
@@ -477,7 +601,12 @@ export function LoginPage() {
     setOtp("");
     setLoading(true);
     try {
-      await authApi.requestOtp(mobile, false);
+      if (otpDelivery === "email") {
+        const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
+        setLinkedEmail(maskedEmail ?? "your linked email");
+      } else {
+        await authApi.requestOtp(mobile, false);
+      }
       countdown.start();
       toast.success(t('loginPage.newOtpSent'));
     } catch (err) {
@@ -490,6 +619,7 @@ export function LoginPage() {
   function handleBack() {
     setStep(1);
     setOtp("");
+    setOtpDelivery("phone");
     countdown.stop();
   }
 
@@ -579,7 +709,7 @@ export function LoginPage() {
                 <p className="mt-0.5 text-xs text-[hsl(var(--text-secondary))]">
                   {step === 1
                     ? t('loginPhone.signInDesc')
-                    : `OTP sent to +91 ${mobile}`}
+                    : `OTP sent to ${otpDelivery === "phone" ? `+91 ${mobile}` : linkedEmail}`}
                 </p>
               </div>
 
@@ -601,7 +731,8 @@ export function LoginPage() {
                     />
                   ) : (
                     <StepOtp
-                      mobile={mobile}
+                      identifier={otpDelivery === "phone" ? mobile : linkedEmail}
+                      method={otpDelivery}
                       otp={otp}
                       setOtp={setOtp}
                       loading={loading}
@@ -609,6 +740,7 @@ export function LoginPage() {
                       onSubmit={handleVerifyOtp}
                       onBack={handleBack}
                       onResend={handleResend}
+                      onUseEmail={otpDelivery === "phone" ? () => setEmailFallbackOpen(true) : undefined}
                     />
                   )}
                 </motion.div>
@@ -640,6 +772,116 @@ export function LoginPage() {
         open={legalDoc !== null}
         onOpenChange={(open) => !open && setLegalDoc(null)}
       />
+
+      <Dialog
+        open={emailFallbackOpen}
+        onOpenChange={(open) => {
+          setEmailFallbackOpen(open);
+          if (!open) {
+            setEmailFallbackError("");
+            setAnveshanPhasePending(false);
+          }
+        }}
+      >
+        <DialogContent
+          className="gap-0 overflow-hidden p-0 sm:max-w-md"
+          // Focus the main action, so Enter sends the email code.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            sendEmailCodeRef.current?.focus();
+          }}
+        >
+          <div className="px-5 pb-6 pt-7 sm:px-6">
+            <DialogHeader className="items-center space-y-1 text-center">
+              <span
+                aria-hidden="true"
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5 dark:text-emerald-300"
+              >
+                <Mail className="h-5 w-5" />
+              </span>
+              <DialogTitle className="text-lg sm:text-xl">Get your code by email</DialogTitle>
+              <DialogDescription className="max-w-sm text-sm leading-relaxed">
+                {step === 1
+                  ? `We could not send an SMS to +91 ${mobile} right now. `
+                  : "SMS not arriving? "}
+                We can send the sign-in code to the email linked to this account instead.
+              </DialogDescription>
+            </DialogHeader>
+            {fallbackEmailLoading && (
+              <div
+                role="status"
+                className="mx-auto mt-5 flex h-11 max-w-xs items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-variant/40 text-sm text-text-secondary"
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Checking linked email
+              </div>
+            )}
+            {!fallbackEmailLoading && fallbackEmail && (
+              <div className="mx-auto mt-5 flex max-w-xs items-center gap-3 rounded-lg border border-border-subtle bg-surface-variant/40 px-3 py-2.5">
+                <Mail className="h-4 w-4 shrink-0 text-primary dark:text-emerald-300" aria-hidden="true" />
+                <div className="min-w-0 text-left">
+                  <p className="text-xs text-text-tertiary">Code will be sent to</p>
+                  <p className="truncate text-sm font-medium text-text">{fallbackEmail}</p>
+                </div>
+              </div>
+            )}
+            {emailFallbackError && (
+              <div
+                role="alert"
+                className="mt-5 flex items-start gap-2 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{emailFallbackError} You can link one from your profile after you sign in.</span>
+              </div>
+            )}
+            {anveshanPhasePending && (
+              <div
+                role="alert"
+                className="mt-5 rounded-lg border border-primary/25 bg-primary/5 px-3 py-3 text-sm text-text dark:border-emerald-400/30"
+              >
+                <div className="flex items-start gap-2">
+                  <Sprout className="mt-0.5 h-4 w-4 shrink-0 text-primary dark:text-emerald-300" aria-hidden="true" />
+                  <p className="leading-relaxed">
+                    Your account needs to be in the <strong>{ANVESHAN_TAGLINE}</strong> on the Anveshan platform to
+                    receive sign-in codes by email.
+                  </p>
+                </div>
+                <a
+                  href={ANVESHAN_PLATFORM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-6 mt-3 inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  Go to Anveshan
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col-reverse gap-2 border-t border-border-subtle bg-surface-variant/40 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <Button variant="outline" className="h-10" onClick={handleContinueWithPhone} disabled={emailFallbackLoading}>
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+              Continue with phone
+            </Button>
+            <Button
+              ref={sendEmailCodeRef}
+              className="h-10 min-w-44"
+              onClick={() => void handleEmailFallback()}
+              disabled={
+                emailFallbackLoading || fallbackEmailLoading || !fallbackEmail || !!emailFallbackError || anveshanPhasePending
+              }
+            >
+              {emailFallbackLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Mail className="h-4 w-4" aria-hidden="true" />
+              )}
+              {emailFallbackLoading ? "Sending code" : "Send code to email"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

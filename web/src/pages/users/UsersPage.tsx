@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronsUpDown,
+  Mail,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
@@ -540,6 +541,7 @@ export function UsersPage() {
                 <SortableHeader label={t('profile.completion.fieldRole')} sortKey="role" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label={t('submissions.status')} sortKey="verificationStatus" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label={t('profile.location')} sortKey="state" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Email</th>
                 <SortableHeader newBadge label={t('usersPage.anveshanProgress')} sortKey="anveshanProgress" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label={t('profilePage.joined')} sortKey="createdAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
                 <SortableHeader label={t('profilePage.lastLogin')} sortKey="lastLoginAt" activeKey={sortBy} order={sortOrder} onSort={handleSort} />
@@ -550,7 +552,7 @@ export function UsersPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 8 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-24 rounded bg-surface-variant animate-pulse" />
                       </td>
@@ -560,7 +562,7 @@ export function UsersPage() {
               ) : users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="py-12 text-center text-text-secondary"
                   >{t('usersPage.noUsersFound')}</td>
                 </tr>
@@ -669,6 +671,17 @@ export function UsersPage() {
                       <td className="px-4 py-3 text-text-secondary">
                         {[u.district, u.state].filter(Boolean).join(", ") ||
                           "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {u.emailLinked ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                            <Mail className="h-3.5 w-3.5" /> Linked
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-variant px-2 py-0.5 text-[11px] font-semibold text-text-secondary">
+                            <Mail className="h-3.5 w-3.5" /> Not linked
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {u.anveshanProgress ? (

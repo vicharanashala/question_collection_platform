@@ -63,10 +63,12 @@ function normalizeBatchResult(result, expectedItem) {
   return translatedText.trim();
 }
 
-async function translateEntries(entries, provider, options = {}) {
+// onProgress receives { phase, completed, total, language } as languages finish and failures are retried.
+async function translateEntries(entries, provider, options = {}, onProgress = () => {}) {
   const settings = { ...DEFAULTS, ...options };
   const batchSize = settings.batchSize;
   const results = [];
+  const totalItems = entries.length * Object.keys(LANGUAGES).length;
 
   for (const [language, targetLanguage] of Object.entries(LANGUAGES)) {
     const languageBatches = chunk(entries, batchSize).map((items) => ({
@@ -93,14 +95,7 @@ async function translateEntries(entries, provider, options = {}) {
           // This isolates problematic items and preserves successful results from other batches.
           return mapWithConcurrency(batch.items, settings.requestConcurrency, async (item) => {
             try {
-              const singleton = await withRetry(
-                () => provider.translateBatch([item], batch.targetLanguage, settings.sourceLanguage),
-                settings
-              );
-              const match = singleton.find((row) => row.key === item.key);
-              const translatedText = normalizeBatchResult(match, item);
-              const validation = validateTranslation(item.text, translatedText);
-              return makeResult(item, batch, translatedText, validation);
+              return await translateSingleItem(provider, item, batch, settings);
             } catch (error) {
               return makeFailedResult(item, batch, error);
             }
@@ -110,14 +105,10 @@ async function translateEntries(entries, provider, options = {}) {
         const byKey = new Map(responseItems.map((row) => [row.key, row]));
         return mapWithConcurrency(batch.items, settings.requestConcurrency, async (item) => {
           try {
-            let row = byKey.get(item.key);
+            const row = byKey.get(item.key);
             if (!row || row.status === "failed" || row.error) {
               // Retry only the failed/missing item; don't repeat successful translations.
-              const singleton = await withRetry(
-                () => provider.translateBatch([item], batch.targetLanguage, settings.sourceLanguage),
-                settings
-              );
-              row = singleton.find((candidate) => candidate.key === item.key);
+              return await translateSingleItem(provider, item, batch, settings);
             }
             const translatedText = normalizeBatchResult(row, item);
             const validation = validateTranslation(item.text, translatedText);
@@ -130,7 +121,10 @@ async function translateEntries(entries, provider, options = {}) {
     );
 
     for (const batchResult of batchResults) results.push(...batchResult);
+    onProgress({ phase: "translate", completed: results.length, total: totalItems, language });
   }
+
+  await retryFailedResults(results, entries, provider, settings, onProgress);
 
   const resultByKey = new Map();
   for (const result of results) {
@@ -178,6 +172,50 @@ async function translateEntries(entries, provider, options = {}) {
     },
     translations,
   };
+}
+
+// Turns a failed row inside a successful bulk response into an error that withRetry retries.
+function retryableItemError(row, item) {
+  const error = new Error(row?.error || row?.message || `Translation failed for ${item.key}`);
+  error.retryable = true;
+  return error;
+}
+
+// Translates one item through the bulk endpoint, retrying with growing pauses until it succeeds.
+async function translateSingleItem(provider, item, batch, settings) {
+  const row = await withRetry(async () => {
+    const rows = await provider.translateBatch([item], batch.targetLanguage, settings.sourceLanguage);
+    const match = rows.find((candidate) => candidate.key === item.key);
+    if (!match || match.status === "failed" || match.error) throw retryableItemError(match, item);
+    return match;
+  }, { ...settings, retryBaseDelayMs: settings.itemRetryDelayMs });
+  const translatedText = normalizeBatchResult(row, item);
+  return makeResult(item, batch, translatedText, validateTranslation(item.text, translatedText));
+}
+
+// Retries what is still failing, one at a time after a cool-down, so a rate limit can reset.
+async function retryFailedResults(results, entries, provider, settings, onProgress) {
+  const failed = results.filter((result) => result.status === "failed");
+  if (failed.length === 0 || settings.finalPassDelayMs <= 0) return;
+
+  onProgress({ phase: "cooldown", waitMs: settings.finalPassDelayMs, total: failed.length });
+  await sleep(settings.finalPassDelayMs);
+
+  const entryByKey = new Map(entries.map((entry) => [entry.key, entry]));
+  // One attempt each: the cool-down already gave the rate limit time to reset.
+  const singleAttempt = { ...settings, maxRetries: 1 };
+  for (const [index, previous] of failed.entries()) {
+    const item = entryByKey.get(previous.key);
+    const batch = { language: previous.language, targetLanguage: previous.targetLanguage };
+    let retried;
+    try {
+      retried = await translateSingleItem(provider, item, batch, singleAttempt);
+    } catch (error) {
+      retried = makeFailedResult(item, batch, error);
+    }
+    results[results.indexOf(previous)] = retried;
+    onProgress({ phase: "retry", completed: index + 1, total: failed.length, language: previous.language });
+  }
 }
 
 function makeResult(item, batch, translatedText, validation) {

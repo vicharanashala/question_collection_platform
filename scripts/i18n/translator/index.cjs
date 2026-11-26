@@ -4,7 +4,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 
-const { DEFAULTS } = require("./config.cjs");
+const { DEFAULTS, LANGUAGES } = require("./config.cjs");
+const { style, step, detail, createProgress, countdown, formatDuration, languageName } = require("./progress.cjs");
 const { SarvamProvider } = require("./providers/sarvam.cjs");
 const { validateApprovedEntries } = require("./validator.cjs");
 const { translateEntries } = require("./translator.cjs");
@@ -19,6 +20,14 @@ const defaultOutput = path.join(
   "scripts/i18n/reports/translation-preview.json"
 );
 const resourceFile = path.join(repoRoot, "web/src/i18n/resources.ts");
+
+// Used only for the up-front time estimate; the progress bar switches to measured speed.
+// The backend translates 5 items at a time per request (speech.controller.ts), and one
+// round of Sarvam calls takes roughly this long.
+const BACKEND_PARALLEL_TRANSLATIONS = 5;
+const ESTIMATED_MS_PER_ROUND = 2500;
+const ESTIMATED_MS_PER_RETRY = 4000;
+const STEPS = 3;
 
 function getArgument(name, fallback) {
   const index = process.argv.indexOf(name);
@@ -44,10 +53,11 @@ function runScanner(baseRef) {
     execFileSync(
       process.execPath,
       [scannerFile, "scan", "--base", baseRef, "--out", path.relative(repoRoot, scanReportFile)],
-      { cwd: repoRoot, stdio: "inherit" }
+      { cwd: repoRoot, stdio: ["ignore", "pipe", "pipe"] }
     );
   } catch (error) {
-    throw new Error(`Scanner failed${error.status ? ` (exit ${error.status})` : ""}.`);
+    const output = `${error.stdout || ""}${error.stderr || ""}`.trim();
+    throw new Error(`Scanner failed${error.status ? ` (exit ${error.status})` : ""}.${output ? `\n${output}` : ""}`);
   }
 
   if (!fs.existsSync(scanReportFile)) {
@@ -174,8 +184,90 @@ function writeGeneratedInput(entries, scanReport) {
 // Writes a validated translation report into resources.ts and prints what changed.
 function applyReport(report) {
   const result = applyTranslations(resourceFile, report);
-  console.log(`\nApplied ${result.added} missing resource values to ${path.relative(repoRoot, resourceFile)}.`);
-  console.log(`Backup created: ${path.relative(repoRoot, result.backupFile)}`);
+  detail(style.green(`✓ Added ${result.added} values to ${path.relative(repoRoot, resourceFile)}`));
+  detail(style.dim(`Backup: ${path.relative(repoRoot, result.backupFile)}`));
+}
+
+// Reads the parallel request count from --concurrency or I18N_CONCURRENCY, so a run can go slower.
+function getConcurrency() {
+  const value = Number(getArgument("--concurrency", process.env.I18N_CONCURRENCY || DEFAULTS.requestConcurrency));
+  if (!Number.isInteger(value) || value < 1) throw new Error("Concurrency must be a whole number of 1 or more.");
+  return value;
+}
+
+// Rough time for the whole run, shown before the first request.
+function estimateDurationMs(entryCount) {
+  const languageCount = Object.keys(LANGUAGES).length;
+  return languageCount * Math.ceil(entryCount / BACKEND_PARALLEL_TRANSLATIONS) * ESTIMATED_MS_PER_ROUND;
+}
+
+// Prints the scan in a few lines instead of the scanner's full JSON summary.
+function printScanSummary(scanReport, entries, skipped) {
+  const summary = scanReport.summary || {};
+  detail(`${summary.changedFilesScanned ?? 0} changed files, ${summary.changedLinesScanned ?? 0} changed lines`);
+  detail(`${style.bold(entries.length)} new strings to translate` +
+    style.dim(` · ${(scanReport.ambiguousFindings || []).length} held for review · ${(scanReport.dynamicKeys || []).length} dynamic keys`));
+  const reusable = skipped.filter(({ reason }) => reason.startsWith("Text already exists"));
+  if (reusable.length) {
+    detail(style.yellow(`${reusable.length} strings already have keys. Use these instead of translating again:`));
+    for (const { finding, reason } of reusable) {
+      const key = reason.match(/"([^"]+)"/)?.[1] ?? "?";
+      detail(`  • ${path.basename(finding.file ?? "unknown")}:${finding.line ?? "?"}  "${finding.text}" → ${style.cyan(key)}`);
+    }
+  }
+  for (const { finding, reason } of skipped.filter(({ reason }) => !reason.startsWith("Text already exists"))) {
+    detail(style.dim(`  • ${finding.file ?? "unknown"}:${finding.line ?? "?"} ${reason}`));
+  }
+}
+
+// Runs the translation with a live progress bar, countdown and retry pass.
+async function translateWithProgress(entries, provider, settings) {
+  const languageCount = Object.keys(LANGUAGES).length;
+  const total = entries.length * languageCount;
+  step(2, STEPS, `Translating ${entries.length} strings into ${languageCount} languages (${total} translations)`);
+  detail(style.dim(`Estimated time: about ${formatDuration(estimateDurationMs(entries.length))} · ${settings.requestConcurrency} parallel request(s)`));
+
+  const startedAt = Date.now();
+  const progress = createProgress(total, estimateDurationMs(entries.length));
+  let retryProgress;
+  const report = await translateEntries(entries, provider, settings, (event) => {
+    if (event.phase === "translate") {
+      progress.update(event.completed, `${languageName(event.language)} done`);
+    } else if (event.phase === "cooldown") {
+      progress.stop();
+      detail(style.yellow(`${event.total} translations failed, probably a rate limit. Retrying them one at a time.`));
+      void countdown(event.waitMs, "Pausing before the retry");
+    } else if (event.phase === "retry") {
+      retryProgress ??= createProgress(event.total, event.total * ESTIMATED_MS_PER_RETRY);
+      retryProgress.update(event.completed, `${languageName(event.language)} retried`);
+    }
+  });
+  (retryProgress ?? progress).stop();
+  return { report, elapsed: Date.now() - startedAt };
+}
+
+// Summarises the outcome, listing failures by language with their reasons.
+function printTranslationSummary(report, elapsed) {
+  const { valid, failed, invalid, translationItems } = report.summary;
+  if (report.summary.readyToApply) {
+    detail(style.green(`✓ ${valid}/${translationItems} translated`) + style.dim(` in ${formatDuration(elapsed)}`));
+    return;
+  }
+
+  detail(style.red(`✗ ${failed + invalid} of ${translationItems} translations did not succeed`) +
+    style.dim(` (${valid} succeeded, ${formatDuration(elapsed)})`));
+  const byLanguage = new Map();
+  const reasons = new Map();
+  for (const item of report.translations) {
+    for (const [language, result] of Object.entries(item.translations)) {
+      if (result.status === "valid") continue;
+      byLanguage.set(language, (byLanguage.get(language) || 0) + 1);
+      const reason = result.errors?.[0] || "Unknown error";
+      reasons.set(reason, (reasons.get(reason) || 0) + 1);
+    }
+  }
+  detail([...byLanguage].map(([language, count]) => `${languageName(language)} ${count}`).join(" · "));
+  for (const [reason, count] of reasons) detail(style.dim(`Reason (${count}): ${reason}`));
 }
 
 async function main() {
@@ -186,6 +278,7 @@ Usage:
   node scripts/i18n/translator/index.cjs translate [--base origin/develop]
   node scripts/i18n/translator/index.cjs translate --apply
   node scripts/i18n/translator/index.cjs translate [--base origin/develop] --and-apply
+  Add --concurrency 1 (or set I18N_CONCURRENCY=1) to send fewer requests at once.
 
 The normal translate command runs the scanner, generates approved-translations.json
 from high-confidence findings, and sends those entries to the backend translator.
@@ -207,8 +300,9 @@ Environment:
       throw new Error(`Translation preview not found: ${outputFile}. Run translate first.`);
     }
     const report = JSON.parse(fs.readFileSync(outputFile, "utf8"));
+    step(1, 1, "Applying the reviewed preview to resources.ts");
     applyReport(report);
-    console.log("No translation API requests were made during apply.");
+    detail(style.dim("No translation API requests were made."));
     return;
   }
 
@@ -217,29 +311,22 @@ Environment:
   }
 
   const baseRef = getArgument("--base", process.env.I18N_BASE || "develop");
+  const settings = { ...DEFAULTS, requestConcurrency: getConcurrency() };
+  console.log(`${style.bold("i18n translate")} ${style.dim(`· compared with ${baseRef}`)}`);
+
+  step(1, STEPS, "Scanning changed files");
   const scanReport = runScanner(baseRef);
   const { entries: generatedEntries, skipped } = createGeneratedEntries(scanReport);
   writeGeneratedInput(generatedEntries, scanReport);
-
-  console.log(`\nGenerated translation input: ${path.relative(repoRoot, defaultInput)}`);
-  console.log(`Eligible high-confidence strings: ${generatedEntries.length}`);
-  console.log(`Ambiguous strings held for review: ${(scanReport.ambiguousFindings || []).length}`);
-  console.log(`Dynamic keys held for review: ${(scanReport.dynamicKeys || []).length}`);
-  if (skipped.length) {
-    console.log(`Skipped findings: ${skipped.length}`);
-    for (const { finding, reason } of skipped) {
-      console.log(`  - ${finding.file ?? "unknown"}:${finding.line ?? "?"} ${reason}`);
-    }
-  }
+  printScanSummary(scanReport, generatedEntries, skipped);
 
   if (generatedEntries.length === 0) {
-    console.log("No new high-confidence strings to translate. No API requests were made.");
+    console.log(`\n${style.green("✓ Nothing new to translate.")} No API requests were made.`);
     return;
   }
 
   const entries = validateApprovedEntries(generatedEntries.map(({ key, text }) => ({ key, text })));
-  const provider = new SarvamProvider();
-  const report = await translateEntries(entries, provider, DEFAULTS);
+  const { report, elapsed } = await translateWithProgress(entries, new SarvamProvider(), settings);
   report.sourceScan = {
     baseRef: scanReport.baseRef,
     reportFile: path.relative(repoRoot, scanReportFile),
@@ -251,26 +338,28 @@ Environment:
 
   fs.mkdirSync(path.dirname(outputFile), { recursive: true });
   fs.writeFileSync(outputFile, JSON.stringify(report, null, 2) + "\n", "utf8");
+  printTranslationSummary(report, elapsed);
+  detail(style.dim(`Preview: ${path.relative(repoRoot, outputFile)}`));
 
-  console.log("\nTranslation run completed.");
-  console.log(`Planned bulk requests: ${report.summary.bulkRequests} (batch size: ${report.summary.batchSize})`);
-  console.log(JSON.stringify(report.summary, null, 2));
-  console.log(`Preview report: ${outputFile}`);
   if (!report.summary.readyToApply) {
-    console.log("Some translations failed or are invalid. Review the preview; resources.ts was not changed.");
+    step(3, STEPS, "Applying to resources.ts");
+    detail(style.yellow("Skipped: resources.ts was not changed, because every translation must succeed first."));
+    detail(`Run the command again. To go slower: ${style.cyan("I18N_CONCURRENCY=1 npm run i18n:translate:apply")}`);
     process.exitCode = 2;
     return;
   }
 
+  step(3, STEPS, "Applying to resources.ts");
   if (shouldApplyAfterTranslate) {
     applyReport(report);
+    console.log(`\n${style.green("Done.")} Replace the translated strings in the code with t("key") using the keys in the preview.`);
     return;
   }
 
-  console.log("Review the preview, then run translate --apply to update resources.ts.");
+  detail(`Review the preview, then run ${style.cyan("npm run i18n:apply")} to update resources.ts.`);
 }
 
 main().catch((error) => {
-  console.error("i18n translator failed:", error.message);
+  console.error(`\n${style.red("✗ i18n translator failed:")} ${error.message}`);
   process.exitCode = 1;
 });

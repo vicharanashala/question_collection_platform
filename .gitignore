@@ -79,3 +79,6 @@ media/
 pinelab-openai-spec.yaml
 
 
+
+# Files saved by Claude while working (screenshots, previews)
+Claude outputs/

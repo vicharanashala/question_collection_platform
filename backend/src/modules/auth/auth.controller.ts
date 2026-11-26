@@ -15,7 +15,15 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService, AuthResponse } from './auth.service';
-import { RequestOtpDto, VerifyOtpDto, RegisterDto, UpdateMeDto } from './dto';
+import {
+  RequestOtpDto,
+  VerifyOtpDto,
+  RegisterDto,
+  UpdateMeDto,
+  RequestEmailOtpDto,
+  VerifyEmailOtpDto,
+  EmailLoginFallbackDto,
+} from './dto';
 import { Public } from '../../shared/middleware/decorators/public.decorator';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
 import { Request } from 'express';
@@ -26,6 +34,9 @@ import { RegistrationAuthGuard } from '@/shared/middleware/guards/registration-a
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string, sid:string };
 }
+
+// Same limit as the mobile OTP request: 10 calls per 15 minutes.
+const EMAIL_OTP_THROTTLE = { default: { limit: 10, ttl: 900_000 } };
 
 @Controller('auth')
 export class AuthController {
@@ -179,6 +190,80 @@ async logout(@Req() req: AuthenticatedRequest) {
       // Surface upstream failures instead of replying 200 with an empty body.
       throw new BadGatewayException('Unable to fetch crops');
     }
+  }
+
+  /**
+   * POST /auth/sync-email
+   * Sends an OTP to an email address the signed-in user wants to link.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('sync-email')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async syncEmail(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: RequestEmailOtpDto,
+  ) {
+    return this.authService.requestEmailOtp(req.user.id, dto.email);
+  }
+
+  /**
+   * POST /auth/verify-email-otp
+   * Links the email address once the signed-in user confirms its OTP.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('verify-email-otp')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailOtp(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: VerifyEmailOtpDto,
+  ) {
+    return this.authService.verifyEmailOtp(req.user.id, dto.email, dto.otp);
+  }
+
+  /**
+   * POST /auth/preview-email-login-fallback
+   * Returns the masked email a login code would be sent to, without sending one.
+   */
+  @Public()
+  @Post('preview-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async previewEmailLoginFallback(@Body() dto: EmailLoginFallbackDto) {
+    return this.authService.previewEmailLoginFallback(dto.mobileNumber);
+  }
+
+  /**
+   * POST /auth/request-email-login-fallback
+   * Sends a login OTP to the verified email linked to a mobile number, for when
+   * the mobile OTP cannot be delivered.
+   */
+  @Public()
+  @Post('request-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async requestEmailLoginFallback(@Body() dto: EmailLoginFallbackDto) {
+    return this.authService.requestEmailLoginFallback(dto.mobileNumber);
+  }
+
+  /**
+   * POST /auth/verify-email-login-fallback
+   * Signs in with the email OTP. The response has the same shape as verify-otp.
+   */
+  @Public()
+  @Post('verify-email-login-fallback')
+  @Throttle(EMAIL_OTP_THROTTLE)
+  @HttpCode(HttpStatus.OK)
+  async verifyEmailLoginFallback(
+    @Body() dto: VerifyOtpDto,
+    @ReqMeta() meta?: RequestMeta,
+  ) {
+    return this.authService.verifyEmailLoginFallback(
+      dto.mobileNumber,
+      dto.otp,
+      meta,
+    );
   }
 }
 

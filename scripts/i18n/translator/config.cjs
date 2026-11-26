@@ -29,6 +29,10 @@ const DEFAULTS = {
   batchSize: 50,
   maxRetries: 3,
   retryBaseDelayMs: 1000,
+  // A single failed translation is usually a provider rate limit, so it waits longer: 3s, then 6s.
+  itemRetryDelayMs: 3000,
+  // Translations still failing at the end get one slower pass after this cool-down.
+  finalPassDelayMs: 20000,
 };
 
 module.exports = { LANGUAGES, DEFAULTS };
