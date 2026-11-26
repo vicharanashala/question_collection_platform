@@ -27,7 +27,7 @@ export function isStatusHidden(question: Pick<Question, "isAnveshan" | "status">
 
 /** Status label shown to staff, or an empty string when the status is hidden. */
 export function getStatusLabel(question: Pick<Question, "isAnveshan" | "status">): string {
-  if (isStatusHidden(question)) return "";
+  if (isStatusHidden(question)) return "Anveshan";
   return STATUS_LABELS[question.status] ?? question.status;
 }
 

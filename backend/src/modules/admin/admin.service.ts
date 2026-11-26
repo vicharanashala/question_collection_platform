@@ -404,7 +404,7 @@ export class AdminService implements OnModuleInit {
 
 // Counts users by type for an optional join date range.
 async getUserStats(dto: ListUserStatsDto) {
-  const base: Record<string, unknown> = {};
+  const base: Record<string, unknown> = {isDeleted: INCLUDE_DELETED};
   const joinedRange = buildJoinedRange(dto.fromDate, dto.toDate);
   if (joinedRange) base.createdAt = joinedRange;
   if (dto.anveshanScope) base.isAnveshanUser = dto.anveshanScope === 'only' ? true : { $ne: true };
