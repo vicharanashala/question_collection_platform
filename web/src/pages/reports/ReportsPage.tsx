@@ -88,7 +88,12 @@ const REPORTS_EXPORT_COLUMN: ExportColumn<Report>[] = [
   { header: "Reporter Number", value: (report) => report.user?.mobileNumber },
   { header: "Category", value: (report) => report.category },
   { header: "Priority", value: (report) => report.priority },
-  { header: "Status", value: (report) => STATUS_OPTIONS.find((option) => option.value === report.status)?.label ?? report.status },
+  {
+    header: "Status",
+    value: (report) =>
+      STATUS_OPTIONS.find((option) => option.value === report.status)?.label ??
+      report.status,
+  },
   { header: "Created At", value: (report) => exportDateTime(report.createdAt) },
 ];
 
