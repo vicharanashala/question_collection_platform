@@ -127,6 +127,12 @@ export class User {
   @Prop({ name: "bannedReason", type: String, default: null })
   bannedReason: string | null;
 
+  @Prop({ name: "rejectionReason", type: String, default: null })
+  rejectionReason: string | null;
+
+  @Prop({ name: "rejectedAt", type: Date, default: null })
+  rejectedAt: Date | null;
+
   @Prop({ name: "profileData", type: Object, default: null })
   profileData: Record<string, unknown> | null;
 

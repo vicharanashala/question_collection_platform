@@ -74,6 +74,11 @@ const VERIFICATION_CONFIG: Record<VerificationStatus, StatusConfig> = {
     icon: Eye,
     classes: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800',
   },
+  rejected: {
+    label: 'submissions.rejected',
+    icon: XCircle,
+    classes: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-800',
+  },
   suspended: {
     label: 'status.suspended',
     icon: AlertCircle,

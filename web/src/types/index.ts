@@ -1,7 +1,7 @@
 export type UserRole = "user" | "admin" | "super_admin" | "curator" | "finance" | "distributor";
 export type PaymentDetailStatus = 'pending' | 'in_progress' | 'verified' | 'failed';
 export type PayoutMethod = 'upi' | 'bank_transfer';
-export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'suspended' | 'banned';
+export type VerificationStatus = 'pending' | 'manual_review' | 'verified' | 'rejected' | 'suspended' | 'banned';
 export type QuestionStatus = 'pending' | 'held' | 'approved' | 'rejected' | 'moved_to_final';
 export type UserCategory = 'farmer' | 'fpo' | 'student' | 'volunteer' | 'ngo';
 
@@ -55,6 +55,8 @@ export interface User {
   suspendedReason: string | null;
   bannedAt: string | null;
   bannedReason: string | null;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
   createdAt: string;
   lastLoginAt: string | null;
   consentGiven: boolean;
@@ -179,6 +181,8 @@ export interface AuthUser {
   kvk?: string | null;
   languagePreference?: string;
   verificationStatus?: VerificationStatus;
+  rejectionReason?: string | null;
+  rejectedAt?: string | null;
   createdAt?: string;
   lastLoginAt?: string | null;
   // Profile fields populated by toPublicUser (used by the public-user pages)

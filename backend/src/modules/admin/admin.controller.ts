@@ -31,6 +31,7 @@ import {
   UpdateWithdrawalFailureReasonDto,
   CreateUserDto,
   SuspendUserDto,
+  RejectUserDto,
   ListAllWalletsDto,
   WalletScopeDto,
   ListUserTransactionsDto,
@@ -421,6 +422,67 @@ export class AdminController {
         after: {
           status: "verified",
         },
+      },
+      outcome: {
+        status: OutcomeStatus.SUCCESS,
+      },
+    });
+    return result;
+  }
+
+  @Post("users/:id/reject")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @CacheInvalidate("user:*")
+  async rejectUser(
+    @Param("id") id: string,
+    @Body() dto: RejectUserDto,
+    @Req() req: AuthenticatedRequest,
+    @ReqMeta() meta: RequestMeta,
+  ) {
+    const role = req.user.role;
+    const base: AuditLogDto = {
+      actionType: AuditAction.USER_REJECTED,
+      actor: {
+        id: req.user.id,
+        actorType:
+          role === UserRole.SUPER_ADMIN
+            ? ActorType.SUPER_ADMIN
+            : ActorType.ADMIN,
+        name: req.user.name,
+      },
+      resource: {
+        requestId: meta.requestId,
+        ipAddress: meta.ipAddress,
+      },
+      context: {
+        userId: id,
+      },
+    };
+
+    let result;
+    try {
+      result = await this.adminService.rejectUser(req.user.id, id, dto.reason);
+    } catch (err) {
+      await this.safeAudit({
+        ...base,
+        changes: {
+          before: { status: "pending" },
+          after: { status: "pending" },
+        },
+        outcome: {
+          status: OutcomeStatus.FAILURE,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
+      throw err;
+    }
+
+    await this.safeAudit({
+      ...base,
+      changes: {
+        before: { status: "pending" },
+        after: { status: "rejected", reason: dto.reason },
       },
       outcome: {
         status: OutcomeStatus.SUCCESS,

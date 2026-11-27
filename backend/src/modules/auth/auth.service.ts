@@ -99,6 +99,8 @@ export interface PublicUser {
   kvk: string | null;
   languagePreference: string;
   verificationStatus: VerificationStatus;
+  rejectionReason: string | null;
+  rejectedAt: Date | null;
   role: UserRole;
   username: string | null;
   createdAt: Date;
@@ -217,7 +219,7 @@ export class AuthService {
    * Generate a 6-digit OTP and send it via SMS.
    * Rate-limited to 10 requests per 15-minute window per mobile number.
    */
-  async requestOtp(dto: RequestOtpDto): Promise<{ message: string }> {
+  async requestOtp(dto: RequestOtpDto): Promise<{ message: string; otp?: string }> {
     const mobileNumber = this.normalizePhone(dto.mobileNumber);
     const rateLimitKey = `otp_rl:${mobileNumber}`;
 
@@ -370,7 +372,10 @@ export class AuthService {
     //   user.id,
     // );
 
-    return { message: "OTP sent successfully" };
+    return {
+      message: "OTP sent successfully",
+      ...(isDevelopment() && { otp }),
+    };
   }
 
   // Builds the error details for a failed OTP send. The reason, description and retry
@@ -605,7 +610,6 @@ export class AuthService {
    * Creates user wallet and returns auth tokens.
    */
   async register(dto: RegisterDto, userId: string, meta?:RequestMeta): Promise<AuthResponse> {
-    const isDev = isDevelopment();
     const user = await this.userRepo.findOne({ where: { _id: userId } });
     if (!user) {
       throw new UnauthorizedException("User not found");
@@ -694,9 +698,7 @@ export class AuthService {
       languagePreference: dto.languagePreference,
       consentGiven: dto.consentGiven,
       consentTimestamp: dto.consentGiven ? new Date() : null,
-      verificationStatus: isDev
-        ? VerificationStatus.VERIFIED
-        : VerificationStatus.PENDING,
+      verificationStatus: VerificationStatus.PENDING,
       otpHash: null,
       otpExpiresAt: null,
       age: dto.age ?? null,
@@ -964,6 +966,7 @@ async logout(userId: string, sid: string): Promise<void> {
       languagePreference?: string | null;
       consentGiven?: boolean;
       profileCreatedByAdminCompleted?: boolean;
+      resubmitForApproval?: boolean;
       crops?: string[] | null;
     },
   ): Promise<PublicUser> {
@@ -1027,6 +1030,16 @@ async logout(userId: string, sid: string): Promise<void> {
             .map((crop) => crop.trim())
             .filter(Boolean)
         : [];
+    }
+
+    // When a rejected user updates their profile (and doesn't opt out), resubmit for admin review.
+    if (
+      user.verificationStatus === VerificationStatus.REJECTED &&
+      dto.resubmitForApproval !== false
+    ) {
+      user.verificationStatus = VerificationStatus.PENDING;
+      user.rejectionReason = null;
+      user.rejectedAt = null;
     }
 
     await this.userRepo.save(user);
@@ -1482,6 +1495,8 @@ async logout(userId: string, sid: string): Promise<void> {
       kvk: user.kvk,
       languagePreference: user.languagePreference,
       verificationStatus: user.verificationStatus,
+      rejectionReason: user.rejectionReason ?? null,
+      rejectedAt: user.rejectedAt ?? null,
       role: user.role,
       createdAt: user.createdAt,
       age: user.age,

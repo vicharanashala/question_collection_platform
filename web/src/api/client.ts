@@ -273,8 +273,11 @@ export async function request<T>(
 
   const doFetch = () => {
     const url = `${BASE}${path}`;
+    // Backend LgdService already retries upstream, so avoid stacking client retries on /lgd/.
+    const retries = path.startsWith("/lgd/") ? 0 : 2;
     // A fresh timeout signal per attempt so retries are not born already aborted.
-    return withRetry(() =>
+    return withRetry(
+      () =>
       fetch(url, {
         ...options,
         headers,
@@ -330,6 +333,7 @@ export async function request<T>(
           }
           return handleResponse(res);
         }),
+      retries,
     );
   };
 
@@ -448,7 +452,7 @@ export const authApi = {
     ),
 
   requestOtp: (mobileNumber: string, isWeb = false) => {
-    return request<{ message: string }>(
+    return request<{ message: string; otp?: string }>(
       "/auth/request-otp",
       {
         method: "POST",
@@ -514,6 +518,7 @@ export const authApi = {
     consentGiven?: boolean;
     crops?: string[] | null;
     profileCreatedByAdminCompleted?: boolean;
+    resubmitForApproval?: boolean;
   }) =>
     request<{ user: AuthUser }>(
       "/auth/me",
@@ -748,6 +753,21 @@ export const adminApi = {
     request<{ message: string }>(
       `/admin/users/${userId}/verify`,
       { method: "POST" },
+      false,
+    ).finally(() => invalidateCache("/api/admin")),
+
+  rejectUser: (userId: string, reason: string) =>
+    request<{
+      success: boolean;
+      userId: string;
+      newStatus: string;
+      rejectionReason: string;
+    }>(
+      `/admin/users/${userId}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
       false,
     ).finally(() => invalidateCache("/api/admin")),
 

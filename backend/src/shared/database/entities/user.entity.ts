@@ -96,6 +96,12 @@ export class User {
   @Column({ name: 'banned_reason', type: 'varchar', length: 500, nullable: true })
   bannedReason: string | null;
 
+  @Column({ name: 'rejection_reason', type: 'varchar', length: 500, nullable: true })
+  rejectionReason: string | null;
+
+  @Column({ name: 'rejected_at', type: 'timestamp', nullable: true })
+  rejectedAt: Date | null;
+
   @Column({ name: 'profile_data', type: 'jsonb', nullable: true })
   profileData: Record<string, unknown> | null;
 

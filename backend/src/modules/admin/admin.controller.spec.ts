@@ -27,6 +27,7 @@ const mockAdminService = () => ({
   suspendOrBanUser: jest.fn(),
   unsuspendOrUnbanUser: jest.fn(),
   verifyUser: jest.fn(),
+  rejectUser: jest.fn(),
   listReviewQueue: jest.fn(),
   getQuestionForReview: jest.fn(), 
   reviewQuestion: jest.fn(),
@@ -252,6 +253,32 @@ const curatorReq = asReq({ id: "curator-1", mobileNumber: "9997", role: UserRole
 
       expect(result).toBeDefined();
       expect(result!.message).toBe('User already verified');
+    });
+  });
+
+  describe('POST /admin/users/:id/reject', () => {
+    it('should reject a pending user with a mandatory reason', async () => {
+      service.rejectUser.mockResolvedValue({
+        success: true,
+        userId: 'user-1',
+        newStatus: VerificationStatus.REJECTED,
+        rejectionReason: 'Incomplete location details',
+      });
+
+      const result = await controller.rejectUser(
+        'user-1',
+        { reason: 'Incomplete location details' },
+        adminReq as any,
+        meta,
+      );
+
+      expect(service.rejectUser).toHaveBeenCalledWith(
+        'admin-1',
+        'user-1',
+        'Incomplete location details',
+      );
+      expect(result.newStatus).toBe(VerificationStatus.REJECTED);
+      expect(result.rejectionReason).toBe('Incomplete location details');
     });
   });
 

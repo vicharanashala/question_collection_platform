@@ -3,7 +3,7 @@ import { ShieldAlert } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 /** Statuses that mean an admin has not approved the account yet. */
-const UNVERIFIED_STATUSES = ['pending', 'manual_review'] as const
+const UNVERIFIED_STATUSES = ['pending', 'manual_review', 'rejected'] as const
 
 /**
  * Persistent notice shown under the header while the signed-in account is still

@@ -893,6 +893,42 @@ describe('AuthService email OTP', () => {
       });
     });
   });
+
+  describe('rejected profile resubmission', () => {
+    it('resets verificationStatus to PENDING and clears rejection fields when a rejected user updates profile', async () => {
+      const rejectedUser = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+        verificationStatus: VerificationStatus.REJECTED,
+        rejectionReason: 'District mismatch',
+        rejectedAt: new Date(),
+      });
+      userRepo.findOne.mockResolvedValueOnce(rejectedUser);
+      userRepo.save.mockImplementation(async (u) => u);
+
+      const updated = await service.updateMe(rejectedUser._id.toString(), {
+        name: 'Ramesh Updated',
+        resubmitForApproval: true,
+      });
+
+      expect(updated.verificationStatus).toBe(VerificationStatus.PENDING);
+      expect(updated.rejectionReason).toBeNull();
+      expect(updated.rejectedAt).toBeNull();
+    });
+
+    it('keeps non-rejected statuses unchanged when updating profile', async () => {
+      const verifiedUser = makeUserWithEmailOtp(EmailOtpPurpose.EMAIL_LOGIN, {
+        verificationStatus: VerificationStatus.VERIFIED,
+      });
+      userRepo.findOne.mockResolvedValueOnce(verifiedUser);
+      userRepo.save.mockImplementation(async (u) => u);
+
+      const updated = await service.updateMe(verifiedUser._id.toString(), {
+        name: 'Ramesh Updated',
+        resubmitForApproval: true,
+      });
+
+      expect(updated.verificationStatus).toBe(VerificationStatus.VERIFIED);
+    });
+  });
 });
 
 describe('maskEmail', () => {

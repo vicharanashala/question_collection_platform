@@ -7,6 +7,7 @@ import {
   IsArray,
   MinLength,
   Matches,
+  IsBoolean,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -145,6 +146,10 @@ export class UpdateMeDto {
 
   @IsOptional()
   profileCreatedByAdminCompleted?: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  resubmitForApproval?: boolean;
 
   // ── Crops (array of strings) ─────────────────────────────────────────────────
   @IsOptional()

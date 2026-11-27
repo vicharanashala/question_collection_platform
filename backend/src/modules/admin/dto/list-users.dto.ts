@@ -31,7 +31,7 @@ export class ListUsersDto {
   category?: UserCategory;
 
   @IsOptional()
-  @IsIn(['pending', 'manual_review', 'verified', 'suspended', 'banned'])
+  @IsIn(['pending', 'manual_review', 'verified', 'rejected', 'suspended', 'banned'])
   status?: VerificationStatus;
 
   @IsOptional()
