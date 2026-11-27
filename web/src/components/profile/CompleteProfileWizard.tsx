@@ -500,7 +500,7 @@ function Step2({
                 !kvkFreeText &&
                 kvks.length === 0 &&
                 !loadingKvks &&
-                !!form.districtCode
+                !!form.block
               }
               onFreeTextEntry={() => {
                 setKvkFreeText(true);
