@@ -275,7 +275,7 @@ function Step1({ form, errors, setField }: WizardFormStateProps) {
                 <p className="text-xs sm:text-xs sm:text-sm font-semibold text-foreground leading-tight">
                   {c.label}
                 </p>
-                <p className="hidden xs:block mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-snug">
+                <p className="mt-0.5 text-[11px] sm:text-[11px] sm:text-xs text-muted-foreground leading-snug">
                   {c.description}
                 </p>
               </div>
@@ -321,6 +321,11 @@ function Step2({
   setKvkFreeText,
 }: WizardFormStateProps) {
   const { t } = useTranslation();
+  // Free-text entry replaces the list only while the backend has no options for that field.
+  const districtManual = districtFreeText && districts.length === 0;
+  const blockManual = blockFreeText && blocks.length === 0;
+  const villageManual = villageFreeText && villages.length === 0;
+  const kvkManual = kvkFreeText && kvks.length === 0;
   return (
     <div className="space-y-4">
       <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground">{t('completeProfileWizard.weLlUseThis')}</p>
@@ -358,36 +363,37 @@ function Step2({
         <Label>
           District <span className="text-destructive">*</span>
         </Label>
-        <SearchableSelect
-          items={districts.map((d) => ({ value: d.name, label: d.name }))}
-          value={form.district}
-          onValueChange={(v) => {
-            const d = districts.find((x) => x.name === v);
-            setField("district", v);
-            setField("districtCode", d?.code ?? "");
-            loadBlocks(d?.code ?? "");
-          }}
-          placeholder={!form.state ? t('completeProfileWizard.chooseStateFirst') : t('completeProfileWizard.searchDistrict')}
-          disabled={!form.state || loadingDistricts}
-          loading={loadingDistricts}
-          allowFreeText={
-            !districtFreeText &&
-            districts.length === 0 &&
-            !loadingDistricts &&
-            !!form.state
-          }
-          onFreeTextEntry={() => {
-            setDistrictFreeText(true);
-            setField("district", "");
-          }}
-        />
         {/* Free-text input when backend returned no data */}
-        {districtFreeText && (
+        {districtManual ? (
           <Input
             value={form.district}
             onChange={(e) => setField("district", e.target.value)}
             placeholder={t('completeProfileWizard.typeDistrictName')}
-            className="mt-1.5"
+            className="bg-surface dark:bg-surface"
+          />
+        ) : (
+          <SearchableSelect
+            items={districts.map((d) => ({ value: d.name, label: d.name }))}
+            value={form.district}
+            onValueChange={(v) => {
+              const d = districts.find((x) => x.name === v);
+              setField("district", v);
+              setField("districtCode", d?.code ?? "");
+              loadBlocks(d?.code ?? "");
+            }}
+            placeholder={!form.state ? t('completeProfileWizard.chooseStateFirst') : t('completeProfileWizard.searchDistrict')}
+            disabled={!form.state || loadingDistricts}
+            loading={loadingDistricts}
+            allowFreeText={
+              !districtFreeText &&
+              districts.length === 0 &&
+              !loadingDistricts &&
+              !!form.state
+            }
+            onFreeTextEntry={() => {
+              setDistrictFreeText(true);
+              setField("district", "");
+            }}
           />
         )}
         {errors.district && (
@@ -403,38 +409,39 @@ function Step2({
           <Label>
             Block <span className="text-destructive">*</span>
           </Label>
-          <SearchableSelect
-            items={blocks.map((b) => ({ value: b.name, label: b.name }))}
-            value={form.block}
-            onValueChange={(v) => {
-              const block = blocks.find((b) => b.name === v);
-              setField("block", v);
-              loadVillages(block?.code ?? "");
-              loadKvks(form.districtCode);
-            }}
-            placeholder={
-              !form.district ? t('completeProfileWizard.chooseDistrictFirst') : t('completeProfileWizard.searchBlock')
-            }
-            disabled={!form.district || loadingBlocks}
-            loading={loadingBlocks}
-            allowFreeText={
-              !blockFreeText &&
-              blocks.length === 0 &&
-              !loadingBlocks &&
-              !!form.district
-            }
-            onFreeTextEntry={() => {
-              setBlockFreeText(true);
-              setField("block", "");
-            }}
-          />
           {/* Free-text input when backend returned no data */}
-          {blockFreeText && (
+          {blockManual ? (
             <Input
               value={form.block}
               onChange={(e) => setField("block", e.target.value)}
               placeholder={t('completeProfileWizard.typeBlockName')}
-              className="mt-1.5"
+              className="bg-surface dark:bg-surface"
+            />
+          ) : (
+            <SearchableSelect
+              items={blocks.map((b) => ({ value: b.name, label: b.name }))}
+              value={form.block}
+              onValueChange={(v) => {
+                const block = blocks.find((b) => b.name === v);
+                setField("block", v);
+                loadVillages(block?.code ?? "");
+                loadKvks(form.districtCode);
+              }}
+              placeholder={
+                !form.district ? t('completeProfileWizard.chooseDistrictFirst') : t('completeProfileWizard.searchBlock')
+              }
+              disabled={!form.district || loadingBlocks}
+              loading={loadingBlocks}
+              allowFreeText={
+                !blockFreeText &&
+                blocks.length === 0 &&
+                !loadingBlocks &&
+                !!form.district
+              }
+              onFreeTextEntry={() => {
+                setBlockFreeText(true);
+                setField("block", "");
+              }}
             />
           )}
           {errors.block && (
@@ -452,31 +459,32 @@ function Step2({
             <Label>
               Village <span className="text-destructive">*</span>
             </Label>
-            <SearchableSelect
-              items={villages.map((v) => ({ value: v.name, label: v.name }))}
-              value={form.village}
-              onValueChange={(v) => setField("village", v)}
-              placeholder={t('completeProfileWizard.searchVillage')}
-              disabled={loadingVillages}
-              loading={loadingVillages}
-              allowFreeText={
-                !villageFreeText &&
-                villages.length === 0 &&
-                !loadingVillages &&
-                !!form.block
-              }
-              onFreeTextEntry={() => {
-                setVillageFreeText(true);
-                setField("village", "");
-              }}
-            />
             {/* Free-text input when backend returned no data */}
-            {villageFreeText && (
+            {villageManual ? (
               <Input
                 value={form.village}
                 onChange={(e) => setField("village", e.target.value)}
                 placeholder={t('completeProfileWizard.typeVillageName')}
-                className="mt-1.5"
+                className="bg-surface dark:bg-surface"
+              />
+            ) : (
+              <SearchableSelect
+                items={villages.map((v) => ({ value: v.name, label: v.name }))}
+                value={form.village}
+                onValueChange={(v) => setField("village", v)}
+                placeholder={t('completeProfileWizard.searchVillage')}
+                disabled={loadingVillages}
+                loading={loadingVillages}
+                allowFreeText={
+                  !villageFreeText &&
+                  villages.length === 0 &&
+                  !loadingVillages &&
+                  !!form.block
+                }
+                onFreeTextEntry={() => {
+                  setVillageFreeText(true);
+                  setField("village", "");
+                }}
               />
             )}
             {errors.village && (
@@ -489,31 +497,32 @@ function Step2({
             <Label>
               Nearest KVK <span className="text-destructive">*</span>
             </Label>
-            <SearchableSelect
-              items={kvks.map((k) => ({ value: k.address, label: k.address }))}
-              value={form.kvk}
-              onValueChange={(v) => setField("kvk", v)}
-              placeholder={t('completeProfileWizard.searchKvk')}
-              disabled={loadingKvks}
-              loading={loadingKvks}
-              allowFreeText={
-                !kvkFreeText &&
-                kvks.length === 0 &&
-                !loadingKvks &&
-                !!form.block
-              }
-              onFreeTextEntry={() => {
-                setKvkFreeText(true);
-                setField("kvk", "");
-              }}
-            />
             {/* Free-text input when backend returned no data */}
-            {kvkFreeText && (
+            {kvkManual ? (
               <Input
                 value={form.kvk}
                 onChange={(e) => setField("kvk", e.target.value)}
                 placeholder={t('completeProfileWizard.typeKvkName')}
-                className="mt-1.5"
+                className="bg-surface dark:bg-surface"
+              />
+            ) : (
+              <SearchableSelect
+                items={kvks.map((k) => ({ value: k.address, label: k.address }))}
+                value={form.kvk}
+                onValueChange={(v) => setField("kvk", v)}
+                placeholder={t('completeProfileWizard.searchKvk')}
+                disabled={loadingKvks}
+                loading={loadingKvks}
+                allowFreeText={
+                  !kvkFreeText &&
+                  kvks.length === 0 &&
+                  !loadingKvks &&
+                  !!form.block
+                }
+                onFreeTextEntry={() => {
+                  setKvkFreeText(true);
+                  setField("kvk", "");
+                }}
               />
             )}
             {errors.kvk && (
@@ -1302,15 +1311,20 @@ function Step4({
 
 function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 }) {
   return (
-    <div className="relative flex items-start justify-center px-2">
-      {/* Full-width track behind everything */}
-      <div className="absolute top-3 left-4 right-4 h-0.5 bg-border" />
+    <div className="relative flex items-start">
+      {/* Track runs between the first and last circle centres (each step cell is 1/total wide) */}
       <div
-        className="absolute top-3 left-4 h-0.5 bg-emerald-400 transition-all"
+        className="absolute top-[13px] h-0.5 bg-border"
         style={{
-          width: `calc(${((step - 1) / (STEP_KEYS.length - 1)) * 100}% - 1.5rem)`,
+          left: `${50 / STEP_KEYS.length}%`,
+          right: `${50 / STEP_KEYS.length}%`,
         }}
-      />
+      >
+        <div
+          className="h-full bg-emerald-500 transition-[width] duration-300"
+          style={{ width: `${((step - 1) / (STEP_KEYS.length - 1)) * 100}%` }}
+        />
+      </div>
       {STEP_KEYS.map((label, idx) => {
         const n = idx + 1;
         const isDone = n < step;
@@ -1318,6 +1332,7 @@ function StepIndicator({ step }: { step: 1 | 2 | 3 | 4 }) {
         return (
           <div
             key={label}
+            aria-current={isActive ? "step" : undefined}
             className="relative z-10 flex flex-1 flex-col items-center"
           >
             <div
@@ -1375,6 +1390,7 @@ export function CompleteProfileWizard({
     null,
   );
   const directionRef = useRef<1 | -1>(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   // Seed the language preference from the currently active i18n language so a
   // returning user sees their saved choice pre-selected instead of always 'en'.
@@ -1846,7 +1862,7 @@ export function CompleteProfileWizard({
   };
 
   return (
-    <div className="flex h-[80vh] w-full flex-col">
+    <div className="flex h-[min(85dvh,720px)] w-full flex-col">
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 sm:px-6 pt-4 pb-3 sm:pt-5 sm:pb-4 shrink-0">
         <div className="flex items-center gap-3">
@@ -1870,11 +1886,24 @@ export function CompleteProfileWizard({
       {/* ── Step indicator ── */}
       <div className="px-4 sm:px-6 pt-4 pb-2 sm:pt-5 shrink-0">
         <StepIndicator step={step} />
+        {/* Step names are hidden on small screens, so show the current one here */}
+        <p className="mt-2 text-center text-xs text-muted-foreground sm:hidden">
+          {t("stepOf", { step, total: TOTAL_STEPS })}
+          <span className="font-semibold text-foreground"> · {STEP_KEYS[step - 1]}</span>
+        </p>
       </div>
 
       {/* ── Scrollable form area ── */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 min-h-0">
-        <AnimatePresence mode="wait" custom={directionRef.current}>
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 pb-4 min-h-0"
+      >
+        <AnimatePresence
+          mode="wait"
+          custom={directionRef.current}
+          // Start each step at the top instead of keeping the previous scroll position
+          onExitComplete={() => scrollRef.current?.scrollTo({ top: 0 })}
+        >
           <motion.div
             key={step}
             custom={directionRef.current}
@@ -1905,7 +1934,6 @@ export function CompleteProfileWizard({
               variant="outline"
               onClick={back}
               disabled={loading}
-              size="sm"
               className="gap-1.5 text-xs sm:text-xs sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -1917,7 +1945,6 @@ export function CompleteProfileWizard({
           {step < TOTAL_STEPS ? (
             <Button
               onClick={next}
-              size="sm"
               className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-xs sm:text-sm"
             >
               <span>{t('common.continue')}</span>
@@ -1927,7 +1954,6 @@ export function CompleteProfileWizard({
             <Button
               onClick={submit}
               disabled={loading}
-              size="sm"
               className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-xs sm:text-sm"
             >
               {loading ? (
