@@ -8,7 +8,7 @@ import { ArrowDownWideNarrow, ArrowUpNarrowWide, Clock, Download, Image as Image
 import { toast } from 'sonner'
 import { agriEntityApi, getErrorMessage } from '@/api/client'
 import { UserFilter } from '@/components/UserFilter'
-import { isSuperAdmin } from '@/lib/roles'
+import { isSuperAdmin, isSuperAdminOrAdmin } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
 import { NewBadge } from '@/components/ui/new-badge'
 import { markFeatureSeen } from '@/lib/newFeatures'
@@ -52,6 +52,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<AgriEntitySubmission | null>(null)
   const canFilterUsers = scope === 'all' && isSuperAdmin(user)
+  const adminAlsoCanUse = scope === 'all' && isSuperAdminOrAdmin(user);
   const [userIds, setUserIds] = useState<string[]>([])
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [exporting, setExporting] = useState(false)
@@ -222,7 +223,7 @@ export function AgriEntitySubmissionsList({ type, typeLabel, scope = 'mine' }: A
               {sortOrder === 'desc' ? t('agriEntitySubmissionsList.newestFirst') : t('agriEntitySubmissionsList.oldestFirst')}
               <NewBadge feature="entitySortOrder" className="ml-1.5" />
             </Button>
-            {canFilterUsers && (
+            {adminAlsoCanUse && (
               <Button size="sm" variant="outline" onClick={() => { markFeatureSeen('entityExport'); handleExport() }} disabled={exporting}>
                 <Download className="mr-1.5 h-4 w-4" />
                 {exporting ? t('exportMenu.exporting') : t('agriEntitySubmissionsList.exportExcel')}

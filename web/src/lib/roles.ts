@@ -16,6 +16,9 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
 }
 
 /** Returns true if currentUser is super_admin */
+export function isSuperAdminOrAdmin(user: AuthUser | null | undefined): boolean {
+  return user?.role === "super_admin" || user?.role === "admin";
+}
 export function isSuperAdmin(user: AuthUser | null | undefined): boolean {
   return user?.role === 'super_admin'
 }

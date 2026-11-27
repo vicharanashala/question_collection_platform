@@ -49,7 +49,7 @@ export class AgriEntitiesController {
   // GET /agri-entities/export — Excel export of Anveshan users' entities, honouring the list filters.
   @Get('export')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   async exportAnveshan(@Query() dto: ListAgriEntitiesDto, @Req() req: AuthenticatedRequest, @Res() res: Response) {
     const file = await this.agriEntitiesService.exportAnveshanEntities(dto, req.user.role);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
