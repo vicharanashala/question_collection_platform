@@ -190,8 +190,6 @@ export class AdminController {
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
     UserRole.FINANCE,
-    UserRole.CURATOR,
-    UserRole.DISTRIBUTOR,
   )
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_user:${args[0]}`, 120)

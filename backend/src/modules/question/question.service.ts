@@ -737,7 +737,7 @@ export class QuestionService {
     const question = await this.questionRepo.findOne({ where: { id } });
     if (!question) throw new NotFoundException('Question not found');
     // Non-owners can only see approved questions (or own questions)
-    if (userId && question.userId !== userId && question.status !== QuestionStatus.APPROVED) {
+    if (question.userId !== userId) {
       throw new ForbiddenException('Question not available');
     }
     return question;
