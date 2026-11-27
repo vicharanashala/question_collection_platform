@@ -150,7 +150,7 @@ export const reviwerConfig = registerAs("reviewSystem", ()=>({
 }))
 
 export const anveshanDbConfig = registerAs("anveshanDb", () => ({
-  mongoUri: process.env.ANVESHAN_DB_URL || "mongodb://localhost:27017/question_platform",
+  mongoUri: process.env.ANVESHAN_DB_URL || "mongodb://localhost:27017/anveshan_platform",
 }));
 
 export const emailConfig = registerAs("email", () => ({
