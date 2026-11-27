@@ -406,7 +406,8 @@ export function LoginPage() {
     }
     setLoading(true);
     try {
-      await authApi.requestOtp(cleaned, false);
+      const res = await authApi.requestOtp(cleaned, false);
+      if (res.otp) console.log(`[OTP] ${res.otp} for +91 ${cleaned}`);
       setOtpDelivery("phone");
       setStep(2);
       countdown.start();
@@ -605,7 +606,8 @@ export function LoginPage() {
         const { maskedEmail } = await authApi.requestEmailLoginFallback(mobile);
         setLinkedEmail(maskedEmail ?? "your linked email");
       } else {
-        await authApi.requestOtp(mobile, false);
+        const res = await authApi.requestOtp(mobile, false);
+        if (res.otp) console.log(`[OTP] ${res.otp} for +91 ${mobile}`);
       }
       countdown.start();
       toast.success(t('loginPage.newOtpSent'));

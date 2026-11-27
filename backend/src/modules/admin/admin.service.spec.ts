@@ -418,6 +418,8 @@ describe('AdminService', () => {
       expect(result.newStatus).toBe(VerificationStatus.VERIFIED);
       expect(userRepo.update).toHaveBeenCalledWith('user-1', {
         verificationStatus: VerificationStatus.VERIFIED,
+        rejectionReason: null,
+        rejectedAt: null,
       });
       expect(auditRepo.save).toHaveBeenCalled();
     });
@@ -440,6 +442,68 @@ describe('AdminService', () => {
       await expect(service.verifyUser(mockAdminUser.id, 'nonexistent')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  // ─── rejectUser ─────────────────────────────────────────────────────────────
+
+  describe('rejectUser', () => {
+    it('should allow admin to reject a pending user with a reason', async () => {
+      userRepo.findOne
+        .mockResolvedValueOnce({ ...mockAdminUser })
+        .mockResolvedValueOnce({ ...mockTargetUser, verificationStatus: VerificationStatus.PENDING });
+      userRepo.update.mockResolvedValue(undefined);
+
+      const result = await service.rejectUser(
+        mockAdminUser.id,
+        'user-1',
+        '  Incomplete village details  ',
+      );
+
+      expect(result).toEqual({
+        success: true,
+        userId: 'user-1',
+        newStatus: VerificationStatus.REJECTED,
+        rejectionReason: 'Incomplete village details',
+      });
+      expect(userRepo.update).toHaveBeenCalledWith('user-1', {
+        verificationStatus: VerificationStatus.REJECTED,
+        rejectionReason: 'Incomplete village details',
+        rejectedAt: expect.any(Date),
+      });
+    });
+
+    it('should allow super_admin to reject a pending user', async () => {
+      userRepo.findOne
+        .mockResolvedValueOnce({ ...mockSuperAdminUser })
+        .mockResolvedValueOnce({ ...mockTargetUser, verificationStatus: VerificationStatus.PENDING });
+      userRepo.update.mockResolvedValue(undefined);
+
+      const result = await service.rejectUser(
+        mockSuperAdminUser.id,
+        'user-1',
+        'Invalid name',
+      );
+
+      expect(result.newStatus).toBe(VerificationStatus.REJECTED);
+    });
+
+    it('should throw ForbiddenException when non-admin tries to reject', async () => {
+      userRepo.findOne.mockResolvedValueOnce({ ...mockTargetUser, role: UserRole.USER });
+
+      await expect(
+        service.rejectUser('user-1', 'user-2', 'Some reason'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when rejection reason is blank', async () => {
+      userRepo.findOne
+        .mockResolvedValueOnce({ ...mockAdminUser })
+        .mockResolvedValueOnce({ ...mockTargetUser, verificationStatus: VerificationStatus.PENDING });
+
+      await expect(
+        service.rejectUser(mockAdminUser.id, 'user-1', '   '),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -796,6 +860,137 @@ describe('AdminService', () => {
         flaggedQuestions: 5,
       });
       expect(result.summary.approvalRate).toBe(60);
+    });
+  });
+});
+
+// Separate setup with every AdminService dependency, so approval/rejection tests
+// do not depend on the provider list above.
+describe('AdminService approval and rejection', () => {
+  let service: AdminService;
+  let userRepo: { findOne: jest.Mock; update: jest.Mock };
+
+  const adminActor = {
+    id: 'admin-1',
+    role: UserRole.ADMIN,
+    verificationStatus: VerificationStatus.VERIFIED,
+  };
+  const superAdminActor = {
+    id: 'super-1',
+    role: UserRole.SUPER_ADMIN,
+    verificationStatus: VerificationStatus.VERIFIED,
+  };
+  const targetUser = {
+    id: 'user-1',
+    role: UserRole.USER,
+    verificationStatus: VerificationStatus.PENDING,
+    isDeleted: false,
+  };
+
+  beforeEach(async () => {
+    userRepo = {
+      findOne: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+    };
+    const empty = () => ({});
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AdminService,
+        { provide: REPOSITORY_TOKENS.User, useValue: userRepo },
+        { provide: REPOSITORY_TOKENS.Question, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.Wallet, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.Transaction, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.WithdrawalRequest, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.AuditLog, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.AdminConfig, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.Notification, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.PaymentLog, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.UserPaymentDetail, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.FinalQuestion, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.AgriEntity, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.Report, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.AppFeedback, useFactory: empty },
+        { provide: REPOSITORY_TOKENS.AnveshanAnswer, useFactory: empty },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: WalletsService, useFactory: empty },
+        { provide: NotificationsService, useFactory: empty },
+        { provide: PinelabsService, useFactory: empty },
+        { provide: RazorpayPayoutService, useFactory: empty },
+        { provide: RedisService, useFactory: empty },
+        { provide: HotDataService, useFactory: empty },
+        { provide: AnalyticsCacheService, useFactory: empty },
+        { provide: GdbService, useFactory: empty },
+        { provide: MongoTransactionService, useFactory: empty },
+        {
+          provide: AnveshanProgressService,
+          useValue: { getProgressForUsers: jest.fn().mockResolvedValue(new Map()), findCompletedUserIds: jest.fn().mockResolvedValue([]) },
+        },
+      ],
+    }).compile();
+
+    service = module.get<AdminService>(AdminService);
+  });
+
+  it('allows admin to reject a pending user with a mandatory reason', async () => {
+    userRepo.findOne
+      .mockResolvedValueOnce({ ...adminActor })
+      .mockResolvedValueOnce({ ...targetUser });
+
+    const result = await service.rejectUser('admin-1', 'user-1', '  Missing village details  ');
+
+    expect(result).toEqual({
+      success: true,
+      userId: 'user-1',
+      newStatus: VerificationStatus.REJECTED,
+      rejectionReason: 'Missing village details',
+    });
+    expect(userRepo.update).toHaveBeenCalledWith('user-1', {
+      verificationStatus: VerificationStatus.REJECTED,
+      rejectionReason: 'Missing village details',
+      rejectedAt: expect.any(Date),
+    });
+  });
+
+  it('allows super_admin to reject a pending user', async () => {
+    userRepo.findOne
+      .mockResolvedValueOnce({ ...superAdminActor })
+      .mockResolvedValueOnce({ ...targetUser });
+
+    const result = await service.rejectUser('super-1', 'user-1', 'Invalid details');
+    expect(result.newStatus).toBe(VerificationStatus.REJECTED);
+  });
+
+  it('rejects non-admin actors with ForbiddenException', async () => {
+    userRepo.findOne.mockResolvedValueOnce({ id: 'u2', role: UserRole.USER });
+
+    await expect(service.rejectUser('u2', 'user-1', 'Reason')).rejects.toThrow(ForbiddenException);
+  });
+
+  it('rejects blank reasons with BadRequestException', async () => {
+    userRepo.findOne
+      .mockResolvedValueOnce({ ...adminActor })
+      .mockResolvedValueOnce({ ...targetUser });
+
+    await expect(service.rejectUser('admin-1', 'user-1', '   ')).rejects.toThrow(BadRequestException);
+  });
+
+  it('clears rejection fields when approving a previously rejected user', async () => {
+    userRepo.findOne
+      .mockResolvedValueOnce({ ...adminActor })
+      .mockResolvedValueOnce({
+        ...targetUser,
+        verificationStatus: VerificationStatus.REJECTED,
+        rejectionReason: 'Old reason',
+      });
+
+    const result = await service.verifyUser('admin-1', 'user-1');
+
+    expect(result.newStatus).toBe(VerificationStatus.VERIFIED);
+    expect(userRepo.update).toHaveBeenCalledWith('user-1', {
+      verificationStatus: VerificationStatus.VERIFIED,
+      rejectionReason: null,
+      rejectedAt: null,
     });
   });
 });

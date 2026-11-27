@@ -52,6 +52,8 @@ export class UserController {
       village: user.village,
       languagePreference: user.languagePreference,
       verificationStatus: user.verificationStatus,
+      rejectionReason: user.rejectionReason ?? null,
+      rejectedAt: user.rejectedAt ?? null,
       role: user.role,
       age:              user.age,
       gender:           user.gender,

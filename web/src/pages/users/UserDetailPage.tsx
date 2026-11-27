@@ -17,6 +17,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DataTable,
   CardView,
@@ -47,6 +55,7 @@ import {
   Trash2,
   RotateCcw,
   LogOut,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -65,6 +74,16 @@ interface UserSession {
   device: string | null;
 }
 
+const OTHER_REJECTION_REASON = "__other__";
+
+const PROFILE_REJECTION_REASONS = [
+  "Incomplete or inaccurate personal details",
+  "Invalid or mismatched location details (State / District / Block / Village)",
+  "Missing or invalid KVK / crop information",
+  "Invalid or incomplete organization / college details",
+  "Duplicate or suspicious account",
+];
+
 // ─── Status badge helpers ──────────────────────────────────────────────────────
 
 function VerificationBadge({ status }: { status: string }) {
@@ -72,6 +91,7 @@ function VerificationBadge({ status }: { status: string }) {
     verified: { label: "Verified", cls: "bg-emerald-500 text-white" },
     pending: { label: "Pending Review", cls: "bg-amber-500 text-white" },
     manual_review: { label: "Manual Review", cls: "bg-blue-500 text-white" },
+    rejected: { label: "Rejected", cls: "bg-rose-600 text-white" },
     suspended: { label: "Suspended", cls: "bg-amber-500 text-white" },
     banned: { label: "Banned", cls: "bg-red-600 text-white" },
   };
@@ -406,6 +426,8 @@ export function UserDetailPage() {
   const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === "super_admin";
+  const isAdminOrSuperAdmin =
+    currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
   const [user, setUser] = useState<UserType | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -438,6 +460,10 @@ export function UserDetailPage() {
     "unsuspend",
   );
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReasonPreset, setRejectReasonPreset] = useState("");
+  const [rejectRemarks, setRejectRemarks] = useState("");
+  const [rejectError, setRejectError] = useState("");
 
   // Questions view state
   const [qView, setQView] = useState<"table" | "card">("table");
@@ -553,6 +579,12 @@ export function UserDetailPage() {
   const isBanned = user?.verificationStatus === "banned";
   const isLocked = isSuspended || isBanned;
   const isPending = user?.verificationStatus === "pending";
+  const isRejected = user?.verificationStatus === "rejected";
+  const canReviewProfile =
+    isAdminOrSuperAdmin &&
+    user?.role !== "super_admin" &&
+    !isDeleted &&
+    !isLocked;
 
   async function handleVerify() {
     if (!userId) return;
@@ -565,6 +597,43 @@ export function UserDetailPage() {
       setUser(r.user as UserType);
     } catch (e) {
       toast.error(getErrorMessage(e, "Failed to verify user"));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!userId) return;
+    if (!rejectReasonPreset) {
+      setRejectError("Please select a rejection reason.");
+      return;
+    }
+    const remarks = rejectRemarks.trim();
+    if (rejectReasonPreset === OTHER_REJECTION_REASON && remarks.length < 3) {
+      setRejectError("Please enter custom remarks (at least 3 characters).");
+      return;
+    }
+    const combinedReason =
+      rejectReasonPreset === OTHER_REJECTION_REASON
+        ? remarks
+        : remarks
+          ? `${rejectReasonPreset} — ${remarks}`
+          : rejectReasonPreset;
+    if (combinedReason.length > 500) {
+      setRejectError("Combined rejection reason and remarks must be 500 characters or fewer.");
+      return;
+    }
+    setRejectError("");
+    setActionLoading(true);
+    try {
+      await adminApi.rejectUser(userId, combinedReason);
+      toast.success("User profile rejected");
+      setRejectModalOpen(false);
+      setRejectReasonPreset("");
+      setRejectRemarks("");
+      await refreshUser();
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Failed to reject user profile"));
     } finally {
       setActionLoading(false);
     }
@@ -776,10 +845,10 @@ export function UserDetailPage() {
                   </div>
                 </div>
 
-                {/* Action buttons - only for super_admin, never on self */}
-                {isSuperAdmin && user.role !== "super_admin" && (
+                {/* Action buttons */}
+                {(canReviewProfile || (isSuperAdmin && user.role !== "super_admin")) && (
                   <div className="flex flex-wrap gap-2">
-                    {session?.isActive && !isDeleted && (
+                    {isSuperAdmin && user.role !== "super_admin" && session?.isActive && !isDeleted && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -790,7 +859,7 @@ export function UserDetailPage() {
                       </Button>
                     )}
 
-                    {isPending && !isDeleted && (
+                    {canReviewProfile && (isPending || user.verificationStatus === "manual_review" || isRejected) && (
                       <Button
                         size="sm"
                         className="bg-emerald-500 hover:bg-emerald-600 gap-1.5 text-white"
@@ -800,7 +869,23 @@ export function UserDetailPage() {
                       </Button>
                     )}
 
-                    {isDeleted ? (
+                    {canReviewProfile && (isPending || user.verificationStatus === "manual_review") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-rose-600 border-rose-300 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                        onClick={() => {
+                          setRejectReasonPreset("");
+                          setRejectRemarks("");
+                          setRejectError("");
+                          setRejectModalOpen(true);
+                        }}
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </Button>
+                    )}
+
+                    {isSuperAdmin && user.role !== "super_admin" && (isDeleted ? (
                       <Button
                         size="sm"
                         className="gap-1.5 text-white bg-emerald-600 hover:bg-emerald-700"
@@ -820,9 +905,9 @@ export function UserDetailPage() {
                       >
                         <Trash2 className="h-4 w-4" /> {t('audio.delete')}
                       </Button>
-                    )}
+                    ))}
 
-                    {!isLocked && !isDeleted && (
+                    {isSuperAdmin && user.role !== "super_admin" && !isLocked && !isDeleted && (
                       <>
                         <Button
                           size="sm"
@@ -848,7 +933,7 @@ export function UserDetailPage() {
                         </Button>
                       </>
                     )}
-                    {isLocked && !isDeleted && (
+                    {isSuperAdmin && user.role !== "super_admin" && isLocked && !isDeleted && (
                       <Button
                         size="sm"
                         className="gap-1.5 text-white"
@@ -930,6 +1015,28 @@ export function UserDetailPage() {
                   <span>{t('userDetailPage.until', { value1: formatDate(user.suspendedUntil) })}</span>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rejection alert card */}
+      {isRejected && (
+        <Card className="border-2 border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/30">
+          <CardContent className="p-4 flex items-start gap-3">
+            <XCircle className="h-5 w-5 text-rose-600 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">Profile Rejected</p>
+              {user.rejectionReason && (
+                <p className="mt-1 text-xs sm:text-sm italic text-muted-foreground">
+                  "{user.rejectionReason}"
+                </p>
+              )}
+              {user.rejectedAt && (
+                <p className="mt-2 text-[11px] sm:text-xs text-muted-foreground">
+                  Rejected {formatDate(user.rejectedAt)} — awaiting user resubmission
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1723,6 +1830,105 @@ export function UserDetailPage() {
               disabled={actionLoading}
             >
               {actionLoading ? t('userDetailPage.verifying') : t('userDetailPage.confirmVerify')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject profile dialog */}
+      <Dialog
+        open={rejectModalOpen}
+        onOpenChange={(open) => {
+          setRejectModalOpen(open);
+          if (!open) {
+            setRejectReasonPreset("");
+            setRejectRemarks("");
+            setRejectError("");
+          }
+        }}
+      >
+        <DialogContent className="p-5 sm:p-6 gap-4">
+          <DialogHeader className="pr-6">
+            <DialogTitle>Reject User Profile</DialogTitle>
+            <DialogDescription>
+              Select a rejection reason and add any remarks explaining what {user.name || user.mobileNumber} needs to fix before resubmitting.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <div className="space-y-2">
+              <Label htmlFor="reject-reason-preset">Rejection Reason *</Label>
+              <Select
+                value={rejectReasonPreset}
+                onValueChange={(value) => {
+                  setRejectReasonPreset(value);
+                  setRejectError("");
+                }}
+              >
+                <SelectTrigger id="reject-reason-preset" className="w-full">
+                  <SelectValue placeholder="Select a reason..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROFILE_REJECTION_REASONS.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={OTHER_REJECTION_REASON}>
+                    Other (specify in remarks)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reject-remarks">
+                Custom Remarks{" "}
+                {rejectReasonPreset === OTHER_REJECTION_REASON ? (
+                  <span className="text-rose-600">*</span>
+                ) : (
+                  <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+                )}
+              </Label>
+              <Textarea
+                id="reject-remarks"
+                rows={3}
+                maxLength={400}
+                placeholder={
+                  rejectReasonPreset === OTHER_REJECTION_REASON
+                    ? "Enter the specific rejection reason..."
+                    : "Add additional details or instructions for the user..."
+                }
+                value={rejectRemarks}
+                onChange={(e) => {
+                  setRejectRemarks(e.target.value);
+                  if (rejectError) setRejectError("");
+                }}
+              />
+            </div>
+            {rejectError && (
+              <p role="alert" className="text-xs text-rose-600">
+                {rejectError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRejectModalOpen(false)}
+              disabled={actionLoading}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={
+                actionLoading ||
+                !rejectReasonPreset ||
+                (rejectReasonPreset === OTHER_REJECTION_REASON &&
+                  rejectRemarks.trim().length < 3)
+              }
+            >
+              {actionLoading ? "Rejecting..." : "Confirm Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

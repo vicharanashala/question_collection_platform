@@ -14,7 +14,7 @@ import { markFeatureSeen } from '@/lib/newFeatures'
 import { useAnveshanScope } from '@/lib/anveshanMode'
 import {
   Search, ChevronLeft, ChevronRight, Plus, Users, FlaskConical, Sprout, UserRound,
-  PauseCircle, Ban, Clock, CheckCircle,
+  PauseCircle, Ban, Clock, CheckCircle, XCircle,
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
@@ -150,6 +150,7 @@ function FilterSelect({ value, onChange, options, ariaLabel, className }: {
 const STATUS_COLORS: Record<string, string> = {
   verified: "bg-success text-white",
   pending: "bg-warning text-white",
+  rejected: "bg-rose-600 text-white",
   suspended: "bg-warning text-white",
   banned: "bg-destructive text-white",
   manual_review: "bg-amber-500 text-white",
@@ -158,6 +159,7 @@ const STATUS_COLORS: Record<string, string> = {
 const STATUS_ICONS: Record<string, React.ElementType> = {
   verified: CheckCircle,
   pending: Clock,
+  rejected: XCircle,
   suspended: PauseCircle,
   banned: Ban,
 };
@@ -166,6 +168,7 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'All' },
   { value: 'verified', label: 'Verified' },
   { value: 'pending', label: 'Pending' },
+  { value: 'rejected', label: 'Rejected' },
   { value: 'suspended', label: 'Suspended' },
   { value: 'banned', label: 'Banned' },
 ]
@@ -590,7 +593,7 @@ export function UsersPage() {
                             'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] sm:text-[11px] sm:text-xs font-bold',
                             isLocked ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' : 'bg-primary/10 text-primary',
                           )}>
-                            {(u.name || u.username || u.mobileNumber).slice(0, 2).toUpperCase()}
+                            {(u.name || u.username || u.mobileNumber || "?").slice(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -628,7 +631,7 @@ export function UsersPage() {
                               </p>
                             )}
                             <p className="text-[11px] sm:text-xs text-text-tertiary">
-                              {u.mobileNumber}
+                              {u.mobileNumber || "—"}
                             </p>
                           </div>
                         </Link>
@@ -644,7 +647,7 @@ export function UsersPage() {
                           }
                           className="capitalize text-[11px] sm:text-[11px] sm:text-xs"
                         >
-                          {u.role.replace("_", " ")}
+                          {(u.role ?? "user").replace("_", " ")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">

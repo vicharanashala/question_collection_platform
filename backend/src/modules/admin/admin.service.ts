@@ -498,6 +498,8 @@ async getUserStats(dto: ListUserStatsDto) {
       state: u.state,
       district: u.district,
       verificationStatus: u.verificationStatus,
+      rejectionReason: u.rejectionReason ?? null,
+      rejectedAt: u.rejectedAt ?? null,
       role: u.role,
       createdAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
@@ -714,6 +716,8 @@ async getUserStats(dto: ListUserStatsDto) {
       suspendedReason: user.suspendedReason,
       bannedAt: user.bannedAt,
       bannedReason: user.bannedReason,
+      rejectionReason: user.rejectionReason ?? null,
+      rejectedAt: user.rejectedAt ?? null,
       consentGiven: user.consentGiven,
       consentTimestamp: user.consentTimestamp,
       // needed by the Restore button, the "Deleted account" banner and hiding Verify
@@ -889,6 +893,8 @@ async getUserStats(dto: ListUserStatsDto) {
 
     await this.userRepo.update(userId, {
       verificationStatus: VerificationStatus.VERIFIED,
+      rejectionReason: null,
+      rejectedAt: null,
     });
 
     // await this.logAudit({
@@ -903,6 +909,53 @@ async getUserStats(dto: ListUserStatsDto) {
     // });
 
     return { success: true, userId, newStatus: VerificationStatus.VERIFIED };
+  }
+
+  /** Rejects a user's profile approval request with a mandatory reason. */
+  async rejectUser(actorId: string, userId: string, reason: string) {
+    const actor = await this.userRepo.findOne({ where: { id: actorId } });
+    if (!actor) throw new NotFoundException("Actor not found");
+    const validActors = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
+    if (!validActors.includes(actor.role as UserRole)) {
+      throw new ForbiddenException(
+        "Only admins or super admins can reject user profiles",
+      );
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+    if (user.isDeleted) {
+      throw new BadRequestException("Deleted users cannot be rejected");
+    }
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException("Cannot reject a super admin");
+    }
+    if (
+      user.verificationStatus === VerificationStatus.SUSPENDED ||
+      user.verificationStatus === VerificationStatus.BANNED
+    ) {
+      throw new BadRequestException(
+        "Cannot reject a suspended or banned user",
+      );
+    }
+
+    const trimmedReason = reason?.trim();
+    if (!trimmedReason) {
+      throw new BadRequestException("Rejection reason is required");
+    }
+
+    await this.userRepo.update(userId, {
+      verificationStatus: VerificationStatus.REJECTED,
+      rejectionReason: trimmedReason,
+      rejectedAt: new Date(),
+    });
+
+    return {
+      success: true,
+      userId,
+      newStatus: VerificationStatus.REJECTED,
+      rejectionReason: trimmedReason,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────

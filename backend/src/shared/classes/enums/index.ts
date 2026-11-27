@@ -19,6 +19,7 @@ export enum VerificationStatus {
   PENDING = "pending",
   MANUAL_REVIEW = "manual_review",
   VERIFIED = "verified",
+  REJECTED = "rejected",
   SUSPENDED = "suspended",
   BANNED = "banned",
 }
@@ -188,6 +189,7 @@ export enum AuditAction {
   USER_UNSUSPENDED = "user_unsuspended",
   USER_UNBANNED = "user_unbanned",
   USER_VERIFIED = "user_verified",
+  USER_REJECTED = "user_rejected",
   USER_CREATED = "user_created",
   CONFIG_UPDATED = "config_updated",
   QUESTION_APPROVED = "question_approved",

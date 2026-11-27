@@ -211,6 +211,8 @@ function LocationSelect({
   value,
   options,
   disabled,
+  loading = false,
+  allowFreeText = false,
   onChange,
   placeholder,
   required,
@@ -220,12 +222,36 @@ function LocationSelect({
   value: string;
   options: { name: string; address?: string }[];
   disabled: boolean;
+  loading?: boolean;
+  allowFreeText?: boolean;
   onChange: (value: string) => void;
   placeholder: string;
   required?: boolean;
   error?: string;
 }) {
   const { t } = useTranslation();
+  // Ensure existing saved value stays visible even if LGD options haven't loaded yet.
+  const hasValueOption =
+    !value ||
+    options.some((o) => (label === "KVK" ? o.address : o.name) === value);
+
+  if (allowFreeText && !loading && options.length === 0) {
+    return (
+      <div className="space-y-1.5">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+        <Input
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          className="h-10 bg-surface-variant"
+        />
+        <FieldError message={error} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1.5">
       {label}
@@ -236,7 +262,14 @@ function LocationSelect({
         onChange={(event) => onChange(event.target.value)}
         className="flex h-10 w-full rounded-md border border-border-subtle bg-surface-variant px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <option value="">{disabled ? t('editPublicProfileDialog.loadingOptions') : placeholder}</option>
+        <option value="">
+          {loading ? t('editPublicProfileDialog.loadingOptions') : placeholder}
+        </option>
+        {!hasValueOption && (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        )}
         {options.map((option) => (
           <option
             key={option.name}
@@ -299,6 +332,7 @@ export function EditPublicProfileDialog({
   user,
   onSaved,
   required = false,
+  resubmitMode = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -306,6 +340,8 @@ export function EditPublicProfileDialog({
   onSaved: (user: AuthUser) => void;
   /** Blocks dismissal while an admin-created account completes its first profile. */
   required?: boolean;
+  /** Resets rejected status back to pending on save and stays on the current page. */
+  resubmitMode?: boolean;
 }) {
   const { t } = useTranslation();
   // Declared first so its `i18n.language` can seed the initial form below.
@@ -318,7 +354,9 @@ export function EditPublicProfileDialog({
   const [saving, setSaving] = useState(false);
   const [cropPickerOpen, setCropPickerOpen] = useState(false);
   const crops = useCrops();
-  const [states, setStates] = useState<LgdState[]>([]);
+  const [states, setStates] = useState<LgdState[]>(() =>
+    SUPPORTED_STATES.map((s) => ({ code: "", name: s.value })),
+  );
   const [districts, setDistricts] = useState<LgdDistrict[]>([]);
   const [blocks, setBlocks] = useState<LgdSubDistrict[]>([]);
   const [villages, setVillages] = useState<LgdVillage[]>([]);
@@ -442,11 +480,13 @@ export function EditPublicProfileDialog({
       try {
         const stateResult = await lgdApi.getStates();
         if (!active) return;
-        setStates(stateResult.states);
+        if (stateResult.states.length > 0) {
+          setStates(stateResult.states);
+        }
         const state = stateResult.states.find(
           (item) => item.name.toLowerCase() === initialForm.state.toLowerCase(),
         );
-        if (!state) return;
+        if (!state?.code) return;
         const districtResult = await lgdApi.getDistricts(state.code);
         if (!active) return;
         setDistricts(districtResult.districts);
@@ -469,7 +509,14 @@ export function EditPublicProfileDialog({
         const villageResult = await lgdApi.getVillages(block.code);
         if (active) setVillages(villageResult.villages);
       } catch {
-        toast.error(t('editPublicProfileDialog.unableToLoadLocation'));
+        // Fall back to static state list + free-text inputs if LGD upstream is unavailable.
+        if (active) {
+          setStates((prev) =>
+            prev.length > 0
+              ? prev
+              : SUPPORTED_STATES.map((s) => ({ code: "", name: s.value })),
+          );
+        }
       } finally {
         if (active) setLoadingLocation(false);
       }
@@ -503,7 +550,7 @@ export function EditPublicProfileDialog({
     setFieldError("village", undefined);
     setFieldError("kvk", undefined);
     const state = states.find((item) => item.name === stateName);
-    if (!state) return;
+    if (!state?.code) return;
     setLoadingLocation(true);
     try {
       setDistricts((await lgdApi.getDistricts(state.code)).districts);
@@ -914,11 +961,18 @@ export function EditPublicProfileDialog({
 
       if (category === "fpo" || category === "ngo")
         payload.numberOfFarmers = numberOfFarmers;
+      if (resubmitMode) {
+        payload.resubmitForApproval = true;
+      }
       const result = await authApi.updateMe(payload);
       onSaved(result.user);
       onOpenChange(false);
-      toast.success(t('editPublicProfileDialog.profileCompletedSuccessfully'));
-      navigate("/home", { replace: true });
+      if (resubmitMode) {
+        toast.success("Profile updated and resubmitted for approval.");
+      } else {
+        toast.success(t('editPublicProfileDialog.profileCompletedSuccessfully'));
+        navigate("/home", { replace: true });
+      }
     } catch {
       toast.error(t('editPublicProfileDialog.unableToUpdateYour'));
     } finally {
@@ -938,37 +992,55 @@ export function EditPublicProfileDialog({
         }}
       >
         <DialogContent
-          hideCloseButton
+          hideCloseButton={required}
           className="!h-[85vh] !max-h-[85vh] !w-[85vw] !max-w-[85vw] overflow-hidden p-0"
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => {
+            if (required) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (required) e.preventDefault();
+          }}
+          onPointerDownOutside={(e) => {
+            if (required) e.preventDefault();
+          }}
         >
           <form onSubmit={save} className="flex h-full min-h-0 flex-col">
             <div className="shrink-0 border-b border-border-subtle px-5 py-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <DialogTitle>{t('editPublicProfileDialog.completeProfile')}</DialogTitle>
+                  <DialogTitle>
+                    {resubmitMode
+                      ? "Update & Resubmit Profile"
+                      : t('editPublicProfileDialog.completeProfile')}
+                  </DialogTitle>
 
                   <p className="mt-1 text-xs text-text-secondary">
-                    Complete you profile
-                    {category === "fpo"
-                      ? t('editPublicProfileDialog.fpoMembership')
-                      : (category ?? "account")}
-                    .
+                    {resubmitMode ? (
+                      "Correct the flagged details below and submit your profile for review again."
+                    ) : (
+                      <>
+                        Complete you profile
+                        {category === "fpo"
+                          ? t('editPublicProfileDialog.fpoMembership')
+                          : (category ?? "account")}
+                        .
+                      </>
+                    )}
                   </p>
                 </div>
 
-                <Button
-                  type="button"
-                  onClick={handleLogout}
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  {t('auth.logout')}
-                </Button>
+                {required && (
+                  <Button
+                    type="button"
+                    onClick={handleLogout}
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    {t('auth.logout')}
+                  </Button>
+                )}
               </div>
 
               <div className="mt-5 flex items-start">
@@ -1018,7 +1090,8 @@ export function EditPublicProfileDialog({
                       label={t('admin.state')}
                       value={form.state}
                       options={states}
-                      disabled={loadingLocation || states.length === 0}
+                      disabled={states.length === 0}
+                      loading={loadingLocation && states.length === 0}
                       onChange={selectState}
                       placeholder={t('question.selectState')}
                       required
@@ -1028,11 +1101,9 @@ export function EditPublicProfileDialog({
                       label={t('auth.district')}
                       value={form.district}
                       options={districts}
-                      disabled={
-                        loadingLocation ||
-                        !form.state ||
-                        districts.length === 0
-                      }
+                      disabled={!form.state}
+                      loading={loadingLocation}
+                      allowFreeText={!!form.state}
                       onChange={selectDistrict}
                       placeholder={t('question.districtPlaceholder')}
                       required
@@ -1043,11 +1114,9 @@ export function EditPublicProfileDialog({
                         label={t('block')}
                         value={form.block}
                         options={blocks}
-                        disabled={
-                          loadingLocation ||
-                          !form.district ||
-                          blocks.length === 0
-                        }
+                        disabled={!form.district}
+                        loading={loadingLocation}
+                        allowFreeText={!!form.district}
                         onChange={selectBlock}
                         placeholder={t('editPublicProfileDialog.selectBlock')}
                         required
@@ -1059,11 +1128,9 @@ export function EditPublicProfileDialog({
                         label={t('village')}
                         value={form.village}
                         options={villages}
-                        disabled={
-                          loadingLocation ||
-                          !form.block ||
-                          villages.length === 0
-                        }
+                        disabled={!form.block}
+                        loading={loadingLocation}
+                        allowFreeText={!!form.block}
                         onChange={(village) => {
                           setForm((current) => ({ ...current, village }));
                           setFieldError(
@@ -1081,11 +1148,9 @@ export function EditPublicProfileDialog({
                         label={t('profile.kvk')}
                         value={form.kvk}
                         options={kvks}
-                        disabled={
-                          loadingLocation ||
-                          !form.district ||
-                          kvks.length === 0
-                        }
+                        disabled={!form.district}
+                        loading={loadingLocation}
+                        allowFreeText={!!form.district}
                         onChange={(kvk) => {
                           setForm((current) => ({ ...current, kvk }));
                           setFieldError(
@@ -1506,7 +1571,7 @@ export function EditPublicProfileDialog({
                   >{t('common.back')}</Button>
                   <Button type="submit" disabled={saving} className="gap-1.5">
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                    Save changes
+                    {resubmitMode ? "Save & Resubmit" : "Save changes"}
                     {!saving && <ArrowRight className="h-4 w-4" />}
                   </Button>
                 </>
