@@ -57,6 +57,7 @@ export class DistributorController {
 
   @Get('questions')
   @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.DISTRIBUTOR)
   listApprovedQuestions(
     @Req() req: AuthedRequest,
     @Query() dto: ListApprovedQuestionsDto,
@@ -69,6 +70,7 @@ export class DistributorController {
   }
 
   @Get('questions/:id')
+  @Roles(UserRole.DISTRIBUTOR)
   @HttpCode(HttpStatus.OK)
   getApprovedQuestion(@Param('id') id: string) {
     return this.distributorService.getApprovedQuestion(id);

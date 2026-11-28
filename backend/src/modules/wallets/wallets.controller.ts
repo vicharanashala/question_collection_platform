@@ -18,6 +18,7 @@ import { AddPaymentDetailDto } from './dto/payment-details.dto';
 import { Request } from 'express';
 import { CacheInvalidate } from '../../shared/database/cache/decorators/cache-invalidate.decorator';
 import { Cacheable } from '../../shared/database/cache/decorators/cacheable.decorator';
+import { Roles, UserRole } from '@/shared';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; mobileNumber: string; role: string };
@@ -29,6 +30,8 @@ export class WalletsController {
   constructor(private readonly walletsService: WalletsService) {}
 
   @Get('me')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Cacheable('wallet', 60)
   async getBalance(@Req() req: AuthenticatedRequest) {
@@ -42,6 +45,8 @@ export class WalletsController {
    * — it simply computes the tier from the provided number.
    */
   @Get('me/tier')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Cacheable('reward_tier', 600)
   async getRewardTier(@Req() req: AuthenticatedRequest, @Query('approvedCount') approvedCount: string) {
@@ -61,6 +66,8 @@ export class WalletsController {
   }
 
   @Get('me/transactions')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Cacheable('transactions', 60)
   async getTransactions(
@@ -75,6 +82,8 @@ export class WalletsController {
   }
 
   @Get('withdrawals/:id')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `withdrawal:${args[0]}`, 60)
   async getWithdrawal(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
@@ -96,6 +105,8 @@ export class WalletsController {
   }
 
   @Post('withdraw')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate('wallet:*')
   async withdraw(@Req() req: AuthenticatedRequest, @Body() dto: WithdrawDto) {
@@ -113,6 +124,8 @@ export class WalletsController {
 
   /** Add a new payment detail and initiate ₹1 micro-transaction verification. */
   @Post('payment-details')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate('wallet:*')
   async addPaymentDetail(@Req() req: AuthenticatedRequest, @Body() dto: AddPaymentDetailDto) {
@@ -121,6 +134,8 @@ export class WalletsController {
 
   /** Get all payment details for the current user (masked). */
   @Get('payment-details')
+  @Roles(UserRole.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Cacheable('payment_details', 60)
   async getPaymentDetails(@Req() req: AuthenticatedRequest) {

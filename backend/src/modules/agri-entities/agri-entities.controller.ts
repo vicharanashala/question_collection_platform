@@ -20,12 +20,16 @@ export class AgriEntitiesController {
 
   // GET /agri-entities — the caller's own submissions (filter by ?type=&status=).
   @Get()
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   async listMine(@Query() dto: ListAgriEntitiesDto, @Req() req: AuthenticatedRequest) {
     return this.agriEntitiesService.listMine(req.user.id, dto);
   }
 
   // GET /agri-entities/counts/me — the caller's submission count per type.
   @Get('counts/me')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   async countsMine(@Req() req: AuthenticatedRequest) {
     return this.agriEntitiesService.getSubmittedCountsByType(req.user.id);
   }

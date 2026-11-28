@@ -1,7 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { SkipJwtAuth } from '../auth/decorators/skip-jwt-auth.decorator';
 import { RedisService } from '../../shared/database/cache/redis.service';
 import { ALL_PATTERNS, KeyPrefix } from '../../shared/database/cache/cache.keys';
+import { JwtAuthGuard, Roles, UserRole } from '@/shared';
 
 @Controller()
 export class HealthController {
@@ -55,7 +56,8 @@ export class HealthController {
     };
   }
 
-  @SkipJwtAuth()
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @Get('health/cache')
   async cacheStats() {
     if (!this.redisService.isEnabled()) {
