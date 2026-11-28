@@ -3,9 +3,10 @@ import { UserRole } from '../../../shared/classes/enums';
 
 /**
  * Roles a super admin can assign through the role switch.
- * `super_admin` and `user` are intentionally not assignable here.
+ * `super_admin` is intentionally not assignable here.
  */
 export const ASSIGNABLE_ROLES: UserRole[] = [
+  UserRole.USER,
   UserRole.ADMIN,
   UserRole.CURATOR,
   UserRole.DISTRIBUTOR,

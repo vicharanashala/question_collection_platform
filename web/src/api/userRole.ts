@@ -2,6 +2,7 @@ import { request, cache } from "./client";
 
 /** Roles a super admin can switch a user to. Keep in sync with the backend ASSIGNABLE_ROLES. */
 export const ASSIGNABLE_ROLES = [
+  "user",
   "admin",
   "curator",
   "distributor",
@@ -11,6 +12,7 @@ export const ASSIGNABLE_ROLES = [
 export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
 
 export const ROLE_LABELS: Record<AssignableRole, string> = {
+  user: "User",
   admin: "Admin",
   curator: "Curator",
   distributor: "Distributor",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertCircle, UserCog } from "lucide-react";
+import { AlertCircle, Check, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -121,12 +121,30 @@ export function ChangeRoleButton({
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ASSIGNABLE_ROLES.map((r) => (
-                    <SelectItem key={r} value={r} disabled={r === currentRole}>
-                      {ROLE_LABELS[r]}
-                      {r === currentRole ? " (current)" : ""}
-                    </SelectItem>
-                  ))}
+                  {ASSIGNABLE_ROLES.map((r) => {
+                    const isCurrent = r === currentRole;
+                    return (
+                      <SelectItem
+                        key={r}
+                        value={r}
+                        disabled={isCurrent}
+                        className={isCurrent ? "text-muted-foreground" : undefined}
+                      >
+                        {isCurrent && (
+                          <Check
+                            aria-hidden="true"
+                            className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2"
+                          />
+                        )}
+                        {ROLE_LABELS[r]}
+                        {isCurrent && (
+                          <span className="ml-2 text-[10px] font-medium uppercase tracking-wide">
+                            Current
+                          </span>
+                        )}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
