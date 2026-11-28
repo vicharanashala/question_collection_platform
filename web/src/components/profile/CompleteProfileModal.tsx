@@ -58,7 +58,7 @@ export function CompleteProfileModal({ open, mobileNumber }: CompleteProfileModa
           // Hide the default X close button — there's no legitimate way
           // for the user to dismiss this modal until registration completes.
           hideCloseButton
-          className="flex flex-col p-0 overflow-hidden mx-auto w-[calc(100vw-1.5rem)] sm:max-w-[90vw] lg:max-w-[80vw]"
+          className="flex flex-col p-0 overflow-hidden mx-auto w-[calc(100vw-1.5rem)] sm:max-w-2xl lg:max-w-3xl"
         >
           <CompleteProfileWizard mobileNumber={mobileNumber} />
         </DialogContent>
