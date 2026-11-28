@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { TesterTag } from "@/components/TesterTag";
+import { ChangeRoleButton } from "@/components/ChangeRoleButton";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { adminApi, getErrorMessage, cache } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
@@ -788,6 +789,18 @@ export function UserDetailPage() {
                       >
                         <LogOut className="h-4 w-4" /> {t('userDetailPage.logOutUser2')}
                       </Button>
+                    )}
+
+                    {!isDeleted && (
+                      <ChangeRoleButton
+                        userId={user.id}
+                        userName={user.name}
+                        currentRole={user.role}
+                        onChanged={async () => {
+                          await refreshUser();
+                          await loadSession();
+                        }}
+                      />
                     )}
 
                     {isPending && !isDeleted && (

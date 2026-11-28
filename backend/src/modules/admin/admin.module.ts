@@ -2,6 +2,8 @@ import { Logger, Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { UserRoleController } from './user-role.controller';
+import { UserRoleService } from './user-role.service';
 import { AnveshanProgressService } from './anveshan-progress.service';
 import { AnveshanUserDetailController } from './anveshan-user-detail.controller';
 import { AnveshanUserDetailService } from './anveshan-user-detail.service';
@@ -32,9 +34,11 @@ import { SessionModule } from '../session/session.module';
     ExportController,
     CuratorController,
     AnveshanUserDetailController,
+    UserRoleController,
   ],
   providers: [
     AdminService,
+    UserRoleService,
     CuratorService,
     AnveshanProgressService,
     AnveshanUserDetailService,
