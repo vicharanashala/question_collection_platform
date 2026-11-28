@@ -215,14 +215,14 @@ private async safeAudit(payload: AuditLogDto) {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Get('admin/faqs')
   async listAll(@Query() query: ListFaqsQueryDto) {
     return this.faqsService.findAllPaginated(query);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Post('admin/faqs')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateFaqDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
@@ -277,7 +277,7 @@ private async safeAudit(payload: AuditLogDto) {
 
   // Must stay above the ':id' routes so 'reorder' is not read as an id.
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch('admin/faqs/reorder')
   async reorder(@Body() dto: ReorderFaqsDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta: RequestMeta) {
     const base: AuditLogDto = {
@@ -307,7 +307,7 @@ private async safeAudit(payload: AuditLogDto) {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch('admin/faqs/:id')
   async update(@Param('id') id: string, @Body() dto: UpdateFaqDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
     const base: AuditLogDto = {
@@ -344,7 +344,7 @@ private async safeAudit(payload: AuditLogDto) {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch('admin/faqs/:id/visibility')
   async toggleVisibility(@Param('id') id: string, @Body() dto: ToggleVisibilityDto, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
     const base: AuditLogDto = {
@@ -381,7 +381,7 @@ private async safeAudit(payload: AuditLogDto) {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CURATOR, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Delete('admin/faqs/:id')
   async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest, @ReqMeta() meta:RequestMeta) {
     const base: AuditLogDto = {

@@ -29,9 +29,9 @@ import { SignOutDialog } from '@/components/SignOutDialog'
 // Nav items use a translation key (`labelKey`) instead of a literal so the
 // sidebar re-renders in the active language via i18next's `t()`.
 const navItems = [
-  { to: '/dashboard',      labelKey: 'nav.dashboard',      icon: LayoutDashboard, roles: ['user', 'curator', 'finance', 'distributor', 'admin', 'super_admin'] },
+  { to: '/dashboard',      labelKey: 'nav.dashboard',      icon: LayoutDashboard, roles: ['curator', 'finance', 'distributor', 'admin', 'super_admin'] },
   { to: '/users',          labelKey: 'nav.userManagement', icon: Users,           roles: ['finance', 'admin', 'super_admin'] },
-  { to: '/questions',      labelKey: 'nav.questions',      icon: MessageSquare,   roles: ['user', 'curator', 'admin', 'super_admin'] },
+  { to: '/questions',      labelKey: 'nav.questions',      icon: MessageSquare,   roles: ['curator', 'admin', 'super_admin'] },
   { to: '/agri-entities',  labelKey: 'nav.agriEntities',   icon: Sprout,          roles: ['curator', 'admin', 'super_admin'], defaultLabel: 'Agri Entities' },
   { to: '/reviews',        labelKey: 'nav.reviewQueue',    icon: CheckSquare,     roles: ['curator', 'super_admin'] },
   { to: '/feedbacks',      labelKey: 'nav.feedbacks',      icon: Star,            roles: ['admin', 'super_admin'], defaultLabel: 'App Feedback' },

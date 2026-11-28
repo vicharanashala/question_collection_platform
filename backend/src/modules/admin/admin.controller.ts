@@ -86,7 +86,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Post("users")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.CREATED)
   @CacheInvalidate("analytics:*", "hot:*")
   async createUser(
@@ -190,8 +190,6 @@ export class AdminController {
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
     UserRole.FINANCE,
-    UserRole.CURATOR,
-    UserRole.DISTRIBUTOR,
   )
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_user:${args[0]}`, 120)
@@ -200,7 +198,7 @@ export class AdminController {
   }
 
   @Post("users/:id/suspend")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @CacheInvalidate("user:*")
   async suspendUser(
@@ -361,7 +359,7 @@ export class AdminController {
   }
 
   @Post("users/:id/verify")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @CacheInvalidate("user:*")
   async verifyUser(
@@ -434,6 +432,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get("questions/queue")
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   @Cacheable("review_queue", 60)
   async listReviewQueue(@Query() dto: ListReviewQueueDto) {
@@ -442,6 +441,7 @@ export class AdminController {
 
   /** Question quality and volume metrics — curator read-only */
   @Get("questions/metrics")
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   @Cacheable("question_metrics", 120)
   async getQuestionMetrics(@Query() dto: AnalyticsQueryDto) {
@@ -449,7 +449,7 @@ export class AdminController {
   }
 
   @Get("questions/:id")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.CURATOR)
   @HttpCode(HttpStatus.OK)
   @Cacheable((args) => `admin_question:${args[0]}`, 120)
   async getQuestion(@Param("id") id: string) {
@@ -638,7 +638,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get("config")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Cacheable("config", 300)
   async listConfig() {
@@ -659,7 +659,7 @@ export class AdminController {
   // }
 
   @Patch("config")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @CacheInvalidate("meta:*", "hot:reward_tiers")
   async updateConfig(
@@ -716,7 +716,6 @@ export class AdminController {
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
     UserRole.CURATOR,
-    UserRole.FINANCE,
   )
   @HttpCode(HttpStatus.OK)
   @Cacheable("curator_dashboard", 60)
@@ -725,7 +724,7 @@ export class AdminController {
   }
 
   @Get("analytics/dashboard")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Cacheable("dashboard", 60)
   async getDashboard(@Query() dto: AnalyticsQueryDto) {
@@ -743,7 +742,7 @@ export class AdminController {
   }
 
   @Get("analytics/rewards")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Cacheable("reward_summary", 120)
   async getRewardSummary(@Query() dto: AnalyticsQueryDto) {
@@ -751,7 +750,7 @@ export class AdminController {
   }
 
   @Get("analytics/reward-logs")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Cacheable("reward_logs", 60)
   async getRewardLogs(@Query() dto: AnalyticsQueryDto) {
@@ -763,7 +762,7 @@ export class AdminController {
   // ─────────────────────────────────────────────────────────────
 
   @Get("fraud")
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.FINANCE)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @Cacheable("fraud_stats", 60)
   async getFraudStats(

@@ -5,6 +5,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { CuratorService } from './curator.service';
 import { JwtAuthGuard } from '../../shared/middleware/guards/jwt-auth.guard';
@@ -12,6 +13,10 @@ import { RolesGuard } from '../../shared/middleware/guards/roles.guard';
 import { Roles } from '../../shared/middleware/decorators/roles.decorator';
 import { UserRole } from '../../shared/classes/enums';
 import { AnalyticsQueryDto } from './dto';
+
+interface AuthenticatedRequest extends Request {
+  user: { id: string; role: string; name: string; email: string };
+}
 
 @Controller('curator')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,7 +44,7 @@ export class CuratorController {
    */
   @Get('my-stats')
   @HttpCode(HttpStatus.OK)
-  async getMyReviewStats(@Query('userId') userId: string) {
-    return this.curatorService.getCuratorReviewerStats(userId);
+  async getMyReviewStats(@Req() req: AuthenticatedRequest) {
+    return this.curatorService.getCuratorReviewerStats(req.user.id);
   }
 }

@@ -54,6 +54,7 @@ export class QuestionController {
   @Post()
   @UseGuards(AnveshanSubmissionsOpenGuard)
   @HttpCode(HttpStatus.CREATED)
+  @Roles(UserRole.USER)
   @CacheInvalidate('questions:u*', 'anveshan_milestone*')
   async submit(
     @Body() dto: SubmitQuestionDto,
@@ -64,6 +65,8 @@ export class QuestionController {
 
   // POST /questions/preview — Validate and enrich fields; no DB write
   @Post('preview')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.USER)
   @HttpCode(HttpStatus.OK)
   async preview(
     @Body() dto: PreviewQuestionDto,
@@ -75,6 +78,7 @@ export class QuestionController {
   // GET /questions — List questions (own or all for admin)
   @Get()
   @Cacheable('questions', 120)
+  @UseGuards(JwtAuthGuard)
   async list(
     @Query() dto: ListQuestionsDto,
     @Req() req: AuthenticatedRequest,
@@ -89,7 +93,9 @@ export class QuestionController {
 
   // GET /questions/:id — Get single question
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @Cacheable('question', 300)
+  @Roles(UserRole.USER)
   async getOne(
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
@@ -99,6 +105,8 @@ export class QuestionController {
 
   // PATCH /questions/:id — Update question (edit window only)
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.USER)
   @CacheInvalidate('hot:today:*', 'hot:total_approved')
   async update(
     @Param('id') id: string,
@@ -122,6 +130,7 @@ export class QuestionController {
 
   // GET /questions/stats/me — Daily submission count for current user
 @Get('stats/me')
+ @Roles(UserRole.USER)
 @Cacheable('question_stats', 60)
 async getMyStats(@Req() req: AuthenticatedRequest) {
   const objectId = new Types.ObjectId(req.user.id);
@@ -256,6 +265,8 @@ private async safeAudit(payload: AuditLogDto) {
 
   // GET /questions/anveshan-milestone/me — the caller's submission and answer progress.
   @Get('anveshan-milestone/me')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   @Cacheable('anveshan_milestone', 60)
   async getMyAnveshanMilestone(@Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.getMilestone(req.user.id);
@@ -263,12 +274,16 @@ private async safeAudit(payload: AuditLogDto) {
 
     // GET /questions/anveshan-answers/:questionId/score — the caller's system score for an answer; poll while status is processing.
   @Get('anveshan-answers/:questionId/score')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   async getAnveshanAnswerScore(@Param('questionId') questionId: string, @Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.getAnswerScore(req.user.id, questionId);
   } 
   
   // GET /questions/anveshan-answers/me — the caller's own questions they can answer, with answer status.
   @Get('anveshan-answers/me')
+  @Roles(UserRole.USER)
+  @UseGuards(JwtAuthGuard)
   async listMyAnveshanAnswerQuestions(@Req() req: AuthenticatedRequest) {
     return this.anveshanMilestoneService.listAnswerableQuestions(req.user.id);
   }
